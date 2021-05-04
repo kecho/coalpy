@@ -1,21 +1,15 @@
-require 'tundra.syntax.glob'
-require 'tundra.syntax.files'
-
-local native = require "tundra.native"
-local npath = require 'tundra.native.path'
-
-function _G.GetPythonPath()
-    local pyroot = native.getenv("PYTHON39_ROOT", nil);   
-    if pyroot == nil then
-        error("Ensure that the environment variable PYTHON39_ROOT is set, and points to the root python folder containing lib and include.")
-    end
-    return pyroot
-end
-
 local SourceDir = "Source";
+
 local LibIncludes = {
     _G.GetPythonPath() .. "/include"
 }
+
+local CoalPyModuleTable = {
+    core = {},
+    shader = { "core" }
+}
+
+local CoalPyModules = { "core", "shader" }
 
 local PyLibs = {
     {
@@ -28,32 +22,6 @@ local PyLibs = {
     }
 }
 
-SharedLibrary {
-    Name = "coal",
-    Pass = "BuildCode",
-    Includes = LibIncludes,
-    Libs = PyLibs,
-    Sources = {
-        Glob {
-            Dir = SourceDir.."/coalpy",
-            Extensions = { ".cpp", ".h", ".hpp" },
-            Recursive =  true
-        },
-    }
-}
-
-Default("coal")
-
-local function DeployPyd()
-    local srcDll = "$(OBJECTDIR)$(SEP)coal.dll"
-    local dstPyd = "$(OBJECTDIR)$(SEP)coal.pyd"
-    local cpyFile = CopyFile {
-        Pass = "Deploy",
-        Source = srcDll,
-        Target = dstPyd
-    }
-
-    Default(cpyFile)
-end
-
-DeployPyd()
+_G.BuildModules(SourceDir, CoalPyModuleTable)
+_G.BuildPyLib("coalpy", SourceDir, LibIncludes, CoalPyModules, PyLibs)
+_G.DeployPyLib("coalpy")
