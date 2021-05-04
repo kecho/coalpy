@@ -4,13 +4,6 @@ local LibIncludes = {
     _G.GetPythonPath() .. "/include"
 }
 
-local CoalPyModuleTable = {
-    core = {},
-    shader = { "core" }
-}
-
-local CoalPyModules = { "core", "shader" }
-
 local PyLibs = {
     {
         "External/Python39-win64/python39_d.lib",
@@ -21,6 +14,16 @@ local PyLibs = {
         Config = { "win64-msvc-release", "win64-msvc-production"  }
     }
 }
+
+-- C++ module table-> module name with its dependencies
+local CoalPyModuleTable = {
+    core   = {},
+    shader = { "core" }
+}
+
+-- Module list for the core coalpy module
+local CoalPyModules = { "core", "shader" }
+
 
 _G.BuildModules(SourceDir, CoalPyModuleTable)
 _G.BuildPyLib("coalpy", SourceDir, LibIncludes, CoalPyModules, PyLibs)
