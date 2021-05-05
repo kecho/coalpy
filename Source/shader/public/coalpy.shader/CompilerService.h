@@ -1,6 +1,6 @@
 #pragma once
 
-#include <coalpy.core/FileSystem.h>
+#include <coalpy.core/IFileSystem.h>
 
 namespace coalpy
 {
