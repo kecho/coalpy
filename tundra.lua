@@ -20,10 +20,10 @@ Build {
                 CPPPATH = {
                     "$(OBJECTDIR)$(SEP)Source"
                 },
-                CXXOPTS = { "/EHsc", "/MD", "/std:c++17" },
-                CXXOPTS_DEBUG   = { "/Od",  "/D \"_DEBUG\"" },
-                CXXOPTS_RELEASE = { "/Ox" },
-                CXXOPTS_PRODUCTION = { "/O2" },
+                CXXOPTS = { "/EHsc", "/std:c++17" },
+                CXXOPTS_DEBUG   = { "/Od", "/MDd",  "/D \"_DEBUG\"" },
+                CXXOPTS_RELEASE = { "/Ox", "/MD" },
+                CXXOPTS_PRODUCTION = { "/O2", "/MD" },
             },
         }
     },

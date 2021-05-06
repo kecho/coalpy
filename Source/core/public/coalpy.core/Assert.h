@@ -1,21 +1,21 @@
 #pragma once
 
-#ifndef C_ASSERT_ENABLED
+#ifndef CPY_ASSERT_ENABLED
 #if _DEBUG
-#define C_ASSERT_ENABLED 1
+#define CPY_ASSERT_ENABLED 1
 #else
-#define C_ASSERT_ENABLED 0
+#define CPY_ASSERT_ENABLED 0
 #endif
 #endif
 
-#if C_ASSERT_ENABLED
+#if CPY_ASSERT_ENABLED
 
-#define C_ASSERT(cond)               { if (!(cond)) ::coalpy::AssertSystem::assert(#cond, __FILE__, __LINE__, nullptr); }
-#define C_ASSERT_MSG(cond, msg)      { if (!(cond)) ::coalpy::AssertSystem::assert(#cond, __FILE__, __LINE__, "%s", msg); }
-#define C_ASSERT_FMT(cond, fmt, ...) { if (!(cond)) ::coalpy::AssertSystem::assert(#cond, __FILE__, __LINE__, fmt, __VA_ARGS__); }
-#define C_ERROR(cond)                { if (!(cond)) ::coalpy::AssertSystem::error (#cond, __FILE__, __LINE__, nullptr); }
-#define C_ERROR_MSG(cond, msg)       { if (!(cond)) ::coalpy::AssertSystem::error (#cond, __FILE__, __LINE__, "%s", msg); }
-#define C_ERROR_FMT(cond, fmt, ...)  { if (!(cond)) ::coalpy::AssertSystem::error (#cond, __FILE__, __LINE__, fmt, __VA_ARGS__); }
+#define CPY_ASSERT(cond)               { if (!(cond)) ::coalpy::AssertSystem::assert(#cond, __FILE__, __LINE__, nullptr); }
+#define CPY_ASSERT_MSG(cond, msg)      { if (!(cond)) ::coalpy::AssertSystem::assert(#cond, __FILE__, __LINE__, "%s", msg); }
+#define CPY_ASSERT_FMT(cond, fmt, ...) { if (!(cond)) ::coalpy::AssertSystem::assert(#cond, __FILE__, __LINE__, fmt, __VA_ARGS__); }
+#define CPY_ERROR(cond)                { if (!(cond)) ::coalpy::AssertSystem::error (#cond, __FILE__, __LINE__, nullptr); }
+#define CPY_ERROR_MSG(cond, msg)       { if (!(cond)) ::coalpy::AssertSystem::error (#cond, __FILE__, __LINE__, "%s", msg); }
+#define CPY_ERROR_FMT(cond, fmt, ...)  { if (!(cond)) ::coalpy::AssertSystem::error (#cond, __FILE__, __LINE__, fmt, __VA_ARGS__); }
 
 namespace coalpy
 {
@@ -35,11 +35,11 @@ public:
 
 #else
 
-#define C_ASSERT(cond)
-#define C_ASSERT_MSG(cond, msg)
-#define C_ASSERT_FMT(cond, fmt, ...)
-#define C_ERROR(cond)
-#define C_ERROR_MSG(cond, msg)
-#define C_ERROR_FMT(cond, fmt, ...)
+#define CPY_ASSERT(cond)
+#define CPY_ASSERT_MSG(cond, msg)
+#define CPY_ASSERT_FMT(cond, fmt, ...)
+#define CPY_ERROR(cond)
+#define CPY_ERROR_MSG(cond, msg)
+#define CPY_ERROR_FMT(cond, fmt, ...)
 
 #endif

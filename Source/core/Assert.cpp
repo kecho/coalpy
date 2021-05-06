@@ -1,10 +1,12 @@
 #include <coalpy.core/Assert.h>
 
-#if C_ASSERT_ENABLED
+#if CPY_ASSERT_ENABLED
 
 #include <iostream>
 #include <stdio.h>
 #include <stdarg.h>
+#include <windows.h>
+#include <debugapi.h>
 
 namespace coalpy
 {
@@ -64,8 +66,15 @@ void AssertSystem::assert(const char* condition, const char* file, unsigned int 
 
     s_assertHandler(condition, file, line, fmt ? buffer : nullptr);
 
-#if _MSC_VER
-    __debugbreak();
+#ifdef _MSC_VER
+    __try
+    {
+        DebugBreak();
+    }
+    __except(EXCEPTION_EXECUTE_HANDLER)
+    {
+
+    }
 #endif
 
 }
