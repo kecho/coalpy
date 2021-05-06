@@ -19,7 +19,7 @@ typedef TestSuite*(*CreateSuiteFn)();
 namespace coalpy
 {
 
-TestSuite* fileSystemSuite();
+extern TestSuite* fileSystemSuite();
 
 }
 
