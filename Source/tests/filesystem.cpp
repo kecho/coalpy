@@ -7,7 +7,6 @@ namespace coalpy
 
 void testFileCreate(TestContext& ctx)
 {
-    CPY_ASSERT(false);
 }
 
 class FileSystemTestSuite : public TestSuite
