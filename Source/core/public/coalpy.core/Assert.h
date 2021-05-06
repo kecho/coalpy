@@ -1,19 +1,21 @@
 #pragma once
 
+#ifndef C_ASSERT_ENABLED
 #if _DEBUG
 #define C_ASSERT_ENABLED 1
 #else
 #define C_ASSERT_ENABLED 0
 #endif
+#endif
 
 #if C_ASSERT_ENABLED
 
-#define C_ASSERT(cond)               { if (cond) AssertSystem::assert(#cond, __FILE__, __LINE__, nullptr); }
-#define C_ASSERT_MSG(cond, msg)      { if (cond) AssertSystem::assert(#cond, __FILE__, __LINE__, "%s", msg); }
-#define C_ASSERT_FMT(cond, fmt, ...) { if (cond) AssertSystem::assert(#cond, __FILE__, __LINE__, fmt, __VA_ARGS__); }
-#define C_ERROR(cond)                { if (cond) AssertSystem::error (#cond, __FILE__, __LINE__, nullptr); }
-#define C_ERROR_MSG(cond, msg)       { if (cond) AssertSystem::error (#cond, __FILE__, __LINE__, "%s", msg); }
-#define C_ERROR_FMT(cond, fmt, ...)  { if (cond) AssertSystem::error (#cond, __FILE__, __LINE__, fmt, __VA_ARGS__); }
+#define C_ASSERT(cond)               { if (!(cond)) ::coalpy::AssertSystem::assert(#cond, __FILE__, __LINE__, nullptr); }
+#define C_ASSERT_MSG(cond, msg)      { if (!(cond)) ::coalpy::AssertSystem::assert(#cond, __FILE__, __LINE__, "%s", msg); }
+#define C_ASSERT_FMT(cond, fmt, ...) { if (!(cond)) ::coalpy::AssertSystem::assert(#cond, __FILE__, __LINE__, fmt, __VA_ARGS__); }
+#define C_ERROR(cond)                { if (!(cond)) ::coalpy::AssertSystem::error (#cond, __FILE__, __LINE__, nullptr); }
+#define C_ERROR_MSG(cond, msg)       { if (!(cond)) ::coalpy::AssertSystem::error (#cond, __FILE__, __LINE__, "%s", msg); }
+#define C_ERROR_FMT(cond, fmt, ...)  { if (!(cond)) ::coalpy::AssertSystem::error (#cond, __FILE__, __LINE__, fmt, __VA_ARGS__); }
 
 namespace coalpy
 {

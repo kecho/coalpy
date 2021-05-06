@@ -77,6 +77,32 @@ function _G.BuildPyLib(libName, sourceDir, includeList, moduleList, otherDeps)
     Default(pythonLib)
 end
 
+function _G.BuildProgram(programName, programSource, defines, sourceDir, includeList, moduleList, otherDeps)
+    local prog = Program {
+        Name = programName,
+        Pass = "BuildCode",
+        Env = {
+            CPPDEFS = defines
+        },
+        Includes = { _G.GetModuleIncludes(sourceDir, moduleList), includeList },
+        Depends = { 
+            _G.GetModuleDeps(moduleList)
+        },
+        Libs = {
+            otherDeps
+        },
+        Sources = {
+            Glob {
+                Dir = sourceDir.."/"..programSource,
+                Extensions = { ".cpp", ".h", ".hpp" },
+                Recursive =  true
+            },
+        }
+    }
+
+    Default(prog)
+end
+
 function _G.DeployPyLib(pythonLibName)
     local srcDll = "$(OBJECTDIR)$(SEP)"..pythonLibName..".dll"
     local dstPyd = "$(OBJECTDIR)$(SEP)"..pythonLibName..".pyd"

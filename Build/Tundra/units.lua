@@ -27,4 +27,5 @@ local CoalPyModules = { "core", "shader" }
 
 _G.BuildModules(SourceDir, CoalPyModuleTable)
 _G.BuildPyLib("coalpy", SourceDir, LibIncludes, CoalPyModules, PyLibs)
+_G.BuildProgram("coalpy_tests", "tests", { "C_ASSERT_ENABLED=1" }, SourceDir, LibIncludes, CoalPyModules, PyLibs)
 _G.DeployPyLib("coalpy")
