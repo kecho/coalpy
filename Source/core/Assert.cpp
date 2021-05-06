@@ -5,8 +5,11 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdarg.h>
+#ifdef WIN32 
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <debugapi.h>
+#endif
 
 namespace coalpy
 {
@@ -66,7 +69,7 @@ void AssertSystem::assert(const char* condition, const char* file, unsigned int 
 
     s_assertHandler(condition, file, line, fmt ? buffer : nullptr);
 
-#ifdef _MSC_VER
+#ifdef WIN32 
     __try
     {
         DebugBreak();
