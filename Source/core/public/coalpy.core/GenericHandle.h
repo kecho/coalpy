@@ -7,11 +7,12 @@ template <typename BaseHandle>
 struct GenericHandle
 {
     typedef BaseHandle BaseType;
-    BaseHandle handleId = ~0;
+    enum : BaseHandle { InvalidId = (BaseHandle)~0 };
+    BaseHandle handleId = InvalidId;
 
     bool valid() const
     {
-        return handleId != GenericHandle<BaseHandle>::InvalidId;
+        return handleId != InvalidId;
     }
 
     bool operator==(const GenericHandle<BaseHandle>& other) const

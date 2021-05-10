@@ -17,12 +17,13 @@ local PyLibs = {
 
 -- C++ module table-> module name with its dependencies
 local CoalPyModuleTable = {
-    core   = {},
-    shader = { "core" }
+    core    = {},
+    tasks   = { "core" },
+    shader  = { "core", "tasks" }
 }
 
 -- Module list for the core coalpy module
-local CoalPyModules = { "core", "shader" }
+local CoalPyModules = { "core", "shader", "tasks" }
 
 
 _G.BuildModules(SourceDir, CoalPyModuleTable)
