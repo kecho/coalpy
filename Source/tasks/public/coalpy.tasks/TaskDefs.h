@@ -11,7 +11,7 @@ class ITaskSystem;
 
 struct TaskSystemDesc
 {
-    int threadpoolSize = 8u;
+    int threadPoolSize = 8u;
 };
 
 struct TaskContext

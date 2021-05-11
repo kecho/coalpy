@@ -22,6 +22,7 @@ class ThreadWorkerQueue : public ThreadQueue<ThreadWorkerMessage> {};
 
 ThreadWorker::~ThreadWorker()
 {
+    signalStop();
     join();
     delete m_thread;
     delete m_queue;
@@ -29,7 +30,7 @@ ThreadWorker::~ThreadWorker()
 
 void ThreadWorker::start()
 {
-    if (m_thread)
+    if (!m_thread)
         return;
 
     m_queue = new ThreadWorkerQueue;
@@ -49,7 +50,8 @@ int ThreadWorker::queueSize() const
 
 void ThreadWorker::run()
 {
-    while (!m_finished)
+    bool active = true;
+    while (active)
     {
         ThreadWorkerMessage msg;
         m_queue->waitPop(msg);
@@ -57,28 +59,32 @@ void ThreadWorker::run()
         switch (msg.type)
         {
         case ThreadMessageType::RunJob:
-            //todo: run job here
+            msg.fn(msg.ctx);
             break;
         case ThreadMessageType::Exit:
         default:
-            m_finished = true;
+            active = false;
         }
     }
 }
 
-void ThreadWorker::join()
+void ThreadWorker::signalStop()
 {
     if (!m_thread)
         return;
 
     ThreadWorkerMessage exitMessage { ThreadMessageType::Exit, {}, {} };
     m_queue->push(exitMessage);
+}
+
+void ThreadWorker::join()
+{
     m_thread->join();
 }
 
 void ThreadWorker::schedule(TaskFn fn, TaskContext& context)
 {
-    if (m_thread)
+    if (!m_thread)
         return;
 
     ThreadWorkerMessage runMessage { ThreadMessageType::RunJob, fn, context };

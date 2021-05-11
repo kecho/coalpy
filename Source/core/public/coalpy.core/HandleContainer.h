@@ -22,8 +22,8 @@ public:
             outHandle = m_freeHandles.back();
             m_freeHandles.pop_back();
         }
-        auto& container = m_data[handle];
-        container.handle = handle; 
+        auto& container = m_data[outHandle];
+        container.handle = outHandle; 
         container.valid = true;
         return container.data;
     }
@@ -46,6 +46,24 @@ public:
             if (c.valid)
                 elementfn(c.handle, c.data);
         }
+    }
+
+    bool contains(HandleType h) const
+    {
+        if (h >= (HandleType)m_data.size() || !h.valid())
+            return false;
+
+        return m_data[h].valid;
+    }
+
+    DataType& operator[](HandleType h)
+    {
+        return m_data[h].data;
+    }
+
+    const DataType& operator[](HandleType h) const
+    {
+        return m_data[h].data;
     }
 
 private:
