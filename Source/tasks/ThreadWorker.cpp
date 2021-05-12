@@ -1,5 +1,6 @@
 #include "ThreadWorker.h"
 #include "ThreadQueue.h"
+#include <coalpy.core/Assert.h>
 #include <thread>
 
 namespace coalpy
@@ -31,14 +32,9 @@ ThreadWorker::~ThreadWorker()
 
 void ThreadWorker::start()
 {
+    CPY_ASSERT_MSG(m_thread == nullptr, "system must call signalStop and then join to restart the thread worker.");
     if (m_thread)
-    {
-        signalStop();
-        join();
-        delete m_thread;
-        m_thread = nullptr;
         return;
-    }
 
     m_queue = new ThreadWorkerQueue;
 
@@ -90,6 +86,8 @@ void ThreadWorker::join()
         return;
 
     m_thread->join();
+    delete m_thread;
+    m_thread = nullptr;
 }
 
 void ThreadWorker::schedule(TaskFn fn, TaskContext& context)

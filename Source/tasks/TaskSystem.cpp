@@ -1,5 +1,6 @@
 #include "TaskSystem.h"
 #include "ThreadQueue.h"
+#include <coalpy.core/Assert.h>
 #include <thread>
 
 namespace coalpy
@@ -46,6 +47,10 @@ TaskSystem::~TaskSystem()
 
 void TaskSystem::start()
 {
+    CPY_ASSERT_MSG(m_schedulerThread == nullptr, "Task system cannot start, must call signalStop followed by join().");
+    if (m_schedulerThread)
+        return;
+
     m_workers.resize(m_desc.threadPoolSize);
     for (auto& w : m_workers)
     {
@@ -73,6 +78,8 @@ void TaskSystem::join()
     m_schedulerThread->join();
     for (auto& w : m_workers)
         w.join();
+
+    m_schedulerThread.release();
 }
 
 void TaskSystem::execute(Task task)

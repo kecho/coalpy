@@ -12,6 +12,9 @@ public:
     ITaskSystem* ts = nullptr;
 };
 
+namespace
+{
+
 void testParallel0(TestContext& ctx)
 {
     auto& testContext = (TaskSystemContext&)ctx;
@@ -55,6 +58,18 @@ void testParallel0(TestContext& ctx)
 
 }
 
+void testTaskDeps(TestContext& ctx)
+{
+    auto& testContext = (TaskSystemContext&)ctx;
+    auto& ts = *testContext.ts;
+    ts.start();
+    CPY_ASSERT_MSG(false, "Test not implemented");
+    ts.signalStop();
+    ts.join();
+}
+
+}
+
 class TaskSystemTestSuite : public TestSuite
 {
 public:
@@ -62,7 +77,9 @@ public:
     virtual const TestCase* getCases(int& caseCounts) const
     {
         static TestCase sCases[] = {
-            { "testParallel0", testParallel0 }
+            { "testSimpleParallel", testParallel0 },
+            { "testSimpleParallelRestart", testParallel0 },
+            { "testDependencies", testTaskDeps }
         };
 
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
