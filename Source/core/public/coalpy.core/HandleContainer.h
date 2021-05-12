@@ -16,6 +16,7 @@ public:
         if (m_freeHandles.empty())
         {
             outHandle = (HandleType::BaseType)m_data.size();
+            m_data.emplace_back();
         }
         else
         {

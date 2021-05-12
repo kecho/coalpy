@@ -8,6 +8,7 @@ namespace coalpy
 enum class ThreadMessageType
 {
     Exit,
+    Signal,
     RunJob
 };
 
@@ -30,8 +31,14 @@ ThreadWorker::~ThreadWorker()
 
 void ThreadWorker::start()
 {
-    if (!m_thread)
+    if (m_thread)
+    {
+        signalStop();
+        join();
+        delete m_thread;
+        m_thread = nullptr;
         return;
+    }
 
     m_queue = new ThreadWorkerQueue;
 
@@ -79,6 +86,9 @@ void ThreadWorker::signalStop()
 
 void ThreadWorker::join()
 {
+    if (!m_thread)
+        return;
+
     m_thread->join();
 }
 

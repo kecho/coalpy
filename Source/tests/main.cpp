@@ -20,13 +20,14 @@ namespace coalpy
 {
 
 extern TestSuite* fileSystemSuite();
+extern TestSuite* taskSystemSuite();
 
 }
 
 CreateSuiteFn g_suites[] = {
-    fileSystemSuite
+    fileSystemSuite,
+    taskSystemSuite
 };
-
 
 std::atomic<int> g_errors = 0;
 void assertHandler(const char* condition, const char* fileStr, int line, const char* msg)

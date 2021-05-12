@@ -47,6 +47,10 @@ TaskSystem::~TaskSystem()
 void TaskSystem::start()
 {
     m_workers.resize(m_desc.threadPoolSize);
+    for (auto& w : m_workers)
+    {
+        w.start();
+    }
     m_schedulerThread = std::make_unique<std::thread>(
     [this]()
     {
@@ -59,8 +63,6 @@ void TaskSystem::signalStop()
     TaskScheduleMessage msg;
     msg.type = TaskScheduleMessageType::Exit;
     m_schedulerQueue->push(msg);
-    for (auto& w : m_workers)
-        w.signalStop();
 }
 
 void TaskSystem::join()
@@ -130,19 +132,21 @@ void TaskSystem::onMessage()
             break;
         case TaskScheduleMessageType::Exit:
         default:
+            for (auto& w : m_workers)
+                w.signalStop();
             active = false;
             break;
         }
     }
 }
 
+void TaskSystem::wait(Task other)
+{
+}
+
 ITaskSystem* ITaskSystem::create(const TaskSystemDesc& desc)
 {
     return new TaskSystem(desc);
-}
-
-void ITaskSystem::wait(Task other)
-{
 }
 
 void TaskUtil::yieldUntil(TaskPredFn fn)

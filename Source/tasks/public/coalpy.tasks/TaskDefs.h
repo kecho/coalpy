@@ -31,8 +31,8 @@ using Task = GenericHandle<unsigned int>;
 
 struct TaskDesc
 {
-    int flags;
     std::string name;
+    int flags;
     TaskFn fn;
 };
 

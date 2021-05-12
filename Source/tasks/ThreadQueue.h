@@ -11,7 +11,7 @@ template<typename MessageType>
 class ThreadQueue
 {
 public:
-    ~ThreadQueue();
+    ~ThreadQueue() {}
 
     int size() const;
     void push(const MessageType& msg);
