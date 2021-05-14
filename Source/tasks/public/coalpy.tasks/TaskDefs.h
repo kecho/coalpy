@@ -7,6 +7,9 @@
 namespace coalpy
 {
 
+struct TaskSystemDesc;
+struct TaskDesc;
+struct TaskContext;
 class ITaskSystem;
 
 struct TaskSystemDesc
@@ -14,16 +17,11 @@ struct TaskSystemDesc
     int threadPoolSize = 8u;
 };
 
-struct TaskContext
-{
-    void* data;
-    ITaskSystem* ts;
-};
-
 enum class TaskFlags : int
 {
     AutoStart = 1 << 0
 };
+
 
 using TaskPredFn = std::function<bool()>;
 using TaskFn = std::function<void(TaskContext& ctx)>;
@@ -34,6 +32,13 @@ struct TaskDesc
     std::string name;
     int flags;
     TaskFn fn;
+};
+
+struct TaskContext
+{
+    Task task;
+    void* data;
+    ITaskSystem* ts;
 };
 
 }

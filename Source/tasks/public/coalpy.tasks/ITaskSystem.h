@@ -18,6 +18,7 @@ public:
     virtual void wait(Task other) = 0;
     virtual void execute(Task task) = 0;
     virtual void execute(Task* tasks, int counts) = 0;
+    virtual void cleanFinishedTasks() = 0;
 };
 
 namespace TaskUtil

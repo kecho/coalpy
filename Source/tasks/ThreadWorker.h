@@ -2,6 +2,7 @@
 
 #include <coalpy.tasks/TaskDefs.h>
 #include <memory>
+#include <functional>
 
 namespace std
 {
@@ -13,11 +14,13 @@ namespace coalpy
 
 class ThreadWorkerQueue;
 
+using OnTaskCompleteFn = std::function<void(Task)>;
+
 class ThreadWorker
 {
 public:
     ~ThreadWorker();
-    void start();
+    void start(OnTaskCompleteFn onTaskCompleteFn = nullptr);
     void schedule(TaskFn fn, TaskContext& payload);
     void signalStop();
     void join();
@@ -25,8 +28,9 @@ public:
 
 private:
     void run();
-    std::thread* m_thread;
-    ThreadWorkerQueue* m_queue;
+    std::thread* m_thread = nullptr;
+    OnTaskCompleteFn m_onTaskCompleteFn = nullptr;
+    ThreadWorkerQueue* m_queue = nullptr;
 };
 
 }

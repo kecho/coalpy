@@ -30,12 +30,13 @@ ThreadWorker::~ThreadWorker()
     delete m_queue;
 }
 
-void ThreadWorker::start()
+void ThreadWorker::start(OnTaskCompleteFn onTaskCompleteFn)
 {
     CPY_ASSERT_MSG(m_thread == nullptr, "system must call signalStop and then join to restart the thread worker.");
     if (m_thread)
         return;
 
+    m_onTaskCompleteFn = onTaskCompleteFn;
     m_queue = new ThreadWorkerQueue;
 
     m_thread = new std::thread(
@@ -62,8 +63,12 @@ void ThreadWorker::run()
         switch (msg.type)
         {
         case ThreadMessageType::RunJob:
+        {
             msg.fn(msg.ctx);
+            if (m_onTaskCompleteFn)
+                m_onTaskCompleteFn(msg.ctx.task);
             break;
+        }
         case ThreadMessageType::Exit:
         default:
             active = false;
