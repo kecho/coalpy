@@ -63,10 +63,12 @@ void testTaskDeps(TestContext& ctx)
     auto& ts = *testContext.ts;
     ts.start();
 
-    auto setIntJob = TaskDesc([](TaskContext& ctx) {
+    int t = 0;
+
+    auto setIntJob = TaskDesc([&t](TaskContext& ctx) {
         TaskUtil::sleep(400);
         int& i = *(int*)ctx.data;
-        i = 1;
+        i = ++t;
     });
 
     int a = 0;
@@ -93,8 +95,8 @@ void testTaskDeps(TestContext& ctx)
 
     ts.signalStop();
     ts.join();
-    CPY_ASSERT(a == 1);
-    CPY_ASSERT(b == 1);
+    CPY_ASSERT(a == 3);
+    CPY_ASSERT(b == 2);
     CPY_ASSERT(c == 1);
     //CPY_ASSERT(d == 1);
     ts.cleanFinishedTasks();

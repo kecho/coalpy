@@ -93,16 +93,16 @@ void TaskSystem::execute(Task task)
     TaskScheduleMessage msg;
     msg.type = TaskScheduleMessageType::RunJob;
     msg.task = task;
-    {
-        std::unique_lock lock(m_stateMutex);
-        if (!m_taskTable.contains(task))
-        {
-            CPY_ERROR_MSG(false, "Could not schedule task!");
-            return;
-        }
-
-        m_taskTable[task].syncData->state = TaskState::Scheduled;
-    }
+    //{
+    //    std::unique_lock lock(m_stateMutex);
+    //    if (!m_taskTable.contains(task))
+    //    {
+    //        CPY_ERROR_MSG(false, "Could not schedule task!");
+    //        return;
+    //    }
+    //
+    //    m_taskTable[task].syncData->state = TaskState::Scheduled;
+    //}
     m_schedulerQueue->push(msg);
 }
 
