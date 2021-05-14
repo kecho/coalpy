@@ -5,7 +5,9 @@
 #include "ThreadWorker.h"
 #include <memory>
 #include <set>
+#include <mutex>
 #include <shared_mutex>
+#include <condition_variable>
 
 namespace std
 {
@@ -48,13 +50,22 @@ protected:
         Finished
     };
 
+    struct SyncData
+    {
+        TaskState state = TaskState::Created;
+        std::mutex m;
+        std::condition_variable cv;
+    };
+
     struct TaskData
     {
         TaskDesc desc;
-        TaskState state;
-        void* data;
+        void* data = nullptr;
         std::set<Task> dependencies;
         std::set<Task> parents;
+        SyncData* syncData = nullptr;
+
+        TaskState state() { return syncData->state; }
     };
 
     bool getTaskData(Task task, TaskData& outData);

@@ -31,8 +31,8 @@ Task TaskSystem::createTask(const TaskDesc& taskDesc, void* taskData)
         std::unique_lock lock(m_stateMutex);
         TaskData& data = m_taskTable.allocate(outHandle);
         data.desc = taskDesc;
-        data.state = TaskState::Created;
         data.data = taskData;
+        data.syncData = new SyncData;
     }
 
     if ((taskDesc.flags & (int)TaskFlags::AutoStart) != 0)
@@ -101,7 +101,7 @@ void TaskSystem::execute(Task task)
             return;
         }
 
-        m_taskTable[task].state = TaskState::Scheduled;
+        m_taskTable[task].syncData->state = TaskState::Scheduled;
     }
     m_schedulerQueue->push(msg);
 }
@@ -194,7 +194,7 @@ void TaskSystem::onScheduleTask(Task* tasks, int counts)
         std::vector<RunCommand> runCommands;
         auto insertRunCommand = [&initialContext](std::vector<RunCommand>& outCmds, Task t, TaskData& taskData)
         {
-                taskData.state = TaskState::InQueue;
+                taskData.syncData->state = TaskState::InQueue;
                 RunCommand coreCommand = { initialContext, nullptr };
                 coreCommand.context.task = t;
                 coreCommand.context.data = taskData.data;
@@ -213,12 +213,13 @@ void TaskSystem::onScheduleTask(Task* tasks, int counts)
             auto& taskData = m_taskTable[t];
             if (!taskData.dependencies.empty())
             {
-                taskData.state = TaskState::WaitingOnDeps;
+                taskData.syncData->state = TaskState::WaitingOnDeps;
                 for (auto dep : taskData.dependencies)
                 {
-                    auto& depData = m_taskTable[dep];
-                    if (depData.state == TaskState::Created)
-                        insertRunCommand(runCommands, dep, depData);
+                    execute(dep);
+                    //auto& depData = m_taskTable[dep];
+                    //if (depData.syncData->state == TaskState::Created)
+                    //    insertRunCommand(runCommands, dep, depData);
                 }
             }
             else
@@ -261,9 +262,14 @@ void TaskSystem::onMessageLoop()
 void TaskSystem::onTaskComplete(Task t)
 {
     std::vector<Task> nextTasks;
+    SyncData* syncData = nullptr;
     {
         std::unique_lock lock(m_stateMutex);
         TaskData& taskData = m_taskTable[t];
+        syncData = taskData.syncData;
+        CPY_ERROR_MSG(syncData != nullptr, "Sync data not found when task has been completed.");
+        syncData->state = TaskState::Finished;
+
         for (auto p : taskData.parents)
         {
             auto& parentTask = m_taskTable[p];
@@ -273,11 +279,13 @@ void TaskSystem::onTaskComplete(Task t)
         }
     }
 
+
     {
         std::unique_lock lock(m_finishedTasksMutex);
         m_finishedTasksList.insert(t);
     }
 
+    syncData->cv.notify_all();
     execute(nextTasks.data(), (int)nextTasks.size());
 }
 
@@ -287,13 +295,33 @@ void TaskSystem::cleanFinishedTasks()
     std::unique_lock lock2(m_finishedTasksMutex);
 
     for (auto t : m_finishedTasksList)
+    {
+        delete m_taskTable[t].syncData;
         m_taskTable.free(t);
+    }
 
     m_finishedTasksList.clear();
 }
 
 void TaskSystem::wait(Task other)
 {
+    SyncData* syncData = nullptr;
+    {
+        std::shared_lock lock(m_stateMutex);
+        if (!m_taskTable.contains(other))
+        {
+            CPY_ASSERT_MSG(false, "Cannot wait for task that does not exist");
+            return;
+        }
+
+        syncData = m_taskTable[other].syncData;
+        CPY_ERROR_MSG(syncData != nullptr, "Error, no sync data found during wait.");
+    }
+
+    {
+        std::unique_lock lock(syncData->m);
+        syncData->cv.wait(lock, [syncData]() { return syncData->state == TaskState::Finished; });
+    }
 }
 
 ITaskSystem* ITaskSystem::create(const TaskSystemDesc& desc)
