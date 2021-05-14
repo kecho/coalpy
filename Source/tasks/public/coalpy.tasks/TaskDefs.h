@@ -29,6 +29,11 @@ using Task = GenericHandle<unsigned int>;
 
 struct TaskDesc
 {
+    TaskDesc() : name(""), flags(0), fn(nullptr) {}
+    TaskDesc(TaskFn fn) : name(""), flags(0), fn(fn) {}
+    TaskDesc(std::string nm, int flags, TaskFn fn) : name(nm), flags(flags), fn(fn) {}
+    TaskDesc(std::string nm, TaskFn fn) : name(nm), flags(0), fn(fn) {}
+
     std::string name;
     int flags;
     TaskFn fn;

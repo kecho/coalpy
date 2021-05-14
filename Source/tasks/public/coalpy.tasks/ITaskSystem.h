@@ -19,11 +19,19 @@ public:
     virtual void execute(Task task) = 0;
     virtual void execute(Task* tasks, int counts) = 0;
     virtual void cleanFinishedTasks() = 0;
+
+    //convenience functions
+    inline Task createTask()
+    {
+        TaskDesc emptyDesc;
+        return createTask(emptyDesc);
+    } 
 };
 
 namespace TaskUtil
 {
     void yieldUntil(TaskPredFn fn);
+    void sleep(int ms);
     void wait(Task other);
 }
 

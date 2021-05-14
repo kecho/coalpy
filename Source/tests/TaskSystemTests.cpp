@@ -24,17 +24,15 @@ void testParallel0(TestContext& ctx)
 
     int numTasks = 20;
     struct Range { int b; int e; };
-    TaskDesc taskDesc;
-    taskDesc.name = "Job";
-    taskDesc.flags = 0;
-    taskDesc.fn = [&values](TaskContext& ctx)
+
+    TaskDesc taskDesc("Job", [&values](TaskContext& ctx)
     {
         auto range = (Range*)ctx.data;
         for (int i = range->b; i < range->e; ++i)
         {
             values[i] = i * 2;
         }
-    };
+    });
 
     std::vector<Range> ranges(numTasks);
     std::vector<Task> handles(numTasks);
@@ -50,6 +48,7 @@ void testParallel0(TestContext& ctx)
     ts.execute(handles.data(), (int)handles.size());
     ts.signalStop();
     ts.join();
+    ts.cleanFinishedTasks();
 
     for (int i = 0; i < (int)values.size(); ++i)
     {
@@ -63,9 +62,23 @@ void testTaskDeps(TestContext& ctx)
     auto& testContext = (TaskSystemContext&)ctx;
     auto& ts = *testContext.ts;
     ts.start();
-    CPY_ASSERT_MSG(false, "Test not implemented");
+
+    Task root = ts.createTask();
+
+    int i = 0;
+    TaskDesc ds0([&i](TaskContext& ctx){
+        TaskUtil::sleep(400);
+        i = 99;
+    });
+
+    Task child0 = ts.createTask(ds0);
+    ts.depends(root, child0);
+    ts.execute(root);
+
     ts.signalStop();
     ts.join();
+    CPY_ASSERT(i == 99);
+    ts.cleanFinishedTasks();
 }
 
 }

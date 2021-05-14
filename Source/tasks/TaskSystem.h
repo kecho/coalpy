@@ -22,7 +22,9 @@ class TaskSystem : public ITaskSystem
 public:
     TaskSystem(const TaskSystemDesc& desc);
     virtual ~TaskSystem();
+
     virtual Task createTask(const TaskDesc& taskDesc, void* taskData) override;
+
     virtual void start() override;
     virtual void signalStop() override;
     virtual void join() override;
@@ -42,7 +44,7 @@ protected:
         Created,
         WaitingOnDeps,
         Scheduled,
-        Running,
+        InQueue,
         Finished
     };
 

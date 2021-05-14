@@ -1,6 +1,7 @@
 #include "TaskSystem.h"
 #include "ThreadQueue.h"
 #include <coalpy.core/Assert.h>
+#include <chrono>
 #include <thread>
 
 namespace coalpy
@@ -179,14 +180,28 @@ bool TaskSystem::getTaskArgData(Task task, TaskDesc& outDesc, void*& outData)
 
 void TaskSystem::onScheduleTask(Task* tasks, int counts)
 {
-    TaskContext ct = { Task(), nullptr, this };
+    struct RunCommand
+    {
+        TaskContext context;
+        TaskFn fn;
+    };
+
+    TaskContext initialContext = { Task(), nullptr, this };
 
     for (int i = 0; i < counts; ++i)
     {
         Task t = tasks[i];
-        ct.task = t;
+        std::vector<RunCommand> runCommands;
+        auto insertRunCommand = [&initialContext](std::vector<RunCommand>& outCmds, Task t, TaskData& taskData)
+        {
+                taskData.state = TaskState::InQueue;
+                RunCommand coreCommand = { initialContext, nullptr };
+                coreCommand.context.task = t;
+                coreCommand.context.data = taskData.data;
+                coreCommand.fn = taskData.desc.fn;
+                outCmds.push_back(coreCommand);
+        };
 
-        TaskDesc desc;
         {
             std::unique_lock lock(m_stateMutex);
             if (!m_taskTable.contains(t))
@@ -199,16 +214,22 @@ void TaskSystem::onScheduleTask(Task* tasks, int counts)
             if (!taskData.dependencies.empty())
             {
                 taskData.state = TaskState::WaitingOnDeps;
-                continue;
+                for (auto dep : taskData.dependencies)
+                {
+                    auto& depData = m_taskTable[dep];
+                    if (depData.state == TaskState::Created)
+                        insertRunCommand(runCommands, dep, depData);
+                }
             }
-
-            taskData.state = TaskState::Running;
-            desc = taskData.desc;
-            ct.data = taskData.data;
+            else
+                insertRunCommand(runCommands, t, taskData);
         }
 
-        m_workers[m_nextWorker].schedule(desc.fn, ct);
-        m_nextWorker = (m_nextWorker + 1) % (int)m_workers.size();
+        for (auto& runCmd : runCommands)
+        {
+            m_workers[m_nextWorker].schedule(runCmd.fn, runCmd.context);
+            m_nextWorker = (m_nextWorker + 1) % (int)m_workers.size();
+        }
     }
 }
 
@@ -278,6 +299,11 @@ void TaskSystem::wait(Task other)
 ITaskSystem* ITaskSystem::create(const TaskSystemDesc& desc)
 {
     return new TaskSystem(desc);
+}
+
+void TaskUtil::sleep(int ms)
+{
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
 void TaskUtil::yieldUntil(TaskPredFn fn)

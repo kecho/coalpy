@@ -64,7 +64,9 @@ void ThreadWorker::run()
         {
         case ThreadMessageType::RunJob:
         {
-            msg.fn(msg.ctx);
+            if (msg.fn)
+                msg.fn(msg.ctx);
+
             if (m_onTaskCompleteFn)
                 m_onTaskCompleteFn(msg.ctx.task);
             break;
