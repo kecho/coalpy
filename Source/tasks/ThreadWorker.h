@@ -25,12 +25,16 @@ public:
     void signalStop();
     void join();
     int queueSize() const;
+    void waitUntil(TaskBlockFn fn);
 
 private:
     void run();
+    void auxLoop();
     std::thread* m_thread = nullptr;
-    OnTaskCompleteFn m_onTaskCompleteFn = nullptr;
     ThreadWorkerQueue* m_queue = nullptr;
+    std::thread* m_auxThread = nullptr;
+    ThreadWorkerQueue* m_auxQueue = nullptr;
+    OnTaskCompleteFn m_onTaskCompleteFn = nullptr;
 };
 
 }

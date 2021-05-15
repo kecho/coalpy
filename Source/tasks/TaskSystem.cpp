@@ -90,7 +90,7 @@ void TaskSystem::join()
 
 void TaskSystem::execute(Task task)
 {
-    TaskScheduleMessage msg;
+    TaskScheduleMessage msg = {};
     msg.type = TaskScheduleMessageType::RunJob;
     msg.task = task;
     m_schedulerQueue->push(msg);
@@ -98,7 +98,7 @@ void TaskSystem::execute(Task task)
 
 void TaskSystem::execute(Task* tasks, int counts)
 {
-    TaskScheduleMessage msg;
+    TaskScheduleMessage msg = {};
     msg.type = TaskScheduleMessageType::RunJobs;
     msg.tasks.assign(tasks, tasks + counts);
     m_schedulerQueue->push(msg);
@@ -106,7 +106,7 @@ void TaskSystem::execute(Task* tasks, int counts)
 
 void TaskSystem::depends(Task src, Task dst)
 {
-    std::shared_lock lock(m_stateMutex);
+    std::unique_lock lock(m_stateMutex);
 
     bool hasSrcTask = m_taskTable.contains(src);
     bool hasDstTask = m_taskTable.contains(dst);
@@ -123,7 +123,7 @@ void TaskSystem::depends(Task src, Task dst)
 
 void TaskSystem::depends(Task src, Task* dsts, int counts)
 {
-    std::shared_lock lock(m_stateMutex);
+    std::unique_lock lock(m_stateMutex);
 
     bool hasSrcTask = m_taskTable.contains(src);
     CPY_ASSERT_MSG(hasSrcTask, "Src task must exist");
@@ -144,28 +144,6 @@ void TaskSystem::depends(Task src, Task* dsts, int counts)
         srcTaskData.dependencies.insert(dstTask);
         dstTaskData.parents.insert(src);
     }
-}
-
-bool TaskSystem::getTaskData(Task task, TaskData& outData)
-{
-    std::shared_lock lock(m_stateMutex);
-    if (!m_taskTable.contains(task))
-        return false;
-
-    outData = m_taskTable[task];
-    return true;
-}
-
-bool TaskSystem::getTaskArgData(Task task, TaskDesc& outDesc, void*& outData)
-{
-    std::shared_lock lock(m_stateMutex);
-    if (!m_taskTable.contains(task))
-        return false;
-
-    auto& td = m_taskTable[task];
-    outDesc = td.desc;
-    outData = td.data;
-    return true;
 }
 
 void TaskSystem::onScheduleTask(Task* tasks, int counts)
@@ -307,16 +285,12 @@ ITaskSystem* ITaskSystem::create(const TaskSystemDesc& desc)
     return new TaskSystem(desc);
 }
 
-void TaskUtil::sleep(int ms)
+void TaskUtil::sleepThread(int ms)
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
-void TaskUtil::yieldUntil(TaskPredFn fn)
-{
-}
-
-void TaskUtil::wait(Task other)
+void TaskUtil::yieldUntil(TaskBlockFn fn)
 {
 }
 

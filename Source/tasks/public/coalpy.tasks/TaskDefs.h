@@ -23,7 +23,7 @@ enum class TaskFlags : int
 };
 
 
-using TaskPredFn = std::function<bool()>;
+using TaskBlockFn = std::function<void()>;
 using TaskFn = std::function<void(TaskContext& ctx)>;
 using Task = GenericHandle<unsigned int>;
 

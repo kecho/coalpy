@@ -66,8 +66,6 @@ protected:
         TaskState state() { return syncData->state; }
     };
 
-    bool getTaskData(Task task, TaskData& outData);
-    bool getTaskArgData(Task task, TaskDesc& outDesc, void*& outArgData);
     void onTaskComplete(Task task);
 
     TaskSystemDesc m_desc;

@@ -30,9 +30,8 @@ public:
 
 namespace TaskUtil
 {
-    void yieldUntil(TaskPredFn fn);
-    void sleep(int ms);
-    void wait(Task other);
+    void yieldUntil(TaskBlockFn fn);
+    void sleepThread(int ms);
 }
 
 }
