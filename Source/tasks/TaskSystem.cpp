@@ -93,16 +93,6 @@ void TaskSystem::execute(Task task)
     TaskScheduleMessage msg;
     msg.type = TaskScheduleMessageType::RunJob;
     msg.task = task;
-    //{
-    //    std::unique_lock lock(m_stateMutex);
-    //    if (!m_taskTable.contains(task))
-    //    {
-    //        CPY_ERROR_MSG(false, "Could not schedule task!");
-    //        return;
-    //    }
-    //
-    //    m_taskTable[task].syncData->state = TaskState::Scheduled;
-    //}
     m_schedulerQueue->push(msg);
 }
 
@@ -186,24 +176,12 @@ void TaskSystem::onScheduleTask(Task* tasks, int counts)
         TaskFn fn;
     };
 
-    TaskContext initialContext = { Task(), nullptr, this };
-
     for (int i = 0; i < counts; ++i)
     {
         Task t = tasks[i];
-        std::vector<RunCommand> runCommands;
-        auto insertRunCommand = [&initialContext](std::vector<RunCommand>& outCmds, Task t, TaskData& taskData)
-        {
-                taskData.syncData->state = TaskState::InQueue;
-                RunCommand coreCommand = { initialContext, nullptr };
-                coreCommand.context.task = t;
-                coreCommand.context.data = taskData.data;
-                coreCommand.fn = taskData.desc.fn;
-                outCmds.push_back(coreCommand);
-        };
-
         {
             std::unique_lock lock(m_stateMutex);
+            std::vector<Task> childTasks;
             if (!m_taskTable.contains(t))
             {
                 CPY_ERROR_MSG(false, "Missing task while scheduling it?");
@@ -211,25 +189,26 @@ void TaskSystem::onScheduleTask(Task* tasks, int counts)
             }
         
             auto& taskData = m_taskTable[t];
+            if (taskData.syncData->state != TaskState::Unscheduled)
+                continue;
+
             if (!taskData.dependencies.empty())
             {
-                taskData.syncData->state = TaskState::WaitingOnDeps;
+                taskData.syncData->state = TaskState::Unscheduled;
                 for (auto dep : taskData.dependencies)
                 {
-                    execute(dep);
-                    //auto& depData = m_taskTable[dep];
-                    //if (depData.syncData->state == TaskState::Created)
-                    //    insertRunCommand(runCommands, dep, depData);
+                    if (m_taskTable[dep].syncData->state == TaskState::Unscheduled)
+                        childTasks.push_back(dep);
                 }
             }
             else
-                insertRunCommand(runCommands, t, taskData);
-        }
-
-        for (auto& runCmd : runCommands)
-        {
-            m_workers[m_nextWorker].schedule(runCmd.fn, runCmd.context);
-            m_nextWorker = (m_nextWorker + 1) % (int)m_workers.size();
+            {
+                taskData.syncData->state = TaskState::InWorker;
+                TaskContext context = { t, taskData.data, this };
+                m_workers[m_nextWorker].schedule(taskData.desc.fn, context);
+                m_nextWorker = (m_nextWorker + 1) % (int)m_workers.size();
+            }
+            execute(childTasks.data(), (int)childTasks.size());
         }
     }
 }
@@ -274,11 +253,10 @@ void TaskSystem::onTaskComplete(Task t)
         {
             auto& parentTask = m_taskTable[p];
             parentTask.dependencies.erase(t);
-            if (parentTask.dependencies.empty())
+            if (parentTask.dependencies.empty() && parentTask.syncData->state == TaskState::Unscheduled)
                 nextTasks.push_back(p);
         }
     }
-
 
     {
         std::unique_lock lock(m_finishedTasksMutex);

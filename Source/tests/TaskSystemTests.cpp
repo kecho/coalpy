@@ -63,36 +63,47 @@ void testTaskDeps(TestContext& ctx)
     auto& ts = *testContext.ts;
     ts.start();
 
-    auto setIntJob = TaskDesc([](TaskContext& ctx) {
+    int t = 0;
+    auto setIntJob = TaskDesc([&t](TaskContext& ctx) {
         int& i = *(int*)ctx.data;
-        i = 1;
+        i = ++t;
+    });
+    auto setIntJob2 = TaskDesc([&t](TaskContext& ctx) {
+        int& i = *(int*)ctx.data;
+        ++i;
     });
 
     int a = 0;
     int b = 0;
     int c = 0;
     int d = 0;
+    int e = 89;
 
-    Task t0 = ts.createTask(setIntJob, &a);
-    Task t1 = ts.createTask(setIntJob, &b);
-    Task t2 = ts.createTask(setIntJob, &c);
-    Task t3 = ts.createTask(setIntJob, &d);
+    Task t0 = ts.createTask(setIntJob,  &a);
+    Task t1 = ts.createTask(setIntJob,  &b);
+    Task t2 = ts.createTask(setIntJob,  &c);
+    Task t3 = ts.createTask(setIntJob,  &d);
+    Task t4 = ts.createTask(setIntJob2, &e);
     Task root = ts.createTask();
 
     ts.depends(t0, t1);
     ts.depends(t1, t2);
     ts.depends(t1, t3);
+    ts.depends(t1, t4);
+    ts.depends(t2, t3);
     ts.depends(root, t0);
     ts.depends(root, t3);
+    ts.depends(root, t4);
 
     ts.execute(root);
 
     ts.wait(root);
 
-    CPY_ASSERT(a == 1);
-    CPY_ASSERT(b == 1);
-    CPY_ASSERT(c == 1);
-    CPY_ASSERT(d == 1);
+    CPY_ASSERT_FMT(a == 4, "%d", a);
+    CPY_ASSERT_FMT(b == 3, "%d", b);
+    CPY_ASSERT_FMT(c == 2, "%d", c);
+    CPY_ASSERT_FMT(d == 1, "%d", d);
+    CPY_ASSERT_FMT(e == 90, "%d", e);
 
     ts.signalStop();
     ts.join();

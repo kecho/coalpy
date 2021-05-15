@@ -43,16 +43,14 @@ protected:
 
     enum class TaskState
     {
-        Created,
-        WaitingOnDeps,
-        Scheduled,
-        InQueue,
+        Unscheduled,
+        InWorker,
         Finished
     };
 
     struct SyncData
     {
-        TaskState state = TaskState::Created;
+        TaskState state = TaskState::Unscheduled;
         std::mutex m;
         std::condition_variable cv;
     };
