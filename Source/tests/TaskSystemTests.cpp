@@ -63,12 +63,9 @@ void testTaskDeps(TestContext& ctx)
     auto& ts = *testContext.ts;
     ts.start();
 
-    int t = 0;
-
-    auto setIntJob = TaskDesc([&t](TaskContext& ctx) {
-        TaskUtil::sleep(400);
+    auto setIntJob = TaskDesc([](TaskContext& ctx) {
         int& i = *(int*)ctx.data;
-        i = ++t;
+        i = 1;
     });
 
     int a = 0;
@@ -84,21 +81,21 @@ void testTaskDeps(TestContext& ctx)
 
     ts.depends(t0, t1);
     ts.depends(t1, t2);
-    //ts.depends(t1, t3);
-    //ts.depends(t1, t3);
+    ts.depends(t1, t3);
     ts.depends(root, t0);
-    //ts.depends(root, t3);
+    ts.depends(root, t3);
 
     ts.execute(root);
 
     ts.wait(root);
 
+    CPY_ASSERT(a == 1);
+    CPY_ASSERT(b == 1);
+    CPY_ASSERT(c == 1);
+    CPY_ASSERT(d == 1);
+
     ts.signalStop();
     ts.join();
-    CPY_ASSERT(a == 3);
-    CPY_ASSERT(b == 2);
-    CPY_ASSERT(c == 1);
-    //CPY_ASSERT(d == 1);
     ts.cleanFinishedTasks();
 }
 
