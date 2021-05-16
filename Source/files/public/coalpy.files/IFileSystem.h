@@ -9,14 +9,14 @@ class ByteBuffer;
 
 class IFileSystem
 {
-
-static IFileSystem* create(const FileSystemDesc& desc);
-virtual AsyncFileHandle open (const FileOpenRequest& request) = 0;
-virtual AsyncFileHandle write(const FileWriteRequest& request) = 0;
-virtual void wait(AsyncFileHandle handle) = 0;
-virtual bool openStatus (AsyncFileHandle handle, FileOpenResponse& response) = 0;
-virtual bool writeStatus(AsyncFileHandle handle, FileWriteResponse& response) = 0;
-virtual void closeHandle(AsyncFileHandle handle) = 0;
+public:
+    static IFileSystem* create(const FileSystemDesc& desc);
+    virtual AsyncFileHandle read (const FileReadRequest& request) = 0;
+    virtual AsyncFileHandle write(const FileWriteRequest& request) = 0;
+    virtual void wait(AsyncFileHandle handle) = 0;
+    virtual bool readStatus (AsyncFileHandle handle, FileReadResponse& response) = 0;
+    virtual bool writeStatus(AsyncFileHandle handle, FileWriteResponse& response) = 0;
+    virtual void closeHandle(AsyncFileHandle handle) = 0;
 
 };
 

@@ -1,6 +1,7 @@
 #pragma once
 #include <coalpy.core/GenericHandle.h>
 #include <coalpy.core/ByteBuffer.h>
+#include <string>
 #include <functional>
 
 namespace coalpy
@@ -15,15 +16,17 @@ struct FileSystemDesc
 
 enum class FileStatus
 {
-    OpenSucces,
-    OpenFail,
     Opening,
+    Reading,
+    OpenFail,
+    ReadingFail,
+    ReadingSuccess,
     WriteSuccess,
     WriteFail,
     Writting
 };
 
-struct FileOpenResponse
+struct FileReadResponse
 {
     FileStatus status = FileStatus::Opening;
     ByteBuffer response;
@@ -35,19 +38,19 @@ struct FileWriteResponse
 };
 
 using AsyncFileHandle = GenericHandle<unsigned int>;
-using FileOpenDoneCallback = std::function<void(FileOpenResponse& response)>;
+using FileReadDoneCallback = std::function<void(FileReadResponse& response)>;
 using FileWriteDoneCallback = std::function<void(FileWriteResponse& response)>;
 
-struct FileOpenRequest
+struct FileReadRequest
 {
-    const char* path = nullptr;
-    FileOpenDoneCallback doneCallback = nullptr;
+    std::string path;
+    FileReadDoneCallback doneCallback;
 };
 
 struct FileWriteRequest
 {
-    const char* path = nullptr;
-    FileWriteDoneCallback doneCallback = nullptr;
+    std::string path;
+    FileWriteDoneCallback doneCallback;
 };
 
 }

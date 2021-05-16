@@ -1,41 +1,56 @@
 #pragma once
 #include <coalpy.files/IFileSystem.h>
+#include <coalpy.tasks/TaskDefs.h>
 #include <coalpy.core/ByteBuffer.h>
 #include <coalpy.core/HandleContainer.h>
 #include <vector>
 #include <variant>
 #include <string>
+#include <mutex>
+#include <shared_mutex>
 #include <atomic>
 
 namespace coalpy
 {
 
+class FileSystemInternal;
+
 class FileSystem : public IFileSystem
 {
 public:
     FileSystem(const FileSystemDesc& desc);
-    virtual AsyncFileHandle open(const FileOpenRequest& request);
-    virtual AsyncFileHandle write(const FileWriteRequest& request);
-    virtual void wait(AsyncFileHandle handle);
-    virtual bool openStatus (AsyncFileHandle handle, FileOpenResponse& response);
-    virtual bool writeStatus(AsyncFileHandle handle, FileWriteResponse& response);
-    virtual void closeHandle(AsyncFileHandle handle);
+    virtual ~FileSystem();
+    virtual AsyncFileHandle read(const FileReadRequest& request) override;
+    virtual AsyncFileHandle write(const FileWriteRequest& request) override;
+    virtual void wait(AsyncFileHandle handle) override;
+    virtual bool readStatus (AsyncFileHandle handle, FileReadResponse& response) override;
+    virtual bool writeStatus(AsyncFileHandle handle, FileWriteResponse& response) override;
+    virtual void closeHandle(AsyncFileHandle handle) override;
+
+    friend class FileSystemInternal;
 
 private:
-    enum RequestType { Open, Write };
+    enum RequestType { Read, Write };
+
+    typedef void* OpaqueFileHandle;
+
     struct Request
     {
-        AsyncFileHandle handle;
-        RequestType type = RequestType::Open;
-        ByteBuffer buffer;
+        RequestType type = RequestType::Read;
         std::string filename;
+        FileReadDoneCallback callback;
+        OpaqueFileHandle opaqueHandle;
+
+        Task task;
+        ByteBuffer buffer;
         std::atomic<FileStatus> fileStatus;
     };
 
     ITaskSystem& m_ts;
     FileSystemDesc m_desc;
-    HandleContainer<AsyncFileHandle, Request> m_requests;
-
+    mutable std::shared_mutex m_requestsMutex;
+    HandleContainer<AsyncFileHandle, Request*> m_requests;
+    FileSystemInternal& m_internalFs;
 };
 
 }

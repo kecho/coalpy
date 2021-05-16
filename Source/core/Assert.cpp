@@ -5,7 +5,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdarg.h>
-#ifdef WIN32 
+#ifdef _WIN32 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <debugapi.h>
@@ -69,7 +69,7 @@ void AssertSystem::assert(const char* condition, const char* file, unsigned int 
 
     s_assertHandler(condition, file, line, fmt ? buffer : nullptr);
 
-#ifdef WIN32 
+#ifdef _WIN32 
     __try
     {
         DebugBreak();
@@ -78,6 +78,8 @@ void AssertSystem::assert(const char* condition, const char* file, unsigned int 
     {
 
     }
+#else
+    #error "Platform not supported"
 #endif
 
 }
