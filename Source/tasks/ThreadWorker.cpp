@@ -55,6 +55,7 @@ void ThreadWorker::start(OnTaskCompleteFn onTaskCompleteFn)
 
     m_thread = new std::thread(
     [this](){
+        CPY_ASSERT(t_localWorker == nullptr);
         t_localWorker = this;
         this->run();
         t_localWorker = nullptr;
@@ -62,6 +63,7 @@ void ThreadWorker::start(OnTaskCompleteFn onTaskCompleteFn)
 
     m_auxThread = new std::thread(
     [this](){
+        CPY_ASSERT(t_localWorker == nullptr);
         t_localWorker = this;
         this->auxLoop();
         t_localWorker = nullptr;

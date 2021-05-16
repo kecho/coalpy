@@ -1,7 +1,15 @@
 #include "FileSystem.h"
+#include <coalpy.tasks/ITaskSystem.h>
 
 namespace coalpy
 {
+
+FileSystem::FileSystem(const FileSystemDesc& desc)
+: m_desc(desc)
+, m_ts(*desc.taskSystem)
+{
+    
+}
 
 AsyncFileHandle FileSystem::open(const FileOpenRequest& request)
 {
@@ -30,6 +38,11 @@ bool FileSystem::writeStatus(AsyncFileHandle handle, FileWriteResponse& response
 
 void FileSystem::closeHandle(AsyncFileHandle handle)
 {
+}
+
+IFileSystem* IFileSystem::create(const FileSystemDesc& desc)
+{
+    return new FileSystem(desc);
 }
 
 }

@@ -1,53 +1,16 @@
 #pragma once
-#include <coalpy.core/GenericHandle.h>
-#include <coalpy.core/ByteBuffer.h>
-#include <functional>
+#include <coalpy.files/FileDefs.h>
 
 namespace coalpy
 {
 
+class ITaskSystem;
 class ByteBuffer;
-
-enum class FileStatus
-{
-    OpenSucces,
-    OpenFail,
-    Opening,
-    WriteSuccess,
-    WriteFail,
-    Writting
-};
-
-struct FileOpenResponse
-{
-    FileStatus status = FileStatus::Opening;
-    ByteBuffer response;
-};
-
-struct FileWriteResponse
-{
-    FileStatus status = FileStatus::Writting;
-};
-
-using AsyncFileHandle = GenericHandle<unsigned int>;
-using FileOpenDoneCallback = std::function<void(FileOpenResponse& response)>;
-using FileWriteDoneCallback = std::function<void(FileWriteResponse& response)>;
-
-struct FileOpenRequest
-{
-    const char* path = nullptr;
-    FileOpenDoneCallback doneCallback = nullptr;
-};
-
-struct FileWriteRequest
-{
-    const char* path = nullptr;
-    FileWriteDoneCallback doneCallback = nullptr;
-};
 
 class IFileSystem
 {
 
+static IFileSystem* create(const FileSystemDesc& desc);
 virtual AsyncFileHandle open (const FileOpenRequest& request) = 0;
 virtual AsyncFileHandle write(const FileWriteRequest& request) = 0;
 virtual void wait(AsyncFileHandle handle) = 0;

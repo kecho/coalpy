@@ -13,6 +13,7 @@ namespace coalpy
 class FileSystem : public IFileSystem
 {
 public:
+    FileSystem(const FileSystemDesc& desc);
     virtual AsyncFileHandle open(const FileOpenRequest& request);
     virtual AsyncFileHandle write(const FileWriteRequest& request);
     virtual void wait(AsyncFileHandle handle);
@@ -31,6 +32,8 @@ private:
         std::atomic<FileStatus> fileStatus;
     };
 
+    ITaskSystem& m_ts;
+    FileSystemDesc m_desc;
     HandleContainer<AsyncFileHandle, Request> m_requests;
 
 };

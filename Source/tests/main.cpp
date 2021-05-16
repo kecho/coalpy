@@ -66,6 +66,7 @@ void runSuite(CreateSuiteFn createFn)
         bool success = (prevErr == finalErrors);
         printf("Case %d: %s - %s\n", i, caseData.name, success ? "PASS" : "FAIL");
     }
+    printf("\n");
     suite->destroyContext(context);
     g_errors = 0;
     delete suite;
