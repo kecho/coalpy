@@ -26,6 +26,7 @@ public:
         auto& container = m_data[outHandle];
         container.handle = outHandle; 
         container.valid = true;
+        ++m_numElements;
         return container.data;
     }
 
@@ -38,6 +39,7 @@ public:
         m_data[handle].valid = false;
         if (resetObject)
             m_data[handle].data = DataType();
+        --m_numElements;
     }
 
     void forEach(OnElementFn elementfn)
@@ -67,6 +69,8 @@ public:
         return m_data[h].data;
     }
 
+    const int elementsCount() const { return m_numElements; }
+
 private:
     struct DataContainer
     {
@@ -75,6 +79,7 @@ private:
         DataType data;
     };
 
+    int m_numElements = 0;
     std::vector<HandleType> m_freeHandles;
     std::vector<DataContainer> m_data;
 };

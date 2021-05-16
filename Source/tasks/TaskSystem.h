@@ -33,14 +33,18 @@ public:
     virtual void depends(Task src, Task dst) override;
     virtual void depends(Task src, Task* dsts, int counts) override;
     virtual void wait(Task other) override;
-    virtual void execute(Task task);
-    virtual void execute(Task* tasks, int counts);
-    virtual void cleanFinishedTasks();
+    virtual void execute(Task task) override;
+    virtual void execute(Task* tasks, int counts) override;
+    virtual void cleanFinishedTasks() override;
+    virtual void cleanTaskTree(Task src) override;
+
+    void getStats(Stats& outStats) override;
 
 protected:
     void onMessageLoop();
     void onScheduleTask(Task* t, int counts);
     void internalWait(Task other);
+    void removeTask(Task t);
 
     enum class TaskState
     {
@@ -60,6 +64,7 @@ protected:
     {
         TaskDesc desc;
         void* data = nullptr;
+        std::set<Task> initialDependencies;
         std::set<Task> dependencies;
         std::set<Task> parents;
         SyncData* syncData = nullptr;

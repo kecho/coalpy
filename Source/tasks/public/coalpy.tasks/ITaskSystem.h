@@ -19,6 +19,7 @@ public:
     virtual void execute(Task task) = 0;
     virtual void execute(Task* tasks, int counts) = 0;
     virtual void cleanFinishedTasks() = 0;
+    virtual void cleanTaskTree(Task src) = 0;
 
     //convenience functions
     inline Task createTask()
@@ -26,6 +27,13 @@ public:
         TaskDesc emptyDesc;
         return createTask(emptyDesc);
     } 
+
+    struct Stats
+    {
+        int numElements;
+    };
+
+    virtual void getStats(Stats& outStats) = 0;
 };
 
 namespace TaskUtil

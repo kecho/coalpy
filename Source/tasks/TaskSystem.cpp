@@ -117,6 +117,7 @@ void TaskSystem::depends(Task src, Task dst)
 
     TaskData& srcTaskData = m_taskTable[src];
     TaskData& dstTaskData = m_taskTable[dst];
+    srcTaskData.initialDependencies.insert(dst);
     srcTaskData.dependencies.insert(dst);
     dstTaskData.parents.insert(src);
 }
@@ -141,6 +142,7 @@ void TaskSystem::depends(Task src, Task* dsts, int counts)
         
         TaskData& dstTaskData = m_taskTable[dstTask];
 
+        srcTaskData.initialDependencies.insert(dstTask);
         srcTaskData.dependencies.insert(dstTask);
         dstTaskData.parents.insert(src);
     }
@@ -245,18 +247,44 @@ void TaskSystem::onTaskComplete(Task t)
     execute(nextTasks.data(), (int)nextTasks.size());
 }
 
+void TaskSystem::removeTask(Task t)
+{
+    delete m_taskTable[t].syncData;
+    m_taskTable.free(t);
+}
+
 void TaskSystem::cleanFinishedTasks()
 {
     std::unique_lock lock(m_stateMutex);
     std::unique_lock lock2(m_finishedTasksMutex);
 
     for (auto t : m_finishedTasksList)
-    {
-        delete m_taskTable[t].syncData;
-        m_taskTable.free(t);
-    }
+        removeTask(t);
 
     m_finishedTasksList.clear();
+}
+
+void TaskSystem::cleanTaskTree(Task src)
+{
+    std::unique_lock lock(m_stateMutex);
+    std::unique_lock lock2(m_finishedTasksMutex);
+    std::vector<Task> tasksToClean;
+    std::set<Task> erasedTasks;
+    tasksToClean.push_back(src);
+
+    while (!tasksToClean.empty())
+    {
+        auto t = tasksToClean.back();
+        tasksToClean.pop_back();
+        if (erasedTasks.insert(t).second == false)
+            continue;
+
+        auto& tableData = m_taskTable[t];
+        for (auto d : tableData.initialDependencies)
+            tasksToClean.push_back(d);
+
+        removeTask(t);
+    }
 }
 
 void TaskSystem::wait(Task other)
@@ -292,6 +320,12 @@ void TaskSystem::internalWait(Task other)
         std::unique_lock lock(syncData->m);
         syncData->cv.wait(lock, [syncData]() { return syncData->state == TaskState::Finished; });
     }
+}
+
+void TaskSystem::getStats(ITaskSystem::Stats& outStats)
+{
+    std::shared_lock lock(m_stateMutex);
+    outStats.numElements = m_taskTable.elementsCount();
 }
 
 ITaskSystem* ITaskSystem::create(const TaskSystemDesc& desc)

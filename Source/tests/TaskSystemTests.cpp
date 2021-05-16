@@ -15,10 +15,19 @@ public:
 namespace
 {
 
+//utilities
+#define ASSERT_NO_TASKS(s) {\
+    ITaskSystem::Stats stats;\
+    s.getStats(stats);\
+    CPY_ASSERT_FMT(stats.numElements == 0, "Task system still has some tasks alive: %d", stats.numElements);\
+    }
+//
+
 void testParallel0(TestContext& ctx)
 {
     auto& testContext = (TaskSystemContext&)ctx;
     auto& ts = *testContext.ts;
+    ASSERT_NO_TASKS(ts);
     ts.start();
     std::vector<int> values(500, 0);
 
@@ -61,6 +70,7 @@ void testTaskDeps(TestContext& ctx)
 {
     auto& testContext = (TaskSystemContext&)ctx;
     auto& ts = *testContext.ts;
+    ASSERT_NO_TASKS(ts);
     ts.start();
 
     int t = 0;
@@ -98,6 +108,7 @@ void testTaskDeps(TestContext& ctx)
     ts.execute(root);
 
     ts.wait(root);
+    ts.cleanTaskTree(root);
 
     CPY_ASSERT_FMT(a == 4, "%d", a);
     CPY_ASSERT_FMT(b == 3, "%d", b);
@@ -107,13 +118,13 @@ void testTaskDeps(TestContext& ctx)
 
     ts.signalStop();
     ts.join();
-    ts.cleanFinishedTasks();
 }
 
 void testTaskYield(TestContext& ctx)
 {
     auto& testContext = (TaskSystemContext&)ctx;
     auto& ts = *testContext.ts;
+    ASSERT_NO_TASKS(ts);
     ts.start();
 
     auto writeToTarget = TaskDesc([](TaskContext& ctx)
@@ -144,6 +155,7 @@ void testTaskYield(TestContext& ctx)
 
     ts.execute(root);
     ts.wait(root);
+    ts.cleanTaskTree(root);
 
     CPY_ASSERT_FMT(q == 20, "%d", q);
     for (int t : targets)
@@ -153,7 +165,6 @@ void testTaskYield(TestContext& ctx)
 
     ts.signalStop();
     ts.join();
-    ts.cleanFinishedTasks();
 }
 
 }
