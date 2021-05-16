@@ -11,6 +11,13 @@
 namespace coalpy
 {
 
+struct PathInfo
+{
+    std::vector<std::string> directoryList;
+    std::string path;
+    std::string filename;
+};
+
 #ifdef _WIN32
 namespace InternalFileSystem
 {
@@ -39,7 +46,7 @@ namespace InternalFileSystem
             0u, //dwShareMode
             NULL, //lpSecurityAttributes
             request == FileSystem::RequestType::Read ? OPEN_EXISTING : CREATE_ALWAYS,//dwCreationDisposition
-            FILE_FLAG_OVERLAPPED, //dwFlagsAndAttributes
+            FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, //dwFlagsAndAttributes
             NULL); //template attribute
 
         if (h == INVALID_HANDLE_VALUE)
@@ -102,7 +109,7 @@ namespace InternalFileSystem
                             result = true;
                             break;
                         case ERROR_IO_INCOMPLETE:
-                            result = true;
+                            result = false;
                             break;
                         default:
                             result = false;
@@ -133,6 +140,58 @@ namespace InternalFileSystem
         return result;
     }
 
+    bool writeBytes(FileSystem::OpaqueFileHandle h, const char* buffer, int bufferSize)
+    {
+        CPY_ASSERT(h != nullptr);
+        if (h == nullptr)
+            return false;
+
+        auto* wf = (WindowsFile*)h;
+        CPY_ASSERT(wf->h != INVALID_HANDLE_VALUE);
+
+        DWORD dwordBytesWritten;
+        bool result = WriteFile(
+            wf->h,
+            buffer,
+            (DWORD)bufferSize,
+            &dwordBytesWritten,
+            &wf->overlapped);
+
+        if (!result)
+        {
+            auto dwError = GetLastError();
+            switch (dwError)
+            {
+            case ERROR_IO_PENDING:
+                {
+                    bool overlappedSuccess = GetOverlappedResult(wf->h,
+                                                  &wf->overlapped,
+                                                  &dwordBytesWritten,
+                                                  TRUE); 
+                    if (!overlappedSuccess)
+                    {
+                        result = false;
+                    }
+                    else
+                    {
+                        result = true;
+                        ResetEvent(wf->overlapped.hEvent);
+                    }
+
+                    break;
+                }
+            default:
+                //file IO issue occured here
+                result = false;
+            }
+        }
+
+        if (bufferSize != dwordBytesWritten)
+            return false;
+
+        return result;
+    }
+
     void close(FileSystem::OpaqueFileHandle h)
     {
         CPY_ASSERT(h != nullptr);
@@ -152,18 +211,26 @@ namespace InternalFileSystem
         }
     }
 
-    void getDirectoryList(const std::string& filePath, std::vector<std::string>& outDirectories, std::string& file)
+    void getPathInfo(const std::string& filePath, PathInfo& pathInfo)
     {
+        pathInfo = {};
         auto dirCandidates = ClTokenizer::splitString(filePath, '\\');
         for (auto d : dirCandidates)
             if (d != "")
-                outDirectories.push_back(d);
+                pathInfo.directoryList.push_back(d);
 
-        if (outDirectories.empty())
+        if (pathInfo.directoryList.empty())
             return;
 
-        file = outDirectories.back();
-        outDirectories.pop_back();
+        pathInfo.filename = pathInfo.directoryList.back();
+        pathInfo.directoryList.pop_back();
+    
+        std::stringstream ss;
+        for (auto& d : pathInfo.directoryList)
+        {
+            ss << d  << "\\";
+        }
+        pathInfo.path = std::move(ss.str());
     }
 
     bool createDirectory(const char* str)
@@ -203,7 +270,7 @@ namespace InternalFileSystem
         return;
     }
 
-    bool carveFile(const std::string& path, bool lastIsFile = true)
+    bool carvePath(const std::string& path, bool lastIsFile = true)
     {
         bool exists, isDir;
         getAttributes(path, exists, isDir);
@@ -211,29 +278,25 @@ namespace InternalFileSystem
             return lastIsFile ? !isDir : isDir;
 
         //ok so the path doesnt really exists, lets carve it.
-        std::string filename;
-        std::vector<std::string> directories;
-        getDirectoryList(path, directories, filename);
-        if (filename == "")
+        PathInfo pathInfo;
+        getPathInfo(path, pathInfo);
+        if (pathInfo.filename == "")
             return false;
 
         if (!lastIsFile)
-            directories.push_back(filename);
+            pathInfo.directoryList.push_back(pathInfo.filename);
 
-        if (!directories.empty())
+        std::stringstream ss;
+        for (auto& d : pathInfo.directoryList)
         {
-            std::stringstream ss;
-            for (auto& d : directories)
-            {
-                ss << d << "/";
-                auto currentPath = ss.str();
-                getAttributes(currentPath, exists, isDir);
-                if (exists && !isDir)
-                    return false;
+            ss << d << "\\";
+            auto currentPath = ss.str();
+            getAttributes(currentPath, exists, isDir);
+            if (exists && !isDir)
+                return false;
 
-                if (!exists && !createDirectory(currentPath.c_str()))
-                    return false;
-            }
+            if (!exists && !createDirectory(currentPath.c_str()))
+                return false;
         }
 
         return true;
@@ -267,7 +330,7 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
         requestData = new Request();
         requestData->type = RequestType::Read;
         requestData->filename = request.path;
-        requestData->callback = request.doneCallback;
+        requestData->readCallback = request.doneCallback;
         requestData->opaqueHandle = {};
         requestData->fileStatus = FileStatus::Reading;
         requestData->task = m_ts.createTask(TaskDesc([this](TaskContext& ctx)
@@ -277,7 +340,7 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                 requestData->fileStatus = FileStatus::Opening;
                 FileReadResponse response;
                 response.status = FileStatus::Opening;
-                requestData->callback(response);
+                requestData->readCallback(response);
             }
             requestData->opaqueHandle = InternalFileSystem::openFile(requestData->filename.c_str(), RequestType::Read);
             if (!InternalFileSystem::valid(requestData->opaqueHandle))
@@ -286,7 +349,7 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                     requestData->fileStatus = FileStatus::OpenFail;
                     FileReadResponse response;
                     response.status = FileStatus::OpenFail;
-                    requestData->callback(response);
+                    requestData->readCallback(response);
                 }
                 return;
             }
@@ -310,7 +373,7 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                         requestData->fileStatus = FileStatus::ReadingFail;
                         FileReadResponse response;
                         response.status = FileStatus::ReadingFail;
-                        requestData->callback(response);
+                        requestData->readCallback(response);
                     }
                     return;
                 }
@@ -320,7 +383,7 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                 requestData->fileStatus = FileStatus::ReadingSuccess;
                 FileReadResponse response;
                 response.status = FileStatus::ReadingSuccess;
-                requestData->callback(response);
+                requestData->readCallback(response);
             }
 
         }), requestData);
@@ -333,7 +396,78 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
 
 AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
 {
-    return AsyncFileHandle();
+    CPY_ASSERT_MSG(request.doneCallback, "File read request must provide a done callback.");
+
+    AsyncFileHandle asyncHandle;
+    Task task;
+    
+    {
+        std::unique_lock lock(m_requestsMutex);
+        Request*& requestData = m_requests.allocate(asyncHandle);
+        requestData = new Request();
+        requestData->type = RequestType::Write;
+        requestData->filename = request.path;
+        requestData->writeCallback = request.doneCallback;
+        requestData->opaqueHandle = {};
+        requestData->fileStatus = FileStatus::Writting;
+        requestData->writeBuffer = request.buffer;
+        requestData->writeSize = request.size;
+        requestData->task = m_ts.createTask(TaskDesc([this](TaskContext& ctx)
+        {
+            auto* requestData = (Request*)ctx.data;
+            {
+                requestData->fileStatus = FileStatus::Opening;
+                FileWriteResponse response;
+                response.status = FileStatus::Opening;
+                requestData->writeCallback(response);
+            }
+            requestData->opaqueHandle = InternalFileSystem::openFile(requestData->filename.c_str(), RequestType::Write);
+            if (!InternalFileSystem::valid(requestData->opaqueHandle))
+            {
+                {
+                    requestData->fileStatus = FileStatus::OpenFail;
+                    FileWriteResponse response;
+                    response.status = FileStatus::OpenFail;
+                    requestData->writeCallback(response);
+                }
+                return;
+            }
+
+            struct WriteState {
+                const char* buffer;
+                int bufferSize;
+                bool successWrite;
+            } writeState = { requestData->writeBuffer, requestData->writeSize, false };
+
+            TaskUtil::yieldUntil([&writeState, requestData]() {
+                writeState.successWrite = InternalFileSystem::writeBytes(
+                    requestData->opaqueHandle, writeState.buffer, writeState.bufferSize);
+            });
+
+            if (!writeState.successWrite)
+            {
+                {
+                    requestData->fileStatus = FileStatus::ReadingFail;
+                    FileWriteResponse response;
+                    response.status = FileStatus::WriteFail;
+                    requestData->writeCallback(response);
+                }
+                return;
+            }
+
+            {
+                requestData->fileStatus = FileStatus::ReadingSuccess;
+                FileWriteResponse response;
+                response.status = FileStatus::WriteSuccess;
+                requestData->writeCallback(response);
+            }
+
+        }), requestData);
+        task = requestData->task;
+    }
+
+    m_ts.execute(task);
+    return asyncHandle;
 }
 
 
@@ -361,13 +495,37 @@ bool FileSystem::writeStatus(AsyncFileHandle handle, FileWriteResponse& response
 
 void FileSystem::closeHandle(AsyncFileHandle handle)
 {
+    Request* requestData = nullptr;
+    {
+        std::unique_lock lock(m_requestsMutex);
+        if (!m_requests.contains(handle))
+            return;
+
+        requestData = m_requests[handle];
+        if (requestData == nullptr)
+            return;
+    }
+
+    m_ts.wait(requestData->task);
+    m_ts.cleanTaskTree(requestData->task);
+
+    if (!InternalFileSystem::valid(requestData->opaqueHandle))
+        return;
+
+    InternalFileSystem::close(requestData->opaqueHandle);
+    delete requestData;
+    
+    {
+        std::unique_lock lock(m_requestsMutex);
+        m_requests.free(handle);
+    }
 }
 
 bool FileSystem::carveDirectoryPath(const char* directoryName)
 {
     std::string dir = directoryName;
     InternalFileSystem::fixStringPath(dir);
-    return InternalFileSystem::carveFile(dir, false);
+    return InternalFileSystem::carvePath(dir, false);
 }
 
 bool FileSystem::enumerateFiles(std::vector<std::string>& dirList)

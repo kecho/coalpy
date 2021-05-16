@@ -29,7 +29,6 @@ enum class FileStatus
 struct FileReadResponse
 {
     FileStatus status = FileStatus::Opening;
-    ByteBuffer response;
 };
 
 struct FileWriteResponse
@@ -51,6 +50,8 @@ struct FileWriteRequest
 {
     std::string path;
     FileWriteDoneCallback doneCallback;
+    const char* buffer;
+    int size;
 };
 
 }

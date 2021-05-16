@@ -47,26 +47,32 @@ void testCreateDeleteDir(TestContext& ctx)
     testContext.end();
 }
 
-void testFileRead(TestContext& ctx)
+void testFileReadWrite(TestContext& ctx)
 {
     auto& testContext = (FileSystemContext&)ctx;
     testContext.begin();
 
     IFileSystem& fs = *testContext.fs;
     
-    bool isSuccess = false;
-    AsyncFileHandle h = fs.read(FileReadRequest {
+    std::string str = "hello world!";
+    bool writeSuccess = false;
+    AsyncFileHandle writeHandle = fs.write(FileWriteRequest {
         "test.txt",
-        [&isSuccess](FileReadResponse& response)
+        [&writeSuccess](FileWriteResponse& response)
         {
-            if (response.status == FileStatus::ReadingSuccess)
-                isSuccess = true;
-        }
+            if (response.status == FileStatus::WriteSuccess)
+                writeSuccess = true;
+        },
+        str.c_str(),
+        (int)str.size()
     });
 
-    fs.wait(h);
+    fs.wait(writeHandle);
+    fs.closeHandle(writeHandle);
+    CPY_ASSERT(writeSuccess);
 
-    CPY_ASSERT(isSuccess);
+    bool deleteSuccess = fs.deleteFile("test.txt");
+    CPY_ASSERT(deleteSuccess);
     
     testContext.end();
 }
@@ -79,7 +85,7 @@ public:
     {
         static TestCase sCases[] = {
             { "createDeleteDir", testCreateDeleteDir },
-            { "fileRead", testFileRead }
+            { "fileReadWrite", testFileReadWrite }
         };
 
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

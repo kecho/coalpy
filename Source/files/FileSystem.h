@@ -38,11 +38,14 @@ private:
     {
         RequestType type = RequestType::Read;
         std::string filename;
-        FileReadDoneCallback callback;
-        OpaqueFileHandle opaqueHandle;
+        FileReadDoneCallback readCallback = nullptr;
+        FileWriteDoneCallback writeCallback = nullptr;
+        OpaqueFileHandle opaqueHandle = {};
+
+        const char* writeBuffer = nullptr;
+        int writeSize = 0;
 
         Task task;
-        ByteBuffer buffer;
         std::atomic<FileStatus> fileStatus;
     };
 
