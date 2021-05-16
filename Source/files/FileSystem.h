@@ -13,8 +13,6 @@
 namespace coalpy
 {
 
-class FileSystemInternal;
-
 class FileSystem : public IFileSystem
 {
 public:
@@ -26,13 +24,15 @@ public:
     virtual bool readStatus (AsyncFileHandle handle, FileReadResponse& response) override;
     virtual bool writeStatus(AsyncFileHandle handle, FileWriteResponse& response) override;
     virtual void closeHandle(AsyncFileHandle handle) override;
+    virtual bool carveDirectoryPath(const char* directoryName) override;
+    virtual bool enumerateFiles(std::vector<std::string>& dirList) override;
+    virtual bool deleteDirectory(const char* directoryName) override;
+    virtual bool deleteFile(const char* fileName) override;
 
-    friend class FileSystemInternal;
+    enum RequestType { Read, Write };
+    typedef void* OpaqueFileHandle;
 
 private:
-    enum RequestType { Read, Write };
-
-    typedef void* OpaqueFileHandle;
 
     struct Request
     {
@@ -50,7 +50,6 @@ private:
     FileSystemDesc m_desc;
     mutable std::shared_mutex m_requestsMutex;
     HandleContainer<AsyncFileHandle, Request*> m_requests;
-    FileSystemInternal& m_internalFs;
 };
 
 }

@@ -25,8 +25,8 @@ extern TestSuite* taskSystemSuite();
 }
 
 CreateSuiteFn g_suites[] = {
+    taskSystemSuite,
     fileSystemSuite,
-    taskSystemSuite
 };
 
 std::atomic<int> g_errors = 0;

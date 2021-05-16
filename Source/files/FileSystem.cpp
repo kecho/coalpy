@@ -5,16 +5,15 @@
 #ifdef _WIN32 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <coalpy.core/ClTokenizer.h>
 #endif
 
 namespace coalpy
 {
 
 #ifdef _WIN32
-class FileSystemInternal
+namespace InternalFileSystem
 {
-public:
-
     enum {
         bufferSize = 16 * 1024 //16kb buffer size
     };
@@ -27,7 +26,7 @@ public:
         char buffer[bufferSize];
     };
 
-    inline bool valid(FileSystem::OpaqueFileHandle h) const
+    bool valid(FileSystem::OpaqueFileHandle h)
     {
         return h != nullptr;
     }
@@ -143,6 +142,102 @@ public:
         CloseHandle(wf->overlapped.hEvent);
         delete wf;
     }
+
+    void fixStringPath(std::string& str)
+    {
+        for (auto& c : str)
+        {
+            if (c == '/')
+                c = '\\';
+        }
+    }
+
+    void getDirectoryList(const std::string& filePath, std::vector<std::string>& outDirectories, std::string& file)
+    {
+        auto dirCandidates = ClTokenizer::splitString(filePath, '\\');
+        for (auto d : dirCandidates)
+            if (d != "")
+                outDirectories.push_back(d);
+
+        if (outDirectories.empty())
+            return;
+
+        file = outDirectories.back();
+        outDirectories.pop_back();
+    }
+
+    bool createDirectory(const char* str)
+    {
+        return CreateDirectoryA(str, nullptr);
+    }
+
+    bool deleteDirectory(const char* str)
+    {
+        return RemoveDirectoryA(str);
+    }
+
+    bool deleteFile(const char* str)
+    {
+        return DeleteFile(str);
+    }
+
+    void getAttributes(const std::string& dirName_in, bool& exists, bool& isDir)
+    {
+        exists = false;
+        isDir = false;
+        DWORD ftyp = GetFileAttributesA(dirName_in.c_str());
+        if (ftyp == INVALID_FILE_ATTRIBUTES)
+        {
+            exists = false;
+            isDir = false;
+            return;
+        }
+        
+        exists = true;
+        if (ftyp & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            isDir = true;
+            return;
+        }
+        
+        return;
+    }
+
+    bool carveFile(const std::string& path, bool lastIsFile = true)
+    {
+        bool exists, isDir;
+        getAttributes(path, exists, isDir);
+        if (exists)
+            return lastIsFile ? !isDir : isDir;
+
+        //ok so the path doesnt really exists, lets carve it.
+        std::string filename;
+        std::vector<std::string> directories;
+        getDirectoryList(path, directories, filename);
+        if (filename == "")
+            return false;
+
+        if (!lastIsFile)
+            directories.push_back(filename);
+
+        if (!directories.empty())
+        {
+            std::stringstream ss;
+            for (auto& d : directories)
+            {
+                ss << d << "/";
+                auto currentPath = ss.str();
+                getAttributes(currentPath, exists, isDir);
+                if (exists && !isDir)
+                    return false;
+
+                if (!exists && !createDirectory(currentPath.c_str()))
+                    return false;
+            }
+        }
+
+        return true;
+    }
 };
 #else
     #error "Platform not supported"
@@ -151,14 +246,12 @@ public:
 FileSystem::FileSystem(const FileSystemDesc& desc)
 : m_desc(desc)
 , m_ts(*desc.taskSystem)
-, m_internalFs(*(new FileSystemInternal))
 {
     
 }
 
 FileSystem::~FileSystem()
 {
-    delete &m_internalFs;
 }
 
 AsyncFileHandle FileSystem::read(const FileReadRequest& request)
@@ -186,8 +279,8 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                 response.status = FileStatus::Opening;
                 requestData->callback(response);
             }
-            requestData->opaqueHandle = m_internalFs.openFile(requestData->filename.c_str(), RequestType::Read);
-            if (!m_internalFs.valid(requestData->opaqueHandle))
+            requestData->opaqueHandle = InternalFileSystem::openFile(requestData->filename.c_str(), RequestType::Read);
+            if (!InternalFileSystem::valid(requestData->opaqueHandle))
             {
                 {
                     requestData->fileStatus = FileStatus::OpenFail;
@@ -198,17 +291,20 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                 return;
             }
 
-            char* output = nullptr;
-            int bytesRead = 0;
-            bool isEof = false;
-            bool successRead = false;
-            while (!isEof)
+            struct ReadState {
+                char* output = nullptr;
+                int bytesRead = 0;
+                bool isEof = false;
+                bool successRead = false;
+            } readState;
+            while (!readState.isEof)
             {
-                TaskUtil::yieldUntil([&output, &bytesRead, &isEof, requestData, &successRead, this]() {
-                    successRead = m_internalFs.readBytes(requestData->opaqueHandle, output, bytesRead, isEof);
+                TaskUtil::yieldUntil([&readState, requestData]() {
+                    readState.successRead = InternalFileSystem::readBytes(
+                        requestData->opaqueHandle, readState.output, readState.bytesRead, readState.isEof);
                 });
 
-                if (!successRead)
+                if (!readState.successRead)
                 {
                     {
                         requestData->fileStatus = FileStatus::ReadingFail;
@@ -265,6 +361,28 @@ bool FileSystem::writeStatus(AsyncFileHandle handle, FileWriteResponse& response
 
 void FileSystem::closeHandle(AsyncFileHandle handle)
 {
+}
+
+bool FileSystem::carveDirectoryPath(const char* directoryName)
+{
+    std::string dir = directoryName;
+    InternalFileSystem::fixStringPath(dir);
+    return InternalFileSystem::carveFile(dir, false);
+}
+
+bool FileSystem::enumerateFiles(std::vector<std::string>& dirList)
+{
+    return false;
+}
+
+bool FileSystem::deleteDirectory(const char* directoryName)
+{
+    return InternalFileSystem::deleteDirectory(directoryName);
+}
+
+bool FileSystem::deleteFile(const char* fileName)
+{
+    return InternalFileSystem::deleteFile(fileName);
 }
 
 IFileSystem* IFileSystem::create(const FileSystemDesc& desc)

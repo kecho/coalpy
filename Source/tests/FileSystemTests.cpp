@@ -2,6 +2,7 @@
 #include <coalpy.core/Assert.h>
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.files/IFileSystem.h>
+#include <sstream>
 #include <iostream>
 
 namespace coalpy
@@ -26,6 +27,26 @@ public:
     }
 };
 
+void testCreateDeleteDir(TestContext& ctx)
+{
+    auto& testContext = (FileSystemContext&)ctx;
+    testContext.begin();
+    IFileSystem& fs = *testContext.fs;
+    const char* dir = "test/some/dir";
+    {
+        bool result = fs.carveDirectoryPath(dir);
+        CPY_ASSERT_MSG(result, "carveDirectoryPath");
+    }
+
+    {
+        bool result = fs.deleteDirectory(dir);
+        CPY_ASSERT_MSG(result, "deleteDirectory");
+    }
+
+
+    testContext.end();
+}
+
 void testFileRead(TestContext& ctx)
 {
     auto& testContext = (FileSystemContext&)ctx;
@@ -33,19 +54,19 @@ void testFileRead(TestContext& ctx)
 
     IFileSystem& fs = *testContext.fs;
     
-    bool success = false;
+    bool isSuccess = false;
     AsyncFileHandle h = fs.read(FileReadRequest {
         "test.txt",
-        [&success](FileReadResponse& response)
+        [&isSuccess](FileReadResponse& response)
         {
             if (response.status == FileStatus::ReadingSuccess)
-                success = true;
+                isSuccess = true;
         }
     });
 
     fs.wait(h);
 
-    CPY_ASSERT(success);
+    CPY_ASSERT(isSuccess);
     
     testContext.end();
 }
@@ -57,6 +78,7 @@ public:
     virtual const TestCase* getCases(int& caseCounts) const
     {
         static TestCase sCases[] = {
+            { "createDeleteDir", testCreateDeleteDir },
             { "fileRead", testFileRead }
         };
 
