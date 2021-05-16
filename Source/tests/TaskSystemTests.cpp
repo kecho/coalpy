@@ -110,6 +110,52 @@ void testTaskDeps(TestContext& ctx)
     ts.cleanFinishedTasks();
 }
 
+void testTaskYield(TestContext& ctx)
+{
+    auto& testContext = (TaskSystemContext&)ctx;
+    auto& ts = *testContext.ts;
+    ts.start();
+
+    auto writeToTarget = TaskDesc([](TaskContext& ctx)
+    {
+        auto& i = *((int*)ctx.data);
+        i = 100;
+    });
+
+    const int totalJobs = 90;
+    int targets[totalJobs];
+
+    std::vector<Task> tasks;
+    for (int& t : targets)
+    {
+        t = 0;
+        tasks.push_back(ts.createTask(writeToTarget, &t));
+    }
+
+    int q = 0;
+    tasks.push_back(ts.createTask(TaskDesc([&q](TaskContext& ctx)
+    {
+        TaskUtil::yieldUntil([](){ TaskUtil::sleepThread(100); });
+        q = 20;
+    })));
+
+    Task root = ts.createTask();
+    ts.depends(root, tasks.data(), (int)tasks.size());
+
+    ts.execute(root);
+    ts.wait(root);
+
+    CPY_ASSERT_FMT(q == 20, "%d", q);
+    for (int t : targets)
+    {
+        CPY_ASSERT_FMT(t == 100, "%d", t);
+    }
+
+    ts.signalStop();
+    ts.join();
+    ts.cleanFinishedTasks();
+}
+
 }
 
 class TaskSystemTestSuite : public TestSuite
@@ -121,7 +167,8 @@ public:
         static TestCase sCases[] = {
             { "testSimpleParallel", testParallel0 },
             { "testSimpleParallelRestart", testParallel0 },
-            { "testDependencies", testTaskDeps }
+            { "testDependencies", testTaskDeps },
+            { "testYield", testTaskYield }
         };
 
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

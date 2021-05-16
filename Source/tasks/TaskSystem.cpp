@@ -261,6 +261,20 @@ void TaskSystem::cleanFinishedTasks()
 
 void TaskSystem::wait(Task other)
 {
+    ThreadWorker* worker = ThreadWorker::getLocalThreadWorker();
+    if (worker != nullptr)
+    {
+        //this means we are inside a job
+        TaskUtil::yieldUntil([this, other](){ this->internalWait(other); });
+    }
+    else
+    {
+        internalWait(other);
+    }
+}
+
+void TaskSystem::internalWait(Task other)
+{
     SyncData* syncData = nullptr;
     {
         std::shared_lock lock(m_stateMutex);
@@ -292,6 +306,13 @@ void TaskUtil::sleepThread(int ms)
 
 void TaskUtil::yieldUntil(TaskBlockFn fn)
 {
+    ThreadWorker* localWorker = ThreadWorker::getLocalThreadWorker();
+    CPY_ASSERT_MSG(localWorker != nullptr, "Calling TaskUtil::yieldUntil in a non task context is illegal. This function must be called within a tasks callstack.");
+
+    if (!localWorker)
+        return;
+
+    localWorker->waitUntil(fn);
 }
 
 }

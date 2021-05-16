@@ -24,6 +24,8 @@ struct ThreadWorkerMessage
 
 class ThreadWorkerQueue : public ThreadQueue<ThreadWorkerMessage> {};
 
+thread_local ThreadWorker* t_localWorker = nullptr;
+
 ThreadWorker::~ThreadWorker()
 {
     signalStop();
@@ -53,12 +55,16 @@ void ThreadWorker::start(OnTaskCompleteFn onTaskCompleteFn)
 
     m_thread = new std::thread(
     [this](){
+        t_localWorker = this;
         this->run();
+        t_localWorker = nullptr;
     });
 
     m_auxThread = new std::thread(
     [this](){
+        t_localWorker = this;
         this->auxLoop();
+        t_localWorker = nullptr;
     });
 }
 
@@ -109,8 +115,10 @@ void ThreadWorker::auxLoop()
             {
                 CPY_ASSERT(msg.blockFn);
                 msg.blockFn(); //this function, which is set internally, usually waits for responses.
+
+                //send a message to the main thread which is waiting, to wake up and exit the current stack frame (and resume previously asleep work)
                 ThreadWorkerMessage response = { ThreadMessageType::Exit, nullptr, {} };
-                m_queue->push(msg);
+                m_queue->push(response);
                 break;
             }
         case ThreadMessageType::Exit:
@@ -161,6 +169,11 @@ void ThreadWorker::schedule(TaskFn fn, TaskContext& context)
 
     ThreadWorkerMessage runMessage { ThreadMessageType::RunJob, fn, {}, context };
     m_queue->push(runMessage);
+}
+
+ThreadWorker* ThreadWorker::getLocalThreadWorker()
+{
+    return t_localWorker;
 }
 
 }

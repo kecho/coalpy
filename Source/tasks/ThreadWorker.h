@@ -19,6 +19,7 @@ using OnTaskCompleteFn = std::function<void(Task)>;
 class ThreadWorker
 {
 public:
+
     ~ThreadWorker();
     void start(OnTaskCompleteFn onTaskCompleteFn = nullptr);
     void schedule(TaskFn fn, TaskContext& payload);
@@ -26,6 +27,7 @@ public:
     void join();
     int queueSize() const;
     void waitUntil(TaskBlockFn fn);
+    static ThreadWorker* getLocalThreadWorker();
 
 private:
     void run();

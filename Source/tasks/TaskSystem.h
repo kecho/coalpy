@@ -40,6 +40,7 @@ public:
 protected:
     void onMessageLoop();
     void onScheduleTask(Task* t, int counts);
+    void internalWait(Task other);
 
     enum class TaskState
     {
