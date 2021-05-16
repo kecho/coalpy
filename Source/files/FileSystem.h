@@ -1,5 +1,5 @@
 #pragma once
-#include <coalpy.core/IFileSystem.h>
+#include <coalpy.files/IFileSystem.h>
 #include <coalpy.core/ByteBuffer.h>
 #include <coalpy.core/HandleContainer.h>
 #include <vector>
