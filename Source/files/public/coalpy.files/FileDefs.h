@@ -16,24 +16,27 @@ struct FileSystemDesc
 
 enum class FileStatus
 {
+    Idle,
     Opening,
     Reading,
     OpenFail,
     ReadingFail,
-    ReadingSuccess,
+    ReadingSuccessEof,
     WriteSuccess,
     WriteFail,
-    Writting
+    Writing
 };
 
 struct FileReadResponse
 {
-    FileStatus status = FileStatus::Opening;
+    FileStatus status = FileStatus::Idle;
+    const char* buffer = nullptr;
+    int size = 0;
 };
 
 struct FileWriteResponse
 {
-    FileStatus status = FileStatus::Writting;
+    FileStatus status = FileStatus::Idle;
 };
 
 using AsyncFileHandle = GenericHandle<unsigned int>;
@@ -49,9 +52,9 @@ struct FileReadRequest
 struct FileWriteRequest
 {
     std::string path;
-    FileWriteDoneCallback doneCallback;
-    const char* buffer;
-    int size;
+    FileWriteDoneCallback doneCallback = nullptr;
+    const char* buffer = nullptr;
+    int size = 0;
 };
 
 }

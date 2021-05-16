@@ -332,7 +332,7 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
         requestData->filename = request.path;
         requestData->readCallback = request.doneCallback;
         requestData->opaqueHandle = {};
-        requestData->fileStatus = FileStatus::Reading;
+        requestData->fileStatus = FileStatus::Idle;
         requestData->task = m_ts.createTask(TaskDesc([this](TaskContext& ctx)
         {
             auto* requestData = (Request*)ctx.data;
@@ -354,6 +354,8 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                 return;
             }
 
+            requestData->fileStatus = FileStatus::Reading;
+
             struct ReadState {
                 char* output = nullptr;
                 int bytesRead = 0;
@@ -366,6 +368,14 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                     readState.successRead = InternalFileSystem::readBytes(
                         requestData->opaqueHandle, readState.output, readState.bytesRead, readState.isEof);
                 });
+
+                {
+                    FileReadResponse response;
+                    response.status = FileStatus::Reading;
+                    response.buffer = readState.output;
+                    response.size = readState.bytesRead;
+                    requestData->readCallback(response);
+                }
 
                 if (!readState.successRead)
                 {
@@ -380,9 +390,9 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
             }
 
             {
-                requestData->fileStatus = FileStatus::ReadingSuccess;
+                requestData->fileStatus = FileStatus::ReadingSuccessEof;
                 FileReadResponse response;
-                response.status = FileStatus::ReadingSuccess;
+                response.status = FileStatus::ReadingSuccessEof;
                 requestData->readCallback(response);
             }
 
@@ -409,7 +419,7 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
         requestData->filename = request.path;
         requestData->writeCallback = request.doneCallback;
         requestData->opaqueHandle = {};
-        requestData->fileStatus = FileStatus::Writting;
+        requestData->fileStatus = FileStatus::Idle;
         requestData->writeBuffer = request.buffer;
         requestData->writeSize = request.size;
         requestData->task = m_ts.createTask(TaskDesc([this](TaskContext& ctx)
@@ -433,6 +443,8 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
                 return;
             }
 
+            requestData->fileStatus = FileStatus::Writing;
+
             struct WriteState {
                 const char* buffer;
                 int bufferSize;
@@ -447,7 +459,7 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
             if (!writeState.successWrite)
             {
                 {
-                    requestData->fileStatus = FileStatus::ReadingFail;
+                    requestData->fileStatus = FileStatus::WriteFail;
                     FileWriteResponse response;
                     response.status = FileStatus::WriteFail;
                     requestData->writeCallback(response);
@@ -456,7 +468,7 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
             }
 
             {
-                requestData->fileStatus = FileStatus::ReadingSuccess;
+                requestData->fileStatus = FileStatus::WriteSuccess;
                 FileWriteResponse response;
                 response.status = FileStatus::WriteSuccess;
                 requestData->writeCallback(response);
