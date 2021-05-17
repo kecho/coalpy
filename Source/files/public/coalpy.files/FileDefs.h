@@ -44,18 +44,41 @@ using AsyncFileHandle = GenericHandle<unsigned int>;
 using FileReadDoneCallback = std::function<void(FileReadResponse& response)>;
 using FileWriteDoneCallback = std::function<void(FileWriteResponse& response)>;
 
+enum class FileRequestFlags : int
+{
+    AutoStart = 1 << 0
+};
+
 struct FileReadRequest
 {
     std::string path;
     FileReadDoneCallback doneCallback;
+    int flags;
+
+    FileReadRequest() {}
+
+    FileReadRequest(std::string path, FileReadDoneCallback doneCallback)
+    : flags(0), path(path), doneCallback(doneCallback) {}
+
+    FileReadRequest(std::string path, FileReadDoneCallback doneCallback, int flags)
+    : flags(flags), path(path), doneCallback(doneCallback) {}
 };
 
 struct FileWriteRequest
 {
     std::string path;
-    FileWriteDoneCallback doneCallback = nullptr;
-    const char* buffer = nullptr;
-    int size = 0;
+    FileWriteDoneCallback doneCallback;
+    const char* buffer;
+    int size;
+    int flags;
+    
+    FileWriteRequest() {}
+
+    FileWriteRequest(std::string path, FileWriteDoneCallback doneCallback, const char* buffer, int size)
+    : flags(0), path(path), doneCallback(doneCallback), buffer(buffer), size(size) {}
+
+    FileWriteRequest(std::string path, FileWriteDoneCallback doneCallback, const char* buffer, int size, int flags)
+    : flags(flags), path(path), doneCallback(doneCallback), buffer(buffer), size(size) {}
 };
 
 struct FileAttributes

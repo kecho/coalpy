@@ -180,13 +180,14 @@ namespace InternalFileSystem
         return result;
     }
 
-    void close(OpaqueFileHandle h)
+    void close(OpaqueFileHandle& h)
     {
         CPY_ASSERT(h != nullptr);
         auto* wf = (WindowsFile*)h;
         CPY_ASSERT(wf->h != INVALID_HANDLE_VALUE);
         CloseHandle(wf->h);
         CloseHandle(wf->overlapped.hEvent);
+        h = {};
         delete wf;
     }
 

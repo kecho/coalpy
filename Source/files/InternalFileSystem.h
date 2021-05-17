@@ -38,7 +38,7 @@ namespace InternalFileSystem
 
     bool writeBytes(OpaqueFileHandle h, const char* buffer, int bufferSize);
 
-    void close(OpaqueFileHandle h);
+    void close(OpaqueFileHandle& h);
 
     void fixStringPath(std::string& str);
 

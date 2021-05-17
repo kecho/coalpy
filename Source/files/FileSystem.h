@@ -21,6 +21,8 @@ public:
     virtual ~FileSystem();
     virtual AsyncFileHandle read(const FileReadRequest& request) override;
     virtual AsyncFileHandle write(const FileWriteRequest& request) override;
+    virtual void execute(AsyncFileHandle handle) override;
+    virtual Task asTask(AsyncFileHandle handle) override;
     virtual void wait(AsyncFileHandle handle) override;
     virtual bool readStatus (AsyncFileHandle handle, FileReadResponse& response) override;
     virtual bool writeStatus(AsyncFileHandle handle, FileWriteResponse& response) override;

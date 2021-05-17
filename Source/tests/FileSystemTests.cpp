@@ -78,10 +78,11 @@ void testFileReadWrite(TestContext& ctx)
     testContext.begin();
 
     IFileSystem& fs = *testContext.fs;
+    ITaskSystem& ts = *testContext.ts;
     
     std::string str = "hello world!";
     bool writeSuccess = false;
-    AsyncFileHandle writeHandle = fs.write(FileWriteRequest {
+    AsyncFileHandle writeHandle = fs.write(FileWriteRequest(
         ".test_folder/test.txt",
         [&writeSuccess](FileWriteResponse& response)
         {
@@ -90,16 +91,13 @@ void testFileReadWrite(TestContext& ctx)
         },
         str.c_str(),
         (int)str.size()
-    });
+    ));
 
-    fs.wait(writeHandle);
-    fs.closeHandle(writeHandle);
-    CPY_ASSERT(writeSuccess);
 
     bool readSuccess = false;
     std::string readResult;
     
-    AsyncFileHandle readHande = fs.read(FileReadRequest {
+    AsyncFileHandle readHandle = fs.read(FileReadRequest(
         ".test_folder/test.txt",
         [&readSuccess, &readResult](FileReadResponse& response)
         {
@@ -108,13 +106,17 @@ void testFileReadWrite(TestContext& ctx)
             else if (response.status == FileStatus::ReadingSuccessEof)
                 readSuccess = true;
         }
-    });
+    ));
 
-    fs.wait(readHande);
-    fs.closeHandle(readHande);
+    ts.depends(fs.asTask(readHandle), fs.asTask(writeHandle));
+    ts.execute(fs.asTask(readHandle));
+    fs.wait(readHandle);
 
+    CPY_ASSERT(writeSuccess);
     CPY_ASSERT(readSuccess);
     CPY_ASSERT_FMT(readResult == str, "Mismatch result found %s expected %s", readResult.c_str(), str.c_str());
+    fs.closeHandle(writeHandle);
+    fs.closeHandle(readHandle);
 
     {
         deleteAllDir(fs, ".test_folder");

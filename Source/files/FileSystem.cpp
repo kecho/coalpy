@@ -79,6 +79,9 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                 if (!readState.successRead)
                 {
                     {
+                        if (InternalFileSystem::valid(requestData->opaqueHandle))
+                            InternalFileSystem::close(requestData->opaqueHandle);
+
                         requestData->fileStatus = FileStatus::ReadingFail;
                         FileReadResponse response;
                         response.status = FileStatus::ReadingFail;
@@ -89,6 +92,9 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
             }
 
             {
+                if (InternalFileSystem::valid(requestData->opaqueHandle))
+                    InternalFileSystem::close(requestData->opaqueHandle);
+
                 requestData->fileStatus = FileStatus::ReadingSuccessEof;
                 FileReadResponse response;
                 response.status = FileStatus::ReadingSuccessEof;
@@ -99,8 +105,27 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
         task = requestData->task;
     }
 
-    m_ts.execute(task);
+    if ((request.flags & (int)FileRequestFlags::AutoStart) != 0)
+        m_ts.execute(task);
     return asyncHandle;
+}
+
+void FileSystem::execute(AsyncFileHandle handle)
+{
+    Task task = asTask(handle);
+    m_ts.execute(task);
+}
+
+Task FileSystem::asTask(AsyncFileHandle handle)
+{
+    Task task;
+    {
+        std::unique_lock lock(m_requestsMutex);
+        CPY_ASSERT(m_requests.contains(handle));
+        Request* requestData = m_requests[handle];
+        task = requestData->task;
+    }
+    return task;
 }
 
 AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
@@ -167,6 +192,9 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
             if (!writeState.successWrite)
             {
                 {
+                    if (InternalFileSystem::valid(requestData->opaqueHandle))
+                        InternalFileSystem::close(requestData->opaqueHandle);
+
                     requestData->fileStatus = FileStatus::WriteFail;
                     FileWriteResponse response;
                     response.status = FileStatus::WriteFail;
@@ -176,6 +204,9 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
             }
 
             {
+                if (InternalFileSystem::valid(requestData->opaqueHandle))
+                    InternalFileSystem::close(requestData->opaqueHandle);
+
                 requestData->fileStatus = FileStatus::WriteSuccess;
                 FileWriteResponse response;
                 response.status = FileStatus::WriteSuccess;
@@ -186,7 +217,8 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
         task = requestData->task;
     }
 
-    m_ts.execute(task);
+    if ((request.flags & (int)FileRequestFlags::AutoStart) != 0)
+        m_ts.execute(task);
     return asyncHandle;
 }
 
@@ -229,10 +261,9 @@ void FileSystem::closeHandle(AsyncFileHandle handle)
     m_ts.wait(requestData->task);
     m_ts.cleanTaskTree(requestData->task);
 
-    if (!InternalFileSystem::valid(requestData->opaqueHandle))
-        return;
+    if (InternalFileSystem::valid(requestData->opaqueHandle))
+        InternalFileSystem::close(requestData->opaqueHandle);
 
-    InternalFileSystem::close(requestData->opaqueHandle);
     delete requestData;
     
     {
