@@ -116,6 +116,7 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
         requestData = new Request();
         requestData->type = InternalFileSystem::RequestType::Write;
         requestData->filename = request.path;
+        InternalFileSystem::fixStringPath(requestData->filename);
         requestData->writeCallback = request.doneCallback;
         requestData->opaqueHandle = {};
         requestData->fileStatus = FileStatus::Idle;
@@ -128,6 +129,14 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
                 requestData->fileStatus = FileStatus::Opening;
                 FileWriteResponse response;
                 response.status = FileStatus::Opening;
+                requestData->writeCallback(response);
+            }
+
+            if (!InternalFileSystem::carvePath(requestData->filename))
+            {
+                requestData->fileStatus = FileStatus::FailedCreatingDir;
+                FileWriteResponse response;
+                response.status = FileStatus::FailedCreatingDir;
                 requestData->writeCallback(response);
             }
             requestData->opaqueHandle = InternalFileSystem::openFile(requestData->filename.c_str(), InternalFileSystem::RequestType::Write);
@@ -239,9 +248,10 @@ bool FileSystem::carveDirectoryPath(const char* directoryName)
     return InternalFileSystem::carvePath(dir, false);
 }
 
-bool FileSystem::enumerateFiles(std::vector<std::string>& dirList)
+void FileSystem::enumerateFiles(const char* directoryName, std::vector<std::string>& dirList)
 {
-    return false;
+    std::string dirName = directoryName;
+    InternalFileSystem::enumerateFiles(dirName, dirList);
 }
 
 bool FileSystem::deleteDirectory(const char* directoryName)
@@ -252,6 +262,11 @@ bool FileSystem::deleteDirectory(const char* directoryName)
 bool FileSystem::deleteFile(const char* fileName)
 {
     return InternalFileSystem::deleteFile(fileName);
+}
+
+void FileSystem::getFileAttributes(const char* fileName, FileAttributes& attributes)
+{
+    InternalFileSystem::getAttributes(fileName, attributes.exists, attributes.isDir, attributes.isDot);
 }
 
 IFileSystem* IFileSystem::create(const FileSystemDesc& desc)

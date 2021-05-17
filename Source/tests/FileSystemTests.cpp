@@ -27,6 +27,31 @@ public:
     }
 };
 
+void deleteAllDir(IFileSystem& fs, const char* dir)
+{
+    std::vector<std::string> outDirs;
+    fs.enumerateFiles(dir, outDirs);
+    CPY_ASSERT_MSG(!outDirs.empty(), "Found empty directory.");
+    for (auto& f : outDirs)
+    {
+        FileAttributes attributes = {};
+        fs.getFileAttributes(f.c_str(), attributes);
+        if (!attributes.isDir)
+        {
+            bool deleteResult = fs.deleteFile(f.c_str());
+            CPY_ASSERT(deleteResult);
+        }
+        else if (!attributes.isDot)
+        {
+            bool deleteResult = fs.deleteDirectory(f.c_str());
+            CPY_ASSERT(deleteResult);
+        }
+    }
+    
+    bool deleteTestDirResult = fs.deleteDirectory(dir);
+    CPY_ASSERT(deleteTestDirResult);
+}
+
 void testCreateDeleteDir(TestContext& ctx)
 {
     auto& testContext = (FileSystemContext&)ctx;
@@ -57,7 +82,7 @@ void testFileReadWrite(TestContext& ctx)
     std::string str = "hello world!";
     bool writeSuccess = false;
     AsyncFileHandle writeHandle = fs.write(FileWriteRequest {
-        "test.txt",
+        ".test_folder/test.txt",
         [&writeSuccess](FileWriteResponse& response)
         {
             if (response.status == FileStatus::WriteSuccess)
@@ -71,8 +96,29 @@ void testFileReadWrite(TestContext& ctx)
     fs.closeHandle(writeHandle);
     CPY_ASSERT(writeSuccess);
 
-    bool deleteSuccess = fs.deleteFile("test.txt");
-    CPY_ASSERT(deleteSuccess);
+    bool readSuccess = false;
+    std::string readResult;
+    
+    AsyncFileHandle readHande = fs.read(FileReadRequest {
+        ".test_folder/test.txt",
+        [&readSuccess, &readResult](FileReadResponse& response)
+        {
+            if (response.status == FileStatus::Reading)
+                readResult.append(response.buffer, response.size);
+            else if (response.status == FileStatus::ReadingSuccessEof)
+                readSuccess = true;
+        }
+    });
+
+    fs.wait(readHande);
+    fs.closeHandle(readHande);
+
+    CPY_ASSERT(readSuccess);
+    CPY_ASSERT_FMT(readResult == str, "Mismatch result found %s expected %s", readResult.c_str(), str.c_str());
+
+    {
+        deleteAllDir(fs, ".test_folder");
+    }
     
     testContext.end();
 }

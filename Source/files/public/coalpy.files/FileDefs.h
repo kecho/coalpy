@@ -20,6 +20,7 @@ enum class FileStatus
     Opening,
     Reading,
     OpenFail,
+    FailedCreatingDir,
     ReadingFail,
     ReadingSuccessEof,
     WriteSuccess,
@@ -55,6 +56,13 @@ struct FileWriteRequest
     FileWriteDoneCallback doneCallback = nullptr;
     const char* buffer = nullptr;
     int size = 0;
+};
+
+struct FileAttributes
+{
+    bool exists;
+    bool isDir;
+    bool isDot;
 };
 
 }

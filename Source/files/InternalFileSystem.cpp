@@ -236,10 +236,19 @@ namespace InternalFileSystem
         return DeleteFile(str);
     }
 
-    void getAttributes(const std::string& dirName_in, bool& exists, bool& isDir)
+    void getFileName(const std::string& path, std::string& outName)
+    {
+        int index = path.size() - 1;
+        for (; index >= 0 && path[index] != '\\'; --index);
+        index++;
+        outName = path.c_str() + index;
+    }
+
+    void getAttributes(const std::string& dirName_in, bool& exists, bool& isDir, bool& isDots)
     {
         exists = false;
         isDir = false;
+        isDots = false;
         DWORD ftyp = GetFileAttributesA(dirName_in.c_str());
         if (ftyp == INVALID_FILE_ATTRIBUTES)
         {
@@ -252,16 +261,21 @@ namespace InternalFileSystem
         if (ftyp & FILE_ATTRIBUTE_DIRECTORY)
         {
             isDir = true;
+            std::string dirNameSanitized = dirName_in;
+            std::string filename;
+            fixStringPath(dirNameSanitized);
+            getFileName(dirNameSanitized, filename);
+            isDots = filename == "." || filename == "..";
             return;
         }
-        
+    
         return;
     }
 
     bool carvePath(const std::string& path, bool lastIsFile)
     {
-        bool exists, isDir;
-        getAttributes(path, exists, isDir);
+        bool exists, isDir, isDots;
+        getAttributes(path, exists, isDir, isDots);
         if (exists)
             return lastIsFile ? !isDir : isDir;
 
@@ -279,7 +293,7 @@ namespace InternalFileSystem
         {
             ss << d << "\\";
             auto currentPath = ss.str();
-            getAttributes(currentPath, exists, isDir);
+            getAttributes(currentPath, exists, isDir, isDots);
             if (exists && !isDir)
                 return false;
 
@@ -290,6 +304,22 @@ namespace InternalFileSystem
         return true;
     }
 
+    void enumerateFiles(const std::string& path, std::vector<std::string>& files)
+    {
+        WIN32_FIND_DATA data = {};
+        std::string query = path + "\\*";
+        HANDLE hFind = FindFirstFile(query.c_str(), &data);      // DIRECTORY
+    
+        if ( hFind == INVALID_HANDLE_VALUE )
+            return;
+    
+        do {
+            std::string fileName = data.cFileName;
+            std::string fullPath = path + "\\" + fileName;
+            files.push_back(fullPath);
+        } while (FindNextFile(hFind, &data));
+        FindClose(hFind);
+    }
 
 }
 #else

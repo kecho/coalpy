@@ -44,15 +44,19 @@ namespace InternalFileSystem
 
     void getPathInfo(const std::string& filePath, PathInfo& pathInfo);
 
+    void getFileName(const std::string& path, std::string& outName);
+
     bool createDirectory(const char* str);
 
     bool deleteDirectory(const char* str);
 
     bool deleteFile(const char* str);
 
-    void getAttributes(const std::string& dirName_in, bool& exists, bool& isDir);
+    void getAttributes(const std::string& dirName_in, bool& exists, bool& isDir, bool& isDots);
 
     bool carvePath(const std::string& path, bool lastIsFile = true);
+
+    void enumerateFiles(const std::string& path, std::vector<std::string>& files);
 }
 
 }

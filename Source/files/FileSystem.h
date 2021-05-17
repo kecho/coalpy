@@ -26,9 +26,10 @@ public:
     virtual bool writeStatus(AsyncFileHandle handle, FileWriteResponse& response) override;
     virtual void closeHandle(AsyncFileHandle handle) override;
     virtual bool carveDirectoryPath(const char* directoryName) override;
-    virtual bool enumerateFiles(std::vector<std::string>& dirList) override;
+    virtual void enumerateFiles(const char* directoryName, std::vector<std::string>& dirList) override;
     virtual bool deleteDirectory(const char* directoryName) override;
     virtual bool deleteFile(const char* fileName) override;
+    virtual void getFileAttributes(const char* fileName, FileAttributes& attributes) override;
 
 private:
 
