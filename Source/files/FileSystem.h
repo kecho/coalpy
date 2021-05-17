@@ -3,6 +3,7 @@
 #include <coalpy.tasks/TaskDefs.h>
 #include <coalpy.core/ByteBuffer.h>
 #include <coalpy.core/HandleContainer.h>
+#include "InternalFileSystem.h"
 #include <vector>
 #include <variant>
 #include <string>
@@ -29,18 +30,15 @@ public:
     virtual bool deleteDirectory(const char* directoryName) override;
     virtual bool deleteFile(const char* fileName) override;
 
-    enum RequestType { Read, Write };
-    typedef void* OpaqueFileHandle;
-
 private:
 
     struct Request
     {
-        RequestType type = RequestType::Read;
+        InternalFileSystem::RequestType type = InternalFileSystem::RequestType::Read;
         std::string filename;
         FileReadDoneCallback readCallback = nullptr;
         FileWriteDoneCallback writeCallback = nullptr;
-        OpaqueFileHandle opaqueHandle = {};
+        InternalFileSystem::OpaqueFileHandle opaqueHandle = {};
 
         const char* writeBuffer = nullptr;
         int writeSize = 0;
