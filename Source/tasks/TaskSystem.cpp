@@ -249,7 +249,16 @@ void TaskSystem::onTaskComplete(Task t)
 
 void TaskSystem::removeTask(Task t)
 {
-    delete m_taskTable[t].syncData;
+    auto& taskData = m_taskTable[t];
+    for (auto p : taskData.parents)
+    {
+        if (!m_taskTable.contains(p))
+            continue;
+        auto& pdata = m_taskTable[p];
+        pdata.initialDependencies.erase(t);
+        pdata.dependencies.erase(t);
+    }
+    delete taskData.syncData;
     m_taskTable.free(t);
 }
 
