@@ -340,6 +340,25 @@ namespace FileUtils
     {
         InternalFileSystem::getFileName(path, outName);
     }
+
+    void getDirName(const std::string& path, std::string& outName)
+    {
+        std::string cpy = path;
+        InternalFileSystem::fixStringPath(cpy);
+        int foundIndex = 0;
+        for (int i = 0; i < (int)cpy.size(); ++i)
+        {
+            int currIndex = (int)cpy.size() - 1 - i; 
+            char c = cpy[currIndex];
+            if (c == '\\')
+            {
+                foundIndex = currIndex;
+                break;
+            }
+        }
+
+        outName = cpy.substr(0, foundIndex);
+    }
 }
 
 }

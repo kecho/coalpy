@@ -21,12 +21,14 @@ namespace coalpy
 
 extern TestSuite* fileSystemSuite();
 extern TestSuite* taskSystemSuite();
+extern TestSuite* shaderSuite();
 
 }
 
 CreateSuiteFn g_suites[] = {
     taskSystemSuite,
     fileSystemSuite,
+    shaderSuite
 };
 
 std::atomic<int> g_errors = 0;
@@ -93,6 +95,11 @@ bool prepareCli(ClParser& p, ArgParameters& params)
 
 int main(int argc, char* argv[])
 {
+    ApplicationContext appCtx;
+    appCtx.argc = argc;
+    appCtx.argv = argv;
+    ApplicationContext::set(appCtx);
+    
     ArgParameters params;
     ClParser p;
     if (!prepareCli(p, params))

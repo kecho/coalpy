@@ -14,6 +14,7 @@ namespace coalpy
 ShaderService::ShaderService(const ShaderServiceDesc& desc)
 : m_fs(desc.fs)
 , m_ts(desc.ts)
+, m_fileWatchPollingRate(desc.fileWatchPollingRate)
 {
     std::string dirName = desc.watchDirectory;
     FileUtils::fixStringPath(dirName, m_rootDir);
@@ -43,7 +44,11 @@ void ShaderService::stop()
 void ShaderService::onFileListening()
 {
     bool active = true;
+#ifdef _WIN32 
     HANDLE h = INVALID_HANDLE_VALUE;
+#else
+    #error "Platform not supported"
+#endif
     while (active)
     {
         Message msg;
@@ -51,6 +56,7 @@ void ShaderService::onFileListening()
         switch (msg.type)
         {
         case MessageType::ListenToDirectories:
+#ifdef _WIN32 
             {
                 if (h == INVALID_HANDLE_VALUE)
                 {
@@ -65,7 +71,7 @@ void ShaderService::onFileListening()
                         break;
                 }
 
-                auto result = WaitForSingleObject(h, INFINITE);
+                auto result = WaitForSingleObject(h, m_fileWatchPollingRate <= 0 ? INFINITE : (DWORD)m_fileWatchPollingRate);
                 CPY_ASSERT(result != WAIT_FAILED);
                 if (result != WAIT_OBJECT_0)
                     break;
@@ -73,6 +79,9 @@ void ShaderService::onFileListening()
                 //again try and listen for more dir changes.
                 m_fileThreadQueue.push(msg);
             }
+#else
+    #error "Platform not supported"
+#endif
             break;
         case MessageType::Exit:
         default:
@@ -91,6 +100,16 @@ ShaderHandle ShaderService::compileShader(const ShaderDesc& desc)
     data.debugName = desc.debugName;
     data.filename = desc.path;
     return outHandle;
+}
+
+ShaderHandle ShaderService::compileInlineShader(const ShaderInlineDesc& desc)
+{
+    return ShaderHandle();
+}
+
+GpuPipelineHandle ShaderService::createComputePipeline(const ComputePipelineDesc& desc)
+{
+    return GpuPipelineHandle();
 }
 
 IShaderService* IShaderService::create(const ShaderServiceDesc& desc)

@@ -198,6 +198,7 @@ public:
     virtual void destroyContext(TestContext* context)
     {
         auto testContext = static_cast<TaskSystemContext*>(context);
+        delete testContext->ts;
         delete testContext;
     }
 };

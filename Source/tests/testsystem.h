@@ -27,4 +27,13 @@ public:
     virtual void destroyContext(TestContext* context) { delete context; }
 };
 
+struct ApplicationContext
+{
+    int argc;
+    char** argv;
+    
+    static const ApplicationContext& get();
+    static void set(const ApplicationContext& ctx);
+};
+
 }

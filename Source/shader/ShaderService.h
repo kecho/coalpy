@@ -42,6 +42,7 @@ private:
 
     std::unique_ptr<std::thread> m_fileThread;
     ThreadQueue<Message> m_fileThreadQueue;
+    int m_fileWatchPollingRate;
 
     struct ShaderData
     {

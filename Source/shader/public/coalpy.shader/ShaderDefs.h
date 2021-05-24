@@ -55,6 +55,7 @@ struct ShaderServiceDesc
     IFileSystem* fs;
     ITaskSystem* ts;
     const char* watchDirectory; //must be absolute.
+    int fileWatchPollingRate;
     OnShaderCompleteFn shaderCompiledFn;
     OnGpuPipelineCompleteFn gpuPipelineCompiledFn;
 };

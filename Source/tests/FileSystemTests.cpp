@@ -161,6 +161,8 @@ public:
     virtual void destroyContext(TestContext* context)
     {
         auto testContext = static_cast<FileSystemContext*>(context);
+        delete testContext->fs;
+        delete testContext->ts;
         delete testContext;
     }
 };
