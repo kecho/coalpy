@@ -1,5 +1,5 @@
 #include "TaskSystem.h"
-#include "ThreadQueue.h"
+#include <coalpy.tasks/ThreadQueue.h>
 #include <coalpy.core/Assert.h>
 #include <chrono>
 #include <thread>

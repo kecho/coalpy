@@ -326,4 +326,20 @@ namespace InternalFileSystem
 #else
     #error "Platform not supported"
 #endif
+
+namespace FileUtils
+{
+    void fixStringPath(const std::string& str, std::string& output)
+    {
+        auto cpy = str;
+        InternalFileSystem::fixStringPath(cpy);        
+        output = std::move(cpy);
+    }
+
+    void getFileName(const std::string& path, std::string& outName)
+    {
+        InternalFileSystem::getFileName(path, outName);
+    }
+}
+
 }
