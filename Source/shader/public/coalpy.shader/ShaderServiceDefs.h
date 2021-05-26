@@ -1,6 +1,6 @@
 #pragma once
 
-#include <coalpy.core/GenericHandle.h>
+#include <coalpy.render/ShaderDefs.h>
 #include <functional>
 
 namespace coalpy
@@ -8,29 +8,6 @@ namespace coalpy
 
 class IFileSystem;
 class ITaskSystem;
-
-enum class ShaderType
-{
-    Compute,
-    Count
-};
-
-struct ShaderDesc
-{
-    ShaderType type;
-    const char* debugName;
-    const char* path;
-};
-
-struct ShaderInlineDesc
-{
-    ShaderType type;
-    const char* debugName;
-    const char* immCode;
-};
-
-using ShaderHandle = GenericHandle<unsigned>;
-using GpuPipelineHandle = GenericHandle<unsigned>;
 
 struct ComputePipelineDesc
 {

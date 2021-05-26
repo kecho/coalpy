@@ -36,8 +36,6 @@ void testFileWatch(TestContext& ctx)
 {
     auto& testContext = (ShaderServiceContext&)ctx;
     testContext.begin();
-
-
     testContext.end();
 }
 
