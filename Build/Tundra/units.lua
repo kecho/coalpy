@@ -1,18 +1,27 @@
 local SourceDir = "Source";
+local DxcDir = "External/dxc_2021_04-20/"
+local DxcIncludes = DxcDir.."inc/"
+local DxcBinary = DxcDir.."bin/x64/dxcompiler.dll"
+local PythonDir = "External/Python39-win64/"
+
 
 local LibIncludes = {
     _G.GetPythonPath() .. "/include"
 }
 
-local PyLibs = {
+local Libraries = {
     {
-        "External/Python39-win64/python39_d.lib",
+        PythonDir.."python39_d.lib",
         Config = { "win64-msvc-debug-*" }
     },
     {
-        "External/Python39-win64/python39.lib",
+        PythonDir.."python39.lib",
         Config = { "win64-msvc-release", "win64-msvc-production"  }
     }
+}
+
+local Binaries = {
+    DxcBinary
 }
 
 -- C++ module table-> module name with its dependencies
@@ -24,11 +33,15 @@ local CoalPyModuleTable = {
     render  = { "core", "tasks" }
 }
 
+-- C++ module external includes
+local CoalPyModuleIncludes = {
+    render = { DxcIncludes }
+}
+
 -- Module list for the core coalpy module
 local CoalPyModules = { "core", "shader", "tasks", "render", "files"  }
 
-
-_G.BuildModules(SourceDir, CoalPyModuleTable)
-_G.BuildPyLib("coalpy", SourceDir, LibIncludes, CoalPyModules, PyLibs)
-_G.BuildProgram("coalpy_tests", "tests", { "CPY_ASSERT_ENABLED=1" }, SourceDir, LibIncludes, CoalPyModules, PyLibs)
-_G.DeployPyLib("coalpy")
+_G.BuildModules(SourceDir, CoalPyModuleTable, CoalPyModuleIncludes)
+_G.BuildPyLib("coalpy", SourceDir, LibIncludes, CoalPyModules, Libraries)
+_G.BuildProgram("coalpy_tests", "tests", { "CPY_ASSERT_ENABLED=1" }, SourceDir, LibIncludes, CoalPyModules, Libraries)
+_G.DeployPyLib("coalpy", Binaries)

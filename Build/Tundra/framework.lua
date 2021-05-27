@@ -32,15 +32,17 @@ function _G.GetModuleDeps(moduleList)
     return depList
 end
 
-function _G.BuildModules(sourceDir, moduleMap)
+function _G.BuildModules(sourceDir, moduleMap, extraIncludes)
     for k,v in pairs(moduleMap) do
+        local externalIncludes = extraIncludes[k]
         local moduleLib = StaticLibrary {
             Name = k,
             Pass = "BuildCode",
             Depends = { _G.GetModuleDeps(v) },
             Includes = {
                 _G.GetModuleIncludes(sourceDir, v),
-                _G.GetModulePublicInclude(sourceDir, k)
+                _G.GetModulePublicInclude(sourceDir, k),
+                extraIncludes
             },
             Sources = {
                 Glob {
@@ -103,7 +105,7 @@ function _G.BuildProgram(programName, programSource, defines, sourceDir, include
     Default(prog)
 end
 
-function _G.DeployPyLib(pythonLibName)
+function _G.DeployPyLib(pythonLibName, binaries)
     local srcDll = "$(OBJECTDIR)$(SEP)"..pythonLibName..".dll"
     local dstPyd = "$(OBJECTDIR)$(SEP)"..pythonLibName..".pyd"
     local cpyFile = CopyFile {
@@ -113,5 +115,14 @@ function _G.DeployPyLib(pythonLibName)
     }
 
     Default(cpyFile)
+
+    for i, v in ipairs(binaries) do
+        local cpCmd = CopyFile {
+            Pass = "Deploy",
+            Source = v,
+            Target = "$(OBJECTDIR)"
+        }
+        Default(cpCmd)
+    end
 end
 

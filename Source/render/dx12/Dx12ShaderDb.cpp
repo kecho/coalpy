@@ -1,4 +1,5 @@
 #include "Dx12ShaderDb.h" 
+#include <d3d12shader.h>
 
 namespace coalpy
 {
