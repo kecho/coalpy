@@ -103,9 +103,7 @@ public:
     //! \return SmartPtrerence to the pointed object
     C & operator*()
     {
-#if PEGASUS_ENABLE_DETAILED_ASSERT
         CPY_ASSERT_MSG(mObject != nullptr, "Trying to dereference a null SmartPtr<>");
-#endif
         return *mObject;
     }
 
@@ -113,9 +111,7 @@ public:
     //! \return SmartPtrerence to the pointed object
     const C & operator*() const
     {
-#if PEGASUS_ENABLE_DETAILED_ASSERT
         CPY_ASSERT_MSG(mObject != nullptr, "Trying to dereference a null SmartPtr<>");
-#endif
         return *mObject;
     }
 
@@ -123,9 +119,7 @@ public:
     //! \return Pointed to the pointed object
     C * operator->()
     {
-#if PEGASUS_ENABLE_DETAILED_ASSERT
         CPY_ASSERT_MSG(mObject != nullptr, "Trying to access a member of a null SmartPtr<>");
-#endif
         return mObject;
     }
 
@@ -133,11 +127,9 @@ public:
     //! \return Pointed to the pointed object
     const C * operator->() const
     {
-#if PEGASUS_ENABLE_DETAILED_ASSERT
         CPY_ASSERT_MSG(mObject != nullptr, "Trying to access a member of a null SmartPtr<>");
-#endif
         return mObject;
-    }
+    } 
 
   
     //! SmartPtrerence cast operator, with C2 as the destination class
@@ -160,6 +152,9 @@ public:
     template <class C2>
     inline operator const C2 *() const { return static_cast<const C2 *>(mObject); }
 
+    //! Implicit cast to boolean, so it can be used in conditionals (test for nulity)
+    //! \return boolean to check if pointer is null or not 
+    inline operator bool() const { return mObject != nullptr; }
 
     //! Comparison operator with a weak pointer
     //! \warning Compares the pointers, not the objects themselves

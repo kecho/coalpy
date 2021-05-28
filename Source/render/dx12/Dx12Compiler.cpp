@@ -7,6 +7,7 @@
 #include <coalpy.core/HandleContainer.h>
 #include <coalpy.core/SmartPtr.h>
 #include <coalpy.core/String.h>
+#include <coalpy.core/ClTokenizer.h>
 #include <coalpy.files/Utils.h>
 
 #include <string>
@@ -110,41 +111,139 @@ Dx12Compiler::~Dx12Compiler()
 {
 }
 
-void Dx12Compiler::compileShader(
-        ShaderType type,
-        const char* mainFn,
-        const char* source,
-        const std::vector<std::string>& defines,
-        ShaderCompilationResult& result)
+void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
 {
-    DxcCompilerScope scope;
-    DxcInstanceData instanceData = scope.data();
-    IDxcCompiler3& compiler = instanceData.compiler;
-    IDxcUtils& utils = instanceData.utils;
-
-    std::vector<LPWSTR>  arguments;
-    std::vector<std::wstring> argumentsMem;
-
-    argumentsMem.push_back(L"-E");
-    argumentsMem.push_back(s2ws(std::string(mainFn)));
-
     //latest and greatest shader model 6.6 baby!!
     static const wchar_t* s_targets[ShaderType::Count] = {
         L"vs_6_6", //Vertex
         L"ps_6_6", //Pixel
         L"cs_6_6"  //Compute
     };
-    
-    argumentsMem.push_back(L"-T");
-    argumentsMem.push_back(s_targets[(int)type]);
 
-    for (auto& defStr : defines)
+    DxcCompilerScope scope;
+    DxcInstanceData instanceData = scope.data();
+    IDxcCompiler3& compiler = instanceData.compiler;
+    IDxcUtils& utils = instanceData.utils;
+
+    SmartPtr<IDxcBlobEncoding> codeBlob;
+    DX_OK(utils.CreateBlob(args.source, strlen(args.source), CP_UTF8, (IDxcBlobEncoding**)&codeBlob));
+
+    std::string  sshaderName = args.shaderName;
+    std::wstring wshaderName = s2ws(sshaderName);
+
+    std::string  sentryPoint = args.mainFn;
+    std::wstring wentryPoint = s2ws(sentryPoint);
+
+    const wchar_t* profile = s_targets[(int)args.type];
+
+    std::vector<LPCWSTR> arguments;
+    arguments.push_back(DXC_ARG_WARNINGS_ARE_ERRORS);
+    arguments.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
+    arguments.push_back(DXC_ARG_ENABLE_STRICTNESS);
+
+    SmartPtr<IDxcCompilerArgs> compilerArgs;
+
+    //extremely important to not resize these containers, so we preserve the same pointers
+    std::vector<std::wstring> defineStrings((int)args.defines.size() * 2u);
+    std::vector<DxcDefine> dxcDefines;
+    dxcDefines.reserve(args.defines.size());
     {
-        argumentsMem.push_back(L"-D");
-        argumentsMem.push_back(s2ws(defStr));
+        int nextDefine = 0;
+        for (auto& str : args.defines)
+        {
+            auto splitArr = ClTokenizer::splitString(str, '=');
+            DxcDefine dxcDef = {};
+            defineStrings[nextDefine] = s2ws(splitArr[0]);
+            dxcDef.Name = defineStrings[nextDefine].c_str();
+            ++nextDefine;
+            if (splitArr.size() >= 2)
+            {
+                defineStrings[nextDefine] = s2ws(splitArr[1]);
+                dxcDef.Value = defineStrings[nextDefine].c_str();
+                ++nextDefine;
+            }
+
+            dxcDefines.push_back(dxcDef);
+        }
     }
 
-    
+    DX_OK(utils.BuildArguments(
+        wshaderName.c_str(),
+        wentryPoint.c_str(),
+        profile,
+        arguments.data(),
+        (UINT32)arguments.size(),
+        dxcDefines.data(),
+        (UINT32)dxcDefines.size(),
+        (IDxcCompilerArgs**)&compilerArgs
+    ));
+
+    DxcBuffer sourceBuffer = {
+        codeBlob->GetBufferPointer(),
+        codeBlob->GetBufferSize(),
+        0u };
+
+    SmartPtr<IDxcResult> results;
+
+    DX_OK(compiler.Compile(
+        &sourceBuffer,
+        compilerArgs->GetArguments(),
+        compilerArgs->GetCount(),
+        nullptr, /*todo place header*/
+        __uuidof(IDxcResult),
+        (void**)&results
+    ));
+
+    int numOutputs = (int)results->GetNumOutputs();
+    bool compiledSuccess = false;
+    for (int i = 0; i < numOutputs; ++i)
+    {
+        DXC_OUT_KIND kind = results->GetOutputByIndex(i);
+        if (kind == DXC_OUT_ERRORS)
+        {
+            SmartPtr<IDxcBlobUtf8> errorBlob;
+            DX_OK(results->GetOutput(
+                DXC_OUT_ERRORS,
+                __uuidof(IDxcBlobUtf8),
+                (void**)&errorBlob,
+                nullptr));
+            
+            if (args.onError)
+            {
+                std::string errorStr;
+                if (errorBlob != nullptr)
+                    errorStr.assign(errorBlob->GetStringPointer(), errorBlob->GetStringLength());
+                else
+                    errorStr = "unknown error";
+                args.onError(args.shaderName, errorStr.c_str());
+            }
+        }
+        else if (kind == DXC_OUT_OBJECT)
+        {
+            SmartPtr<IDxcBlob> shaderOut;
+            DX_OK(results->GetOutput(
+                DXC_OUT_OBJECT,
+                __uuidof(IDxcBlob),
+                (void**)&shaderOut,
+                nullptr));
+
+            if (shaderOut)
+            {
+                if (args.onFinished)
+                    args.onFinished(true, &(*shaderOut));
+                compiledSuccess = true;
+            }
+            else if (args.onError)
+            {
+                args.onError(args.shaderName, "Failed to retrieve result blob.");
+            }
+        }
+    }
+
+    if (!compiledSuccess && args.onFinished)
+    {
+        args.onFinished(false, nullptr);
+    }
 }
 
 void Dx12Compiler::setupDxc()
