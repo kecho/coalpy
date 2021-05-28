@@ -1,9 +1,9 @@
 #include <coalpy.render/IShaderDb.h>
 
-struct IDxcCompiler3;
-
 namespace coalpy
 {
+
+class Dx12Compiler;
 
 class Dx12ShaderDb : public IShaderDb
 {
@@ -13,9 +13,8 @@ public:
     virtual ~Dx12ShaderDb();
 
 private:
-    void SetupDxc();
     ShaderDbDesc m_desc;
-    IDxcCompiler3* m_compiler;
+    Dx12Compiler& m_compiler;
 };
 
 }

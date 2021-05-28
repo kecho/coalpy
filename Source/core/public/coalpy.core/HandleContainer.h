@@ -15,15 +15,15 @@ public:
     {
         if (m_freeHandles.empty())
         {
-            outHandle = (HandleType::BaseType)m_data.size();
+            outHandle.handleId = (HandleType::BaseType)m_data.size();
             m_data.emplace_back();
         }
         else
         {
-            outHandle = m_freeHandles.back();
+            outHandle.handleId = m_freeHandles.back();
             m_freeHandles.pop_back();
         }
-        auto& container = m_data[outHandle];
+        auto& container = m_data[outHandle.handleId];
         container.handle = outHandle; 
         container.valid = true;
         ++m_numElements;
@@ -32,7 +32,7 @@ public:
 
     void free(HandleType handle, bool resetObject = true)
     {
-        if (handle >= (HandleType)(HandleType::BaseType)m_data.size())
+        if (handle.handleId >= (HandleType::BaseType)m_data.size())
             return;
 
         m_freeHandles.push_back(handle);
@@ -53,20 +53,20 @@ public:
 
     bool contains(HandleType h) const
     {
-        if (h >= (HandleType)m_data.size() || !h.valid())
+        if (h.handleId >= (HandleType::BaseType)m_data.size() || !h.valid())
             return false;
 
-        return m_data[h].valid;
+        return m_data[h.handleId].valid;
     }
 
     DataType& operator[](HandleType h)
     {
-        return m_data[h].data;
+        return m_data[h.handleId].data;
     }
 
     const DataType& operator[](HandleType h) const
     {
-        return m_data[h].data;
+        return m_data[h.handleId].data;
     }
 
     const int elementsCount() const { return m_numElements; }

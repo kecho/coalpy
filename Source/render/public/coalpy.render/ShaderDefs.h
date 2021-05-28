@@ -7,6 +7,8 @@ namespace coalpy
 
 enum class ShaderType
 {
+    Vertex,
+    Pixel,
     Compute,
     Count
 };
