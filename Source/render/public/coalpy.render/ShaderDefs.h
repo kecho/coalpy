@@ -36,7 +36,8 @@ struct ShaderCompilationResult
 
 struct ShaderDbDesc
 {
-    /* nothing here yet */
+    //optional if we want to specify a path for the compiler library
+    const char* compilerDllPath = nullptr;
 };
 
 }

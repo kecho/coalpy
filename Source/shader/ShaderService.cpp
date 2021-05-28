@@ -1,6 +1,7 @@
 #include "ShaderService.h" 
 #include <coalpy.files/Utils.h>
 #include <coalpy.core/Assert.h>
+#include <coalpy.render/IShaderDb.h>
 #include <string>
 
 #ifdef _WIN32 
@@ -14,6 +15,7 @@ namespace coalpy
 ShaderService::ShaderService(const ShaderServiceDesc& desc)
 : m_fs(desc.fs)
 , m_ts(desc.ts)
+, m_db(desc.db)
 , m_fileWatchPollingRate(desc.fileWatchPollingRate)
 {
     std::string dirName = desc.watchDirectory;

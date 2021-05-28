@@ -42,7 +42,7 @@ function _G.BuildModules(sourceDir, moduleMap, extraIncludes)
             Includes = {
                 _G.GetModuleIncludes(sourceDir, v),
                 _G.GetModulePublicInclude(sourceDir, k),
-                extraIncludes
+                externalIncludes
             },
             Sources = {
                 Glob {

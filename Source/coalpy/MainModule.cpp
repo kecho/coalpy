@@ -43,7 +43,7 @@ static struct PyModuleDef s_CoalPyModuleDef = {
 PyMODINIT_FUNC
 PyInit_coalpy(void)
 {
-    std::cout << "PY TEST MODULE BITCHES" << std::endl;
+    std::cout << "PY TEST MODULE BITCHES " << std::endl;
     PyObject* moduleObj = PyModule_Create(&s_CoalPyModuleDef);
     auto state = (CoalPyModuleState*)PyModule_GetState(moduleObj);
     state->d = "hello world";

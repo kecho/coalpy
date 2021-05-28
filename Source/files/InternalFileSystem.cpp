@@ -322,6 +322,20 @@ namespace InternalFileSystem
         FindClose(hFind);
     }
 
+    void getAbsolutePath(const std::string& path, std::string& outDir)
+    {
+        const int DestBufferSize = 1024;
+        char destination[DestBufferSize];
+        if (!GetFullPathNameA(path.c_str(), 1024, destination, NULL))
+        {
+            outDir = path;
+        }
+        else
+        {
+            outDir = destination;
+        }
+    }
+
 }
 #else
     #error "Platform not supported"
@@ -359,6 +373,12 @@ namespace FileUtils
 
         outName = cpy.substr(0, foundIndex);
     }
+
+    void getAbsolutePath(const std::string& path, std::string& outDir)
+    {
+        InternalFileSystem::getAbsolutePath(path, outDir);
+    }
+    
 }
 
 }

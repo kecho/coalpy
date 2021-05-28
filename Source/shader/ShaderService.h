@@ -28,6 +28,7 @@ private:
     void onFileListening();
     IFileSystem* m_fs;
     ITaskSystem* m_ts;
+    IShaderDb* m_db;
 
     enum class MessageType
     {

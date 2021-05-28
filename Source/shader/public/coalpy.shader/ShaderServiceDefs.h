@@ -8,6 +8,7 @@ namespace coalpy
 
 class IFileSystem;
 class ITaskSystem;
+class IShaderDb;
 
 struct ComputePipelineDesc
 {
@@ -31,7 +32,8 @@ struct ShaderServiceDesc
 {
     IFileSystem* fs;
     ITaskSystem* ts;
-    const char* watchDirectory; //must be absolute.
+    IShaderDb* db;
+    const char* watchDirectory; 
     int fileWatchPollingRate;
     OnShaderCompleteFn shaderCompiledFn;
     OnGpuPipelineCompleteFn gpuPipelineCompiledFn;

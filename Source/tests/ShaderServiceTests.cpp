@@ -4,6 +4,7 @@
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/Utils.h>
 #include <coalpy.shader/IShaderService.h>
+#include <coalpy.render/IShaderDb.h>
 #include <sstream>
 #include <iostream>
 
@@ -16,6 +17,7 @@ public:
     ITaskSystem* ts = nullptr;
     IFileSystem* fs = nullptr;
     IShaderService* ss = nullptr;
+    IShaderDb* db = nullptr;
 
     void begin()
     {
@@ -57,6 +59,11 @@ public:
     {
         auto testContext = new ShaderServiceContext();
 
+        std::string rootDir;
+        auto appContext = ApplicationContext::get();
+        std::string appName = appContext.argv[0];
+        FileUtils::getDirName(appName, rootDir);
+
         {
             TaskSystemDesc desc;
             desc.threadPoolSize = 8;
@@ -69,12 +76,13 @@ public:
         }
 
         {
-            std::string rootDir;
-            auto appContext = ApplicationContext::get();
-            std::string appName = appContext.argv[0];
-            FileUtils::getDirName(appName, rootDir);
-            std::cout << rootDir << std::endl;
-            ShaderServiceDesc desc { testContext->fs, testContext->ts, rootDir.c_str(), 60, nullptr, nullptr };
+            ShaderDbDesc desc;
+            desc.compilerDllPath = rootDir.c_str();
+            testContext->db = IShaderDb::create(desc);
+        }
+
+        {
+            ShaderServiceDesc desc { testContext->fs, testContext->ts, testContext->db, rootDir.c_str(), 60, nullptr, nullptr };
             testContext->ss = IShaderService::create(desc);
         }
 
@@ -85,6 +93,7 @@ public:
     {
         auto testContext = static_cast<ShaderServiceContext*>(context);
         delete testContext->ss;
+        delete testContext->db;
         delete testContext->fs;
         delete testContext->ts;
         delete testContext;

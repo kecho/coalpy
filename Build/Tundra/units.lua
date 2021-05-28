@@ -1,7 +1,7 @@
 local SourceDir = "Source";
 local DxcDir = "External/dxc_2021_04-20/"
-local DxcIncludes = DxcDir.."inc/"
-local DxcBinary = DxcDir.."bin/x64/dxcompiler.dll"
+local DxcIncludes = DxcDir
+local DxcBinary = DxcDir.."dxc/bin/x64/dxcompiler.dll"
 local PythonDir = "External/Python39-win64/"
 
 
@@ -30,7 +30,7 @@ local CoalPyModuleTable = {
     tasks   = { "core" },
     files   = { "core", "tasks" },
     shader  = { "core", "tasks", "files", "render" },
-    render  = { "core", "tasks" }
+    render  = { "core", "tasks", "files" }
 }
 
 -- C++ module external includes
