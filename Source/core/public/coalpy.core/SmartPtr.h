@@ -152,10 +152,6 @@ public:
     template <class C2>
     inline operator const C2 *() const { return static_cast<const C2 *>(mObject); }
 
-    //! Implicit cast to boolean, so it can be used in conditionals (test for nulity)
-    //! \return boolean to check if pointer is null or not 
-    inline operator bool() const { return mObject != nullptr; }
-
     //! Comparison operator with a weak pointer
     //! \warning Compares the pointers, not the objects themselves
     //! \param ptr Pointer to compare with

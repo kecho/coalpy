@@ -1,7 +1,8 @@
 local SourceDir = "Source";
 local DxcDir = "External/dxc_2021_04-20/"
 local DxcIncludes = DxcDir
-local DxcBinary = DxcDir.."dxc/bin/x64/dxcompiler.dll"
+local DxcBinaryCompiler = DxcDir.."dxc/bin/x64/dxcompiler.dll"
+local DxcBinaryIl = DxcDir.."dxc/bin/x64/dxil.dll"
 local PythonDir = "External/Python39-win64/"
 
 
@@ -21,7 +22,8 @@ local Libraries = {
 }
 
 local Binaries = {
-    DxcBinary
+    DxcBinaryCompiler,
+    DxcBinaryIl
 }
 
 -- C++ module table-> module name with its dependencies

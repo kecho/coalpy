@@ -105,6 +105,7 @@ struct DxcCompilerScope
 Dx12Compiler::Dx12Compiler(const ShaderDbDesc& desc)
 : m_desc(desc)
 {
+    setupDxc();
 }
 
 Dx12Compiler::~Dx12Compiler()
@@ -211,11 +212,11 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
             if (args.onError)
             {
                 std::string errorStr;
-                if (errorBlob != nullptr)
+                if (errorBlob != nullptr && errorBlob->GetStringLength() > 0)
+                {
                     errorStr.assign(errorBlob->GetStringPointer(), errorBlob->GetStringLength());
-                else
-                    errorStr = "unknown error";
-                args.onError(args.shaderName, errorStr.c_str());
+                    args.onError(args.shaderName, errorStr.c_str());
+                }
             }
         }
         else if (kind == DXC_OUT_OBJECT)
@@ -227,7 +228,7 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
                 (void**)&shaderOut,
                 nullptr));
 
-            if (shaderOut)
+            if (shaderOut != nullptr)
             {
                 if (args.onFinished)
                     args.onFinished(true, &(*shaderOut));
@@ -265,11 +266,6 @@ void Dx12Compiler::setupDxc()
             CPY_ASSERT_MSG(g_dxcCreateInstanceFn, "Could not find \"DxcCreateInstance\" inside dxcompiler.dll");
         }
     }
-
-    if (!g_dxcCreateInstanceFn)
-        return;
-
-    //DX_OK(g_dxcCreateInstanceFn(CLSID_DxcCompiler, __uuidof(IDxcCompiler3), (void**)&m_compiler));
 }
 
 

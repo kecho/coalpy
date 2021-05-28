@@ -2,7 +2,8 @@ require 'tundra.syntax.glob'
 require 'tundra.syntax.files'
 
 local native = require "tundra.native"
-local path     = require "tundra.path"
+local path  = require "tundra.path"
+local npath = require 'tundra.native.path'
 
 function _G.GetPythonPath()
     local pyroot = native.getenv("PYTHON39_ROOT", nil);   
@@ -117,10 +118,11 @@ function _G.DeployPyLib(pythonLibName, binaries)
     Default(cpyFile)
 
     for i, v in ipairs(binaries) do
+        local targetName =  "$(OBJECTDIR)$(SEP)"..npath.get_filename(v)
         local cpCmd = CopyFile {
             Pass = "Deploy",
             Source = v,
-            Target = "$(OBJECTDIR)"
+            Target = targetName
         }
         Default(cpCmd)
     end

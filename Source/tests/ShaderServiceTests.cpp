@@ -5,6 +5,8 @@
 #include <coalpy.files/Utils.h>
 #include <coalpy.shader/IShaderService.h>
 #include <coalpy.render/IShaderDb.h>
+#include <coalpy.render/../../Config.h>
+#include <coalpy.render/../../Dx12/Dx12Compiler.h>
 #include <sstream>
 #include <iostream>
 
@@ -18,6 +20,7 @@ public:
     IFileSystem* fs = nullptr;
     IShaderService* ss = nullptr;
     IShaderDb* db = nullptr;
+    std::string rootDir;
 
     void begin()
     {
@@ -41,6 +44,79 @@ void testFileWatch(TestContext& ctx)
     testContext.end();
 }
 
+#if ENABLE_DX12
+void dx12CompileFunction(Dx12Compiler& compiler)
+{
+    Dx12CompileArgs compilerArgs = {};
+    compilerArgs.type = ShaderType::Compute;
+    compilerArgs.mainFn = "csMain";
+    compilerArgs.shaderName = "SimpleComputeShader";
+    compilerArgs.source = R"(
+        Texture2D<float> input : register(t0);
+        RWTexture2D<float> output : register(u0);
+        [numthreads(8,8,1)]
+        void csMain(int3 dti : SV_DispatchThreadID)
+        {
+            output[dti.xy] = input[dti.xy];
+        }
+    )";
+
+    compilerArgs.onError = [&](const char* name, const char* errorString)
+    {
+        CPY_ASSERT_FMT(false, "Unexpected compilation error: \"%s\".", errorString);
+    };
+
+    int onFinishedReached = 0;
+    compilerArgs.onFinished = [&](bool success, IDxcBlob* blob)
+    {
+        ++onFinishedReached;
+        bool compiledSuccess = success && blob != nullptr;
+        CPY_ASSERT_MSG(compiledSuccess, "Unexpected compilation error.");
+    };
+
+    compiler.compileShader(compilerArgs);
+    CPY_ASSERT_FMT(onFinishedReached == 1, "onFinishedFunction reached multiple times %d.", onFinishedReached);
+}
+
+void dx12TestSimpleDxcCompile(TestContext& ctx)
+{
+    auto& testContext = (ShaderServiceContext&)ctx;
+
+    ShaderDbDesc dbDesc;
+    dbDesc.compilerDllPath = testContext.rootDir.c_str();
+    Dx12Compiler compiler(dbDesc);
+    dx12CompileFunction(compiler);
+}
+
+void dx12TestParallelDxcCompile(TestContext& ctx)
+{
+    auto& testContext = (ShaderServiceContext&)ctx;
+    testContext.begin();
+
+    ShaderDbDesc dbDesc;
+    dbDesc.compilerDllPath = testContext.rootDir.c_str();
+    Dx12Compiler compiler(dbDesc);
+
+    TaskDesc compileTask([&compiler](TaskContext& taskContext) {
+        dx12CompileFunction(compiler);
+    });
+
+    int compileTasksCount = 200;
+    std::vector<Task> compileTasks;
+    for (int i = 0; i < compileTasksCount; ++i)
+        compileTasks.push_back(testContext.ts->createTask(compileTask));
+
+    Task rootTask = testContext.ts->createTask();
+    testContext.ts->depends(rootTask, compileTasks.data(), (int)compileTasks.size());
+
+    testContext.ts->execute(rootTask);
+    testContext.ts->wait(rootTask);
+    testContext.ts->cleanTaskTree(rootTask);
+
+    testContext.end();
+}
+#endif
+
 class ShaderSuite : public TestSuite
 {
 public:
@@ -48,6 +124,10 @@ public:
     virtual const TestCase* getCases(int& caseCounts) const
     {
         static TestCase sCases[] = {
+#if ENABLE_DX12
+            { "dx12TestSimpleDxcCompile", dx12TestSimpleDxcCompile },
+            { "dx12TestManyParallelDxcCompile", dx12TestParallelDxcCompile },
+#endif
             { "testFilewatch", testFileWatch }
         };
 
@@ -63,6 +143,8 @@ public:
         auto appContext = ApplicationContext::get();
         std::string appName = appContext.argv[0];
         FileUtils::getDirName(appName, rootDir);
+
+        testContext->rootDir = rootDir;
 
         {
             TaskSystemDesc desc;
