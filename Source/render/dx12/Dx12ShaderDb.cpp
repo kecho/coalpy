@@ -1,4 +1,4 @@
-#include "../Config.h"
+#include <Config.h>
 
 #if ENABLE_DX12
 

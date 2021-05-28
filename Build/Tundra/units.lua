@@ -35,7 +35,7 @@ local CoalPyModuleTable = {
 
 -- C++ module external includes
 local CoalPyModuleIncludes = {
-    render = { DxcIncludes }
+    render = { DxcIncludes, "Source/render/" }
 }
 
 -- Module list for the core coalpy module
