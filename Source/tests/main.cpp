@@ -2,6 +2,7 @@
 #include <coalpy.core/Assert.h>
 #include <coalpy.core/ClParser.h>
 #include <coalpy.core/ClTokenizer.h>
+#include <coalpy.core/Stopwatch.h>
 #include <string>
 #include <set>
 #include <atomic>
@@ -31,6 +32,7 @@ CreateSuiteFn g_suites[] = {
     shaderSuite
 };
 
+int g_totalErrors = 0;
 std::atomic<int> g_errors = 0;
 void assertHandler(const char* condition, const char* fileStr, int line, const char* msg)
 {
@@ -56,20 +58,24 @@ void runSuite(CreateSuiteFn createFn)
     TestContext* context = suite->createContext();
     int caseCount = 0;
     const TestCase* cases = suite->getCases(caseCount);
+    Stopwatch sw;
     for (int i = 0; i < caseCount; ++i)
     {
         const TestCase& caseData = cases[i];
         if (!gFilters.cases.empty() && gFilters.cases.find(caseData.name) == gFilters.cases.end())
             continue;
 
+        sw.start();
         int prevErr = g_errors;
         caseData.fn(*context);
         int finalErrors = g_errors;
         bool success = (prevErr == finalErrors);
-        printf("Case %d: %s - %s\n", i, caseData.name, success ? "PASS" : "FAIL");
+        float runningTime = (float)sw.timeMicroSeconds() / 1000.0f;
+        printf("Case %d: %s (%.3fms) - %s\n", i, caseData.name, runningTime, success ? "PASS" : "FAIL");
     }
     printf("\n");
     suite->destroyContext(context);
+    g_totalErrors += g_errors;
     g_errors = 0;
     delete suite;
 }
@@ -156,5 +162,7 @@ int main(int argc, char* argv[])
     {
         runSuite(g_suites[i]);
     }
+
+    std::cout << (g_totalErrors == 0 ? "SUCCESS" : "FAIL") << std::endl;
     return 0;
 }

@@ -115,6 +115,20 @@ void dx12TestParallelDxcCompile(TestContext& ctx)
 
     testContext.end();
 }
+
+void dx12TestManySerialDxcCompile(TestContext& ctx)
+{
+    auto& testContext = (ShaderServiceContext&)ctx;
+    ShaderDbDesc dbDesc;
+    dbDesc.compilerDllPath = testContext.rootDir.c_str();
+    Dx12Compiler compiler(dbDesc);
+
+    int compileTasksCount = 200;
+    for (int i = 0; i < compileTasksCount; ++i)
+    {
+        dx12CompileFunction(compiler);
+    }
+}
 #endif
 
 class ShaderSuite : public TestSuite
@@ -127,6 +141,7 @@ public:
 #if ENABLE_DX12
             { "dx12TestSimpleDxcCompile", dx12TestSimpleDxcCompile },
             { "dx12TestManyParallelDxcCompile", dx12TestParallelDxcCompile },
+            { "dx12TestManySerialDxcCompile", dx12TestManySerialDxcCompile },
 #endif
             { "testFilewatch", testFileWatch }
         };

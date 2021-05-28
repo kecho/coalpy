@@ -10,8 +10,8 @@ struct IDxcBlob;
 namespace coalpy
 {
 
-using OnError = std::function<void(const char* name, const char* errorString)>;
-using OnFinished = std::function<void(bool success, IDxcBlob* resultBlob)>;
+using Dx12CompilerOnError = std::function<void(const char* name, const char* errorString)>;
+using Dx12CompilerOnFinished = std::function<void(bool success, IDxcBlob* resultBlob)>;
 
 struct Dx12CompileArgs
 {
@@ -20,8 +20,8 @@ struct Dx12CompileArgs
     const char* mainFn;
     const char* source;
     std::vector<std::string> defines;
-    OnError onError;
-    OnFinished onFinished;
+    Dx12CompilerOnError onError;
+    Dx12CompilerOnFinished onFinished;
 };
 
 class Dx12Compiler
