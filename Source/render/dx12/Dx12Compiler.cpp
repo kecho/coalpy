@@ -8,6 +8,7 @@
 #include <coalpy.core/SmartPtr.h>
 #include <coalpy.core/String.h>
 #include <coalpy.core/ClTokenizer.h>
+#include <coalpy.core/ByteBuffer.h>
 #include <coalpy.files/Utils.h>
 
 #include <string>
@@ -82,22 +83,68 @@ private:
     HandleContainer<DxcUtilsHandle, SmartPtr<IDxcUtils>> m_utilsPool;
 };
 
-thread_local DxcPool s_dxcPool;
+thread_local DxcPool* s_dxcPool = nullptr;
 
 struct DxcCompilerScope
 {
     DxcCompilerScope()
     {
-        m_instance = s_dxcPool.allocate();
+        if (s_dxcPool == nullptr)
+            s_dxcPool = new DxcPool;
+        m_instance = s_dxcPool->allocate();
     }
 
     ~DxcCompilerScope()
     {
-        s_dxcPool.release(m_instance);
+        s_dxcPool->release(m_instance);
     }
 
-    inline DxcInstanceData data() { return s_dxcPool[m_instance]; }
+    inline DxcInstanceData data() { return (*s_dxcPool)[m_instance]; }
     DxcInstance m_instance;
+};
+
+struct DxcIncludeHandler : public IDxcIncludeHandler
+{
+    DxcIncludeHandler(IDxcUtils& utils, Dx12CompilerOnInclude includeFn)
+    : m_includeFn(includeFn)
+    , m_utils(utils)
+    {
+    }
+
+    virtual HRESULT LoadSource(LPCWSTR pFilename, IDxcBlob **ppIncludeSource) override
+    {
+        std::wstring fileName = pFilename;
+        std::string sfileName = ws2s(fileName);
+        IDxcBlobEncoding* codeBlob = nullptr;
+        if (m_includeFn(sfileName.c_str(), m_buffer))
+        {
+            DX_OK(m_utils.CreateBlob(m_buffer.data(), m_buffer.size(), CP_UTF8, &codeBlob));
+            CPY_ASSERT(codeBlob != nullptr);
+        }
+
+        *ppIncludeSource = codeBlob;
+        return S_OK;
+    }
+
+    virtual ULONG AddRef() override
+    {
+        return 1u;
+    }
+
+    virtual ULONG Release() override
+    {
+        return 1u;
+    }
+
+    virtual HRESULT QueryInterface(const IID &,void ** ptr)
+    {
+        *ptr = this;
+        return S_OK;
+    }
+
+    Dx12CompilerOnInclude m_includeFn;
+    IDxcUtils& m_utils;
+    ByteBuffer m_buffer;
 };
 
 }
@@ -186,11 +233,12 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
 
     SmartPtr<IDxcResult> results;
 
+    DxcIncludeHandler includeHandler(utils, args.onInclude);
     DX_OK(compiler.Compile(
         &sourceBuffer,
         compilerArgs->GetArguments(),
         compilerArgs->GetCount(),
-        nullptr, /*todo place header*/
+        args.onInclude == nullptr ? nullptr : &includeHandler,
         __uuidof(IDxcResult),
         (void**)&results
     ));

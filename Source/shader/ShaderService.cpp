@@ -95,13 +95,7 @@ void ShaderService::onFileListening()
 
 ShaderHandle ShaderService::compileShader(const ShaderDesc& desc)
 {
-    std::unique_lock lock(m_shadersMutex);
-    ShaderHandle outHandle;
-    auto& data = m_shaders.allocate(outHandle);
-    data.type = desc.type;
-    data.debugName = desc.debugName;
-    data.filename = desc.path;
-    return outHandle;
+    return ShaderHandle();
 }
 
 ShaderHandle ShaderService::compileInlineShader(const ShaderInlineDesc& desc)

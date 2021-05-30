@@ -45,16 +45,7 @@ private:
     ThreadQueue<Message> m_fileThreadQueue;
     int m_fileWatchPollingRate;
 
-    struct ShaderData
-    {
-        ShaderType type;
-        std::string debugName;
-        std::string filename;
-    };
-
     std::string m_rootDir;
-    std::shared_mutex m_shadersMutex;
-    HandleContainer<ShaderHandle, ShaderData> m_shaders;
 };
 
 
