@@ -52,7 +52,7 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
     compileState->readStep = m_desc.fs->read(FileReadRequest(readPath, [compileState, this](FileReadResponse& response){
         if (response.status == FileStatus::Reading)
         {
-            compileState->buffer.append(response.buffer, response.size);
+            compileState->buffer.append((const u8*)response.buffer, response.size);
         }
         else if (response.status == FileStatus::ReadingSuccessEof)
         {
@@ -79,7 +79,7 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
         [&buffer, &result](FileReadResponse& response){
             if (response.status == FileStatus::Reading)
             {
-                buffer.append(response.buffer, response.size);    
+                buffer.append((const u8*)response.buffer, response.size);    
             }
             else if (response.status == FileStatus::ReadingSuccessEof)
             {

@@ -1,8 +1,9 @@
 #pragma once
-#include <vector>
 
 namespace coalpy
 {
+
+typedef unsigned char u8;
 
 class ByteBuffer
 {
@@ -10,18 +11,22 @@ public:
     ByteBuffer();
     ByteBuffer(size_t size);
     ByteBuffer(ByteBuffer&& other);
+    ~ByteBuffer();
     
-    size_t size() { return m_support.size(); }
-    uint8_t* data() { return m_support.data(); }
-    const uint8_t* data() const { return m_support.data(); }
-    void append(const uint8_t* data, size_t size) { m_support.insert(m_support.end(), data, data + size); }
-    inline void append(const char* data, size_t size)
-    { append((const uint8_t*)data, size); }
-    void  resize(size_t newSize);
-    void  free();
+    u8* data() { return m_data; }
+    const u8* data() const { return m_data; }
+    size_t size() const { return m_size; }
+
+    void append(const u8* data, size_t size);
+    void resize(size_t newSize);
+    void free();
+    void forget();
+    void reserve(size_t newCapacity);
 
 private:
-    std::vector<uint8_t> m_support;
+    u8* m_data;
+    size_t m_size;
+    size_t m_capacity;
 };
 
 }

@@ -1,30 +1,75 @@
 #include <coalpy.core/ByteBuffer.h>
+#include <stdlib.h>
+#include <algorithm>
 
 namespace coalpy
 {
 
 ByteBuffer::ByteBuffer()
+: m_data(nullptr), m_size(0), m_capacity(0)
 {
 }
 
 ByteBuffer::ByteBuffer(size_t size)
+: m_data(nullptr), m_size(0), m_capacity(0)
 {
-    m_support.resize(size);
+    resize(size);
 }
 
 ByteBuffer::ByteBuffer(ByteBuffer&& other)
 {
-    m_support = std::move(other.m_support);
+    m_data = other.m_data;
+    m_size = other.m_capacity;
+    m_capacity = other.m_capacity;
+    other.forget();
+}
+
+ByteBuffer::~ByteBuffer()
+{
+    free();
+}
+
+void ByteBuffer::append(const u8* data, size_t size)
+{
+    size_t totalNewSize = std::max(m_capacity, m_size + size);
+    reserve(totalNewSize);
+    memcpy(m_data + m_size, data, size);
+    m_size += size;
+}
+
+void ByteBuffer::reserve(size_t newCapacity)
+{
+    if (newCapacity > m_capacity)
+    {
+        u8* newData = (u8*)malloc(newCapacity);
+        size_t currentSize = m_size;
+        if (currentSize > 0u)
+            memcpy(newData, m_data, currentSize);
+        free();
+        m_size = currentSize;
+        m_data = newData;
+        m_capacity = newCapacity;
+    }
 }
 
 void ByteBuffer::resize(size_t newSize)
 {
-    m_support.resize(newSize);
+    reserve(newSize);
+    m_size = newSize;
 }
 
 void ByteBuffer::free()
 {
-    m_support.clear();
+    if (m_data)
+        ::free(m_data);
+    forget();
+}
+
+void ByteBuffer::forget()
+{
+    m_data = nullptr;
+    m_size = 0;
+    m_capacity = 0;
 }
 
 }

@@ -20,6 +20,7 @@ typedef TestSuite*(*CreateSuiteFn)();
 namespace coalpy
 {
 
+extern TestSuite* coreSuite();
 extern TestSuite* fileSystemSuite();
 extern TestSuite* taskSystemSuite();
 extern TestSuite* shaderSuite();
@@ -27,6 +28,7 @@ extern TestSuite* shaderSuite();
 }
 
 CreateSuiteFn g_suites[] = {
+    coreSuite,
     taskSystemSuite,
     fileSystemSuite,
     shaderSuite
