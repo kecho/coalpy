@@ -113,6 +113,7 @@ struct DxcIncludeHandler : public IDxcIncludeHandler
 
     virtual HRESULT LoadSource(LPCWSTR pFilename, IDxcBlob **ppIncludeSource) override
     {
+        m_buffer.resize(0u);
         std::wstring fileName = pFilename;
         std::string sfileName = ws2s(fileName);
         IDxcBlobEncoding* codeBlob = nullptr;
