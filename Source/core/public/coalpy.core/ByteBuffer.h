@@ -9,6 +9,7 @@ class ByteBuffer
 {
 public:
     ByteBuffer();
+    ByteBuffer(const u8* data, size_t size);
     ByteBuffer(size_t size);
     ByteBuffer(ByteBuffer&& other);
     ~ByteBuffer();
@@ -22,6 +23,8 @@ public:
     void free();
     void forget();
     void reserve(size_t newCapacity);
+
+    ByteBuffer& operator=(ByteBuffer&& other);
 
 private:
     u8* m_data;

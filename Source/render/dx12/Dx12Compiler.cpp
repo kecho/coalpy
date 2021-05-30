@@ -175,7 +175,7 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
     IDxcUtils& utils = instanceData.utils;
 
     SmartPtr<IDxcBlobEncoding> codeBlob;
-    DX_OK(utils.CreateBlob(args.source, strlen(args.source), CP_UTF8, (IDxcBlobEncoding**)&codeBlob));
+    DX_OK(utils.CreateBlob(args.source, strlen(args.source)+1, CP_UTF8, (IDxcBlobEncoding**)&codeBlob));
 
     std::string  sshaderName = args.shaderName;
     std::wstring wshaderName = s2ws(sshaderName);
@@ -244,12 +244,9 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
         (void**)&results
     ));
 
-    int numOutputs = (int)results->GetNumOutputs();
-    bool compiledSuccess = false;
-    for (int i = 0; i < numOutputs; ++i)
+    bool compiledSuccess = true;
     {
-        DXC_OUT_KIND kind = results->GetOutputByIndex(i);
-        if (kind == DXC_OUT_ERRORS)
+        //DXC_OUT_ERRORS
         {
             SmartPtr<IDxcBlobUtf8> errorBlob;
             DX_OK(results->GetOutput(
@@ -258,17 +255,20 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
                 (void**)&errorBlob,
                 nullptr));
             
-            if (args.onError)
+
+            std::string errorStr;
+            if (errorBlob != nullptr && errorBlob->GetStringLength() > 0)
             {
-                std::string errorStr;
-                if (errorBlob != nullptr && errorBlob->GetStringLength() > 0)
+                if (args.onError)
                 {
                     errorStr.assign(errorBlob->GetStringPointer(), errorBlob->GetStringLength());
                     args.onError(args.shaderName, errorStr.c_str());
                 }
+                compiledSuccess = false;
             }
         }
-        else if (kind == DXC_OUT_OBJECT)
+
+        //DXC_OUT_OBJECT
         {
             SmartPtr<IDxcBlob> shaderOut;
             DX_OK(results->GetOutput(
@@ -280,19 +280,13 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
             if (shaderOut != nullptr)
             {
                 if (args.onFinished)
-                    args.onFinished(true, &(*shaderOut));
-                compiledSuccess = true;
+                    args.onFinished(compiledSuccess, &(*shaderOut));
             }
             else if (args.onError)
             {
                 args.onError(args.shaderName, "Failed to retrieve result blob.");
             }
         }
-    }
-
-    if (!compiledSuccess && args.onFinished)
-    {
-        args.onFinished(false, nullptr);
     }
 }
 

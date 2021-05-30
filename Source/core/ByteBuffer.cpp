@@ -10,6 +10,12 @@ ByteBuffer::ByteBuffer()
 {
 }
 
+ByteBuffer::ByteBuffer(const u8* data, size_t size)
+: m_data(nullptr), m_size(0), m_capacity(0)
+{
+    append(data, size);
+}
+
 ByteBuffer::ByteBuffer(size_t size)
 : m_data(nullptr), m_size(0), m_capacity(0)
 {
@@ -18,10 +24,16 @@ ByteBuffer::ByteBuffer(size_t size)
 
 ByteBuffer::ByteBuffer(ByteBuffer&& other)
 {
+    *this = std::move(other);
+}
+
+ByteBuffer& ByteBuffer::operator=(ByteBuffer&& other)
+{
     m_data = other.m_data;
     m_size = other.m_capacity;
     m_capacity = other.m_capacity;
     other.forget();
+    return *this;
 }
 
 ByteBuffer::~ByteBuffer()

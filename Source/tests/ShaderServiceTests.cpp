@@ -9,6 +9,7 @@
 #include <coalpy.render/../../Dx12/Dx12Compiler.h>
 #include <sstream>
 #include <iostream>
+#include <atomic>
 
 namespace coalpy
 {
@@ -37,11 +38,42 @@ public:
     }
 };
 
-void testFileWatch(TestContext& ctx)
+const char* simpleComputeShader()
 {
-    auto& testContext = (ShaderServiceContext&)ctx;
-    testContext.begin();
-    testContext.end();
+    return R"(
+        Texture2D<float> input : register(t0);
+        RWTexture2D<float> output : register(u0);
+        [numthreads(8,8,1)]
+        void csMain(int3 dti : SV_DispatchThreadID)
+        {
+            output[dti.xy] = input[dti.xy];
+        }
+    )";
+}
+
+
+const char* simpleComputeShaderWithInclude()
+{
+    return R"(
+        #include "testInclude.hlsl"
+        Texture2D<float> input : register(t0);
+        RWTexture2D<float> output : register(u0);
+        [numthreads(8,8,1)]
+        void csMain(int3 dti : SV_DispatchThreadID)
+        {
+            output[dti.xy] = input[dti.xy] + g_someFloat4.w;
+        }
+    )";
+}
+
+const char* simpleComputeInclude()
+{
+    return R"(
+        cbuffer buff : register(b0)
+        {
+            float4 g_someFloat4;
+        }
+    )";
 }
 
 #if ENABLE_DX12
@@ -51,16 +83,7 @@ void dx12CompileFunction(Dx12Compiler& compiler)
     compilerArgs.type = ShaderType::Compute;
     compilerArgs.mainFn = "csMain";
     compilerArgs.shaderName = "SimpleComputeShader";
-    compilerArgs.source = R"(
-        Texture2D<float> input : register(t0);
-        RWTexture2D<float> output : register(u0);
-        [numthreads(8,8,1)]
-        void csMain(int3 dti : SV_DispatchThreadID)
-        {
-            output[dti.xy] = input[dti.xy];
-        }
-    )";
-
+    compilerArgs.source = simpleComputeShader();
     compilerArgs.onError = [&](const char* name, const char* errorString)
     {
         CPY_ASSERT_FMT(false, "Unexpected compilation error: \"%s\".", errorString);
@@ -131,6 +154,88 @@ void dx12TestManySerialDxcCompile(TestContext& ctx)
 }
 #endif
 
+void shaderDbCompile(TestContext& ctx)
+{
+    auto& testContext = (ShaderServiceContext&)ctx;
+    testContext.begin();
+    IFileSystem& fs = *testContext.fs;
+    ITaskSystem& ts = *testContext.ts;
+    IShaderDb& db = *testContext.db;
+
+    fs.carveDirectoryPath("shaderTest");
+
+    //write simple include
+    std::string includeName = "shaderTest/testInclude.hlsl";
+    AsyncFileHandle includeFile = fs.write(FileWriteRequest(includeName, [](FileWriteResponse& response) {}, simpleComputeInclude(), strlen(simpleComputeInclude())));
+
+    //write tmp shader files
+    std::vector<std::string> fileNames;
+    std::vector<AsyncFileHandle> files;
+    std::atomic<int> successCount = 0;
+    Task allWrite = ts.createTask();
+    ts.depends(allWrite, fs.asTask(includeFile));
+    for (int i = 0; i < 1; ++i)
+    {
+        std::stringstream name;
+        name << "shaderTest/testShader-" << i <<  ".hlsl";
+        fileNames.push_back(name.str());
+        files.push_back(fs.write(FileWriteRequest(fileNames.back(),
+            [&successCount](FileWriteResponse& response)
+            {
+                if (response.status == FileStatus::WriteSuccess)
+                    ++successCount;
+                else if (response.status == FileStatus::WriteFail)
+                    CPY_ASSERT_MSG(false, "failed writting file");
+            },
+            simpleComputeShaderWithInclude(), strlen(simpleComputeShaderWithInclude())
+        )));
+
+        ts.depends(allWrite, fs.asTask(files.back()));
+    }
+
+    ts.execute(allWrite);
+    ts.wait(allWrite);
+    int finalCount = successCount;
+    CPY_ASSERT_FMT(finalCount == (int)fileNames.size(), "Failed to write %d files, wrote only %d", (int)fileNames.size(), finalCount) ;
+
+    for (auto fileHandle : files)
+        fs.closeHandle(fileHandle);
+    fs.closeHandle(includeFile);
+    files.clear();
+    ts.cleanTaskTree(allWrite);
+
+    std::vector<ShaderHandle> shaderHandles;
+    for (const auto& fileName : fileNames)
+    {
+        ShaderDesc sd;
+        sd.type = ShaderType::Compute;
+        sd.name = fileName.c_str();
+        sd.mainFn = "csMain";
+        sd.path = fileName.c_str();
+        shaderHandles.push_back(db.requestCompile(sd));
+    }
+
+    for (auto h : shaderHandles)
+    {
+        db.resolve(h);
+        CPY_ASSERT(db.isValid(h));
+    }
+
+    fs.deleteFile(includeName.c_str());
+    for (const auto& fileName : fileNames)
+        fs.deleteFile(fileName.c_str());
+    bool clearTestDir = fs.deleteDirectory("shaderTest");
+    CPY_ASSERT_MSG(clearTestDir, "Could not clear test directory 'shaderTest', ensure all files have been deleted");
+    testContext.end();
+}
+
+void testFileWatch(TestContext& ctx)
+{
+    auto& testContext = (ShaderServiceContext&)ctx;
+    testContext.begin();
+    testContext.end();
+}
+
 class ShaderSuite : public TestSuite
 {
 public:
@@ -143,6 +248,7 @@ public:
             { "dx12TestManyParallelDxcCompile", dx12TestParallelDxcCompile },
             { "dx12TestManySerialDxcCompile", dx12TestManySerialDxcCompile },
 #endif
+            { "shaderDbCompile", shaderDbCompile },
             { "testFilewatch", testFileWatch }
         };
 
@@ -173,13 +279,12 @@ public:
         }
 
         {
-            ShaderDbDesc desc;
-            desc.compilerDllPath = rootDir.c_str();
+            ShaderDbDesc desc = { rootDir.c_str(), testContext->fs, testContext->ts };
             testContext->db = IShaderDb::create(desc);
         }
 
         {
-            ShaderServiceDesc desc { testContext->fs, testContext->ts, testContext->db, rootDir.c_str(), 60, nullptr, nullptr };
+            ShaderServiceDesc desc { testContext->db, rootDir.c_str(), 60, nullptr, nullptr };
             testContext->ss = IShaderService::create(desc);
         }
 

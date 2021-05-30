@@ -13,9 +13,7 @@ namespace coalpy
 {
 
 ShaderService::ShaderService(const ShaderServiceDesc& desc)
-: m_fs(desc.fs)
-, m_ts(desc.ts)
-, m_db(desc.db)
+: m_db(desc.db)
 , m_fileWatchPollingRate(desc.fileWatchPollingRate)
 {
     std::string dirName = desc.watchDirectory;
@@ -90,22 +88,6 @@ void ShaderService::onFileListening()
             active = false;
         }
     }
-}
-
-
-ShaderHandle ShaderService::compileShader(const ShaderDesc& desc)
-{
-    return ShaderHandle();
-}
-
-ShaderHandle ShaderService::compileInlineShader(const ShaderInlineDesc& desc)
-{
-    return ShaderHandle();
-}
-
-GpuPipelineHandle ShaderService::createComputePipeline(const ComputePipelineDesc& desc)
-{
-    return GpuPipelineHandle();
 }
 
 IShaderService* IShaderService::create(const ShaderServiceDesc& desc)

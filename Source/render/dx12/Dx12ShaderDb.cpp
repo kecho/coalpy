@@ -87,23 +87,16 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
             }
         }));
 
+        m_desc.fs->execute(handle);
         m_desc.fs->wait(handle);
         m_desc.fs->closeHandle(handle);
-
+        char terminator = '\0';
+        buffer.append((const u8*)&terminator, 1);
         return result;
     };
 
     compileState->compileArgs.onFinished = [compileState, this](bool success, IDxcBlob* resultBlob)
     {
-        if (success)
-        {
-            std::cout << "Success compiling " << compileState->shaderName;
-        }
-        else
-        {
-            std::cout << "Failed compiling " << compileState->shaderName;
-        }
-
         {
             std::unique_lock lock(m_shadersMutex);
             auto& shaderState = m_shaders[compileState->shaderHandle];

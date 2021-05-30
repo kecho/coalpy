@@ -43,7 +43,7 @@ private:
         FileWriteDoneCallback writeCallback = nullptr;
         InternalFileSystem::OpaqueFileHandle opaqueHandle = {};
 
-        const char* writeBuffer = nullptr;
+        ByteBuffer writeBuffer;
         int writeSize = 0;
 
         Task task;

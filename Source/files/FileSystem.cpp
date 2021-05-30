@@ -145,7 +145,7 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
         requestData->writeCallback = request.doneCallback;
         requestData->opaqueHandle = {};
         requestData->fileStatus = FileStatus::Idle;
-        requestData->writeBuffer = request.buffer;
+        requestData->writeBuffer.append((const u8*)request.buffer, (size_t)request.size);
         requestData->writeSize = request.size;
         requestData->task = m_ts.createTask(TaskDesc([this](TaskContext& ctx)
         {
@@ -163,6 +163,12 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
                 FileWriteResponse response;
                 response.status = FileStatus::FailedCreatingDir;
                 requestData->writeCallback(response);
+                {
+                    FileWriteResponse response;
+                    response.status = FileStatus::WriteFail;
+                    requestData->writeCallback(response);
+                }
+                return;
             }
             requestData->opaqueHandle = InternalFileSystem::openFile(requestData->filename.c_str(), InternalFileSystem::RequestType::Write);
             if (!InternalFileSystem::valid(requestData->opaqueHandle))
@@ -171,6 +177,11 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
                     requestData->fileStatus = FileStatus::OpenFail;
                     FileWriteResponse response;
                     response.status = FileStatus::OpenFail;
+                    requestData->writeCallback(response);
+                }
+                {
+                    FileWriteResponse response;
+                    response.status = FileStatus::WriteFail;
                     requestData->writeCallback(response);
                 }
                 return;
@@ -182,13 +193,16 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
                 const char* buffer;
                 int bufferSize;
                 bool successWrite;
-            } writeState = { requestData->writeBuffer, requestData->writeSize, false };
+            } writeState = { (const char*)requestData->writeBuffer.data(), requestData->writeSize, false };
 
-            TaskUtil::yieldUntil([&writeState, requestData]() {
+            bool yielded = false;
+            TaskUtil::yieldUntil([&writeState, &yielded, requestData]() {
+                yielded = true;
                 writeState.successWrite = InternalFileSystem::writeBytes(
                     requestData->opaqueHandle, writeState.buffer, writeState.bufferSize);
             });
 
+            CPY_ASSERT(yielded);
             if (!writeState.successWrite)
             {
                 {

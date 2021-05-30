@@ -30,8 +30,6 @@ using OnGpuPipelineCompleteFn = std::function<void(const GpuPipelineResponse& re
 
 struct ShaderServiceDesc
 {
-    IFileSystem* fs;
-    ITaskSystem* ts;
     IShaderDb* db;
     const char* watchDirectory; 
     int fileWatchPollingRate;

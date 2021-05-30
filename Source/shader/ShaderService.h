@@ -20,15 +20,10 @@ public:
     ShaderService(const ShaderServiceDesc& desc);
     virtual void start() override;
     virtual void stop()  override;
-    virtual ShaderHandle compileShader(const ShaderDesc& desc) override;
-    virtual ShaderHandle compileInlineShader(const ShaderInlineDesc& desc) override;
-    virtual GpuPipelineHandle createComputePipeline(const ComputePipelineDesc& desc) override;
 
 private:
     void onFileListening();
-    IFileSystem* m_fs;
-    ITaskSystem* m_ts;
-    IShaderDb* m_db;
+    IShaderDb*   m_db;
 
     enum class MessageType
     {
