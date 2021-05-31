@@ -174,7 +174,7 @@ void shaderDbCompile(TestContext& ctx)
     std::atomic<int> successCount = 0;
     Task allWrite = ts.createTask();
     ts.depends(allWrite, fs.asTask(includeFile));
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 2; ++i)
     {
         std::stringstream name;
         name << "shaderTest/testShader-" << i <<  ".hlsl";
@@ -221,11 +221,22 @@ void shaderDbCompile(TestContext& ctx)
         CPY_ASSERT(db.isValid(h));
     }
 
-    fs.deleteFile(includeName.c_str());
-    for (const auto& fileName : fileNames)
-        fs.deleteFile(fileName.c_str());
-    bool clearTestDir = fs.deleteDirectory("shaderTest");
-    CPY_ASSERT_MSG(clearTestDir, "Could not clear test directory 'shaderTest', ensure all files have been deleted");
+    {
+        std::vector<std::string> dirList;
+        fs.enumerateFiles("shaderTest", dirList);
+        for (const auto& d: dirList)
+        {
+            FileAttributes attributes = {};
+            fs.getFileAttributes(d.c_str(), attributes);
+            if (attributes.exists && !attributes.isDot && !attributes.isDir)
+            {
+                bool deletedFile = fs.deleteFile(d.c_str()); 
+                CPY_ASSERT_FMT(deletedFile, "Could not delete file %s", d.c_str());
+            }
+        }
+        bool clearTestDir = fs.deleteDirectory("shaderTest");
+        CPY_ASSERT_MSG(clearTestDir, "Could not clear test directory 'shaderTest', ensure all files have been deleted");
+    }
     testContext.end();
 }
 
