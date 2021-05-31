@@ -35,6 +35,13 @@ Dx12ShaderDb::Dx12ShaderDb(const ShaderDbDesc& desc)
 
 Dx12ShaderDb::~Dx12ShaderDb()
 {
+    int unresolvedShaders = 0;
+    m_shaders.forEach([&unresolvedShaders](ShaderHandle handle, ShaderState& state)
+    {
+        unresolvedShaders += state.compileState == nullptr ? 0 : 1;
+    });
+
+    CPY_ASSERT_FMT(unresolvedShaders == 0, "%d unresolved shaders. Expect memory leaks.", unresolvedShaders);
 }
 
 ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
