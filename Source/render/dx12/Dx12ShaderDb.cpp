@@ -57,6 +57,7 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
         else if (response.status == FileStatus::ReadingSuccessEof)
         {
             compileState->compileArgs.source = (const char*)compileState->buffer.data();
+            compileState->compileArgs.sourceSize = (int)compileState->buffer.size();
         }
         else if (response.status == FileStatus::ReadingFail)
         {
@@ -90,8 +91,6 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
         m_desc.fs->execute(handle);
         m_desc.fs->wait(handle);
         m_desc.fs->closeHandle(handle);
-        char terminator = '\0';
-        buffer.append((const u8*)&terminator, 1);
         return result;
     };
 

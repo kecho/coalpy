@@ -175,7 +175,7 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
     IDxcUtils& utils = instanceData.utils;
 
     SmartPtr<IDxcBlobEncoding> codeBlob;
-    DX_OK(utils.CreateBlob(args.source, strlen(args.source)+1, CP_UTF8, (IDxcBlobEncoding**)&codeBlob));
+    DX_OK(utils.CreateBlob(args.source, args.sourceSize > 0 ? args.sourceSize : strlen(args.source), CP_UTF8, (IDxcBlobEncoding**)&codeBlob));
 
     std::string  sshaderName = args.shaderName;
     std::wstring wshaderName = s2ws(sshaderName);
