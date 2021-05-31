@@ -11,6 +11,8 @@
 #include <windows.h>
 #endif
 
+#define WATCH_SERVICE_DEBUG_OUTPUT 0
+
 namespace coalpy
 {
 
@@ -45,49 +47,96 @@ void ShaderService::stop()
 
 void ShaderService::onFileListening()
 {
-#if 0
 #ifdef _WIN32 
     bool active = true;
+#if WATCH_SERVICE_DEBUG_OUTPUT
     std::cout << "opening " << m_rootDir.c_str() << std::endl;
+#endif
     HANDLE dirHandle = CreateFileA(
         m_rootDir.c_str(),
         FILE_LIST_DIRECTORY,
         FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-        FILE_FLAG_BACKUP_SEMANTICS /*| FILE_FLAG_OVERLAPPED*/, NULL);
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
 
     CPY_ASSERT_FMT(dirHandle != INVALID_HANDLE_VALUE, "Could not open directory \"%s\" for file watching service.", m_rootDir.c_str());
 
-    //OVERLAPPED overlapped;
+/*
+    std::cout << "Changes detected" << bytesReturned << std::endl;
+    FILE_NOTIFY_INFORMATION* curr = bytesReturned ? infos : nullptr;
+    while (curr != nullptr)
+    {
+        std::wstring wfilename;
+        wfilename.assign(curr->FileName, curr->FileNameLength / sizeof(wchar_t));
+        std::string filename = ws2s(wfilename);
+        std::cout << filename << std::endl;
+        curr = curr->NextEntryOffset == 0 ? nullptr : (FILE_NOTIFY_INFORMATION*)((char*)curr + curr->NextEntryOffset);
+    }
+
+    bytesReturned = 0;
+}
+else
+{
+    std::cout << "Error querying changes" << std::endl;
+}
+*/
+
+    OVERLAPPED overlapped;
+    overlapped.hEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
     FILE_NOTIFY_INFORMATION infos[1024];
     while (active)
     {
         Message msg;
         m_fileThreadQueue.waitPop(msg);
+        bool listeningToDirectories = false;
         switch (msg.type)
         {
         case MessageType::ListenToDirectories:
             {
-                while (true)
+                listeningToDirectories = true;
+                while (listeningToDirectories)
                 {
                     DWORD bytesReturned;
                     bool result = ReadDirectoryChangesW(
-                        dirHandle, (LPVOID)&infos, sizeof(infos), TRUE, FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned, NULL, NULL);
-                    if (result)
+                            dirHandle, (LPVOID)&infos, sizeof(infos), TRUE, FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned,
+                            &overlapped, NULL);
+
+                    if (!result)
                     {
-                        std::cout << "Changes detected" << bytesReturned << std::endl;
-                        FILE_NOTIFY_INFORMATION* curr = infos;
-                        while (curr != nullptr)
-                        {
-                            std::wstring wfilename;
-                            wfilename.assign(curr->FileName, curr->FileNameLength / sizeof(wchar_t));
-                            std::string filename = ws2s(wfilename);
-                            std::cout << filename << std::endl;
-                            curr = curr->NextEntryOffset == 0 ? nullptr : (FILE_NOTIFY_INFORMATION*)((char*)curr + curr->NextEntryOffset);
-                        }
+                        CPY_ASSERT_FMT(false, "Failed watching directory \"%s\"", m_rootDir.c_str());
+                        listeningToDirectories = false;
+                        continue;
                     }
-                    else
+
+                    bool foundResults = false;
+                    while (!foundResults)
                     {
-                        std::cout << "Error reading directory changes" << std::endl;
+                        auto waitResult = WaitForSingleObject(overlapped.hEvent, 1000);
+                        if (waitResult == WAIT_TIMEOUT)
+                        {
+#if WATCH_SERVICE_DEBUG_OUTPUT
+                            std::cout << "timed out" << std::endl;
+#endif
+                            Message newMsg;
+                            bool hasMessage = false;
+                            m_fileThreadQueue.acquireThread();
+                            hasMessage = m_fileThreadQueue.unsafePop(newMsg);
+                            m_fileThreadQueue.releaseThread();
+                            if (hasMessage && newMsg.type == MessageType::Exit)
+                            {
+                                foundResults = true;
+                                listeningToDirectories = false;
+                                active = false;
+                            }
+                            continue;
+                        }
+                        auto hasOverlapped = GetOverlappedResult(dirHandle, &overlapped, &bytesReturned, FALSE);
+                        if (hasOverlapped)
+                        {
+#if WATCH_SERVICE_DEBUG_OUTPUT
+                            std::cout << "has overlapped waited!" << bytesReturned << std::endl;
+#endif
+                            foundResults = true;
+                        }
                     }
                 }
             }
@@ -100,11 +149,11 @@ void ShaderService::onFileListening()
         }
     }
 
+    CloseHandle(overlapped.hEvent);
     if (dirHandle != INVALID_HANDLE_VALUE)
         CloseHandle(dirHandle);
 #else
     #error "Platform not supported"
-#endif
 #endif
 }
 
