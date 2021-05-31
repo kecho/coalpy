@@ -22,7 +22,7 @@ public:
     IShaderService* ss = nullptr;
     IShaderDb* db = nullptr;
     std::string rootDir;
-
+    virtual ~ShaderServiceContext() {}
     void begin()
     {
         ts->start();

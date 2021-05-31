@@ -14,6 +14,8 @@ class IFileSystem
 {
 public:
     static IFileSystem* create(const FileSystemDesc& desc);
+    
+    virtual ~IFileSystem() {}
 
     virtual AsyncFileHandle read (const FileReadRequest& request) = 0;
     virtual AsyncFileHandle write(const FileWriteRequest& request) = 0;

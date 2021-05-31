@@ -3,6 +3,7 @@
 #include <coalpy.core/ClParser.h>
 #include <coalpy.core/ClTokenizer.h>
 #include <coalpy.core/Stopwatch.h>
+#include <coalpy.core/SmartPtr.h>
 #include <string>
 #include <set>
 #include <atomic>
@@ -51,7 +52,7 @@ struct Filters
 void runSuite(CreateSuiteFn createFn)
 {
     g_errors = 0;
-    TestSuite* suite = createFn();
+    SmartPtr<TestSuite> suite = createFn();
     if (!gFilters.suites.empty() && gFilters.suites.find(suite->name()) == gFilters.suites.end())
         return;
 
@@ -79,7 +80,6 @@ void runSuite(CreateSuiteFn createFn)
     suite->destroyContext(context);
     g_totalErrors += g_errors;
     g_errors = 0;
-    delete suite;
 }
 
 struct ArgParameters
