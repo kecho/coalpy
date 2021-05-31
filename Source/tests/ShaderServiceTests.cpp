@@ -244,6 +244,7 @@ void testFileWatch(TestContext& ctx)
 {
     auto& testContext = (ShaderServiceContext&)ctx;
     testContext.begin();
+    //while (true);
     testContext.end();
 }
 

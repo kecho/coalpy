@@ -1,7 +1,9 @@
 #include "ShaderService.h" 
 #include <coalpy.files/Utils.h>
 #include <coalpy.core/Assert.h>
+#include <coalpy.core/String.h>
 #include <coalpy.render/IShaderDb.h>
+#include <iostream>
 #include <string>
 
 #ifdef _WIN32 
@@ -43,12 +45,20 @@ void ShaderService::stop()
 
 void ShaderService::onFileListening()
 {
-    bool active = true;
+#if 0
 #ifdef _WIN32 
-    HANDLE h = INVALID_HANDLE_VALUE;
-#else
-    #error "Platform not supported"
-#endif
+    bool active = true;
+    std::cout << "opening " << m_rootDir.c_str() << std::endl;
+    HANDLE dirHandle = CreateFileA(
+        m_rootDir.c_str(),
+        FILE_LIST_DIRECTORY,
+        FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS /*| FILE_FLAG_OVERLAPPED*/, NULL);
+
+    CPY_ASSERT_FMT(dirHandle != INVALID_HANDLE_VALUE, "Could not open directory \"%s\" for file watching service.", m_rootDir.c_str());
+
+    //OVERLAPPED overlapped;
+    FILE_NOTIFY_INFORMATION infos[1024];
     while (active)
     {
         Message msg;
@@ -56,38 +66,46 @@ void ShaderService::onFileListening()
         switch (msg.type)
         {
         case MessageType::ListenToDirectories:
-#ifdef _WIN32 
             {
-                if (h == INVALID_HANDLE_VALUE)
+                while (true)
                 {
-                    h = FindFirstChangeNotificationA(m_rootDir.c_str(), TRUE, FILE_NOTIFY_CHANGE_LAST_WRITE);
-                    CPY_ASSERT(h != INVALID_HANDLE_VALUE);
+                    DWORD bytesReturned;
+                    bool result = ReadDirectoryChangesW(
+                        dirHandle, (LPVOID)&infos, sizeof(infos), TRUE, FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned, NULL, NULL);
+                    if (result)
+                    {
+                        std::cout << "Changes detected" << bytesReturned << std::endl;
+                        FILE_NOTIFY_INFORMATION* curr = infos;
+                        while (curr != nullptr)
+                        {
+                            std::wstring wfilename;
+                            wfilename.assign(curr->FileName, curr->FileNameLength / sizeof(wchar_t));
+                            std::string filename = ws2s(wfilename);
+                            std::cout << filename << std::endl;
+                            curr = curr->NextEntryOffset == 0 ? nullptr : (FILE_NOTIFY_INFORMATION*)((char*)curr + curr->NextEntryOffset);
+                        }
+                    }
+                    else
+                    {
+                        std::cout << "Error reading directory changes" << std::endl;
+                    }
                 }
-                else
-                {
-                    bool success = FindNextChangeNotification(h);
-                    CPY_ASSERT(success);
-                    if (!success)
-                        break;
-                }
-
-                auto result = WaitForSingleObject(h, m_fileWatchPollingRate <= 0 ? INFINITE : (DWORD)m_fileWatchPollingRate);
-                CPY_ASSERT(result != WAIT_FAILED);
-                if (result != WAIT_OBJECT_0)
-                    break;
-
-                //again try and listen for more dir changes.
-                m_fileThreadQueue.push(msg);
             }
-#else
-    #error "Platform not supported"
-#endif
             break;
         case MessageType::Exit:
         default:
-            active = false;
+            {
+                active = false;
+            }
         }
     }
+
+    if (dirHandle != INVALID_HANDLE_VALUE)
+        CloseHandle(dirHandle);
+#else
+    #error "Platform not supported"
+#endif
+#endif
 }
 
 IShaderService* IShaderService::create(const ShaderServiceDesc& desc)
