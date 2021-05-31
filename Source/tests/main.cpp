@@ -86,6 +86,7 @@ struct ArgParameters
 {
     bool help = false;
     bool printTests = false;
+    bool forever = false;
     const char* suitefilter = "";
     const char* testfilter = "";
 };
@@ -98,6 +99,7 @@ bool prepareCli(ClParser& p, ArgParameters& params)
     CliSwitch(gid, "print available suites and tests", "p", "printtests", Bool, ArgParameters, printTests);
     CliSwitch(gid, "Comma separated suite filters", "s", "suites", String, ArgParameters, suitefilter);
     CliSwitch(gid, "Comma separated test case filters", "t", "tests", String, ArgParameters, testfilter);
+    CliSwitch(gid, "Run indefinitely iterations of the tests. Ideal to stress test things.", "e", "forever", Bool, ArgParameters, forever);
     return true;
 }
 
@@ -159,12 +161,18 @@ int main(int argc, char* argv[])
             gFilters.cases.insert(s);
     }
 
-    AssertSystem::setAssertHandler(assertHandler);
-    for (int i = 0; i < suiteCounts; ++i)
+    bool keepRunning = true;
+    while (keepRunning)
     {
-        runSuite(g_suites[i]);
-    }
+        AssertSystem::setAssertHandler(assertHandler);
+        for (int i = 0; i < suiteCounts; ++i)
+        {
+            runSuite(g_suites[i]);
+        }
 
-    std::cout << (g_totalErrors == 0 ? "SUCCESS" : "FAIL") << std::endl;
+        std::cout << (g_totalErrors == 0 ? "SUCCESS" : "FAIL") << std::endl;
+        
+        keepRunning = params.forever;
+    }
     return 0;
 }

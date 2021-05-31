@@ -255,14 +255,14 @@ void TaskSystem::onTaskComplete(Task t)
             if (parentTask.dependencies.empty() && parentTask.syncData->state == TaskState::Unscheduled)
                 nextTasks.push_back(p);
         }
-    }
 
-    {
-        std::unique_lock lock(m_finishedTasksMutex);
-        m_finishedTasksList.insert(t);
-    }
+        {
+            std::unique_lock lock(m_finishedTasksMutex);
+            m_finishedTasksList.insert(t);
+        }
 
-    syncData->cv.notify_all();
+        syncData->cv.notify_all();
+    }
     execute(nextTasks.data(), (int)nextTasks.size());
 }
 
@@ -283,6 +283,7 @@ void TaskSystem::removeTask(Task t)
 
 void TaskSystem::cleanFinishedTasks()
 {
+    CPY_ASSERT_MSG(ThreadWorker::getLocalThreadWorker() == nullptr, "cleanFinishedTasks cannot be called from a worker thread.");
     std::unique_lock lock(m_stateMutex);
     std::unique_lock lock2(m_finishedTasksMutex);
 
@@ -294,6 +295,9 @@ void TaskSystem::cleanFinishedTasks()
 
 void TaskSystem::cleanTaskTree(Task src)
 {
+    if (ThreadWorker::getLocalThreadWorker() != nullptr)
+        return;
+
     std::unique_lock lock(m_stateMutex);
     std::unique_lock lock2(m_finishedTasksMutex);
     std::vector<Task> tasksToClean;
