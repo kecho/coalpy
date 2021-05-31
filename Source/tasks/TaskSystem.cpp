@@ -223,6 +223,20 @@ void TaskSystem::onMessageLoop()
     }
 }
 
+void TaskSystem::runSingleJob(ThreadWorker& worker)
+{
+    TaskFn fn;
+    TaskContext ctx;
+    for (ThreadWorker& otherWorker : m_workers)
+    {
+        if (otherWorker.stealJob(fn, ctx))
+        {
+            worker.runInThread(fn, ctx);
+            return;
+        }
+    }
+}
+
 void TaskSystem::onTaskComplete(Task t)
 {
     std::vector<Task> nextTasks;
@@ -302,13 +316,39 @@ void TaskSystem::cleanTaskTree(Task src)
     }
 }
 
+bool TaskSystem::isTaskFinished(Task t)
+{
+    std::shared_lock lock(m_stateMutex);
+    SyncData* syncData = nullptr;
+    if (!m_taskTable.contains(t))
+    {
+        CPY_ASSERT_MSG(false, "Task does not exist");
+        return true;
+    }
+    
+    syncData = m_taskTable[t].syncData;
+    if (syncData == nullptr)
+    {
+        CPY_ASSERT_MSG(false, "Task does not exist");
+        return true;
+    }
+    
+    if (syncData->state == TaskState::Finished)
+        return true;
+
+    return false;
+}
+
 void TaskSystem::wait(Task other)
 {
     ThreadWorker* worker = ThreadWorker::getLocalThreadWorker();
     if (worker != nullptr)
     {
         //this means we are inside a job
-        TaskUtil::yieldUntil([this, other](){ this->internalWait(other); });
+        //TaskUtil::yieldUntil([this, other](){ this->internalWait(other); });
+        bool finished = false;
+        while (!isTaskFinished(other))
+            runSingleJob(*worker);
     }
     else
     {

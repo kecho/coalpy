@@ -26,6 +26,8 @@ public:
     void setId(int workerId) { m_workerId = workerId; }
     void start(OnTaskCompleteFn onTaskCompleteFn = nullptr);
     void schedule(TaskFn fn, TaskContext& payload);
+    bool stealJob(TaskFn& fn, TaskContext& payload);
+    void runInThread(TaskFn fn, TaskContext& payload);
     void signalStop();
     void join();
     int queueSize() const;

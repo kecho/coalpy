@@ -2,6 +2,7 @@
 #include <coalpy.tasks/ThreadQueue.h>
 #include <coalpy.core/Assert.h>
 #include <thread>
+#include <iostream>
 
 namespace coalpy
 {
@@ -52,6 +53,7 @@ ThreadWorker::ThreadWorker()
     m_auxLoopActive = new std::atomic<bool>();
     *m_auxLoopActive = true;
 }
+
 ThreadWorker::~ThreadWorker()
 {
     signalStop();
@@ -119,11 +121,7 @@ void ThreadWorker::run()
         {
         case ThreadMessageType::RunJob:
             {
-                if (msg.fn)
-                    msg.fn(msg.ctx);
-
-                if (m_onTaskCompleteFn)
-                    m_onTaskCompleteFn(msg.ctx.task);
+                runInThread(msg.fn, msg.ctx);
             }
             break;
         case ThreadMessageType::Exit:
@@ -140,6 +138,44 @@ void ThreadWorker::run()
             }
         }
     }
+}
+
+bool ThreadWorker::stealJob(TaskFn& outFn, TaskContext& payload)
+{
+    bool result = false;
+    std::vector<ThreadWorkerMessage> tmpMessages;
+    m_queue->acquireThread();
+    ThreadWorkerMessage currMessage;
+    while (m_queue->unsafePop(currMessage))
+    {
+        if (currMessage.type == ThreadMessageType::RunJob)
+        {
+            outFn = currMessage.fn;
+            payload = currMessage.ctx;
+            result = true;
+            break;
+        }
+        else
+        {
+            tmpMessages.push_back(currMessage);
+        }
+    }
+
+    for (auto& tmpMsg : tmpMessages)
+        m_queue->unsafePush(tmpMsg);
+    m_queue->releaseThread();
+    return result;
+}
+
+void ThreadWorker::runInThread(TaskFn fn, TaskContext& payload)
+{
+    CPY_ASSERT(getLocalThreadWorker() == this);
+
+    if (fn)
+        fn(payload);
+    
+    if (m_onTaskCompleteFn)
+        m_onTaskCompleteFn(payload.task);
 }
 
 void ThreadWorker::auxLoop()

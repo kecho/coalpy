@@ -146,7 +146,7 @@ void dx12TestManySerialDxcCompile(TestContext& ctx)
     dbDesc.compilerDllPath = testContext.rootDir.c_str();
     Dx12Compiler compiler(dbDesc);
 
-    int compileTasksCount = 200;
+    int compileTasksCount = 20;
     for (int i = 0; i < compileTasksCount; ++i)
     {
         dx12CompileFunction(compiler);
@@ -174,7 +174,7 @@ void shaderDbCompile(TestContext& ctx)
     std::atomic<int> successCount = 0;
     Task allWrite = ts.createTask();
     ts.depends(allWrite, fs.asTask(includeFile));
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < 400; ++i)
     {
         std::stringstream name;
         name << "shaderTest/testShader-" << i <<  ".hlsl";

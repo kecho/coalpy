@@ -42,9 +42,11 @@ public:
 
 protected:
     void onMessageLoop();
+    void runSingleJob(ThreadWorker& worker);
     void onScheduleTask(Task* t, int counts);
     void internalWait(Task other);
     void removeTask(Task t);
+    bool isTaskFinished(Task t);
 
     enum class TaskState
     {

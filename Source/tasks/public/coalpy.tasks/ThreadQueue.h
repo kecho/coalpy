@@ -15,7 +15,11 @@ public:
 
     int size() const;
     void push(const MessageType& msg);
+    void unsafePush(const MessageType& msg);
+    bool unsafePop(MessageType& msg);
     void waitPop(MessageType& msg);
+    void acquireThread() { m_mutex.lock(); }
+    void releaseThread() { m_mutex.unlock(); }
 
 private:
     mutable std::mutex m_mutex;
@@ -28,7 +32,7 @@ void ThreadQueue<MessageType>::push(const MessageType& msg)
 {
     {
         std::unique_lock<std::mutex> lock(m_mutex);
-        m_queue.push(msg);
+        unsafePush(msg);
     }
     m_cv.notify_one();
 }
@@ -49,8 +53,23 @@ void ThreadQueue<MessageType>::waitPop(MessageType& msg)
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     m_cv.wait(lock, [this]() { return !m_queue.empty(); });
+    unsafePop(msg);
+}
+
+template<typename MessageType>
+void ThreadQueue<MessageType>::unsafePush(const MessageType& msg)
+{
+    m_queue.push(msg);
+}
+
+template<typename MessageType>
+bool ThreadQueue<MessageType>::unsafePop(MessageType& msg)
+{
+    if (m_queue.empty())
+        return false;
     msg = m_queue.front();
     m_queue.pop();
+    return true;
 }
 
 }
