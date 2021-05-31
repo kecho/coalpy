@@ -3,6 +3,7 @@
 #include <coalpy.tasks/TaskDefs.h>
 #include <memory>
 #include <functional>
+#include <atomic>
 
 namespace std
 {
@@ -19,8 +20,10 @@ using OnTaskCompleteFn = std::function<void(Task)>;
 class ThreadWorker
 {
 public:
-
+    ThreadWorker();
     ~ThreadWorker();
+    
+    void setId(int workerId) { m_workerId = workerId; }
     void start(OnTaskCompleteFn onTaskCompleteFn = nullptr);
     void schedule(TaskFn fn, TaskContext& payload);
     void signalStop();
@@ -28,7 +31,6 @@ public:
     int queueSize() const;
     void waitUntil(TaskBlockFn fn);
     static ThreadWorker* getLocalThreadWorker();
-
 private:
     void run();
     void auxLoop();
@@ -37,6 +39,9 @@ private:
     std::thread* m_auxThread = nullptr;
     ThreadWorkerQueue* m_auxQueue = nullptr;
     OnTaskCompleteFn m_onTaskCompleteFn = nullptr;
+    std::atomic<bool>* m_auxLoopActive = nullptr;
+    int m_activeDepth = 0;
+    int m_workerId = -1;
 };
 
 }

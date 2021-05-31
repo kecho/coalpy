@@ -16,16 +16,42 @@ enum class ThreadMessageType
 
 struct ThreadWorkerMessage
 {
-    ThreadMessageType type;
-    TaskFn fn;
-    TaskBlockFn blockFn;
-    TaskContext ctx;
+    ThreadMessageType type = ThreadMessageType::Exit;
+    TaskFn fn = {};
+    TaskBlockFn blockFn = {};
+    TaskContext ctx = {};
+    int targetStack = -1;
 };
 
-class ThreadWorkerQueue : public ThreadQueue<ThreadWorkerMessage> {};
+class ThreadWorkerQueue : public ThreadQueue<ThreadWorkerMessage>
+{
+public:
+    void addInactiveMessage(ThreadWorkerMessage& msg)
+    {
+        m_inactiveMessages.push_back(msg);
+    }
+
+    void recoverInactiveMessages()
+    {
+        for (const auto& m : m_inactiveMessages)
+        {
+            push(m);
+        }
+
+        m_inactiveMessages.clear();
+    }
+
+private:
+    std::vector<ThreadWorkerMessage> m_inactiveMessages;
+};
 
 thread_local ThreadWorker* t_localWorker = nullptr;
 
+ThreadWorker::ThreadWorker()
+{
+    m_auxLoopActive = new std::atomic<bool>();
+    *m_auxLoopActive = true;
+}
 ThreadWorker::~ThreadWorker()
 {
     signalStop();
@@ -37,6 +63,8 @@ ThreadWorker::~ThreadWorker()
 
     if (m_auxQueue)
         delete m_auxQueue;
+
+    delete m_auxLoopActive;
 }
 
 void ThreadWorker::start(OnTaskCompleteFn onTaskCompleteFn)
@@ -57,7 +85,9 @@ void ThreadWorker::start(OnTaskCompleteFn onTaskCompleteFn)
     [this](){
         CPY_ASSERT(t_localWorker == nullptr);
         t_localWorker = this;
+        m_activeDepth = 0;
         this->run();
+        CPY_ASSERT(m_activeDepth == 0);
         t_localWorker = nullptr;
     });
 
@@ -88,23 +118,33 @@ void ThreadWorker::run()
         switch (msg.type)
         {
         case ThreadMessageType::RunJob:
-        {
-            if (msg.fn)
-                msg.fn(msg.ctx);
+            {
+                if (msg.fn)
+                    msg.fn(msg.ctx);
 
-            if (m_onTaskCompleteFn)
-                m_onTaskCompleteFn(msg.ctx.task);
+                if (m_onTaskCompleteFn)
+                    m_onTaskCompleteFn(msg.ctx.task);
+            }
             break;
-        }
         case ThreadMessageType::Exit:
         default:
-            active = false;
+            {
+                if (msg.targetStack == m_activeDepth || msg.targetStack < 0)
+                {
+                    active = false;
+                }
+                else
+                {
+                    m_queue->addInactiveMessage(msg);
+                }
+            }
         }
     }
 }
 
 void ThreadWorker::auxLoop()
 {
+    *m_auxLoopActive = true;
     bool active = true;
     while (active)
     {
@@ -119,7 +159,9 @@ void ThreadWorker::auxLoop()
                 msg.blockFn(); //this function, which is set internally, usually waits for responses.
 
                 //send a message to the main thread which is waiting, to wake up and exit the current stack frame (and resume previously asleep work)
-                ThreadWorkerMessage response = { ThreadMessageType::Exit, nullptr, {} };
+                ThreadWorkerMessage response;
+                response.type = ThreadMessageType::Exit;
+                response.targetStack = msg.targetStack;
                 m_queue->push(response);
                 break;
             }
@@ -128,13 +170,22 @@ void ThreadWorker::auxLoop()
             active = false;
         }
     }
+    *m_auxLoopActive = false;
 }
 
 void ThreadWorker::waitUntil(TaskBlockFn fn)
 {
-    ThreadWorkerMessage msg = { ThreadMessageType::RunAuxLambda, {}, fn, {} };
+    ThreadWorkerMessage msg;
+    msg.type = ThreadMessageType::RunAuxLambda;
+    msg.blockFn = fn;
+    msg.targetStack = m_activeDepth + 1;
+    CPY_ASSERT(*m_auxLoopActive);
     m_auxQueue->push(msg);
+    ++m_activeDepth;
     run(); //trap and start a new job in the stack until the aux thread is finished.
+    --m_activeDepth;
+
+    m_queue->recoverInactiveMessages();
 }
 
 void ThreadWorker::signalStop()
@@ -142,7 +193,8 @@ void ThreadWorker::signalStop()
     if (!m_thread)
         return;
 
-    ThreadWorkerMessage exitMessage { ThreadMessageType::Exit, {}, {}, {} };
+    ThreadWorkerMessage exitMessage;
+    exitMessage.type = ThreadMessageType::Exit;
     m_queue->push(exitMessage);
     m_auxQueue->push(exitMessage);
 }
@@ -169,7 +221,10 @@ void ThreadWorker::schedule(TaskFn fn, TaskContext& context)
     if (!m_thread)
         return;
 
-    ThreadWorkerMessage runMessage { ThreadMessageType::RunJob, fn, {}, context };
+    ThreadWorkerMessage runMessage;
+    runMessage.type = ThreadMessageType::RunJob;
+    runMessage.fn = fn;
+    runMessage.ctx = context;
     m_queue->push(runMessage);
 }
 

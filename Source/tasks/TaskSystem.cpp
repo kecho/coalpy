@@ -63,8 +63,12 @@ void TaskSystem::start()
         return;
 
     m_workers.resize(m_desc.threadPoolSize);
+    int nextId = 0;
     for (auto& w : m_workers)
+    {
+        w.setId(nextId++);
         w.start([this](Task t) { this->onTaskComplete(t); });
+    }
 
     m_schedulerThread = std::make_unique<std::thread>([this]() { onMessageLoop(); });
 }
@@ -184,6 +188,7 @@ void TaskSystem::onScheduleTask(Task* tasks, int counts)
             else
             {
                 taskData.syncData->state = TaskState::InWorker;
+                taskData.syncData->workerId = m_nextWorker;
                 TaskContext context = { t, taskData.data, this };
                 m_workers[m_nextWorker].schedule(taskData.desc.fn, context);
                 m_nextWorker = (m_nextWorker + 1) % (int)m_workers.size();
@@ -293,6 +298,7 @@ void TaskSystem::cleanTaskTree(Task src)
             tasksToClean.push_back(d);
 
         removeTask(t);
+        m_finishedTasksList.erase(t);
     }
 }
 

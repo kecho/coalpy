@@ -56,6 +56,7 @@ protected:
     struct SyncData
     {
         TaskState state = TaskState::Unscheduled;
+        int workerId = -1;
         std::mutex m;
         std::condition_variable cv;
     };

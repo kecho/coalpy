@@ -124,7 +124,7 @@ void dx12TestParallelDxcCompile(TestContext& ctx)
         dx12CompileFunction(compiler);
     });
 
-    int compileTasksCount = 200;
+    int compileTasksCount = 20;
     std::vector<Task> compileTasks;
     for (int i = 0; i < compileTasksCount; ++i)
         compileTasks.push_back(testContext.ts->createTask(compileTask));
@@ -174,7 +174,7 @@ void shaderDbCompile(TestContext& ctx)
     std::atomic<int> successCount = 0;
     Task allWrite = ts.createTask();
     ts.depends(allWrite, fs.asTask(includeFile));
-    for (int i = 0; i < 1; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         std::stringstream name;
         name << "shaderTest/testShader-" << i <<  ".hlsl";

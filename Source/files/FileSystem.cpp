@@ -195,14 +195,11 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
                 bool successWrite;
             } writeState = { (const char*)requestData->writeBuffer.data(), requestData->writeSize, false };
 
-            bool yielded = false;
-            TaskUtil::yieldUntil([&writeState, &yielded, requestData]() {
-                yielded = true;
+            TaskUtil::yieldUntil([&writeState, requestData]() {
                 writeState.successWrite = InternalFileSystem::writeBytes(
                     requestData->opaqueHandle, writeState.buffer, writeState.bufferSize);
             });
 
-            CPY_ASSERT(yielded);
             if (!writeState.successWrite)
             {
                 {

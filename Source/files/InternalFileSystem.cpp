@@ -31,7 +31,7 @@ namespace InternalFileSystem
         HANDLE h = CreateFileA(
             filename, //file name
             request == RequestType::Read ? GENERIC_READ : GENERIC_WRITE, //dwDesiredAccess
-            0u, //dwShareMode
+            request == RequestType::Read ? FILE_SHARE_READ : 0u, //dwShareMode
             NULL, //lpSecurityAttributes
             request == RequestType::Read ? OPEN_EXISTING : CREATE_ALWAYS,//dwCreationDisposition
             FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, //dwFlagsAndAttributes
