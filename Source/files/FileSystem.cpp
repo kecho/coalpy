@@ -14,6 +14,7 @@ FileSystem::FileSystem(const FileSystemDesc& desc)
 
 FileSystem::~FileSystem()
 {
+    CPY_ASSERT_FMT(m_requests.elementsCount() == 0, "%d File requests still alive. Please close the handles.", m_requests.elementsCount());
 }
 
 AsyncFileHandle FileSystem::read(const FileReadRequest& request)

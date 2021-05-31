@@ -52,6 +52,13 @@ TaskSystem::~TaskSystem()
 
     signalStop();
     join();
+
+    int aliveTasks = 0;
+    m_taskTable.forEach([&aliveTasks](Task task, TaskData& data){
+        aliveTasks += data.syncData == nullptr ? 0 : 1;
+    });
+
+    CPY_ASSERT_FMT(aliveTasks == 0, "%d still alive tasks detected. This will cause memory leaks.", aliveTasks);
 }
 
 void TaskSystem::start()
@@ -348,8 +355,6 @@ void TaskSystem::wait(Task other)
     ThreadWorker* worker = ThreadWorker::getLocalThreadWorker();
     if (worker != nullptr)
     {
-        //this means we are inside a job
-        //TaskUtil::yieldUntil([this, other](){ this->internalWait(other); });
         bool finished = false;
         while (!isTaskFinished(other))
             runSingleJob(*worker);

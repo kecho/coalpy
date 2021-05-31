@@ -71,6 +71,13 @@ public:
 
     const int elementsCount() const { return m_numElements; }
 
+    void clear()
+    {
+        m_numElements = 0;
+        m_freeHandles.clear();
+        m_data.clear();
+    }
+
 private:
     struct DataContainer
     {

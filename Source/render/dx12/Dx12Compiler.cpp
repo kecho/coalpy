@@ -10,6 +10,7 @@
 #include <coalpy.core/ClTokenizer.h>
 #include <coalpy.core/ByteBuffer.h>
 #include <coalpy.files/Utils.h>
+#include <mutex>
 
 #include <string>
 #include <vector>
@@ -44,6 +45,10 @@ struct DxcInstanceData
 class DxcPool
 {
 public:
+    DxcPool()
+    {
+    }
+
     DxcInstance allocate()
     {
         DxcInstance h;
@@ -78,12 +83,31 @@ public:
         m_utilsPool.free(instance.utils, false/*dont reset object so we recycle it*/);
     }
 
+    void clear()
+    {
+        m_compilerPool.clear();
+        m_utilsPool.clear();
+    }
+
+    void AddRef()
+    {
+        ++m_ref;
+    }
+
+    void Release()
+    {
+        --m_ref;
+        if (m_ref <= 0)
+            delete this;
+    }
+
 private:
     HandleContainer<DxcCompilerHandle, SmartPtr<IDxcCompiler3>> m_compilerPool;
     HandleContainer<DxcUtilsHandle, SmartPtr<IDxcUtils>> m_utilsPool;
+    int m_ref = 0;
 };
 
-thread_local DxcPool* s_dxcPool = nullptr;
+thread_local SmartPtr<DxcPool> s_dxcPool = nullptr;
 
 struct DxcCompilerScope
 {
@@ -158,6 +182,7 @@ Dx12Compiler::Dx12Compiler(const ShaderDbDesc& desc)
 
 Dx12Compiler::~Dx12Compiler()
 {
+    //DxcPool::collectGarbage();
 }
 
 void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
