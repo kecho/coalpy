@@ -1,6 +1,6 @@
 #pragma once
 
-#include <coalpy.shader/ShaderServiceDefs.h>
+#include <coalpy.render/ShaderServiceDefs.h>
 
 namespace coalpy
 {

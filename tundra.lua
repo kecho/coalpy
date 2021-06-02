@@ -48,7 +48,7 @@ Build {
         
         -- Override solutions to generate and what units to put where.
         MsvcSolutions = {
-            ['coal.sln'] = {},          -- receives all the units due to empty set
+            ['coalpy.sln'] = {},          -- receives all the units due to empty set
         },
         
         BuildAllByDefault = true,

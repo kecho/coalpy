@@ -3,7 +3,7 @@
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/Utils.h>
-#include <coalpy.shader/IShaderService.h>
+#include <coalpy.render/IShaderService.h>
 #include <coalpy.render/IShaderDb.h>
 #include <coalpy.render/../../Config.h>
 #include <coalpy.render/../../Dx12/Dx12Compiler.h>

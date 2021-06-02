@@ -2,6 +2,9 @@
 #include <coalpy.core/Assert.h>
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.files/IFileSystem.h>
+#include <coalpy.files/FileWatcher.h>
+#include <coalpy.files/Utils.h>
+#include <unordered_map>
 #include <sstream>
 #include <iostream>
 
@@ -125,6 +128,96 @@ void testFileReadWrite(TestContext& ctx)
     testContext.end();
 }
 
+void testFileWatcher(TestContext& ctx)
+{
+    auto& testContext = (FileSystemContext&)ctx;
+    testContext.begin();
+    IFileSystem& fs = *testContext.fs;
+    
+    bool carveResult = fs.carveDirectoryPath(".testWatchFile");
+    CPY_ASSERT(carveResult);
+    auto getFileName = [](int i)
+    {
+        std::stringstream ss;
+        ss << ".testWatchFile/file-" << i << ".txt";
+        std::string fileName;
+        FileUtils::fixStringPath(ss.str(), fileName); 
+        return fileName;
+    };
+
+    auto writeFile = [&fs](const std::string& fileName, int* success)
+    {
+        std::string testString = "hello world";
+        *success = 0;
+        return fs.write(FileWriteRequest(fileName, [success](FileWriteResponse& response)
+        {
+            if (response.status == FileStatus::WriteSuccess)
+                *success = 1;
+            else if (response.status == FileStatus::WriteFail)
+                CPY_ASSERT(false);
+        }, testString.data(), testString.size()));
+    };
+
+    
+    int numFiles = 20;
+    std::unordered_map<std::string, int> fileWrites;
+    std::vector<int> successes;
+    std::vector<AsyncFileHandle> handles;
+    handles.resize(numFiles);
+    successes.resize(numFiles);
+    for (int i = 0; i < numFiles; ++i)
+    {
+        std::string fileName = getFileName(i);
+        handles[i] = writeFile(fileName, &successes[i]);
+        fs.execute(handles[i]);
+        fileWrites[fileName] = 0;
+    }
+
+    for (int i = 0; i < numFiles; ++i)
+    {
+        fs.wait(handles[i]);
+        fs.closeHandle(handles[i]);
+        std::string fileName = getFileName(i);
+        CPY_ASSERT_FMT(successes[i], "Failed writting file \"%s\"", fileName.c_str());
+    }
+    
+    FileWatcher fieWatcher;
+    fieWatcher.start(".testWatchFile", [&fileWrites](const std::set<std::string>& files) {
+        for (auto& fn : files)
+        {
+            std::stringstream ss;
+            ss << ".testWatchFile\\" << fn;
+            ++fileWrites[ss.str()];       
+        }
+    }, 100);
+
+    for (int i = 0; i < numFiles; ++i)
+    {
+        std::string fileName = getFileName(i);
+        handles[i] = writeFile(fileName, &successes[i]);
+        fs.execute(handles[i]);
+    }
+
+    for (int i = 0; i < numFiles; ++i)
+    {
+        fs.wait(handles[i]);
+        fs.closeHandle(handles[i]);
+        std::string fileName = getFileName(i);
+        CPY_ASSERT_FMT(successes[i], "Failed writting file \"%s\"", fileName.c_str());
+    }
+
+    fieWatcher.stop();
+
+    for (auto& it : fileWrites)
+    {
+        CPY_ASSERT_FMT(it.second > 0, "Did not detected a write for file \"%s\"", it.first.c_str());
+    }
+    
+    deleteAllDir(fs, ".testWatchFile");
+    testContext.end();
+
+}
+
 class FileSystemTestSuite : public TestSuite
 {
 public:
@@ -133,7 +226,8 @@ public:
     {
         static TestCase sCases[] = {
             { "createDeleteDir", testCreateDeleteDir },
-            { "fileReadWrite", testFileReadWrite }
+            { "fileReadWrite", testFileReadWrite },
+            { "fileWatcher", testFileWatcher }
         };
 
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

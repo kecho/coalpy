@@ -31,7 +31,6 @@ local CoalPyModuleTable = {
     core    = {},
     tasks   = { "core" },
     files   = { "core", "tasks" },
-    shader  = { "core", "tasks", "files", "render" },
     render  = { "core", "tasks", "files" }
 }
 
@@ -41,7 +40,7 @@ local CoalPyModuleIncludes = {
 }
 
 -- Module list for the core coalpy module
-local CoalPyModules = { "core", "shader", "tasks", "render", "files"  }
+local CoalPyModules = { "core", "tasks", "render", "files"  }
 
 _G.BuildModules(SourceDir, CoalPyModuleTable, CoalPyModuleIncludes)
 _G.BuildPyLib("coalpy", SourceDir, LibIncludes, CoalPyModules, Libraries)

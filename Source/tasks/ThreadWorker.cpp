@@ -50,8 +50,6 @@ thread_local ThreadWorker* t_localWorker = nullptr;
 
 ThreadWorker::ThreadWorker()
 {
-    m_auxLoopActive = new std::atomic<bool>();
-    *m_auxLoopActive = true;
 }
 
 ThreadWorker::~ThreadWorker()
@@ -65,8 +63,6 @@ ThreadWorker::~ThreadWorker()
 
     if (m_auxQueue)
         delete m_auxQueue;
-
-    delete m_auxLoopActive;
 }
 
 void ThreadWorker::start(OnTaskCompleteFn onTaskCompleteFn)
@@ -180,7 +176,6 @@ void ThreadWorker::runInThread(TaskFn fn, TaskContext& payload)
 
 void ThreadWorker::auxLoop()
 {
-    *m_auxLoopActive = true;
     bool active = true;
     while (active)
     {
@@ -206,7 +201,6 @@ void ThreadWorker::auxLoop()
             active = false;
         }
     }
-    *m_auxLoopActive = false;
 }
 
 void ThreadWorker::waitUntil(TaskBlockFn fn)
@@ -215,7 +209,6 @@ void ThreadWorker::waitUntil(TaskBlockFn fn)
     msg.type = ThreadMessageType::RunAuxLambda;
     msg.blockFn = fn;
     msg.targetStack = m_activeDepth + 1;
-    CPY_ASSERT(*m_auxLoopActive);
     m_auxQueue->push(msg);
     ++m_activeDepth;
     run(); //trap and start a new job in the stack until the aux thread is finished.

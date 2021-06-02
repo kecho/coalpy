@@ -3,7 +3,6 @@
 #include <coalpy.tasks/TaskDefs.h>
 #include <memory>
 #include <functional>
-#include <atomic>
 
 namespace std
 {
@@ -41,7 +40,6 @@ private:
     std::thread* m_auxThread = nullptr;
     ThreadWorkerQueue* m_auxQueue = nullptr;
     OnTaskCompleteFn m_onTaskCompleteFn = nullptr;
-    std::atomic<bool>* m_auxLoopActive = nullptr;
     int m_activeDepth = 0;
     int m_workerId = -1;
 };
