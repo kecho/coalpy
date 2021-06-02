@@ -1,4 +1,5 @@
 #define PY_SSIZE_T_CLEAN
+
 #include <Python.h>
 #include <iostream>
 
@@ -6,6 +7,8 @@ struct CoalPyModuleState
 {
     const char* d = nullptr;
 };
+
+static PyObject* s_errorObj;
 
 namespace coalpy
 {
@@ -47,5 +50,15 @@ PyInit_gpu(void)
     PyObject* moduleObj = PyModule_Create(&s_CoalPyModuleDef);
     auto state = (CoalPyModuleState*)PyModule_GetState(moduleObj);
     state->d = "hello world";
+
+    s_errorObj = PyErr_NewException("gpu.testerror", NULL, NULL);
+    Py_XINCREF(s_errorObj);
+    if (PyModule_AddObject(moduleObj, "testerror", s_errorObj) < 0) {
+        Py_XDECREF(s_errorObj);
+        Py_CLEAR(s_errorObj);
+        Py_DECREF(moduleObj);
+        return NULL;
+    }
+
     return moduleObj;
 }
