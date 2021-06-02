@@ -57,7 +57,7 @@ function _G.BuildModules(sourceDir, moduleMap, extraIncludes)
     end
 end
 
-function _G.BuildPyLib(libName, sourceDir, includeList, moduleList, otherDeps)
+function _G.BuildPyLib(libName, libFolder, sourceDir, includeList, moduleList, otherDeps)
     local pythonLib = SharedLibrary {
         Name = libName,
         Pass = "BuildCode",
@@ -70,7 +70,7 @@ function _G.BuildPyLib(libName, sourceDir, includeList, moduleList, otherDeps)
         },
         Sources = {
             Glob {
-                Dir = sourceDir.."/"..libName,
+                Dir = sourceDir.."/"..libFolder,
                 Extensions = { ".cpp", ".h", ".hpp" },
                 Recursive =  true
             },
@@ -106,9 +106,10 @@ function _G.BuildProgram(programName, programSource, defines, sourceDir, include
     Default(prog)
 end
 
-function _G.DeployPyLib(pythonLibName, binaries)
+function _G.DeployPyPackage(packageName, pythonLibName, binaries, scriptsDir)
     local srcDll = "$(OBJECTDIR)$(SEP)"..pythonLibName..".dll"
-    local dstPyd = "$(OBJECTDIR)$(SEP)"..pythonLibName..".pyd"
+    local packageDst = "$(OBJECTDIR)$(SEP)"..packageName
+    local dstPyd = packageDst.."$(SEP)"..pythonLibName..".pyd"
     local cpyFile = CopyFile {
         Pass = "Deploy",
         Source = srcDll,
@@ -119,6 +120,22 @@ function _G.DeployPyLib(pythonLibName, binaries)
 
     for i, v in ipairs(binaries) do
         local targetName =  "$(OBJECTDIR)$(SEP)"..npath.get_filename(v)
+        local cpCmd = CopyFile {
+            Pass = "Deploy",
+            Source = v,
+            Target = targetName
+        }
+        Default(cpCmd)
+    end
+
+    local scripts = Glob {
+        Dir = scriptsDir,
+        Extensions = { ".py", "READNME" },
+        Recursive = true
+    }
+
+    for i, v in ipairs(scripts) do
+        local targetName = packageDst.."$(SEP)"..path.remove_prefix(scriptsDir.."/", v)
         local cpCmd = CopyFile {
             Pass = "Deploy",
             Source = v,

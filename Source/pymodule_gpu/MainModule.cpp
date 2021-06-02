@@ -33,7 +33,7 @@ static PyMethodDef s_CoalPyMethods[] = {
 
 static struct PyModuleDef s_CoalPyModuleDef = {
     PyModuleDef_HEAD_INIT,
-    "coal",   /* name of module */
+    "gpu",   /* name of module */
     NULL, /* module documentation, may be NULL */
     sizeof(CoalPyModuleState),       /* size of per-interpreter state of the module,
                  or -1 if the module keeps state in global variables. */
@@ -41,7 +41,7 @@ static struct PyModuleDef s_CoalPyModuleDef = {
 };
 
 PyMODINIT_FUNC
-PyInit_coalpy(void)
+PyInit_gpu(void)
 {
     std::cout << "PY TEST MODULE BITCHES " << std::endl;
     PyObject* moduleObj = PyModule_Create(&s_CoalPyModuleDef);
