@@ -5,6 +5,14 @@ local native = require "tundra.native"
 local path  = require "tundra.path"
 local npath = require 'tundra.native.path'
 
+local function GenRootIdeHints(rootFolder)
+   return {
+        Msvc = {
+            SolutionFolder = rootFolder
+        }
+    }
+end
+
 function _G.GetPythonPath()
     local pyroot = native.getenv("PYTHON39_ROOT", nil);   
     if pyroot == nil then
@@ -51,7 +59,9 @@ function _G.BuildModules(sourceDir, moduleMap, extraIncludes)
                     Extensions = { ".cpp", ".h", ".hpp" },
                     Recursive =  true
                 }
-            }
+            },
+
+            IdeGenerationHints = GenRootIdeHints("Modules");
         }
         Default(moduleLib)
     end
@@ -74,7 +84,8 @@ function _G.BuildPyLib(libName, libFolder, sourceDir, includeList, moduleList, o
                 Extensions = { ".cpp", ".h", ".hpp" },
                 Recursive =  true
             },
-        }
+        },
+        IdeGenerationHints = GenRootIdeHints("PyModules");
     }
 
     Default(pythonLib)
@@ -100,7 +111,8 @@ function _G.BuildProgram(programName, programSource, defines, sourceDir, include
                 Extensions = { ".cpp", ".h", ".hpp" },
                 Recursive =  true
             },
-        }
+        },
+        IdeGenerationHints = GenRootIdeHints("Apps");
     }
 
     Default(prog)

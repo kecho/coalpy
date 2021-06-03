@@ -20,7 +20,7 @@ namespace {
     {NULL, NULL, 0, NULL}
 
 PyMethodDef g_defs[] = {
-    KW_FN(loadShader,   "Loads a shader from a file"),
+    KW_FN(loadShader,   "Loads a shader from a file (fileName: string, [mainFunction: string], [identifier: string]"),
     KW_FN(inlineShader, "Create an inline shader"),
     FN_END
 };
@@ -54,7 +54,7 @@ void freeModule(void* modulePtr)
 
 PyObject* loadShader(PyObject* self, PyObject* args, PyObject* kwds)
 {
-    static char* argnames[] = { "fileName", "mainFunction", "shaderName" };
+    static char* argnames[] = { "fileName", "mainFunction", "identifier" };
     ModuleState& state = getState(self);
     const char* fileName = nullptr;
     const char* mainFunction = "csMain";
@@ -62,7 +62,6 @@ PyObject* loadShader(PyObject* self, PyObject* args, PyObject* kwds)
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|ss", argnames, &fileName, &mainFunction, &shaderName))
     {
-        PyErr_SetString(state.exObj(), "failed loading arguments for loadShader.");
         return nullptr;
     }
 
