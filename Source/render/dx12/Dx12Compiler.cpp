@@ -320,8 +320,12 @@ void Dx12Compiler::setupDxc()
     if (g_dxcModule == nullptr)
     {
         std::string moduleName ="dxcompiler.dll";
-        if (m_desc.compilerDllPath != nullptr)
-            moduleName = std::string(m_desc.compilerDllPath) + "\\" + moduleName;
+        std::string compilerPath = m_desc.compilerDllPath ? m_desc.compilerDllPath : "";
+        std::stringstream compilerFullPath;
+        if (compilerPath != "")
+            compilerFullPath << compilerPath << "\\";
+        compilerFullPath << moduleName;
+        moduleName = compilerFullPath.str();
 
         std::string fullModulePath;
         FileUtils::getAbsolutePath(moduleName, fullModulePath);

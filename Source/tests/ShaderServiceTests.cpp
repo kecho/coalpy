@@ -275,7 +275,6 @@ public:
         auto appContext = ApplicationContext::get();
         std::string appName = appContext.argv[0];
         FileUtils::getDirName(appName, rootDir);
-
         testContext->rootDir = rootDir;
 
         {
