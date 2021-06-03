@@ -32,6 +32,7 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
         requestData->filename = request.path;
         requestData->readCallback = request.doneCallback;
         requestData->opaqueHandle = {};
+        requestData->error = IoError::None;
         requestData->fileStatus = FileStatus::Idle;
         requestData->task = m_ts.createTask(TaskDesc([this](TaskContext& ctx)
         {
@@ -46,9 +47,11 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
             if (!InternalFileSystem::valid(requestData->opaqueHandle))
             {
                 {
-                    requestData->fileStatus = FileStatus::OpenFail;
+                    requestData->error = IoError::FailedOpening;
+                    requestData->fileStatus = FileStatus::Fail;
                     FileReadResponse response;
-                    response.status = FileStatus::OpenFail;
+                    response.error = IoError::FailedOpening;
+                    response.status = FileStatus::Fail;
                     requestData->readCallback(response);
                 }
                 return;
@@ -83,9 +86,11 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                         if (InternalFileSystem::valid(requestData->opaqueHandle))
                             InternalFileSystem::close(requestData->opaqueHandle);
 
-                        requestData->fileStatus = FileStatus::ReadingFail;
+                        requestData->error = IoError::FailedReading;
+                        requestData->fileStatus = FileStatus::Fail;
                         FileReadResponse response;
-                        response.status = FileStatus::ReadingFail;
+                        response.error = IoError::FailedReading;
+                        response.status = FileStatus::Fail;
                         requestData->readCallback(response);
                     }
                     return;
@@ -96,9 +101,9 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                 if (InternalFileSystem::valid(requestData->opaqueHandle))
                     InternalFileSystem::close(requestData->opaqueHandle);
 
-                requestData->fileStatus = FileStatus::ReadingSuccessEof;
+                requestData->fileStatus = FileStatus::Success;
                 FileReadResponse response;
-                response.status = FileStatus::ReadingSuccessEof;
+                response.status = FileStatus::Success;
                 requestData->readCallback(response);
             }
 
@@ -145,6 +150,7 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
         InternalFileSystem::fixStringPath(requestData->filename);
         requestData->writeCallback = request.doneCallback;
         requestData->opaqueHandle = {};
+        requestData->error = IoError::None;
         requestData->fileStatus = FileStatus::Idle;
         requestData->writeBuffer.append((const u8*)request.buffer, (size_t)request.size);
         requestData->writeSize = request.size;
@@ -160,13 +166,16 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
 
             if (!InternalFileSystem::carvePath(requestData->filename))
             {
-                requestData->fileStatus = FileStatus::FailedCreatingDir;
+                requestData->error = IoError::FailedCreatingDir;
+                requestData->fileStatus = FileStatus::Fail;
                 FileWriteResponse response;
-                response.status = FileStatus::FailedCreatingDir;
+                response.error = IoError::FailedCreatingDir;
+                response.status = FileStatus::Fail;
                 requestData->writeCallback(response);
                 {
                     FileWriteResponse response;
-                    response.status = FileStatus::WriteFail;
+                    response.status = FileStatus::Fail;
+                    response.error = IoError::FailedCreatingDir;
                     requestData->writeCallback(response);
                 }
                 return;
@@ -175,14 +184,11 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
             if (!InternalFileSystem::valid(requestData->opaqueHandle))
             {
                 {
-                    requestData->fileStatus = FileStatus::OpenFail;
+                    requestData->error = IoError::FailedOpening;
+                    requestData->fileStatus = FileStatus::Fail;
                     FileWriteResponse response;
-                    response.status = FileStatus::OpenFail;
-                    requestData->writeCallback(response);
-                }
-                {
-                    FileWriteResponse response;
-                    response.status = FileStatus::WriteFail;
+                    response.error = IoError::FailedOpening;
+                    response.status = FileStatus::Fail;
                     requestData->writeCallback(response);
                 }
                 return;
@@ -207,9 +213,11 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
                     if (InternalFileSystem::valid(requestData->opaqueHandle))
                         InternalFileSystem::close(requestData->opaqueHandle);
 
-                    requestData->fileStatus = FileStatus::WriteFail;
+                    requestData->error = IoError::FailedWriting;
+                    requestData->fileStatus = FileStatus::Fail;
                     FileWriteResponse response;
-                    response.status = FileStatus::WriteFail;
+                    response.error = IoError::FailedWriting;
+                    response.status = FileStatus::Fail;
                     requestData->writeCallback(response);
                 }
                 return;
@@ -219,9 +227,9 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
                 if (InternalFileSystem::valid(requestData->opaqueHandle))
                     InternalFileSystem::close(requestData->opaqueHandle);
 
-                requestData->fileStatus = FileStatus::WriteSuccess;
+                requestData->fileStatus = FileStatus::Success;
                 FileWriteResponse response;
-                response.status = FileStatus::WriteSuccess;
+                response.status = FileStatus::Success;
                 requestData->writeCallback(response);
             }
 

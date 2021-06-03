@@ -89,7 +89,8 @@ void testFileReadWrite(TestContext& ctx)
         ".test_folder/test.txt",
         [&writeSuccess](FileWriteResponse& response)
         {
-            if (response.status == FileStatus::WriteSuccess)
+            CPY_ASSERT_FMT(response.status != FileStatus::Fail, "writing fail: %s", IoError2String(response.error));
+            if (response.status == FileStatus::Success)
                 writeSuccess = true;
         },
         str.c_str(),
@@ -104,9 +105,10 @@ void testFileReadWrite(TestContext& ctx)
         ".test_folder/test.txt",
         [&readSuccess, &readResult](FileReadResponse& response)
         {
+            CPY_ASSERT_FMT(response.status != FileStatus::Fail, "reading fail: %s", IoError2String(response.error));
             if (response.status == FileStatus::Reading)
                 readResult.append(response.buffer, response.size);
-            else if (response.status == FileStatus::ReadingSuccessEof)
+            else if (response.status == FileStatus::Success)
                 readSuccess = true;
         }
     ));
@@ -151,9 +153,10 @@ void testFileWatcher(TestContext& ctx)
         *success = 0;
         return fs.write(FileWriteRequest(fileName, [success](FileWriteResponse& response)
         {
-            if (response.status == FileStatus::WriteSuccess)
+            CPY_ASSERT_FMT(response.status != FileStatus::Fail, "writing fail: %s", IoError2String(response.error));
+            if (response.status == FileStatus::Success)
                 *success = 1;
-            else if (response.status == FileStatus::WriteFail)
+            else if (response.status == FileStatus::Fail)
                 CPY_ASSERT(false);
         }, testString.data(), testString.size()));
     };

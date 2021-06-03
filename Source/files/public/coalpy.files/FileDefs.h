@@ -14,22 +14,49 @@ struct FileSystemDesc
     ITaskSystem* taskSystem = nullptr;
 };
 
+enum class IoError
+{
+    FailedCreating,
+    FailedOpening,
+    FailedWriting,
+    FailedReading,
+    FailedCreatingDir,
+    None
+};
+
+inline const char* IoError2String(IoError err)
+{
+    switch (err)
+    {
+    case IoError::FailedCreating:
+        return "IoError::FailedCreating";
+    case IoError::FailedOpening:
+        return "IoError::FailedOpening";
+    case IoError::FailedWriting:
+        return "IoError::FailedWriting";
+    case IoError::FailedReading:
+        return "IoError::FailedReading";
+    case IoError::FailedCreatingDir:
+        return "IoError::FailedCreatingDir";
+    default:
+    case IoError::None:
+        return "IoError::None";
+    }
+}
+
 enum class FileStatus
 {
     Idle,
     Opening,
     Reading,
-    OpenFail,
-    FailedCreatingDir,
-    ReadingFail,
-    ReadingSuccessEof,
-    WriteSuccess,
-    WriteFail,
-    Writing
+    Writing,
+    Fail,
+    Success
 };
 
 struct FileReadResponse
 {
+    IoError error = IoError::None;
     FileStatus status = FileStatus::Idle;
     const char* buffer = nullptr;
     int size = 0;
@@ -37,6 +64,7 @@ struct FileReadResponse
 
 struct FileWriteResponse
 {
+    IoError error = IoError::None;
     FileStatus status = FileStatus::Idle;
 };
 

@@ -182,10 +182,9 @@ void shaderDbCompile(TestContext& ctx)
         files.push_back(fs.write(FileWriteRequest(fileNames.back(),
             [&successCount](FileWriteResponse& response)
             {
-                if (response.status == FileStatus::WriteSuccess)
+                CPY_ASSERT_FMT(response.status != FileStatus::Fail, "failed writting file %s", IoError2String(response.error));
+                if (response.status == FileStatus::Success)
                     ++successCount;
-                else if (response.status == FileStatus::WriteFail)
-                    CPY_ASSERT_MSG(false, "failed writting file");
             },
             simpleComputeShaderWithInclude(), strlen(simpleComputeShaderWithInclude())
         )));

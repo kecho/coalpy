@@ -61,14 +61,14 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
         {
             compileState->buffer.append((const u8*)response.buffer, response.size);
         }
-        else if (response.status == FileStatus::ReadingSuccessEof)
+        else if (response.status == FileStatus::Success)
         {
             compileState->compileArgs.source = (const char*)compileState->buffer.data();
             compileState->compileArgs.sourceSize = (int)compileState->buffer.size();
         }
-        else if (response.status == FileStatus::ReadingFail)
+        else if (response.status == FileStatus::Fail)
         {
-            std::cout << "Failed reading " << compileState->shaderName;
+            std::cout << "Failed reading " << compileState->shaderName << ". Reason: " << IoError2String(response.error);
         }
     }));
 
@@ -89,7 +89,7 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
             {
                 buffer.append((const u8*)response.buffer, response.size);    
             }
-            else if (response.status == FileStatus::ReadingSuccessEof)
+            else if (response.status == FileStatus::Success)
             {
                 result = true;
             }

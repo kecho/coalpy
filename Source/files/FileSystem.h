@@ -47,6 +47,7 @@ private:
         int writeSize = 0;
 
         Task task;
+        std::atomic<IoError> error;
         std::atomic<FileStatus> fileStatus;
     };
 
