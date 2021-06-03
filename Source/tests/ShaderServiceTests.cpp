@@ -295,7 +295,7 @@ public:
         }
 
         {
-            ShaderServiceDesc desc { testContext->db, rootDir.c_str(), 60, nullptr, nullptr };
+            ShaderServiceDesc desc { testContext->db, rootDir.c_str(), 60 };
             testContext->ss = IShaderService::create(desc);
         }
 

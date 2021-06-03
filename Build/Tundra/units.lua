@@ -44,6 +44,6 @@ local CoalPyModuleIncludes = {
 local CoalPyModules = { "core", "tasks", "render", "files"  }
 
 _G.BuildModules(SourceDir, CoalPyModuleTable, CoalPyModuleIncludes)
-_G.BuildPyLib("gpu", "pymodule_gpu", SourceDir, LibIncludes, CoalPyModules, Libraries)
+_G.BuildPyLib("gpu", "pymodules/gpu", SourceDir, LibIncludes, CoalPyModules, Libraries)
 _G.BuildProgram("coalpy_tests", "tests", { "CPY_ASSERT_ENABLED=1" }, SourceDir, LibIncludes, CoalPyModules, Libraries)
 _G.DeployPyPackage("coalpy", "gpu", Binaries, ScriptsDir)

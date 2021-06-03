@@ -1,5 +1,4 @@
 #pragma once
-
 #include <coalpy.render/ShaderServiceDefs.h>
 
 namespace coalpy
