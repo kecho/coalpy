@@ -19,7 +19,8 @@ local Libraries = {
     {
         PythonDir.."python39.lib",
         Config = { "win64-msvc-release", "win64-msvc-production"  }
-    }
+    },
+    "User32.lib"
 }
 
 local Binaries = {

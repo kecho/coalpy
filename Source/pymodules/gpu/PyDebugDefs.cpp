@@ -2,10 +2,6 @@
 
 #include <Python.h>
 
-#ifdef assert
-#undef assert
-#endif
-
 #include <coalpy.core/Assert.h>
 
 Py_ssize_t _Py_RefTotal = 0;

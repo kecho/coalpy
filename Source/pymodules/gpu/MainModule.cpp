@@ -3,6 +3,38 @@
 #include <iostream>
 #include "ModuleState.h"
 #include "ModuleFunctions.h"
+#include "TypeRegistry.h"
+#if _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+#include <coalpy.core/Assert.h>
+#include <coalpy.window/WindowDefs.h>
+
+
+coalpy::ModuleOsHandle g_ModuleInstance = nullptr;
+
+#if _WIN32
+
+BOOL WINAPI DllMain(
+    HINSTANCE hinstDLL,  // handle to DLL module
+    DWORD fdwReason,     // reason for calling function
+    LPVOID lpReserved )  // reserved
+{
+    switch( fdwReason ) 
+    { 
+        case DLL_PROCESS_ATTACH:
+            g_ModuleInstance = (coalpy::ModuleOsHandle)hinstDLL;
+            break;
+
+        case DLL_PROCESS_DETACH:
+            g_ModuleInstance = nullptr;
+            break;
+    }
+    return TRUE;
+}
+
+#endif
 
 PyMODINIT_FUNC PyInit_gpu(void)
 {
@@ -20,7 +52,37 @@ PyMODINIT_FUNC PyInit_gpu(void)
 
     moduleDef.m_methods = coalpy::gpu::methods::get();
 
+    static std::vector<PyTypeObject> sTypes;
+    coalpy::gpu::constructTypes(sTypes);
+
+    //Check types
+    for (auto& t : sTypes)
+    {
+        if (PyType_Ready(&t) < 0)
+            return nullptr;
+    }
+
     PyObject* moduleObj = PyModule_Create(&moduleDef);
+
+    //Register types
+    int prependStrLen = strlen("gpu.");
+    for (auto& t : sTypes)
+    {
+        int typeNameLen = strlen(t.tp_name);
+        CPY_ASSERT_FMT(typeNameLen > prependStrLen, "typename %s must have prefix \"gpu.\"", t.tp_name);
+        if (typeNameLen <= prependStrLen)
+            return nullptr;
+
+        Py_INCREF(&t);
+        const char* typeName = t.tp_name + prependStrLen;
+        if (PyModule_AddObject(moduleObj, typeName, (PyObject*)&t) < 0)
+        {
+            Py_DECREF(&t);
+            Py_DECREF(moduleObj);
+            return nullptr;
+        }
+    }
+
     auto state = (coalpy::gpu::ModuleState*)PyModule_GetState(moduleObj);
     new (state) coalpy::gpu::ModuleState;
     state->startServices();

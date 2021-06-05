@@ -53,7 +53,7 @@ void AssertSystem::setErrorHandler(AssertSystem::HandlerFn fn)
     s_assertHandler = fn ? fn : defaultErrorFn;
 }
 
-void AssertSystem::assert(const char* condition, const char* file, unsigned int line, const char* fmt, ...)
+void AssertSystem::onAssert(const char* condition, const char* file, unsigned int line, const char* fmt, ...)
 {
     if (!s_assertHandler)
         return;
@@ -84,7 +84,7 @@ void AssertSystem::assert(const char* condition, const char* file, unsigned int 
 
 }
 
-void AssertSystem::error(const char* condition, const char* file, unsigned int line, const char* fmt, ...)
+void AssertSystem::onError(const char* condition, const char* file, unsigned int line, const char* fmt, ...)
 {
     if (!s_errorHandler)
         return;

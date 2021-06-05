@@ -43,7 +43,7 @@ struct GenericHandle
     
     bool operator!=(const GenericHandle<BaseHandle>& other) const
     {
-        return !((*this) == other)
+        return !((*this) == other);
     }
 
     bool operator< (const GenericHandle<BaseHandle>& other) const
