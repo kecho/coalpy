@@ -32,7 +32,8 @@ local CoalPyModuleTable = {
     core    = {},
     tasks   = { "core" },
     files   = { "core", "tasks" },
-    render  = { "core", "tasks", "files" }
+    render  = { "core", "tasks", "files" },
+    window  = { "core" }
 }
 
 -- C++ module external includes
@@ -41,7 +42,7 @@ local CoalPyModuleIncludes = {
 }
 
 -- Module list for the core coalpy module
-local CoalPyModules = { "core", "tasks", "render", "files"  }
+local CoalPyModules = { "core", "tasks", "render", "files", "window"  }
 
 _G.BuildModules(SourceDir, CoalPyModuleTable, CoalPyModuleIncludes)
 _G.BuildPyLib("gpu", "pymodules/gpu", SourceDir, LibIncludes, CoalPyModules, Libraries)
