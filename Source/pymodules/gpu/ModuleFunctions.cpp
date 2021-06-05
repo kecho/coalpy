@@ -3,6 +3,7 @@
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/Utils.h>
 #include <coalpy.render/IShaderDb.h>
+#include <coalpy.window/IWindow.h>
 #include <string>
 
 #define PY_SSIZE_T_CLEAN
@@ -22,6 +23,7 @@ namespace {
 PyMethodDef g_defs[] = {
     KW_FN(loadShader,   "Loads a shader from a file (fileName: string, [mainFunction: string], [identifier: string]"),
     KW_FN(inlineShader, "Create an inline shader"),
+    VA_FN(runWindows, "Runs window rendering callbacks. This function blocks until all the windows specified are closed."),
     FN_END
 };
 
@@ -83,6 +85,33 @@ PyObject* loadShader(PyObject* self, PyObject* args, PyObject* kwds)
 
 PyObject* inlineShader(PyObject* self, PyObject* args, PyObject* kwds)
 {
+    Py_RETURN_NONE;
+}
+
+PyObject* runWindows(PyObject* self, PyObject* args)
+{
+    ModuleState& state = getState(self);
+    PyObject* renderCb;
+    if (!PyArg_ParseTuple(args, "O:runWindows", &renderCb))
+        return nullptr;
+
+    if (!PyCallable_Check(renderCb))
+    {
+        PyErr_SetString(state.exObj(), "parameter must be a callback");
+        return nullptr;
+    }
+
+    Py_XINCREF(renderCb);
+
+    WindowRunArgs runArgs = {};
+    runArgs.onRender = [renderCb](IWindow* window)
+    {
+        PyObject_CallObject(renderCb, nullptr);
+    };
+
+    IWindow::run(runArgs);
+
+    Py_XDECREF(renderCb);
     Py_RETURN_NONE;
 }
 

@@ -13,8 +13,17 @@ class Win32Window : public IWindow
 {
 public:
     explicit Win32Window(const WindowDesc& desc);
-    virtual ModuleOsHandle getHandle() const override;
+    virtual WindowOsHandle getHandle() const override;
     virtual ~Win32Window();
+
+    struct HandleMessageRet
+    {
+        bool handled;
+        unsigned long retCode;
+    };
+
+    HandleMessageRet handleMessage(
+        unsigned message, unsigned int* wparam, unsigned long* lparam);
 
 private:
     void createWindow();

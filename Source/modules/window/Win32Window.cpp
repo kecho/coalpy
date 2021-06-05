@@ -135,15 +135,46 @@ void Win32Window::destroyWindow()
         WND_OK(DestroyWindow(m_state.windowHandle));
 }
 
-ModuleOsHandle Win32Window::getHandle() const
+WindowOsHandle Win32Window::getHandle() const
 {
-    return nullptr;
+    return (WindowOsHandle)m_state.windowHandle;
+}
+
+Win32Window::HandleMessageRet Win32Window::handleMessage(
+    unsigned message,
+    unsigned int* wparam,
+    unsigned long* lparam)
+{
+    HandleMessageRet ret = {};
+    switch (message)
+    {
+    case WM_DESTROY:
+        ret.handled = true;
+        m_state.windowHandle = nullptr;
+        PostQuitMessage(0);
+        break;
+    case WM_SIZE:
+        ret.handled = true;
+        break;
+    }
+    return ret;
 }
 
 LRESULT CALLBACK win32WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     if (message == WM_CREATE)
     {
+        auto self = static_cast<Win32Window*>(((LPCREATESTRUCT)lParam)->lpCreateParams);
+        if (self)
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)self);
+    }
+
+    auto self = (Win32Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    if (self)
+    {
+        auto ret = self->handleMessage(message, (unsigned int*)wParam, (unsigned long*)lParam);
+        if (ret.handled)
+            return (LRESULT)ret.retCode;
     }
 
     return DefWindowProc(hwnd, message, wParam, lParam);
@@ -160,6 +191,32 @@ IWindow* IWindow::create(const WindowDesc& desc)
     return nullptr;
 #endif
 }
+
+void IWindow::run(const WindowRunArgs& args)
+{
+#if ENABLE_WIN32_WINDOW
+    bool finished = false;
+    MSG currMsg;
+    while (!finished)
+    {
+        PeekMessage(&currMsg, NULL, NULL, NULL, PM_REMOVE);
+        if (currMsg.message == WM_QUIT)
+        {
+            finished = true;
+        }
+        else
+        {
+            //run all windows here
+            if (args.onRender)
+                args.onRender(nullptr);
+
+            TranslateMessage(&currMsg);
+            DispatchMessage(&currMsg);
+        }
+    }
+#endif
+}
+
 
 }
 

@@ -9,7 +9,8 @@ class IWindow
 {
 public:
     static IWindow* create(const WindowDesc& desc);
-    virtual ModuleOsHandle getHandle() const = 0;
+    static void run(const WindowRunArgs& runArgs);
+    virtual WindowOsHandle getHandle() const = 0;
     virtual ~IWindow() {}
 };
 
