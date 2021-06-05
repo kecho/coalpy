@@ -21,8 +21,12 @@ function _G.GetPythonPath()
     return pyroot
 end
 
+function _G.GetModuleDir(sourceDir, moduleName)
+    return sourceDir.."\\modules\\"..moduleName.."\\"
+end
+
 function _G.GetModulePublicInclude(sourceDir, moduleName)
-    return sourceDir.."\\"..moduleName.."\\public\\"
+    return _G.GetModuleDir(sourceDir, moduleName).."public\\"
 end
 
 function _G.GetModuleIncludes(sourceDir, moduleList)
@@ -49,13 +53,14 @@ function _G.BuildModules(sourceDir, moduleMap, extraIncludes)
             Pass = "BuildCode",
             Depends = { _G.GetModuleDeps(v) },
             Includes = {
+                _G.GetModuleDir(sourceDir, k),
                 _G.GetModuleIncludes(sourceDir, v),
                 _G.GetModulePublicInclude(sourceDir, k),
                 externalIncludes
             },
             Sources = {
                 Glob {
-                    Dir = sourceDir.."/"..k,
+                    Dir = _G.GetModuleDir(sourceDir, k),
                     Extensions = { ".cpp", ".h", ".hpp" },
                     Recursive =  true
                 }

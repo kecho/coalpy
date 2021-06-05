@@ -1,5 +1,5 @@
 local SourceDir = "Source";
-local ScriptsDir = "Scripts/coalpy";
+local ScriptsDir = "Source/scripts/coalpy";
 local DxcDir = "External/dxc_2021_04-20/"
 local DxcIncludes = DxcDir
 local DxcBinaryCompiler = DxcDir.."dxc/bin/x64/dxcompiler.dll"
