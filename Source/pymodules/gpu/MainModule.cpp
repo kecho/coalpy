@@ -10,9 +10,11 @@
 #endif
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/WindowDefs.h>
+#include "CoalpyTypeObject.h"
 
 
 coalpy::ModuleOsHandle g_ModuleInstance = nullptr;
+coalpy::gpu::TypeList g_allTypes;
 
 #if _WIN32
 
@@ -29,6 +31,9 @@ BOOL WINAPI DllMain(
 
         case DLL_PROCESS_DETACH:
             g_ModuleInstance = nullptr;
+            for (auto t : g_allTypes)
+                delete t;
+            g_allTypes.clear();
             break;
     }
     return TRUE;
@@ -52,13 +57,14 @@ PyMODINIT_FUNC PyInit_gpu(void)
 
     moduleDef.m_methods = coalpy::gpu::methods::get();
 
-    static std::vector<PyTypeObject> sTypes;
-    coalpy::gpu::constructTypes(sTypes);
+    coalpy::gpu::TypeList typeList;
+    coalpy::gpu::constructTypes(typeList);
+    g_allTypes.insert(g_allTypes.end(), typeList.begin(), typeList.end());
 
     //Check types
-    for (auto& t : sTypes)
+    for (auto& t : typeList)
     {
-        if (PyType_Ready(&t) < 0)
+        if (PyType_Ready(&t->pyObj) < 0)
             return nullptr;
     }
 
@@ -66,25 +72,25 @@ PyMODINIT_FUNC PyInit_gpu(void)
 
     //Register types
     int prependStrLen = strlen("gpu.");
-    for (auto& t : sTypes)
+    for (auto& t : typeList)
     {
-        int typeNameLen = strlen(t.tp_name);
-        CPY_ASSERT_FMT(typeNameLen > prependStrLen, "typename %s must have prefix \"gpu.\"", t.tp_name);
+        int typeNameLen = strlen(t->pyObj.tp_name);
+        CPY_ASSERT_FMT(typeNameLen > prependStrLen, "typename %s must have prefix \"gpu.\"", t->pyObj.tp_name);
         if (typeNameLen <= prependStrLen)
             return nullptr;
 
-        Py_INCREF(&t);
-        const char* typeName = t.tp_name + prependStrLen;
-        if (PyModule_AddObject(moduleObj, typeName, (PyObject*)&t) < 0)
+        Py_INCREF(&t->pyObj);
+        const char* typeName = t->pyObj.tp_name + prependStrLen;
+        if (PyModule_AddObject(moduleObj, typeName, (PyObject*)&t->pyObj) < 0)
         {
-            Py_DECREF(&t);
+            Py_DECREF(&t->pyObj);
             Py_DECREF(moduleObj);
             return nullptr;
         }
     }
 
     auto state = (coalpy::gpu::ModuleState*)PyModule_GetState(moduleObj);
-    new (state) coalpy::gpu::ModuleState;
+    new (state) coalpy::gpu::ModuleState(typeList.data(), (int)typeList.size());
     state->startServices();
 
     PyObject* exceptionObject = PyErr_NewException("gpu.exceptionObject", NULL, NULL);

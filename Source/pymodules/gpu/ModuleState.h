@@ -2,6 +2,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include "TypeIds.h"
 
 namespace coalpy
 {
@@ -14,10 +15,12 @@ class ITaskSystem;
 namespace gpu
 {
 
+struct CoalpyTypeObject;
+
 class ModuleState
 {
 public:
-    ModuleState();
+    ModuleState(CoalpyTypeObject** types, int typesCount);
     ~ModuleState();
 
     void startServices();
@@ -32,11 +35,13 @@ public:
     PyObject* exObj() const { return m_exObj; }
 
 private:
+    void registerTypes(CoalpyTypeObject** types, int typesCount);
     ITaskSystem*    m_ts;
     IFileSystem*    m_fs;
     IShaderDb*      m_db;
     IShaderService* m_ss;
     PyObject* m_exObj;
+    CoalpyTypeObject* m_types[(int)TypeId::Counts];
 };
 
 }

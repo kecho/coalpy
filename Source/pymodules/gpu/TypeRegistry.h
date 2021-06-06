@@ -10,8 +10,11 @@ namespace coalpy
 namespace gpu
 {
 
+struct CoalpyTypeObject;
+
+using TypeList = std::vector<CoalpyTypeObject*>;
 //registration table
-void constructTypes(std::vector<PyTypeObject>& outTypes);
+void constructTypes(TypeList& outTypes);
 
 }
 }

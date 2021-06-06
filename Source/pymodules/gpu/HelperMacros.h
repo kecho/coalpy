@@ -1,8 +1,10 @@
 #pragma once
 
-#define RegisterType(type, list)\
+#define RegisterType(ctypeName, list)\
     {\
-        PyTypeObject to = { PyVarObject_HEAD_INIT(NULL, 0) };\
-        type::makeType(to);\
+        CoalpyTypeObject* to = new CoalpyTypeObject;\
+        to->pyObj = { PyVarObject_HEAD_INIT(NULL, 0) };\
+        ctypeName::constructType(to->pyObj);\
+        to->typeId = ctypeName::s_typeId;\
         list.push_back(to);\
     }
