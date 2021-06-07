@@ -30,11 +30,9 @@ int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     const char* shaderFile = nullptr;
     const char* mainFunction = "";
 
-    static char* argnames[] = { "name", "file", "mainFunction", nullptr };
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|ss", argnames, &shaderFile, &mainFunction, &shaderName))
-    {
+    static char* argnames[] = { "file", "name", "mainFunction", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|ss", argnames, &shaderFile, &shaderName, &mainFunction))
         return -1;
-    }
 
     std::string sshaderName = shaderName ? shaderName : "";
     if (sshaderName == "")

@@ -1,10 +1,12 @@
 #include "ModuleFunctions.h"
 #include "ModuleState.h"
 #include "HelperMacros.h"
-#include <coalpy.core/Assert.h>
-#include <coalpy.window/IWindow.h>
 #include <string>
 #include "Window.h"
+#include "Shader.h"
+#include <coalpy.core/Assert.h>
+#include <coalpy.window/IWindow.h>
+#include <coalpy.render/IShaderDb.h>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -44,9 +46,28 @@ void freeModule(void* modulePtr)
         state->~ModuleState();
 }
 
-PyObject* inlineShader(PyObject* self, PyObject* args, PyObject* kwds)
+PyObject* inlineShader(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
-    Py_RETURN_NONE;
+    ModuleState& state = getState(self);
+    const char* shaderName = nullptr;
+    const char* shaderSource = nullptr;
+    const char* mainFunction = "";
+
+    static char* argnames[] = { "source", "name", "mainFunction", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "ss|s", argnames, &shaderSource, &shaderName, &mainFunction))
+        return nullptr;
+
+    PyObject* obj = PyType_GenericAlloc(state.getType(TypeId::Shader), 1); 
+    Shader* shaderObj = reinterpret_cast<Shader*>(obj);
+
+    ShaderInlineDesc desc;
+    desc.type = ShaderType::Compute;
+    desc.mainFn = mainFunction != nullptr ? mainFunction : "csMain";
+    desc.name = shaderName;
+    desc.immCode = shaderSource;
+    shaderObj->db = &state.db();
+    shaderObj->handle = state.db().requestCompile(desc);
+    return obj;
 }
 
 PyObject* run(PyObject* self, PyObject* args)

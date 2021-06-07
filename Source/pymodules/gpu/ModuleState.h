@@ -39,6 +39,8 @@ public:
     void getWindows(std::set<Window*>& outSet) { outSet = m_windows; }
     void registerWindow(Window* w) { m_windows.insert(w); }
     void unregisterWindow(Window* w) { m_windows.erase(w); }
+    inline CoalpyTypeObject* getCoalpyType(TypeId t) { return m_types[(int)t]; }
+    inline PyTypeObject* getType(TypeId t) { return reinterpret_cast<PyTypeObject*>(m_types[(int)t]); }
 
 private:
     void registerTypes(CoalpyTypeObject** types, int typesCount);

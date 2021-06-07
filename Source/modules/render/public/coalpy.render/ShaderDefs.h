@@ -28,6 +28,7 @@ struct ShaderInlineDesc
 {
     ShaderType type;
     const char* name;
+    const char* mainFn;
     const char* immCode;
 };
 
