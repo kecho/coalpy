@@ -1,5 +1,16 @@
 #pragma once
 
+//Used for python function declarations
+#define KW_FN(name, desc) \
+    { #name, (PyCFunction)(coalpy::gpu::methods::##name), METH_VARARGS | METH_KEYWORDS, desc }
+
+#define VA_FN(name, desc) \
+    { #name, (coalpy::gpu::methods::##name), METH_VARARGS, desc }
+
+#define FN_END \
+    {NULL, NULL, 0, NULL}
+
+//Used to register types
 #define RegisterType(ctypeName, list)\
     {\
         CoalpyTypeObject* to = new CoalpyTypeObject;\
@@ -8,3 +19,4 @@
         to->typeId = ctypeName::s_typeId;\
         list.push_back(to);\
     }
+

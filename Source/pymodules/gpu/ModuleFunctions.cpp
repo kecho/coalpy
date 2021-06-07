@@ -1,5 +1,6 @@
 #include "ModuleFunctions.h"
 #include "ModuleState.h"
+#include "HelperMacros.h"
 #include <coalpy.core/Assert.h>
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/Utils.h>
@@ -12,15 +13,6 @@
 #include <Python.h>
 
 namespace {
-
-#define KW_FN(name, desc) \
-    { #name, (PyCFunction)(coalpy::gpu::methods::##name), METH_VARARGS | METH_KEYWORDS, desc }
-
-#define VA_FN(name, desc) \
-    { #name, (coalpy::gpu::methods::##name), METH_VARARGS, desc }
-
-#define FN_END \
-    {NULL, NULL, 0, NULL}
 
 PyMethodDef g_defs[] = {
     KW_FN(loadShader,   "Loads a shader from a file (fileName: string, [mainFunction: string], [identifier: string]"),
