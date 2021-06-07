@@ -1,5 +1,9 @@
 #include "Shader.h"
 #include "CoalpyTypeObject.h"
+#include <coalpy.files/IFileSystem.h>
+#include <coalpy.files/Utils.h>
+#include <coalpy.render/IShaderDb.h>
+#include <string>
 
 namespace coalpy
 {
@@ -20,10 +24,35 @@ void Shader::constructType(PyTypeObject& t)
 
 int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 {
-    auto& shader = *(Shader*)self;
     ModuleState& moduleState = parentModule(self);
+
+    const char* shaderName = nullptr;
+    const char* shaderFile = nullptr;
+    const char* mainFunction = "";
+
+    static char* argnames[] = { "name", "file", "mainFunction", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|ss", argnames, &shaderFile, &mainFunction, &shaderName))
+    {
+        return -1;
+    }
+
+    std::string sshaderName = shaderName ? shaderName : "";
+    if (sshaderName == "")
+    {
+        std::string filePath = shaderFile;
+        FileUtils::getFileName(filePath, sshaderName);
+    }
+
+    auto& shader = *(Shader*)self;
+
+    ShaderDesc desc;
+    desc.type = ShaderType::Compute;
+    desc.name = sshaderName.c_str();
+    desc.mainFn = mainFunction;
+    desc.path = shaderFile;
+
     shader.db = &(moduleState.db());
-    shader.handle = ShaderHandle();
+    shader.handle = shader.db->requestCompile(desc);
     return 0;
 }
 

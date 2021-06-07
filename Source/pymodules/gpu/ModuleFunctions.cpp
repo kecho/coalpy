@@ -2,9 +2,6 @@
 #include "ModuleState.h"
 #include "HelperMacros.h"
 #include <coalpy.core/Assert.h>
-#include <coalpy.files/IFileSystem.h>
-#include <coalpy.files/Utils.h>
-#include <coalpy.render/IShaderDb.h>
 #include <coalpy.window/IWindow.h>
 #include <string>
 #include "Window.h"
@@ -15,7 +12,6 @@
 namespace {
 
 PyMethodDef g_defs[] = {
-    KW_FN(loadShader,   "Loads a shader from a file (fileName: string, [mainFunction: string], [identifier: string]"),
     KW_FN(inlineShader, "Create an inline shader"),
     VA_FN(run, "Runs window rendering callbacks. This function blocks until all the existing windows are closed."),
     FN_END
@@ -46,35 +42,6 @@ void freeModule(void* modulePtr)
     auto state = (ModuleState*)PyModule_GetState(moduleObj);
     if (state)
         state->~ModuleState();
-}
-
-PyObject* loadShader(PyObject* self, PyObject* args, PyObject* kwds)
-{
-    static char* argnames[] = { "fileName", "mainFunction", "identifier" };
-    ModuleState& state = getState(self);
-    const char* fileName = nullptr;
-    const char* mainFunction = "csMain";
-    const char* shaderName = nullptr;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|ss", argnames, &fileName, &mainFunction, &shaderName))
-    {
-        return nullptr;
-    }
-
-    std::string sshaderName = shaderName ? shaderName : "";
-    if (sshaderName == "")
-    {
-        std::string filePath = fileName;
-        FileUtils::getFileName(filePath, sshaderName);
-    }
-    
-    ShaderDesc desc;
-    desc.type = ShaderType::Compute;
-    desc.name = sshaderName.c_str();
-    desc.mainFn = mainFunction;
-    desc.path = fileName;
-    ShaderHandle handle = state.db().requestCompile(desc);
-    Py_RETURN_NONE;
 }
 
 PyObject* inlineShader(PyObject* self, PyObject* args, PyObject* kwds)
