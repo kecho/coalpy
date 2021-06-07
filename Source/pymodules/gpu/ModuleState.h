@@ -3,6 +3,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "TypeIds.h"
+#include <set>
 
 namespace coalpy
 {
@@ -15,6 +16,7 @@ class ITaskSystem;
 namespace gpu
 {
 
+struct Window;
 struct CoalpyTypeObject;
 
 class ModuleState
@@ -34,6 +36,10 @@ public:
     void setExObj(PyObject* obj) { m_exObj = obj; }
     PyObject* exObj() const { return m_exObj; }
 
+    void getWindows(std::set<Window*>& outSet) { outSet = m_windows; }
+    void registerWindow(Window* w) { m_windows.insert(w); }
+    void unregisterWindow(Window* w) { m_windows.erase(w); }
+
 private:
     void registerTypes(CoalpyTypeObject** types, int typesCount);
     ITaskSystem*    m_ts;
@@ -42,6 +48,7 @@ private:
     IShaderService* m_ss;
     PyObject* m_exObj;
     CoalpyTypeObject* m_types[(int)TypeId::Counts];
+    std::set<Window*> m_windows;
 };
 
 }

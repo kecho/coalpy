@@ -1,10 +1,12 @@
 #include "ModuleFunctions.h"
 #include "ModuleState.h"
+#include <coalpy.core/Assert.h>
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/Utils.h>
 #include <coalpy.render/IShaderDb.h>
 #include <coalpy.window/IWindow.h>
 #include <string>
+#include "Window.h"
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -23,7 +25,7 @@ namespace {
 PyMethodDef g_defs[] = {
     KW_FN(loadShader,   "Loads a shader from a file (fileName: string, [mainFunction: string], [identifier: string]"),
     KW_FN(inlineShader, "Create an inline shader"),
-    VA_FN(runWindows, "Runs window rendering callbacks. This function blocks until all the windows specified are closed."),
+    VA_FN(run, "Runs window rendering callbacks. This function blocks until all the existing windows are closed."),
     FN_END
 };
 
@@ -88,30 +90,41 @@ PyObject* inlineShader(PyObject* self, PyObject* args, PyObject* kwds)
     Py_RETURN_NONE;
 }
 
-PyObject* runWindows(PyObject* self, PyObject* args)
+PyObject* run(PyObject* self, PyObject* args)
 {
     ModuleState& state = getState(self);
-    PyObject* renderCb;
-    if (!PyArg_ParseTuple(args, "O:runWindows", &renderCb))
-        return nullptr;
-
-    if (!PyCallable_Check(renderCb))
-    {
-        PyErr_SetString(state.exObj(), "parameter must be a callback");
-        return nullptr;
-    }
-
-    Py_XINCREF(renderCb);
 
     WindowRunArgs runArgs = {};
-    runArgs.onRender = [renderCb](IWindow* window)
+    bool raiseException = false;
+    runArgs.onRender = [&state, &raiseException]()
     {
-        PyObject_CallObject(renderCb, nullptr);
+        std::set<Window*> windowsPtrs;
+        state.getWindows(windowsPtrs);
+        for (Window* w : windowsPtrs)
+        {
+            CPY_ASSERT(w != nullptr);
+            if (w == nullptr)
+                return false;
+            if (w && w->onRenderCallback != nullptr)
+            {
+                PyObject* retObj = PyObject_CallObject(w->onRenderCallback, nullptr);
+                //means an exception has been risen. Propagate up.
+                if (retObj == nullptr)
+                {
+                    raiseException = true;
+                    return false;
+                }
+                Py_DECREF(retObj);
+            }
+        }
+
+        return true;
     };
 
-    IWindow::run(runArgs);
+    IWindow::run(runArgs); //block
+    if (raiseException)
+        return nullptr; //means we propagate an exception.
 
-    Py_XDECREF(renderCb);
     Py_RETURN_NONE;
 }
 

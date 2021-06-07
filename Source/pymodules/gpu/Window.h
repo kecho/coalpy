@@ -18,7 +18,8 @@ struct Window
 {
     //Data
     PyObject_HEAD
-    IWindow* object;       
+    PyObject* onRenderCallback;
+    IWindow* object;
 
     //Functions
     static const TypeId s_typeId = TypeId::Window;

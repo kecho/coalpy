@@ -208,7 +208,7 @@ void IWindow::run(const WindowRunArgs& args)
         {
             //run all windows here
             if (args.onRender)
-                args.onRender(nullptr);
+                finished = !args.onRender();
 
             TranslateMessage(&currMsg);
             DispatchMessage(&currMsg);

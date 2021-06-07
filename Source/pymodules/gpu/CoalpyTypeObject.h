@@ -27,5 +27,10 @@ inline CoalpyTypeObject* asCoalpyObj(PyTypeObject* obj)
     return reinterpret_cast<CoalpyTypeObject*>(obj);
 }
 
+inline ModuleState& parentModule(PyObject* object)
+{
+    return *(asCoalpyObj(Py_TYPE(object))->moduleState);
+}
+
 }
 }

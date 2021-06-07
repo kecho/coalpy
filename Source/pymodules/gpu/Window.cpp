@@ -34,7 +34,30 @@ int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     desc.osHandle = g_ModuleInstance;
     desc.width = 400;
     desc.height = 400;
+    window.onRenderCallback = nullptr;
+
+    static char* keywords[] = { "width", "height", "renderFunction", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(
+            vargs, kwds, "|iiO:Window", keywords,
+            &desc.width, &desc.height, &window.onRenderCallback))
+    {
+        return -1;
+    }
+
+    Py_XINCREF(window.onRenderCallback);
+    if (!PyCallable_Check(window.onRenderCallback))
+    {
+        Py_XDECREF(window.onRenderCallback);
+        return -1;
+    }
+
     window.object = IWindow::create(desc);
+    window.object->setUserData(self);
+    {
+        ModuleState& moduleState = parentModule(self);
+        moduleState.registerWindow(&window);
+    }
+    
     return 0;
 }
 
@@ -44,8 +67,15 @@ void Window::close(PyObject* self)
     if (!window.object)
         return;
 
+    Py_XDECREF(window.onRenderCallback);
+    window.onRenderCallback = nullptr;
     delete window.object;
     window.object = nullptr;
+
+    {
+        ModuleState& moduleState = parentModule(self);
+        moduleState.unregisterWindow(&window);
+    }
 }
 
 void Window::destroy(PyObject* self)

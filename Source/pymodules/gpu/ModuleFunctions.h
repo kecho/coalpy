@@ -20,7 +20,7 @@ void freeModule(void* modulePtr);
 // coalpy::gpu
 PyObject* loadShader(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* inlineShader(PyObject* self, PyObject* args, PyObject* kwds);
-PyObject* runWindows(PyObject* self, PyObject* args);
+PyObject* run(PyObject* self, PyObject* args);
 
 }
 

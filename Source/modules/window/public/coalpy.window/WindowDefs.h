@@ -10,7 +10,7 @@ typedef void* WindowOsHandle;
 
 class IWindow;
 
-using OnRender = std::function<void(IWindow* window)>;
+using OnRender = std::function<bool()>;
 
 struct WindowDesc
 {
