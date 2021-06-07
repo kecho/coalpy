@@ -14,8 +14,17 @@
 namespace {
 
 PyMethodDef g_defs[] = {
-    KW_FN(inlineShader, "Create an inline shader"),
+
+    KW_FN(
+        inlineShader,
+        "Create an inline shader. Arguments:\n"
+        "name: Name of shader. It is mandatory for inline shaders.\n"
+        "source: Source code of shader. Use HLSL.\n"
+        "mainFunction (optional): entry point of shader. Default is 'main'.\n"
+    ),
+
     VA_FN(run, "Runs window rendering callbacks. This function blocks until all the existing windows are closed."),
+
     FN_END
 };
 
@@ -51,7 +60,7 @@ PyObject* inlineShader(PyObject* self, PyObject* vargs, PyObject* kwds)
     ModuleState& state = getState(self);
     const char* shaderName = nullptr;
     const char* shaderSource = nullptr;
-    const char* mainFunction = "";
+    const char* mainFunction = "main";
 
     static char* argnames[] = { "source", "name", "mainFunction", nullptr };
     if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "ss|s", argnames, &shaderSource, &shaderName, &mainFunction))
@@ -62,7 +71,7 @@ PyObject* inlineShader(PyObject* self, PyObject* vargs, PyObject* kwds)
 
     ShaderInlineDesc desc;
     desc.type = ShaderType::Compute;
-    desc.mainFn = mainFunction != nullptr ? mainFunction : "csMain";
+    desc.mainFn = mainFunction;
     desc.name = shaderName;
     desc.immCode = shaderSource;
     shaderObj->db = &state.db();

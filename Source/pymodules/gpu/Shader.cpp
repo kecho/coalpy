@@ -1,4 +1,5 @@
 #include "Shader.h"
+#include "HelperMacros.h"
 #include "CoalpyTypeObject.h"
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/Utils.h>
@@ -10,16 +11,32 @@ namespace coalpy
 namespace gpu
 {
 
+namespace methods
+{
+    static PyObject* resolve(PyObject* self, PyObject* vargs);
+}
+
+PyMethodDef g_shaderMethods[] = {
+    VA_FN(resolve, ""),
+    FN_END
+};
+
 void Shader::constructType(PyTypeObject& t)
 {
     t.tp_name = "gpu.Shader";
     t.tp_basicsize = sizeof(Shader);
-    t.tp_doc   = "Class that represnts a shader.\n"
-                 "Constructor Arguments: todo\n";
+    t.tp_doc   = "Class that represents a shader.\n"
+                 "Constructor Arguments:\n"
+                 "file: text file with shader code.\n"
+                 "name (optional): identifier of the shader to use. Default will be the file name.\n"
+                 "mainFunction (optional): entry point of shader. Default is 'main'.\n"
+                 "NOTE: to create an inline shader, use the function gpu.inlineShader()";
+    
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
     t.tp_init = Shader::init;
     t.tp_dealloc = Shader::destroy;
+    t.tp_methods = g_shaderMethods;
 }
 
 int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
@@ -28,7 +45,7 @@ int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 
     const char* shaderName = nullptr;
     const char* shaderFile = nullptr;
-    const char* mainFunction = "";
+    const char* mainFunction = "main";
 
     static char* argnames[] = { "file", "name", "mainFunction", nullptr };
     if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|ss", argnames, &shaderFile, &shaderName, &mainFunction))
@@ -57,6 +74,16 @@ int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 void Shader::destroy(PyObject* self)
 {
     Py_TYPE(self)->tp_free(self);
+}
+
+namespace methods
+{
+    static PyObject* resolve(PyObject* self, PyObject* vargs)
+    {
+        auto* shader = (Shader*)self;
+        shader->db->resolve(shader->handle);
+        Py_RETURN_NONE;
+    }
 }
 
 }

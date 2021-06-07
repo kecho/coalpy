@@ -128,6 +128,11 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
 
 void Dx12ShaderDb::resolve(ShaderHandle handle)
 {
+    CPY_ASSERT(handle.valid());
+
+    if (!handle.valid())
+        return;
+
     Dx12CompileState* compileState = nullptr;
     {
         std::shared_lock lock(m_shadersMutex);
