@@ -1,6 +1,7 @@
 #pragma once
 
 #include <coalpy.core/GenericHandle.h>
+#include <functional>
 
 namespace coalpy
 {
@@ -41,12 +42,16 @@ struct ShaderCompilationResult
     ShaderHandle handle;
 };
 
+using OnShaderErrorFn = std::function<void(ShaderHandle handle, const char* shaderName, const char* shaderErrorStr)>;
+
 struct ShaderDbDesc
 {
     //optional if we want to specify a path for the compiler library
     const char* compilerDllPath = nullptr;
     IFileSystem* fs = nullptr;
     ITaskSystem* ts = nullptr;
+    OnShaderErrorFn onErrorFn = nullptr;
+    bool resolveOnDestruction = false;
 };
 
 }

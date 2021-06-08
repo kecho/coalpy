@@ -5,6 +5,7 @@
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.tasks/ITaskSystem.h>
 #include "CoalpyTypeObject.h"
+#include <iostream>
 
 namespace coalpy
 {
@@ -30,6 +31,10 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
         ShaderDbDesc desc;
         desc.fs = m_fs;
         desc.ts = m_ts;
+        desc.onErrorFn = [this](ShaderHandle handle, const char* shaderName, const char* shaderErrorStr)
+        {
+            onShaderCompileError(handle, shaderName, shaderErrorStr);
+        };
         m_db = IShaderDb::create(desc);
     }
 
@@ -80,6 +85,12 @@ void ModuleState::stopServices()
     m_ss->stop();
     m_ts->signalStop();
     m_ts->join();
+}
+
+void ModuleState::onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString)
+{
+    std::lock_guard lock(m_shaderErrorMutex);
+    std::cerr << shaderName << "-" << shaderErrorString << std::endl;
 }
 
 }

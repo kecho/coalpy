@@ -4,6 +4,8 @@
 #include <Python.h>
 #include "TypeIds.h"
 #include <set>
+#include <coalpy.render/ShaderDefs.h>
+#include <mutex>
 
 namespace coalpy
 {
@@ -43,7 +45,9 @@ public:
     inline PyTypeObject* getType(TypeId t) { return reinterpret_cast<PyTypeObject*>(m_types[(int)t]); }
 
 private:
+    void onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString);
     void registerTypes(CoalpyTypeObject** types, int typesCount);
+
     ITaskSystem*    m_ts;
     IFileSystem*    m_fs;
     IShaderDb*      m_db;
@@ -51,6 +55,8 @@ private:
     PyObject* m_exObj;
     CoalpyTypeObject* m_types[(int)TypeId::Counts];
     std::set<Window*> m_windows;
+
+    std::mutex m_shaderErrorMutex;
 };
 
 }

@@ -20,6 +20,8 @@ public:
     virtual ~Dx12ShaderDb();
 
 private:
+    void prepareCompileJobs(Dx12CompileState& state);
+
     ShaderDbDesc m_desc;
     Dx12Compiler m_compiler;
 
