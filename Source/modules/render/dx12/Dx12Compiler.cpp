@@ -24,21 +24,49 @@ namespace
 {
 
 const char* g_dxCompiler = "dxcompiler.dll";
+const char* g_dxil = "dxil.dll";
 HMODULE g_dxcModule = nullptr;
+HMODULE g_dxilModule = nullptr;
+
 DxcCreateInstanceProc g_dxcCreateInstanceFn = nullptr;
+DxcCreateInstanceProc g_dxilCreateInstanceFn = nullptr;
+
+void loadCompilerModule(const char* searchPath, const char* moduleName, HMODULE& outModule, DxcCreateInstanceProc& outProc)
+{
+    std::string compilerPath = searchPath ? searchPath : "";
+    std::stringstream compilerFullPath;
+    if (compilerPath != "")
+        compilerFullPath << compilerPath << "\\";
+    compilerFullPath << moduleName;
+    std::string pathAndModName = compilerFullPath.str();
+    
+    std::string fullModulePath;
+    FileUtils::getAbsolutePath(pathAndModName, fullModulePath);
+    outModule = LoadLibraryA(fullModulePath.c_str());
+    CPY_ASSERT_FMT(outModule != nullptr, "Error: could not load %s. Missing dll.", pathAndModName.c_str());
+    
+    if (outModule)
+    {
+        outProc = (DxcCreateInstanceProc)GetProcAddress(outModule, "DxcCreateInstance");
+        CPY_ASSERT_FMT(outProc, "Could not find \"DxcCreateInstance\" inside %s", pathAndModName.c_str());
+    }
+}
 
 struct DxcCompilerHandle : public GenericHandle<unsigned int> {};
+struct DxcValidatorHandle : public GenericHandle<unsigned int> {};
 struct DxcUtilsHandle : public GenericHandle<unsigned int>{};
 
 struct DxcInstance
 {
     DxcCompilerHandle compiler;
+    DxcValidatorHandle validator;
     DxcUtilsHandle utils;
 };
 
 struct DxcInstanceData
 {
     IDxcCompiler3& compiler;
+    IDxcValidator2& validator;
     IDxcUtils& utils;
 };
 
@@ -60,6 +88,12 @@ public:
         }
 
         {
+            SmartPtr<IDxcValidator2>& instance = m_validatorPool.allocate(h.validator);
+            if (instance == nullptr)
+                DX_OK(g_dxilCreateInstanceFn(CLSID_DxcValidator, __uuidof(IDxcValidator2), (void**)&instance));
+        }
+
+        {
             SmartPtr<IDxcUtils>& instance = m_utilsPool.allocate(h.utils);
             if (instance == nullptr)
                 DX_OK(g_dxcCreateInstanceFn(CLSID_DxcUtils, __uuidof(IDxcUtils), (void**)&instance));
@@ -73,19 +107,22 @@ public:
         CPY_ERROR(m_compilerPool.contains(instance.compiler));
         CPY_ERROR(m_utilsPool.contains(instance.utils));
         SmartPtr<IDxcCompiler3>& c = m_compilerPool[instance.compiler];
+        SmartPtr<IDxcValidator2>& vc = m_validatorPool[instance.validator];
         SmartPtr<IDxcUtils>& u = m_utilsPool[instance.utils];
-        return DxcInstanceData { *c, *u };
+        return DxcInstanceData { *c, *vc, *u };
     }
 
     void release(DxcInstance instance)
     {
         m_compilerPool.free(instance.compiler, false/*dont reset object so we recycle it*/);
+        m_validatorPool.free(instance.validator, false/*dont reset object so we recycle it*/);
         m_utilsPool.free(instance.utils, false/*dont reset object so we recycle it*/);
     }
 
     void clear()
     {
         m_compilerPool.clear();
+        m_validatorPool.clear();
         m_utilsPool.clear();
     }
 
@@ -104,6 +141,7 @@ public:
 private:
     HandleContainer<DxcCompilerHandle, SmartPtr<IDxcCompiler3>> m_compilerPool;
     HandleContainer<DxcUtilsHandle, SmartPtr<IDxcUtils>> m_utilsPool;
+    HandleContainer<DxcValidatorHandle, SmartPtr<IDxcValidator2>> m_validatorPool;
     int m_ref = 0;
 };
 
@@ -304,7 +342,17 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
 
             if (shaderOut != nullptr)
             {
-                if (args.onFinished)
+                SmartPtr<IDxcOperationResult> validationResult;
+                DX_OK(instanceData.validator.Validate(&(*shaderOut), DxcValidatorFlags_InPlaceEdit, (IDxcOperationResult **)&validationResult));
+
+                HRESULT validationStatus;
+                validationResult->GetStatus(&validationStatus);
+                if (FAILED(validationStatus))
+                {
+                    if (args.onError)
+                        args.onError(args.shaderName, "Validation Failed.");
+                }
+                else if (args.onFinished)
                     args.onFinished(compiledSuccess, &(*shaderOut));
             }
             else if (args.onError)
@@ -318,26 +366,10 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
 void Dx12Compiler::setupDxc()
 {
     if (g_dxcModule == nullptr)
-    {
-        std::string moduleName ="dxcompiler.dll";
-        std::string compilerPath = m_desc.compilerDllPath ? m_desc.compilerDllPath : "";
-        std::stringstream compilerFullPath;
-        if (compilerPath != "")
-            compilerFullPath << compilerPath << "\\";
-        compilerFullPath << moduleName;
-        moduleName = compilerFullPath.str();
+        loadCompilerModule(m_desc.compilerDllPath, g_dxCompiler, g_dxcModule, g_dxcCreateInstanceFn);
 
-        std::string fullModulePath;
-        FileUtils::getAbsolutePath(moduleName, fullModulePath);
-        g_dxcModule = LoadLibraryA(fullModulePath.c_str());
-        CPY_ASSERT_MSG(g_dxcModule != nullptr, "Error: could not load dxc compiler. Missing dll.");
-
-        if (g_dxcModule)
-        {
-            g_dxcCreateInstanceFn = (DxcCreateInstanceProc)GetProcAddress(g_dxcModule, "DxcCreateInstance");
-            CPY_ASSERT_MSG(g_dxcCreateInstanceFn, "Could not find \"DxcCreateInstance\" inside dxcompiler.dll");
-        }
-    }
+    if (g_dxilModule == nullptr)
+        loadCompilerModule(m_desc.compilerDllPath, g_dxil, g_dxilModule, g_dxilCreateInstanceFn);
 }
 
 
