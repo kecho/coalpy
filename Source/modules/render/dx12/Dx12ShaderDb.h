@@ -4,6 +4,7 @@
 #include <shared_mutex>
 #include "Dx12Compiler.h"
 #include <atomic>
+#include <set>
 
 namespace coalpy
 {
@@ -26,10 +27,20 @@ private:
     ShaderDbDesc m_desc;
     Dx12Compiler m_compiler;
 
+    struct ShaderFileRecipe
+    {
+        ShaderType type;
+        std::string name;
+        std::string mainFn;
+        std::string path;
+    };
+
     struct ShaderState
     {
         bool ready;
         bool success;
+        ShaderFileRecipe recipe;
+        bool hasRecipe;
         IDxcBlob* shaderBlob;
         std::atomic<bool> compiling;
         Dx12CompileState* compileState;
@@ -39,6 +50,9 @@ private:
 
     mutable std::shared_mutex m_shadersMutex;
     HandleContainer<ShaderHandle, ShaderState*> m_shaders;
+
+    
+    std::unordered_map<unsigned int, std::set<ShaderHandle>> m_fileLookups;
 };
 
 }

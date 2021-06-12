@@ -6,6 +6,7 @@
 #include <coalpy.core/Assert.h>
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.tasks/ITaskSystem.h>
+#include <coalpy.files/Utils.h>
 
 #include "Dx12ShaderDb.h" 
 #include "Dx12Compiler.h"
@@ -66,6 +67,7 @@ Dx12ShaderDb::ShaderState& Dx12ShaderDb::createShaderState(ShaderHandle& outHand
     shaderState.ready = false;
     shaderState.success = false;
     shaderState.compiling = true;
+    shaderState.hasRecipe = false;
     shaderState.shaderBlob = nullptr;
     return shaderState;
 }
@@ -110,6 +112,11 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
 
     ShaderHandle shaderHandle;
     ShaderState& shaderState = createShaderState(shaderHandle);
+    shaderState.hasRecipe = true;
+    shaderState.recipe.type = desc.type;
+    shaderState.recipe.name = desc.name;
+    shaderState.recipe.mainFn = desc.mainFn;
+    FileUtils::getAbsolutePath(compileState->filePath, shaderState.recipe.path);
     shaderState.compileState = compileState;
     
     compileState->shaderHandle = shaderHandle;
