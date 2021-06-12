@@ -12,6 +12,8 @@
 #include <coalpy.core/ByteBuffer.h>
 
 #include <iostream>
+#include <windows.h>
+#include <dxc/inc/dxcapi.h>
 
 namespace coalpy
 {
@@ -44,10 +46,28 @@ Dx12ShaderDb::~Dx12ShaderDb()
         else
             unresolvedShaders += state->compileState == nullptr ? 0 : 1;
 
+        if (state->shaderBlob)
+            state->shaderBlob->Release();
         delete state;
     });
 
     CPY_ASSERT_FMT(unresolvedShaders == 0, "%d unresolved shaders. Expect memory leaks.", unresolvedShaders);
+}
+
+Dx12ShaderDb::ShaderState& Dx12ShaderDb::createShaderState(ShaderHandle& outHandle)
+{
+    ShaderState& shaderState = *(new ShaderState);
+    {
+        std::unique_lock lock(m_shadersMutex);
+        auto& statePtr = m_shaders.allocate(outHandle);
+        statePtr = &shaderState;
+    }
+
+    shaderState.ready = false;
+    shaderState.success = false;
+    shaderState.compiling = true;
+    shaderState.shaderBlob = nullptr;
+    return shaderState;
 }
 
 ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
@@ -89,16 +109,7 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
     prepareCompileJobs(*compileState);
 
     ShaderHandle shaderHandle;
-    ShaderState& shaderState = *(new ShaderState);
-    {
-        std::unique_lock lock(m_shadersMutex);
-        auto& statePtr = m_shaders.allocate(shaderHandle);
-        statePtr = &shaderState;
-    }
-
-    shaderState.ready = false;
-    shaderState.success = false;
-    shaderState.compiling = true;
+    ShaderState& shaderState = createShaderState(shaderHandle);
     shaderState.compileState = compileState;
     
     compileState->shaderHandle = shaderHandle;
@@ -124,18 +135,8 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderInlineDesc& desc)
     prepareCompileJobs(*compileState);
 
     ShaderHandle shaderHandle;
-    ShaderState& shaderState = *(new ShaderState);
-    {
-        std::unique_lock lock(m_shadersMutex);
-        auto& statePtr = m_shaders.allocate(shaderHandle);
-        statePtr = &shaderState;
-    }
-
-    shaderState.ready = false;
-    shaderState.success = false;
-    shaderState.compiling = true;
+    ShaderState& shaderState = createShaderState(shaderHandle);
     shaderState.compileState = compileState;
-
     compileState->shaderHandle = shaderHandle;
     m_desc.ts->execute(compileState->compileStep);
     return shaderHandle;
@@ -183,6 +184,11 @@ void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
         {
             std::unique_lock lock(m_shadersMutex);
             auto& shaderState = m_shaders[compileState.shaderHandle];
+            if (success && resultBlob)
+            {
+                resultBlob->AddRef();
+                shaderState->shaderBlob = resultBlob;
+            }
             shaderState->ready = true;
             shaderState->success = success;
         }

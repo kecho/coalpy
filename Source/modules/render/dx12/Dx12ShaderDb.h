@@ -30,9 +30,12 @@ private:
     {
         bool ready;
         bool success;
+        IDxcBlob* shaderBlob;
         std::atomic<bool> compiling;
         Dx12CompileState* compileState;
     };
+
+    ShaderState& createShaderState(ShaderHandle& outHandle);
 
     mutable std::shared_mutex m_shadersMutex;
     HandleContainer<ShaderHandle, ShaderState*> m_shaders;
