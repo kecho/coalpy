@@ -37,12 +37,14 @@ Dx12ShaderDb::Dx12ShaderDb(const ShaderDbDesc& desc)
 Dx12ShaderDb::~Dx12ShaderDb()
 {
     int unresolvedShaders = 0;
-    m_shaders.forEach([&unresolvedShaders, this](ShaderHandle handle, ShaderState& state)
+    m_shaders.forEach([&unresolvedShaders, this](ShaderHandle handle, ShaderState* state)
     {
         if (m_desc.resolveOnDestruction)
             resolve(handle);
         else
-            unresolvedShaders += state.compileState == nullptr ? 0 : 1;
+            unresolvedShaders += state->compileState == nullptr ? 0 : 1;
+
+        delete state;
     });
 
     CPY_ASSERT_FMT(unresolvedShaders == 0, "%d unresolved shaders. Expect memory leaks.", unresolvedShaders);
@@ -87,14 +89,18 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
     prepareCompileJobs(*compileState);
 
     ShaderHandle shaderHandle;
+    ShaderState& shaderState = *(new ShaderState);
     {
         std::unique_lock lock(m_shadersMutex);
-        auto& state = m_shaders.allocate(shaderHandle);
-        state.ready = false;
-        state.success = false;
-        state.compileState = compileState;
-    };
+        auto& statePtr = m_shaders.allocate(shaderHandle);
+        statePtr = &shaderState;
+    }
 
+    shaderState.ready = false;
+    shaderState.success = false;
+    shaderState.compiling = true;
+    shaderState.compileState = compileState;
+    
     compileState->shaderHandle = shaderHandle;
     m_desc.ts->depends(compileState->compileStep, m_desc.fs->asTask(compileState->readStep));
     m_desc.ts->execute(compileState->compileStep);
@@ -118,19 +124,22 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderInlineDesc& desc)
     prepareCompileJobs(*compileState);
 
     ShaderHandle shaderHandle;
+    ShaderState& shaderState = *(new ShaderState);
     {
         std::unique_lock lock(m_shadersMutex);
-        auto& state = m_shaders.allocate(shaderHandle);
-        state.ready = false;
-        state.success = false;
-        state.compileState = compileState;
-    };
+        auto& statePtr = m_shaders.allocate(shaderHandle);
+        statePtr = &shaderState;
+    }
+
+    shaderState.ready = false;
+    shaderState.success = false;
+    shaderState.compiling = true;
+    shaderState.compileState = compileState;
 
     compileState->shaderHandle = shaderHandle;
     m_desc.ts->execute(compileState->compileStep);
     return shaderHandle;
 }
-
 
 void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
 {
@@ -174,8 +183,8 @@ void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
         {
             std::unique_lock lock(m_shadersMutex);
             auto& shaderState = m_shaders[compileState.shaderHandle];
-            shaderState.ready = true;
-            shaderState.success = success;
+            shaderState->ready = true;
+            shaderState->success = success;
         }
     };
 }
@@ -187,28 +196,33 @@ void Dx12ShaderDb::resolve(ShaderHandle handle)
     if (!handle.valid())
         return;
 
+    ShaderState* shaderState = nullptr;
     {
         std::shared_lock lock(m_shadersMutex);
-        if (!m_shaders[handle].compileState)
-            return;
+        shaderState = m_shaders[handle];
     }
-    
-    //wait can be now lockless.
-    m_desc.ts->wait(m_shaders[handle].compileState->compileStep);
 
+    Dx12CompileState* compileState = nullptr;
+    while (shaderState->compiling)
     {
-        std::shared_lock lock(m_shadersMutex);
-        if (!m_shaders[handle].compileState)
-            return;
-    
-        auto compileState = m_shaders[handle].compileState;
+        {
+            std::shared_lock lock(m_shadersMutex);
+            compileState = shaderState->compileState;
+            shaderState->compileState = nullptr;
+        }
+
+        if (compileState == nullptr)
+        {
+            m_desc.ts->yield();
+            continue;
+        }
+
+        m_desc.ts->wait(compileState->compileStep);
         if (compileState->readStep.valid())
             m_desc.fs->closeHandle(compileState->readStep);
         m_desc.ts->cleanTaskTree(compileState->compileStep);
-        auto& state = m_shaders[handle];
-        delete state.compileState;
-        state.compileState = nullptr;
-        compileState = nullptr;
+        delete compileState;
+        shaderState->compiling = false;
     }
 }
 
@@ -216,7 +230,7 @@ bool Dx12ShaderDb::isValid(ShaderHandle handle) const
 {
     std::shared_lock lock(m_shadersMutex);
     const auto& state = m_shaders[handle];
-    return state.ready && state.success;
+    return state->ready && state->success;
 }
 
 IShaderDb* IShaderDb::create(const ShaderDbDesc& desc)

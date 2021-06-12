@@ -37,6 +37,7 @@ public:
     virtual void execute(Task* tasks, int counts) override;
     virtual void cleanFinishedTasks() override;
     virtual void cleanTaskTree(Task src) override;
+    virtual void yield() override;
 
     void getStats(Stats& outStats) override;
 

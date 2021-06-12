@@ -392,6 +392,16 @@ void TaskSystem::getStats(ITaskSystem::Stats& outStats)
     outStats.numElements = m_taskTable.elementsCount();
 }
 
+void TaskSystem::yield()
+{
+    ThreadWorker* localWorker = ThreadWorker::getLocalThreadWorker();
+    if (!localWorker)
+        return;
+    
+    runSingleJob(*localWorker);
+}
+
+
 ITaskSystem* ITaskSystem::create(const TaskSystemDesc& desc)
 {
     return new TaskSystem(desc);

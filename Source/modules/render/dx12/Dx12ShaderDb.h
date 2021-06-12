@@ -3,6 +3,7 @@
 #include <coalpy.render/IShaderDb.h>
 #include <shared_mutex>
 #include "Dx12Compiler.h"
+#include <atomic>
 
 namespace coalpy
 {
@@ -29,11 +30,12 @@ private:
     {
         bool ready;
         bool success;
+        std::atomic<bool> compiling;
         Dx12CompileState* compileState;
     };
 
     mutable std::shared_mutex m_shadersMutex;
-    HandleContainer<ShaderHandle, ShaderState> m_shaders;
+    HandleContainer<ShaderHandle, ShaderState*> m_shaders;
 };
 
 }
