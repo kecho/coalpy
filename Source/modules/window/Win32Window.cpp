@@ -140,6 +140,17 @@ WindowOsHandle Win32Window::getHandle() const
     return (WindowOsHandle)m_state.windowHandle;
 }
 
+bool Win32Window::isClosed()
+{
+    return (m_state.windowHandle == nullptr);
+}
+
+void Win32Window::open()
+{
+    if (isClosed())
+        open();
+}
+
 Win32Window::HandleMessageRet Win32Window::handleMessage(
     unsigned message,
     unsigned int* wparam,
@@ -151,7 +162,6 @@ Win32Window::HandleMessageRet Win32Window::handleMessage(
     case WM_DESTROY:
         ret.handled = true;
         m_state.windowHandle = nullptr;
-        PostQuitMessage(0);
         break;
     case WM_SIZE:
         ret.handled = true;
@@ -200,19 +210,12 @@ void IWindow::run(const WindowRunArgs& args)
     while (!finished)
     {
         PeekMessage(&currMsg, NULL, NULL, NULL, PM_REMOVE);
-        if (currMsg.message == WM_QUIT)
-        {
-            finished = true;
-        }
-        else
-        {
-            //run all windows here
-            if (args.onRender)
-                finished = !args.onRender();
+        //run all windows here
+        if (args.onRender)
+            finished = !args.onRender();
 
-            TranslateMessage(&currMsg);
-            DispatchMessage(&currMsg);
-        }
+        TranslateMessage(&currMsg);
+        DispatchMessage(&currMsg);
     }
 #endif
 }

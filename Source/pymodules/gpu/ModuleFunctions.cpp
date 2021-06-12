@@ -62,8 +62,8 @@ PyObject* inlineShader(PyObject* self, PyObject* vargs, PyObject* kwds)
     const char* shaderSource = nullptr;
     const char* mainFunction = "main";
 
-    static char* argnames[] = { "source", "name", "mainFunction", nullptr };
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "ss|s", argnames, &shaderSource, &shaderName, &mainFunction))
+    static char* argnames[] = { "name", "source", "mainFunction", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "ss|s", argnames, &shaderName, &shaderSource, &mainFunction))
         return nullptr;
 
     PyObject* obj = PyType_GenericAlloc(state.getType(TypeId::Shader), 1); 
@@ -89,11 +89,17 @@ PyObject* run(PyObject* self, PyObject* args)
     {
         std::set<Window*> windowsPtrs;
         state.getWindows(windowsPtrs);
+        int openedWindows = 0;
         for (Window* w : windowsPtrs)
         {
             CPY_ASSERT(w != nullptr);
             if (w == nullptr)
                 return false;
+
+            if (w->object->isClosed())
+                continue;
+
+            ++openedWindows;
             if (w && w->onRenderCallback != nullptr)
             {
                 PyObject* retObj = PyObject_CallObject(w->onRenderCallback, nullptr);
@@ -105,9 +111,10 @@ PyObject* run(PyObject* self, PyObject* args)
                 }
                 Py_DECREF(retObj);
             }
+
         }
 
-        return true;
+        return openedWindows != 0;
     };
 
     IWindow::run(runArgs); //block

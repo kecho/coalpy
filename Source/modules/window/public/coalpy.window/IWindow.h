@@ -11,6 +11,8 @@ public:
     static IWindow* create(const WindowDesc& desc);
     static void run(const WindowRunArgs& runArgs);
     virtual WindowOsHandle getHandle() const = 0;
+    virtual void open() = 0;
+    virtual bool isClosed() = 0;
     virtual ~IWindow() {}
 
     inline void setUserData(void* userData) { m_userData = userData; }

@@ -14,6 +14,8 @@ class Win32Window : public IWindow
 public:
     explicit Win32Window(const WindowDesc& desc);
     virtual WindowOsHandle getHandle() const override;
+    virtual void open() override;
+    virtual bool isClosed() override;
     virtual ~Win32Window();
 
     struct HandleMessageRet

@@ -127,6 +127,7 @@ function _G.DeployPyPackage(packageName, pythonLibName, binaries, scriptsDir)
     local srcDll = "$(OBJECTDIR)$(SEP)"..pythonLibName..".dll"
     local packageDst = "$(OBJECTDIR)$(SEP)"..packageName
     local dstPyd = packageDst.."$(SEP)"..pythonLibName..".pyd"
+    local binaryDst = packageDst .. "$(SEP)resources$(SEP)"
     local cpyFile = CopyFile {
         Pass = "Deploy",
         Source = srcDll,
@@ -136,7 +137,8 @@ function _G.DeployPyPackage(packageName, pythonLibName, binaries, scriptsDir)
     Default(cpyFile)
 
     for i, v in ipairs(binaries) do
-        local targetName =  "$(OBJECTDIR)$(SEP)"..npath.get_filename(v)
+        local targetName =  binaryDst..npath.get_filename(v)
+        print(targetName)
         local cpCmd = CopyFile {
             Pass = "Deploy",
             Source = v,

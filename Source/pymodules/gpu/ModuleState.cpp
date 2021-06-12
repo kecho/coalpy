@@ -29,6 +29,7 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
 
     {
         ShaderDbDesc desc;
+        desc.resolveOnDestruction = true; //this is so there is a nice clean destruction
         desc.fs = m_fs;
         desc.ts = m_ts;
         desc.onErrorFn = [this](ShaderHandle handle, const char* shaderName, const char* shaderErrorStr)
@@ -46,14 +47,14 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
         m_ss = IShaderService::create(desc);
     }
 
-    for (auto& t : m_types)
-        t = nullptr;
-
     registerTypes(types, typesCount);
 }
 
 void ModuleState::registerTypes(CoalpyTypeObject** types, int typesCount)
 {
+    for (auto& t : m_types)
+        t = nullptr;
+
     for (int i = 0; i < (int)TypeId::Counts; ++i)
     {
         CPY_ASSERT(m_types[i] == nullptr);

@@ -23,6 +23,7 @@ namespace coalpy
 namespace 
 {
 
+const char* g_defaultDxcPath = "coalpy\\resources";
 const char* g_dxCompiler = "dxcompiler.dll";
 const char* g_dxil = "dxil.dll";
 HMODULE g_dxcModule = nullptr;
@@ -33,7 +34,7 @@ DxcCreateInstanceProc g_dxilCreateInstanceFn = nullptr;
 
 void loadCompilerModule(const char* searchPath, const char* moduleName, HMODULE& outModule, DxcCreateInstanceProc& outProc)
 {
-    std::string compilerPath = searchPath ? searchPath : "";
+    std::string compilerPath = searchPath ? searchPath : g_defaultDxcPath;
     std::stringstream compilerFullPath;
     if (compilerPath != "")
         compilerFullPath << compilerPath << "\\";
@@ -309,28 +310,6 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
 
     bool compiledSuccess = true;
     {
-        //DXC_OUT_ERRORS
-        {
-            SmartPtr<IDxcBlobUtf8> errorBlob;
-            DX_OK(results->GetOutput(
-                DXC_OUT_ERRORS,
-                __uuidof(IDxcBlobUtf8),
-                (void**)&errorBlob,
-                nullptr));
-            
-
-            std::string errorStr;
-            if (errorBlob != nullptr && errorBlob->GetStringLength() > 0)
-            {
-                if (args.onError)
-                {
-                    errorStr.assign(errorBlob->GetStringPointer(), errorBlob->GetStringLength());
-                    args.onError(args.shaderName, errorStr.c_str());
-                }
-                compiledSuccess = false;
-            }
-        }
-
         //DXC_OUT_OBJECT
         {
             SmartPtr<IDxcBlob> shaderOut;
@@ -350,16 +329,42 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
                 if (FAILED(validationStatus))
                 {
                     if (args.onError)
-                        args.onError(args.shaderName, "Validation Failed.");
+                        compiledSuccess = false;
                 }
                 else if (args.onFinished)
-                    args.onFinished(compiledSuccess, &(*shaderOut));
+                    args.onFinished(true, &(*shaderOut));
             }
             else if (args.onError)
             {
+                compiledSuccess = false;
                 args.onError(args.shaderName, "Failed to retrieve result blob.");
             }
         }
+
+        //DXC_OUT_ERRORS
+        if (!compiledSuccess)
+        {
+            SmartPtr<IDxcBlobUtf8> errorBlob;
+            DX_OK(results->GetOutput(
+                DXC_OUT_ERRORS,
+                __uuidof(IDxcBlobUtf8),
+                (void**)&errorBlob,
+                nullptr));
+            
+
+            std::string errorStr;
+            if (errorBlob != nullptr && errorBlob->GetStringLength() > 0)
+            {
+                if (args.onError)
+                {
+                    errorStr.assign(errorBlob->GetStringPointer(), errorBlob->GetStringLength());
+                    args.onError(args.shaderName, errorStr.c_str());
+                }
+                compiledSuccess = false;
+            }
+            args.onFinished(false, nullptr);
+        }
+
     }
 }
 

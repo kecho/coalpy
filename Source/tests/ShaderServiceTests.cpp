@@ -275,6 +275,7 @@ public:
         std::string appName = appContext.argv[0];
         FileUtils::getDirName(appName, rootDir);
         testContext->rootDir = rootDir;
+        std::string resourceDir = rootDir + "\\coalpy\\resources\\"; 
 
         {
             TaskSystemDesc desc;
@@ -288,7 +289,7 @@ public:
         }
 
         {
-            ShaderDbDesc desc = { rootDir.c_str(), testContext->fs, testContext->ts };
+            ShaderDbDesc desc = { resourceDir.c_str(), testContext->fs, testContext->ts };
             testContext->db = IShaderDb::create(desc);
         }
 
