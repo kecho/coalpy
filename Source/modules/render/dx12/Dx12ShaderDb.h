@@ -1,6 +1,7 @@
 #include <coalpy.core/GenericHandle.h>
 #include <coalpy.core/HandleContainer.h>
 #include <coalpy.render/IShaderDb.h>
+#include <coalpy.files/FileWatcher.h>
 #include <shared_mutex>
 #include "Dx12Compiler.h"
 #include <atomic>
@@ -11,6 +12,58 @@ namespace coalpy
 
 struct Dx12CompileState;
 
+struct Dx12FileLookup
+{
+    std::string filename;
+    unsigned int hash;
+
+    Dx12FileLookup();
+    Dx12FileLookup(const char* filename);
+    Dx12FileLookup(const std::string& filename);
+
+    bool operator==(const Dx12FileLookup& other) const
+    {
+        return hash == other.hash;
+    }
+
+    bool operator>(const Dx12FileLookup& other) const
+    {
+        return hash > other.hash;
+    }
+
+    bool operator>=(const Dx12FileLookup& other) const
+    {
+        return hash >= other.hash;
+    }
+
+    bool operator<(const Dx12FileLookup& other) const
+    {
+        return hash < other.hash;
+    }
+
+    bool operator<=(const Dx12FileLookup& other) const
+    {
+        return hash < other.hash;
+    }
+};
+
+}
+
+namespace std
+{
+    template<>
+    struct hash<coalpy::Dx12FileLookup>
+    {
+        std::size_t operator()(const coalpy::Dx12FileLookup& key) const
+        {
+            return (std::size_t)key.hash;
+        }
+    };
+}
+
+namespace coalpy
+{
+
 class Dx12ShaderDb : public IShaderDb
 {
 public:
@@ -20,6 +73,8 @@ public:
     virtual void resolve(ShaderHandle handle) override;
     virtual bool isValid(ShaderHandle handle) const override;
     virtual ~Dx12ShaderDb();
+
+    void requestRecompile(ShaderHandle handle);
 
 private:
     void prepareCompileJobs(Dx12CompileState& state);
@@ -41,6 +96,7 @@ private:
         bool success;
         ShaderFileRecipe recipe;
         bool hasRecipe;
+        std::string debugName;
         IDxcBlob* shaderBlob;
         std::atomic<bool> compiling;
         Dx12CompileState* compileState;
@@ -51,8 +107,14 @@ private:
     mutable std::shared_mutex m_shadersMutex;
     HandleContainer<ShaderHandle, ShaderState*> m_shaders;
 
-    
-    std::unordered_map<unsigned int, std::set<ShaderHandle>> m_fileLookups;
+    void startLiveEdit();
+    void stopLiveEdit();
+    FileWatcher m_liveEditWatcher;
+    mutable std::shared_mutex m_dependencyMutex;
+    using FileToShaderHandlesMap = std::unordered_map<Dx12FileLookup, std::set<ShaderHandle>>;
+    using ShaderHandleToFilesMap = std::unordered_map<ShaderHandle, std::set<Dx12FileLookup>>;
+    FileToShaderHandlesMap m_fileToShaders;
+    ShaderHandleToFilesMap m_shadersToFiles;
 };
 
 }

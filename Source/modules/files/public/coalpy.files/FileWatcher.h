@@ -23,9 +23,9 @@ public:
 
 private:
     void onFileListening();
-    FileWatchState* m_state;
+    FileWatchState* m_state = nullptr;
     std::string m_rootDir;
-    int m_pollingRateMs;
+    int m_pollingRateMs = 0u;
     OnFileChangedFn m_onFileChangedFn;
 };
 

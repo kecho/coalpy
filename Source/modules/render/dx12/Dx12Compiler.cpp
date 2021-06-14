@@ -179,8 +179,10 @@ struct DxcIncludeHandler : public IDxcIncludeHandler
         m_buffer.resize(0u);
         std::wstring fileName = pFilename;
         std::string sfileName = ws2s(fileName);
+        std::string resolvedPath;
+        FileUtils::getAbsolutePath(sfileName, resolvedPath);
         IDxcBlobEncoding* codeBlob = nullptr;
-        if (m_includeFn(sfileName.c_str(), m_buffer))
+        if (m_includeFn(resolvedPath.c_str(), m_buffer))
         {
             DX_OK(m_utils.CreateBlob(m_buffer.data(), m_buffer.size(), CP_UTF8, &codeBlob));
             CPY_ASSERT(codeBlob != nullptr);

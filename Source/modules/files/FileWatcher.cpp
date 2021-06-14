@@ -93,7 +93,7 @@ void waitListenForDirs(
 {
 #ifdef _WIN32 
     #if WATCH_SERVICE_DEBUG_OUTPUT
-        std::cout << "opening " << m_rootDir.c_str() << std::endl;
+        std::cout << "opening " << rootDir << std::endl;
     #endif
 
     HANDLE dirHandle = CreateFileA(
@@ -156,6 +156,7 @@ void FileWatcher::start(
     OnFileChangedFn onFileChanged,
     int pollingRateMs)
 {
+    CPY_ASSERT(m_state == nullptr);
     m_rootDir = directory;
     m_onFileChangedFn = onFileChanged;
     m_pollingRateMs = pollingRateMs;

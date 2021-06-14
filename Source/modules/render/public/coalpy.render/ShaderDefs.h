@@ -52,6 +52,19 @@ struct ShaderDbDesc
     ITaskSystem* ts = nullptr;
     OnShaderErrorFn onErrorFn = nullptr;
     bool resolveOnDestruction = false;
+    bool enableLiveEditing = false;
 };
 
+}
+
+namespace std
+{
+    template<>
+    struct hash<coalpy::ShaderHandle>
+    {
+        std::size_t operator()(const coalpy::ShaderHandle& h) const
+        {
+            return (std::size_t)h.handleId;
+        }
+    };
 }

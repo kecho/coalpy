@@ -32,6 +32,7 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
         desc.resolveOnDestruction = true; //this is so there is a nice clean destruction
         desc.fs = m_fs;
         desc.ts = m_ts;
+        desc.enableLiveEditing = true;
         desc.onErrorFn = [this](ShaderHandle handle, const char* shaderName, const char* shaderErrorStr)
         {
             onShaderCompileError(handle, shaderName, shaderErrorStr);

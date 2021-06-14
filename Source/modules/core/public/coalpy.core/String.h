@@ -21,7 +21,7 @@ inline std::wstring s2ws(const std::string& s)
     return converterX.from_bytes(s);
 }
 
-inline unsigned int hash(const char* str)
+inline unsigned int stringHash(const char* str)
 {
     //FNV hash
     const unsigned int fnvPrime = 0x811C9DC5;
@@ -37,9 +37,9 @@ inline unsigned int hash(const char* str)
 	return hash;
 }
 
-inline unsigned int hash(const std::string& str)
+inline unsigned int stringHash(const std::string& str)
 {
-    return hash(str.c_str());
+    return stringHash(str.c_str());
 }
 
 
