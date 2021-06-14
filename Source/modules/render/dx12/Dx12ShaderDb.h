@@ -77,6 +77,7 @@ public:
     void requestRecompile(ShaderHandle handle);
 
 private:
+    void prepareIoJob(Dx12CompileState& state, const std::string& resolvedPath);
     void prepareCompileJobs(Dx12CompileState& state);
 
     ShaderDbDesc m_desc;
@@ -88,6 +89,7 @@ private:
         std::string name;
         std::string mainFn;
         std::string path;
+        std::string source;
     };
 
     struct ShaderState
@@ -95,7 +97,6 @@ private:
         bool ready;
         bool success;
         ShaderFileRecipe recipe;
-        bool hasRecipe;
         std::string debugName;
         IDxcBlob* shaderBlob;
         std::atomic<bool> compiling;

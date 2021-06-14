@@ -75,7 +75,6 @@ Dx12ShaderDb::ShaderState& Dx12ShaderDb::createShaderState(ShaderHandle& outHand
     shaderState.ready = false;
     shaderState.success = false;
     shaderState.compiling = true;
-    shaderState.hasRecipe = false;
     shaderState.shaderBlob = nullptr;
     return shaderState;
 }
@@ -89,43 +88,15 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
     FileUtils::getAbsolutePath(inputPath, resolvedPath);
 
     compileState->compileArgs = {};
+    compileState->compileArgs.type = desc.type;
     compileState->shaderName = desc.name;
     compileState->mainFn = desc.mainFn;
-    compileState->filePath = resolvedPath;
-    compileState->compileArgs.type = desc.type;
-    compileState->compileArgs.shaderName = compileState->shaderName.c_str();
-    compileState->compileArgs.mainFn = compileState->mainFn.c_str();
-
-    const auto& readPath = compileState->filePath;
-    compileState->readStep = m_desc.fs->read(FileReadRequest(readPath, [compileState, this](FileReadResponse& response){
-        if (response.status == FileStatus::Reading)
-        {
-            compileState->buffer.append((const u8*)response.buffer, response.size);
-        }
-        else if (response.status == FileStatus::Success)
-        {
-            compileState->compileArgs.source = (const char*)compileState->buffer.data();
-            compileState->compileArgs.sourceSize = (int)compileState->buffer.size();
-        }
-        else if (response.status == FileStatus::Fail)
-        {
-            compileState->compileArgs.source = nullptr;
-            compileState->compileArgs.sourceSize = 0u;
-            if (m_desc.onErrorFn)
-            {
-                std::stringstream ss;
-                ss << "Failed reading " << compileState->filePath.c_str() << ". Reason: " << IoError2String(response.error);
-                m_desc.onErrorFn(compileState->shaderHandle, compileState->shaderName.c_str(), ss.str().c_str());
-            }
-        }
-    }));
-
+    prepareIoJob(*compileState, resolvedPath);
     prepareCompileJobs(*compileState);
 
     ShaderHandle shaderHandle;
     ShaderState& shaderState = createShaderState(shaderHandle);
     shaderState.debugName = desc.name;
-    shaderState.hasRecipe = true;
     shaderState.recipe.type = desc.type;
     shaderState.recipe.name = desc.name;
     shaderState.recipe.mainFn = desc.mainFn;
@@ -162,6 +133,11 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderInlineDesc& desc)
 
     ShaderHandle shaderHandle;
     ShaderState& shaderState = createShaderState(shaderHandle);
+    shaderState.recipe.type = desc.type;
+    shaderState.recipe.name = desc.name;
+    shaderState.recipe.mainFn = desc.mainFn;
+    shaderState.recipe.source = desc.immCode;
+
     shaderState.debugName = desc.name;
     shaderState.compileState = compileState;
     compileState->shaderHandle = shaderHandle;
@@ -189,11 +165,70 @@ void Dx12ShaderDb::requestRecompile(ShaderHandle handle)
 
         if (shaderState->compiling)
             return;
-        shaderState->compiling = true;
     }
 
-    std::cout << "Recompiling " << shaderState->debugName << std::endl;
-    
+    auto& recipe = shaderState->recipe;
+    auto& compileState = *(new Dx12CompileState());
+    compileState.shaderName = recipe.name;
+    compileState.mainFn = recipe.mainFn;
+    compileState.compileArgs.type = recipe.type;
+    compileState.compileArgs.shaderName = recipe.name.c_str();
+    compileState.compileArgs.mainFn = recipe.mainFn.c_str();
+    compileState.mainFn = recipe.mainFn;
+    if (!shaderState->recipe.source.empty())
+    {
+        compileState.compileArgs.source = (const char*)recipe.source.data();
+        compileState.compileArgs.sourceSize = (int)recipe.source.size();
+    }
+    else
+    {
+    }
+
+    prepareCompileJobs(compileState);
+    compileState.shaderHandle = handle;
+    Task patchTask = m_desc.ts->createTask(TaskDesc(
+        [this, &compileState, shaderState](TaskContext& ctx)
+        {
+            std::unique_lock lock(m_shadersMutex);
+            shaderState->compiling = true;
+            shaderState->compileState = &compileState;
+        }));
+
+    m_desc.ts->depends(patchTask, compileState.compileStep);
+    compileState.compileStep = patchTask;
+    m_desc.ts->execute(compileState.compileStep);
+}
+
+void Dx12ShaderDb::prepareIoJob(Dx12CompileState& compileState, const std::string& resolvedPath)
+{
+    compileState.filePath = resolvedPath;
+    compileState.compileArgs.shaderName = compileState.shaderName.c_str();
+    compileState.compileArgs.mainFn = compileState.mainFn.c_str();
+
+    const auto& readPath = compileState.filePath;
+    compileState.readStep = m_desc.fs->read(FileReadRequest(readPath, [&compileState, this](FileReadResponse& response){
+        if (response.status == FileStatus::Reading)
+        {
+            compileState.buffer.append((const u8*)response.buffer, response.size);
+        }
+        else if (response.status == FileStatus::Success)
+        {
+            compileState.compileArgs.source = (const char*)compileState.buffer.data();
+            compileState.compileArgs.sourceSize = (int)compileState.buffer.size();
+        }
+        else if (response.status == FileStatus::Fail)
+        {
+            compileState.compileArgs.source = nullptr;
+            compileState.compileArgs.sourceSize = 0u;
+            if (m_desc.onErrorFn)
+            {
+                std::stringstream ss;
+                ss << "Failed reading " << compileState.filePath.c_str() << ". Reason: " << IoError2String(response.error);
+                m_desc.onErrorFn(compileState.shaderHandle, compileState.shaderName.c_str(), ss.str().c_str());
+            }
+        }
+    }));
+
 }
 
 void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
@@ -239,7 +274,7 @@ void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
 
         return result;
     };
-
+    
     compileState.compileArgs.onFinished = [&compileState, this](bool success, IDxcBlob* resultBlob)
     {
         {
