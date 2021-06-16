@@ -44,7 +44,7 @@ void loadCompilerModule(const char* searchPath, const char* moduleName, HMODULE&
     std::string fullModulePath;
     FileUtils::getAbsolutePath(pathAndModName, fullModulePath);
     outModule = LoadLibraryA(fullModulePath.c_str());
-    CPY_ASSERT_FMT(outModule != nullptr, "Error: could not load %s. Missing dll.", pathAndModName.c_str());
+    CPY_ASSERT_FMT(outModule != nullptr, "Error: could not load %s. Missing dll.", fullModulePath.c_str());
     
     if (outModule)
     {

@@ -275,7 +275,7 @@ public:
         std::string appName = appContext.argv[0];
         FileUtils::getDirName(appName, rootDir);
         testContext->rootDir = rootDir;
-        std::string resourceDir = rootDir + "\\coalpy\\resources\\"; 
+        std::string resourceDir = rootDir + (rootDir == "" ? ".\\" : "\\") + "coalpy\\resources\\"; 
 
         {
             TaskSystemDesc desc;
