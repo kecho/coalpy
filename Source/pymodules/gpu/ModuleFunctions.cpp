@@ -4,6 +4,7 @@
 #include <string>
 #include "Window.h"
 #include "Shader.h"
+#include "RenderArgs.h"
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/IWindow.h>
 #include <coalpy.render/IShaderDb.h>
@@ -83,9 +84,13 @@ PyObject* run(PyObject* self, PyObject* args)
 {
     ModuleState& state = getState(self);
 
+    //prepare arguments for this run call.
+    RenderArgs* renderArgs = state.alloc<RenderArgs>();
+    
     WindowRunArgs runArgs = {};
     bool raiseException = false;
-    runArgs.onRender = [&state, &raiseException]()
+
+    runArgs.onRender = [&state, &raiseException, renderArgs]()
     {
         std::set<Window*> windowsPtrs;
         state.getWindows(windowsPtrs);
@@ -102,7 +107,7 @@ PyObject* run(PyObject* self, PyObject* args)
             ++openedWindows;
             if (w && w->onRenderCallback != nullptr)
             {
-                PyObject* retObj = PyObject_CallObject(w->onRenderCallback, nullptr);
+                PyObject* retObj = PyObject_CallOneArg(w->onRenderCallback, (PyObject*)renderArgs);
                 //means an exception has been risen. Propagate up.
                 if (retObj == nullptr)
                 {
@@ -119,8 +124,12 @@ PyObject* run(PyObject* self, PyObject* args)
 
     IWindow::run(runArgs); //block
     if (raiseException)
+    {
+        Py_DECREF(renderArgs);
         return nullptr; //means we propagate an exception.
+    }
 
+    Py_DECREF(renderArgs);
     Py_RETURN_NONE;
 }
 

@@ -9,6 +9,7 @@ enum class TypeId : int
 {
     Window,
     Shader,
+    RenderArgs,
     Counts
 };
 

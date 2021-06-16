@@ -34,7 +34,7 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
         requestData->opaqueHandle = {};
         requestData->error = IoError::None;
         requestData->fileStatus = FileStatus::Idle;
-        requestData->task = m_ts.createTask(TaskDesc([this](TaskContext& ctx)
+        requestData->task = m_ts.createTask(TaskDesc("FileSystem::read", [this](TaskContext& ctx)
         {
             auto* requestData = (Request*)ctx.data;
             {

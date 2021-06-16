@@ -12,8 +12,6 @@ class IWindow;
 namespace gpu
 {
 
-struct CoalpyTypeObject;
-
 struct Window
 {
     //Data

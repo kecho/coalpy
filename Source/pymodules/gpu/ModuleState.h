@@ -44,6 +44,12 @@ public:
     inline CoalpyTypeObject* getCoalpyType(TypeId t) { return m_types[(int)t]; }
     inline PyTypeObject* getType(TypeId t) { return reinterpret_cast<PyTypeObject*>(m_types[(int)t]); }
 
+    template<typename ObjectT>
+    inline ObjectT* alloc(int count = 1)
+    {
+        return reinterpret_cast<ObjectT*>(PyType_GenericAlloc(getType(ObjectT::s_typeId), count));
+    }
+
 private:
     void onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString);
     void registerTypes(CoalpyTypeObject** types, int typesCount);

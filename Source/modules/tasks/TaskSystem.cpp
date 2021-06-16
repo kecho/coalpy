@@ -302,9 +302,6 @@ void TaskSystem::cleanFinishedTasks()
 
 void TaskSystem::cleanTaskTree(Task src)
 {
-    if (ThreadWorker::getLocalThreadWorker() != nullptr)
-        return;
-
     std::unique_lock lock(m_stateMutex);
     std::unique_lock lock2(m_finishedTasksMutex);
     std::vector<Task> tasksToClean;
