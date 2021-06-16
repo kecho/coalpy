@@ -8,6 +8,7 @@
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/IWindow.h>
 #include <coalpy.render/IShaderDb.h>
+#include <coalpy.core/Stopwatch.h>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -86,14 +87,21 @@ PyObject* run(PyObject* self, PyObject* args)
 
     //prepare arguments for this run call.
     RenderArgs* renderArgs = state.alloc<RenderArgs>();
-    renderArgs->renderTime = 99.0;
-    renderArgs->deltaTime = 101.0;
+    renderArgs->renderTime = 0.0;
+    renderArgs->deltaTime = 0.0;
     
     WindowRunArgs runArgs = {};
     bool raiseException = false;
 
-    runArgs.onRender = [&state, &raiseException, renderArgs]()
+    Stopwatch stopwatch;
+
+    runArgs.onRender = [&state, &raiseException, renderArgs, &stopwatch]()
     {
+        unsigned long long mst = stopwatch.timeMicroSecondsLong();
+        double newRenderTime = (double)mst / 1000.0;
+        renderArgs->deltaTime = newRenderTime - renderArgs->renderTime;
+        renderArgs->renderTime = newRenderTime;
+
         std::set<Window*> windowsPtrs;
         state.getWindows(windowsPtrs);
         int openedWindows = 0;
@@ -124,6 +132,7 @@ PyObject* run(PyObject* self, PyObject* args)
         return openedWindows != 0;
     };
 
+    stopwatch.start();
     IWindow::run(runArgs); //block
     if (raiseException)
     {

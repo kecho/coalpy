@@ -14,4 +14,10 @@ unsigned Stopwatch::timeMicroSeconds() const
     (unsigned)std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_timeStart).count();
 }
 
+unsigned long long Stopwatch::timeMicroSecondsLong() const
+{
+    return
+    (unsigned long long)std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_timeStart).count();
+}
+
 }
