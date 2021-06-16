@@ -86,6 +86,8 @@ PyObject* run(PyObject* self, PyObject* args)
 
     //prepare arguments for this run call.
     RenderArgs* renderArgs = state.alloc<RenderArgs>();
+    renderArgs->renderTime = 99.0;
+    renderArgs->deltaTime = 101.0;
     
     WindowRunArgs runArgs = {};
     bool raiseException = false;

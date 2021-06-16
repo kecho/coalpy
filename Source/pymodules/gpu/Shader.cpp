@@ -16,7 +16,7 @@ namespace methods
     static PyObject* resolve(PyObject* self, PyObject* vargs);
 }
 
-PyMethodDef g_shaderMethods[] = {
+static PyMethodDef g_shaderMethods[] = {
     VA_FN(resolve, "Waits for shader compilation to be finished. Resolve is mostly implicitely called upon any operation requiring the shader's definition."),
     FN_END
 };

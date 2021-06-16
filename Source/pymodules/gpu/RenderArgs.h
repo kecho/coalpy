@@ -15,6 +15,8 @@ struct RenderArgs
 {
     //Data
     PyObject_HEAD
+    double renderTime;
+    double deltaTime;
 
     //Functions
     static const TypeId s_typeId = TypeId::RenderArgs;

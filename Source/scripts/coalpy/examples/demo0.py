@@ -10,7 +10,7 @@ s1 = gpu.inlineShader("testShader", """
     }
 """)
 
-def onRender(renderArgs):
+def onRender(renderArgs : gpu.RenderArgs):
     s1.resolve()
     return 0   
 
