@@ -258,6 +258,7 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
 
     std::vector<std::wstring> paths;
     paths.push_back(L"-I.");
+    paths.push_back(L"-Icoalpy");
 
     for (auto& path : paths)
     {
