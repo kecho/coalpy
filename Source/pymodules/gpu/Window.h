@@ -2,6 +2,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <coalpy.render/IDisplay.h>
 #include "TypeIds.h"
 
 namespace coalpy

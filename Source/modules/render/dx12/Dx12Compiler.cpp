@@ -9,6 +9,7 @@
 #include <coalpy.core/String.h>
 #include <coalpy.core/ClTokenizer.h>
 #include <coalpy.core/ByteBuffer.h>
+#include <coalpy.core/RefCounted.h>
 #include <coalpy.files/Utils.h>
 #include <mutex>
 
@@ -71,7 +72,7 @@ struct DxcInstanceData
     IDxcUtils& utils;
 };
 
-class DxcPool
+class DxcPool : public RefCounted
 {
 public:
     DxcPool()
@@ -127,23 +128,10 @@ public:
         m_utilsPool.clear();
     }
 
-    void AddRef()
-    {
-        ++m_ref;
-    }
-
-    void Release()
-    {
-        --m_ref;
-        if (m_ref <= 0)
-            delete this;
-    }
-
 private:
     HandleContainer<DxcCompilerHandle, SmartPtr<IDxcCompiler3>> m_compilerPool;
     HandleContainer<DxcUtilsHandle, SmartPtr<IDxcUtils>> m_utilsPool;
     HandleContainer<DxcValidatorHandle, SmartPtr<IDxcValidator2>> m_validatorPool;
-    int m_ref = 0;
 };
 
 thread_local SmartPtr<DxcPool> s_dxcPool = nullptr;

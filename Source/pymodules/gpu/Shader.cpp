@@ -17,7 +17,7 @@ namespace methods
 }
 
 static PyMethodDef g_shaderMethods[] = {
-    VA_FN(resolve, "Waits for shader compilation to be finished. Resolve is mostly implicitely called upon any operation requiring the shader's definition."),
+    VA_FN(resolve, resolve, "Waits for shader compilation to be finished. Resolve is mostly implicitely called upon any operation requiring the shader's definition."),
     FN_END
 };
 
@@ -29,7 +29,7 @@ void Shader::constructType(PyTypeObject& t)
                  "Constructor Arguments:\n"
                  "file: text file with shader code.\n"
                  "name (optional): identifier of the shader to use. Default will be the file name.\n"
-                 "mainFunction (optional): entry point of shader. Default is 'main'.\n"
+                 "main_function (optional): entry point of shader. Default is 'main'.\n"
                  "NOTE: to create an inline shader, use the function gpu.inlineShader()";
     
     t.tp_flags = Py_TPFLAGS_DEFAULT;
@@ -47,7 +47,7 @@ int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     const char* shaderFile = nullptr;
     const char* mainFunction = "main";
 
-    static char* argnames[] = { "file", "name", "mainFunction", nullptr };
+    static char* argnames[] = { "file", "name", "main_function", nullptr };
     if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|ss", argnames, &shaderFile, &shaderName, &mainFunction))
         return -1;
 

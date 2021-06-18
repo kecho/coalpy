@@ -1,12 +1,10 @@
 #pragma once
 
+#include <coalpy.core/Os.h>
 #include <functional>
 
 namespace coalpy
 {
-
-typedef void* ModuleOsHandle;
-typedef void* WindowOsHandle;
 
 class IWindow;
 

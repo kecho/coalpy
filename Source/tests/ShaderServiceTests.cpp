@@ -3,7 +3,6 @@
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/Utils.h>
-#include <coalpy.render/IShaderService.h>
 #include <coalpy.render/IShaderDb.h>
 #include <coalpy.render/../../Config.h>
 #include <coalpy.render/../../Dx12/Dx12Compiler.h>
@@ -19,19 +18,16 @@ class ShaderServiceContext : public TestContext
 public:
     ITaskSystem* ts = nullptr;
     IFileSystem* fs = nullptr;
-    IShaderService* ss = nullptr;
     IShaderDb* db = nullptr;
     std::string rootDir;
     virtual ~ShaderServiceContext() {}
     void begin()
     {
         ts->start();
-        ss->start();
     }
 
     void end()
     {
-        ss->stop();
         ts->signalStop();
         ts->join();
         ts->cleanFinishedTasks();
@@ -293,18 +289,12 @@ public:
             testContext->db = IShaderDb::create(desc);
         }
 
-        {
-            ShaderServiceDesc desc { testContext->db, rootDir.c_str(), 60 };
-            testContext->ss = IShaderService::create(desc);
-        }
-
         return testContext;
     }
 
     virtual void destroyContext(TestContext* context)
     {
         auto testContext = static_cast<ShaderServiceContext*>(context);
-        delete testContext->ss;
         delete testContext->db;
         delete testContext->fs;
         delete testContext->ts;

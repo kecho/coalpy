@@ -8,6 +8,7 @@
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/IWindow.h>
 #include <coalpy.render/IShaderDb.h>
+#include <coalpy.render/IDevice.h>
 #include <coalpy.core/Stopwatch.h>
 
 #define PY_SSIZE_T_CLEAN
@@ -18,14 +19,23 @@ namespace {
 PyMethodDef g_defs[] = {
 
     KW_FN(
+        inline_shader,
         inlineShader,
         "Create an inline shader. Arguments:\n"
         "name: Name of shader. It is mandatory for inline shaders.\n"
         "source: Source code of shader. Use HLSL.\n"
         "mainFunction (optional): entry point of shader. Default is 'main'.\n"
+        "Returns: Shader object created.\n"
     ),
 
-    VA_FN(run, "Runs window rendering callbacks. This function blocks until all the existing windows are closed."),
+    KW_FN(
+        get_adapters,
+        getAdapters,
+        "Lists all gpu graphics cards found in the system.\n"
+        "Returns: List of device adapters. Each element in the list is a tuple of type (i : index, name : string)\n"
+    ),
+
+    VA_FN(run, run, "Runs window rendering callbacks. This function blocks until all the existing windows are closed."),
 
     FN_END
 };
@@ -79,6 +89,24 @@ PyObject* inlineShader(PyObject* self, PyObject* vargs, PyObject* kwds)
     shaderObj->db = &state.db();
     shaderObj->handle = state.db().requestCompile(desc);
     return obj;
+}
+
+PyObject* getAdapters(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    std::vector<render::DeviceInfo> infos;
+    render::IDevice::enumerate(render::DevicePlat::Dx12, infos);
+    
+    PyObject* newList = PyList_New(0);
+    for (auto inf : infos)
+    {
+        if (!inf.valid)
+            continue;
+
+        PyObject* tuple = Py_BuildValue("(is)", inf.index, inf.name.c_str());
+        PyList_Append(newList, tuple);
+        Py_DECREF(tuple);
+    }
+    return newList;
 }
 
 PyObject* run(PyObject* self, PyObject* args)

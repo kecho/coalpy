@@ -10,4 +10,5 @@
 
 #endif
 
+#define DX_RET(x) __uuidof(x), (void**)&x
 #define DX_OK(x) { HRESULT _r = x; CPY_ASSERT(_r == S_OK) }

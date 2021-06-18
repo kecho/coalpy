@@ -4,7 +4,6 @@
 #include <coalpy.window/IWindow.h>
 #include "CoalpyTypeObject.h"
 
-
 extern coalpy::ModuleOsHandle g_ModuleInstance;
 
 namespace coalpy
@@ -20,7 +19,7 @@ void Window::constructType(PyTypeObject& t)
                  "Constructor Arguments:\n"
                  "width  : initial width of window and swap chain texture.\n"
                  "height : initial height of window and swap chain texture.\n"
-                 "renderFunction : Rendering function. The function has 1 argument of type RenderArgs and no return. See RenderArgs for more info.\n";
+                 "on_render : Rendering function. The function has 1 argument of type RenderArgs and no return. See RenderArgs for more info.\n";
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
     t.tp_init = Window::init;
@@ -36,7 +35,7 @@ int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     desc.height = 400;
     window.onRenderCallback = nullptr;
 
-    static char* keywords[] = { "width", "height", "renderFunction", nullptr };
+    static char* keywords[] = { "width", "height", "on_render", nullptr };
     if (!PyArg_ParseTupleAndKeywords(
             vargs, kwds, "|iiO:Window", keywords,
             &desc.width, &desc.height, &window.onRenderCallback))

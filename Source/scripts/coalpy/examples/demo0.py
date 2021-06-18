@@ -1,6 +1,10 @@
 import coalpy.gpu as gpu
 
-s1 = gpu.inlineShader("testShader", """
+print ("<<coalpy demo0>>")
+print ("graphics devices:")
+[print("{}: {}".format(idx, nm)) for (idx, nm) in gpu.get_adapters()]
+
+s1 = gpu.inline_shader("testShader", """
     #include "coalpy/examples/testInclude.hlsl"
 
     [numthreads(1,1,1)]
@@ -10,15 +14,15 @@ s1 = gpu.inlineShader("testShader", """
     }
 """)
 
-s2 = gpu.Shader(name = "testShader2", mainFunction =  "csMain", file = "coalpy/examples/testShader.hlsl");
+s2 = gpu.Shader(name = "testShader2", main_function =  "csMain", file = "coalpy/examples/testShader.hlsl");
 
-def onRender(renderArgs : gpu.RenderArgs):
+def on_render(render_args : gpu.RenderArgs):
     s1.resolve();
     s2.resolve();
     return 0   
 
 def main():
-    w = gpu.Window(1280, 720, onRender)
+    w = gpu.Window(1280, 720, on_render)
     gpu.run()
 
 if __name__ == "__main__":

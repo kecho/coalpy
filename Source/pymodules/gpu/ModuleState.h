@@ -10,10 +10,14 @@
 namespace coalpy
 {
 
-class IShaderService;
 class IShaderDb;
 class IFileSystem;
 class ITaskSystem;
+
+namespace render
+{
+    class IDevice;
+}
 
 namespace gpu
 {
@@ -31,9 +35,9 @@ public:
     void stopServices();
 
     IShaderDb&      db() const { return *m_db; }
-    IShaderService& ss() const { return *m_ss; }
     IFileSystem&    fs() const { return *m_fs; }
     ITaskSystem&    ts() const { return *m_ts; }
+    render::IDevice& device() const { return *m_device; }
 
     void setExObj(PyObject* obj) { m_exObj = obj; }
     PyObject* exObj() const { return m_exObj; }
@@ -57,7 +61,7 @@ private:
     ITaskSystem*    m_ts;
     IFileSystem*    m_fs;
     IShaderDb*      m_db;
-    IShaderService* m_ss;
+    render::IDevice* m_device;
     PyObject* m_exObj;
     CoalpyTypeObject* m_types[(int)TypeId::Counts];
     std::set<Window*> m_windows;
