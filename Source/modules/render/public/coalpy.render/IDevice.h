@@ -1,7 +1,9 @@
 #pragma once
 
 #include <coalpy.core/Os.h>
+#include <coalpy.core/SmartPtr.h>
 #include <coalpy.render/Resources.h>
+#include <coalpy.render/IDisplay.h>
 #include <string>
 #include <vector>
 
@@ -43,6 +45,7 @@ public:
     virtual const DeviceInfo& info() const = 0;
 
     virtual Texture createTexture(const TextureDesc& config) = 0;
+    virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) = 0;
 };
 
 

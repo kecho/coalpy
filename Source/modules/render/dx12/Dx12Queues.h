@@ -1,0 +1,41 @@
+#pragma once
+
+struct ID3D12CommandQueue;
+
+namespace coalpy
+{
+namespace render
+{
+
+class Dx12Device;
+
+enum class WorkType
+{
+    Graphics,
+    Compute,
+    Copy,
+    Count
+};
+
+class Dx12Queues
+{
+public:
+    Dx12Queues(Dx12Device& device);
+    ~Dx12Queues();
+
+    ID3D12CommandQueue& directq() { return *(m_containers[(int)WorkType::Graphics].queue); }
+    ID3D12CommandQueue& asyncq()  { return *(m_containers[(int)WorkType::Compute].queue); }
+    ID3D12CommandQueue& copyq()   { return *(m_containers[(int)WorkType::Copy].queue); }
+
+private:
+    struct QueueContainers
+    {
+        ID3D12CommandQueue* queue = nullptr;
+    };
+
+    QueueContainers m_containers[(int)WorkType::Count];
+    Dx12Device& m_device;
+};
+
+}
+}

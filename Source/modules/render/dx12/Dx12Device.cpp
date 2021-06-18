@@ -18,6 +18,7 @@
 #include <coalpy.core/String.h>
 #include <vector>
 #include <algorithm>
+#include "Dx12Display.h"
 
 namespace coalpy
 {
@@ -33,7 +34,7 @@ struct CardInfos
     int  refs = 0;
     SmartPtr<IDXGIFactory2> dxgiFactory;
     std::vector<SmartPtr<IDXGIAdapter4>> cards;
-} g_CardInfos;
+} g_cardInfos;
 
 void cacheCardInfos(CardInfos& cardInfos)
 {
@@ -85,7 +86,7 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
 , m_device(nullptr)
 {
     m_info = {};
-    cacheCardInfos(g_CardInfos);
+    cacheCardInfos(g_cardInfos);
 
 #if _DEBUG
     DX_OK(D3D12GetDebugInterface(DX_RET(m_debugLayer)));
@@ -93,11 +94,11 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
         m_debugLayer->EnableDebugLayer();
 #endif
 
-    if (g_CardInfos.cards.empty())
+    if (g_cardInfos.cards.empty())
         return;
 
-    int selectedDeviceIdx = std::min<int>(std::max<int>(config.index, 0), (int)g_CardInfos.cards.size() - 1);
-    SmartPtr<IDXGIAdapter4>& selectedCard = g_CardInfos.cards[selectedDeviceIdx];
+    int selectedDeviceIdx = std::min<int>(std::max<int>(config.index, 0), (int)g_cardInfos.cards.size() - 1);
+    SmartPtr<IDXGIAdapter4>& selectedCard = g_cardInfos.cards[selectedDeviceIdx];
     if (selectedCard == nullptr)
         return;
 
@@ -123,7 +124,7 @@ Dx12Device::~Dx12Device()
     if (m_debugLayer)
         m_debugLayer->Release();
 
-    shutdownCardInfos(g_CardInfos);
+    shutdownCardInfos(g_cardInfos);
 }
 
 Texture Dx12Device::platCreateTexture(const TextureDesc& desc)
@@ -133,7 +134,7 @@ Texture Dx12Device::platCreateTexture(const TextureDesc& desc)
 
 void Dx12Device::enumerate(std::vector<DeviceInfo>& outputList)
 {
-    CardInfos* cardInfos = &g_CardInfos;
+    CardInfos* cardInfos = &g_cardInfos;
     CardInfos localCardInfos;
 
     if (cardInfos->refs == 0)
@@ -165,6 +166,17 @@ void Dx12Device::enumerate(std::vector<DeviceInfo>& outputList)
 
     if (cardInfos == &localCardInfos)
         shutdownCardInfos(*cardInfos);
+}
+
+SmartPtr<IDisplay> Dx12Device::createDisplay(const DisplayConfig& config)
+{
+    IDisplay * display = new Dx12Display(config, *this);
+    return SmartPtr<IDisplay>(display);
+}
+
+IDXGIFactory2* Dx12Device::dxgiFactory()
+{
+    return g_cardInfos.dxgiFactory;
 }
 
 }
