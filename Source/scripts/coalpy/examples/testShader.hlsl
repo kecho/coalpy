@@ -1,4 +1,4 @@
-#include "coalpy/examples/testInclude.hlsl"
+#include <examples/testInclude.hlsl>
 
 [numthreads(1,1,1)]
 void csMain()
