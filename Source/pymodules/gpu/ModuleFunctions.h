@@ -21,6 +21,8 @@ void freeModule(void* modulePtr);
 PyObject* loadShader(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* inlineShader(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* getAdapters(PyObject* self, PyObject* args, PyObject* kwds);
+PyObject* getCurrentAdapterInfo(PyObject* self, PyObject* args, PyObject* kwds);
+PyObject* setCurrentAdapter(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* run(PyObject* self, PyObject* args);
 
 }

@@ -93,11 +93,11 @@ PyMODINIT_FUNC PyInit_gpu(void)
     new (state) coalpy::gpu::ModuleState(typeList.data(), (int)typeList.size());
     state->startServices();
 
-    PyObject* exceptionObject = PyErr_NewException("gpu.exceptionObject", NULL, NULL);
+    PyObject* exceptionObject = PyErr_NewException("gpu.exception_object", NULL, NULL);
     Py_XINCREF(exceptionObject);
     state->setExObj(exceptionObject);
 
-    if (PyModule_AddObject(moduleObj, "exceptionObject", exceptionObject) < 0) {
+    if (PyModule_AddObject(moduleObj, "exception_object", exceptionObject) < 0) {
         Py_XDECREF(exceptionObject);
         Py_CLEAR(exceptionObject);
         Py_DECREF(moduleObj);

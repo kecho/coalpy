@@ -35,6 +35,22 @@ PyMethodDef g_defs[] = {
         "Returns: List of device adapters. Each element in the list is a tuple of type (i : index, name : string)\n"
     ),
 
+    KW_FN(
+        get_current_adapter_info,
+        getCurrentAdapterInfo,
+        "Gets the currently active GPU adapter, as a tuple of (i : index, name : string).\n"
+        "Returns: Element as tuple of type (i : index, name : string)\n"
+    ),
+
+    KW_FN(
+        set_current_adapter,
+        setCurrentAdapter,
+        "Selects an active GPU adapter. For a list of GPU adapters see coalpy.gpu.get_adapters.\n"
+        "Argumnets:\n"
+        "index: the desired device index. See coalpy.gpu.get_adapters for a full list.\n"
+    ),
+
+
     VA_FN(run, run, "Runs window rendering callbacks. This function blocks until all the existing windows are closed."),
 
     FN_END
@@ -107,6 +123,31 @@ PyObject* getAdapters(PyObject* self, PyObject* vargs, PyObject* kwds)
         Py_DECREF(tuple);
     }
     return newList;
+}
+
+PyObject* getCurrentAdapterInfo(PyObject* self, PyObject* args, PyObject* kwds)
+{
+    ModuleState& state = getState(self);
+    auto& info = state.device().info();
+    if (info.valid)
+        return Py_BuildValue("(is)", info.index, info.name.c_str());
+
+    PyErr_SetString(state.exObj(), "coalpy.gpu.get_current_adapter_info failed, current device is invalid.");
+    return nullptr;
+}
+
+PyObject* setCurrentAdapter(PyObject* self, PyObject* args, PyObject* kwds)
+{
+    static char* argnames[] = { "index", nullptr };
+    int selected = -1;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i", argnames, &selected))
+        return nullptr;
+
+    ModuleState& state = getState(self);
+    if (!state.selectAdapter(selected))
+        return nullptr;
+    
+    Py_RETURN_NONE;
 }
 
 PyObject* run(PyObject* self, PyObject* args)

@@ -89,6 +89,32 @@ void ModuleState::stopServices()
     m_ts->join();
 }
 
+bool ModuleState::selectAdapter(int index)
+{
+    std::vector<render::DeviceInfo> allAdapters;
+    render::IDevice::enumerate(render::DevicePlat::Dx12, allAdapters);
+
+    if (index < 0 || index >= (int)allAdapters.size())
+    {
+        PyErr_SetString(exObj(), "Invalid adapter index selected.");
+        return false;
+    }
+
+    delete m_device;
+    render::DeviceConfig devConfig;
+    devConfig.moduleHandle = g_ModuleInstance;
+    devConfig.shaderDb = m_db;
+    devConfig.index = index;
+    m_device = render::IDevice::create(devConfig);
+    if (!m_device || !m_device->info().valid)
+    {
+        PyErr_SetString(exObj(), "Invalid adapter index selected, current gpu device is not valid.");
+        return false;
+    }
+
+    return true;
+}
+
 void ModuleState::onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString)
 {
     std::lock_guard lock(m_shaderErrorMutex);

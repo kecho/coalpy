@@ -1,8 +1,13 @@
+import sys
 import coalpy.gpu as gpu
 
 print ("<<coalpy demo0>>")
 print ("graphics devices:")
 [print("{}: {}".format(idx, nm)) for (idx, nm) in gpu.get_adapters()]
+
+info = gpu.get_current_adapter_info()
+print("Current device: {}".format(info[1]))
+
 
 s1 = gpu.inline_shader("testShader", """
     #include "coalpy/examples/testInclude.hlsl"

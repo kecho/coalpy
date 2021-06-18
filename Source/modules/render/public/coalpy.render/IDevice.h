@@ -40,6 +40,7 @@ public:
     static void enumerate(DevicePlat platform, std::vector<DeviceInfo>& outputList);
     static IDevice * create(const DeviceConfig& config);
     virtual const DeviceConfig& config() const = 0;
+    virtual const DeviceInfo& info() const = 0;
 
     virtual Texture createTexture(const TextureDesc& config) = 0;
 };

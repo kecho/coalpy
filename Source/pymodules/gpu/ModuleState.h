@@ -54,6 +54,8 @@ public:
         return reinterpret_cast<ObjectT*>(PyType_GenericAlloc(getType(ObjectT::s_typeId), count));
     }
 
+    bool selectAdapter(int index);
+
 private:
     void onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString);
     void registerTypes(CoalpyTypeObject** types, int typesCount);
