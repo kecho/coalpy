@@ -92,7 +92,7 @@ void ModuleState::stopServices()
 void ModuleState::onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString)
 {
     std::lock_guard lock(m_shaderErrorMutex);
-    std::cerr << shaderName << "-" << shaderErrorString << std::endl;
+    std::cerr << "[" << shaderName << "] " << shaderErrorString << std::endl;
 }
 
 }

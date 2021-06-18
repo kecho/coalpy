@@ -243,7 +243,7 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
     SmartPtr<IDxcBlobEncoding> codeBlob;
     DX_OK(utils.CreateBlob(args.source, args.sourceSize > 0 ? args.sourceSize : strlen(args.source), CP_UTF8, (IDxcBlobEncoding**)&codeBlob));
 
-    std::string  sshaderName = args.shaderName;
+    std::string  sshaderName = args.debugName ? args.debugName : args.shaderName;
     std::wstring wshaderName = s2ws(sshaderName);
 
     std::string  sentryPoint = args.mainFn;
@@ -255,6 +255,15 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
     arguments.push_back(DXC_ARG_WARNINGS_ARE_ERRORS);
     arguments.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
     arguments.push_back(DXC_ARG_ENABLE_STRICTNESS);
+
+    std::vector<std::wstring> paths;
+    paths.push_back(L"-I.");
+
+    for (auto& path : paths)
+    {
+        arguments.push_back(path.c_str());
+    }
+    
 
     SmartPtr<IDxcCompilerArgs> compilerArgs;
 

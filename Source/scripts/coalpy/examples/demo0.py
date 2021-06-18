@@ -10,8 +10,11 @@ s1 = gpu.inlineShader("testShader", """
     }
 """)
 
+s2 = gpu.Shader(name = "testShader2", mainFunction =  "csMain", file = "coalpy/examples/testShader.hlsl");
+
 def onRender(renderArgs : gpu.RenderArgs):
-    s1.resolve()
+    s1.resolve();
+    s2.resolve();
     return 0   
 
 def main():

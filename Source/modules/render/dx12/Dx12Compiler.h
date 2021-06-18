@@ -22,6 +22,7 @@ struct Dx12CompileArgs
     const char* shaderName;
     const char* mainFn;
     const char* source;
+    const char* debugName;
     int sourceSize;
     std::vector<std::string> defines;
     Dx12CompilerOnError onError;

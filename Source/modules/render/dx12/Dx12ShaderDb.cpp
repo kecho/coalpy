@@ -32,6 +32,7 @@ struct Dx12CompileState
     AsyncFileHandle readStep;
     Task compileStep;
     std::set<Dx12FileLookup> files;
+    bool success;
 };
 
 Dx12ShaderDb::Dx12ShaderDb(const ShaderDbDesc& desc)
@@ -91,6 +92,7 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
     compileState->compileArgs.type = desc.type;
     compileState->shaderName = desc.name;
     compileState->mainFn = desc.mainFn;
+    compileState->success = false;
     prepareIoJob(*compileState, resolvedPath);
     prepareCompileJobs(*compileState);
 
@@ -106,9 +108,11 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
     if (m_desc.enableLiveEditing)
     {
         Dx12FileLookup fileLookup(resolvedPath);
-        compileState->files.insert(fileLookup);
+        std::unique_lock lock(m_dependencyMutex);
+        m_fileToShaders[fileLookup].insert(shaderHandle);
+        m_shadersToFiles[shaderHandle].insert(fileLookup);
     }
-    
+
     compileState->shaderHandle = shaderHandle;
     m_desc.ts->depends(compileState->compileStep, m_desc.fs->asTask(compileState->readStep));
     m_desc.ts->execute(compileState->compileStep);
@@ -128,6 +132,7 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderInlineDesc& desc)
     compileState->compileArgs.mainFn = compileState->mainFn.c_str();
     compileState->compileArgs.source = (const char*)compileState->buffer.data();
     compileState->compileArgs.sourceSize = (int)compileState->buffer.size();
+    compileState->success = false;
 
     prepareCompileJobs(*compileState);
 
@@ -147,9 +152,9 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderInlineDesc& desc)
 
 void Dx12ShaderDb::requestRecompile(ShaderHandle handle)
 {
+    std::shared_lock lock(m_shadersMutex);
     ShaderState* shaderState = nullptr;
     {
-        std::unique_lock lock(m_shadersMutex);
         bool containsShader = m_shaders.contains(handle);
         CPY_ASSERT(containsShader);
         if (!containsShader)
@@ -175,6 +180,8 @@ void Dx12ShaderDb::requestRecompile(ShaderHandle handle)
     compileState.compileArgs.shaderName = recipe.name.c_str();
     compileState.compileArgs.mainFn = recipe.mainFn.c_str();
     compileState.mainFn = recipe.mainFn;
+    prepareCompileJobs(compileState);
+
     if (!shaderState->recipe.source.empty())
     {
         compileState.compileArgs.source = (const char*)recipe.source.data();
@@ -182,9 +189,10 @@ void Dx12ShaderDb::requestRecompile(ShaderHandle handle)
     }
     else
     {
+        prepareIoJob(compileState, recipe.path);
+        m_desc.ts->depends(compileState.compileStep, m_desc.fs->asTask(compileState.readStep));
     }
 
-    prepareCompileJobs(compileState);
     compileState.shaderHandle = handle;
     Task patchTask = m_desc.ts->createTask(TaskDesc(
         [this, &compileState, shaderState](TaskContext& ctx)
@@ -203,6 +211,7 @@ void Dx12ShaderDb::prepareIoJob(Dx12CompileState& compileState, const std::strin
 {
     compileState.filePath = resolvedPath;
     compileState.compileArgs.shaderName = compileState.shaderName.c_str();
+    compileState.compileArgs.debugName = compileState.filePath.c_str();
     compileState.compileArgs.mainFn = compileState.mainFn.c_str();
 
     const auto& readPath = compileState.filePath;
@@ -229,6 +238,11 @@ void Dx12ShaderDb::prepareIoJob(Dx12CompileState& compileState, const std::strin
         }
     }));
 
+    if (m_desc.enableLiveEditing)
+    {
+        Dx12FileLookup fileLookup(resolvedPath);
+        compileState.files.insert(fileLookup);
+    }
 }
 
 void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
@@ -287,6 +301,7 @@ void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
             }
             shaderState->ready = true;
             shaderState->success = success;
+            compileState.success = success;
         }
     };
 }
@@ -324,18 +339,37 @@ void Dx12ShaderDb::resolve(ShaderHandle handle)
         if (m_desc.enableLiveEditing)
         {
             std::shared_lock lock(m_dependencyMutex);
-            for (auto& fileUsed : compileState->files)
+            if (compileState->success)
             {
-                m_fileToShaders[fileUsed].insert(handle);
+                //step 1, clear the dependencies
+                {
+                    auto& setToClear = m_shadersToFiles[handle];
+                    for (auto fileInSet : setToClear)
+                    {
+                        m_fileToShaders[fileInSet].erase(handle);
+                    }
+
+                    m_shadersToFiles.erase(handle);
+                }
+
+                //step 2, flush new dependencies
+                for (auto& fileUsed : compileState->files)
+                {
+                    m_fileToShaders[fileUsed].insert(handle);
+                }
+                m_shadersToFiles[handle].insert(compileState->files.begin(), compileState->files.end());
             }
-            m_shadersToFiles[handle].insert(compileState->files.begin(), compileState->files.end());
         }
 
         if (compileState->readStep.valid())
             m_desc.fs->closeHandle(compileState->readStep);
         m_desc.ts->cleanTaskTree(compileState->compileStep);
-        delete compileState;
-        shaderState->compiling = false;
+
+        {
+            std::shared_lock lock(m_shadersMutex);
+            delete compileState;
+            shaderState->compiling = false;
+        }
     }
 }
 
@@ -368,19 +402,8 @@ void Dx12ShaderDb::startLiveEdit()
 
         for (auto& handle : handlesToRecompile)
         {
-            //step 1, clear the dependencies
-            {
-                std::unique_lock lock(m_dependencyMutex);
-                auto& setToClear = m_shadersToFiles[handle];
-                for (auto fileInSet : setToClear)
-                {
-                    m_fileToShaders[fileInSet].erase(handle);
-                }
 
-                m_shadersToFiles.erase(handle);
-            }
-
-            //step 2, recompile.
+            //request recompile.
             requestRecompile(handle);
         }
     };
