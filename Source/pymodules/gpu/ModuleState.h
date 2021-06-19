@@ -12,6 +12,7 @@ namespace coalpy
 
 class IShaderDb;
 class IFileSystem;
+class IWindowListener;
 class ITaskSystem;
 
 namespace render
@@ -37,6 +38,7 @@ public:
     IShaderDb&      db() const { return *m_db; }
     IFileSystem&    fs() const { return *m_fs; }
     ITaskSystem&    ts() const { return *m_ts; }
+    IWindowListener& windowListener() const { return *m_windowListener; }
     render::IDevice& device() const { return *m_device; }
 
     void setExObj(PyObject* obj) { m_exObj = obj; }
@@ -56,6 +58,8 @@ public:
 
     bool selectAdapter(int index);
 
+    bool checkValidDevice();
+
 private:
     void onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString);
     void registerTypes(CoalpyTypeObject** types, int typesCount);
@@ -64,6 +68,7 @@ private:
     IFileSystem*    m_fs;
     IShaderDb*      m_db;
     render::IDevice* m_device;
+    IWindowListener* m_windowListener;
     PyObject* m_exObj;
     CoalpyTypeObject* m_types[(int)TypeId::Counts];
     std::set<Window*> m_windows;

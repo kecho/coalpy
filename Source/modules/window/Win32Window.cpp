@@ -82,16 +82,20 @@ struct Win32State
     HWND windowHandle;
 };
 
+std::set<Win32Window*> Win32Window::s_allWindows;
+
 Win32Window::Win32Window(const WindowDesc& desc)
 : m_desc(desc), m_state(*(new Win32State))
 {
     CPY_ASSERT_MSG(desc.osHandle != nullptr, "No os handle set, window wont be able to register its class.");
     registerWindowClass(desc.osHandle);
     createWindow();
+    Win32Window::s_allWindows.insert(this);
 }
 
 Win32Window::~Win32Window()
 {
+    Win32Window::s_allWindows.erase(this);
     destroyWindow();
     unregisterWindowClass(m_desc.osHandle);
     delete &m_state;
@@ -162,8 +166,18 @@ Win32Window::HandleMessageRet Win32Window::handleMessage(
     case WM_DESTROY:
         ret.handled = true;
         m_state.windowHandle = nullptr;
+        if (m_listener)
+        {
+            m_listener->onClose(*this);
+        }
         break;
     case WM_SIZE:
+        if (m_listener)
+        {
+            int w = (int)LOWORD(lparam);
+            int h = (int)HIWORD(lparam);
+            m_listener->onResize(w, h, *this);
+        }
         ret.handled = true;
         break;
     }
@@ -205,6 +219,9 @@ IWindow* IWindow::create(const WindowDesc& desc)
 void IWindow::run(const WindowRunArgs& args)
 {
 #if ENABLE_WIN32_WINDOW
+    for (auto w : Win32Window::s_allWindows)
+        w->setListener(args.listener);
+
     bool finished = false;
     MSG currMsg;
     while (!finished)
@@ -217,6 +234,9 @@ void IWindow::run(const WindowRunArgs& args)
         TranslateMessage(&currMsg);
         DispatchMessage(&currMsg);
     }
+
+    for (auto w : Win32Window::s_allWindows)
+        w->setListener(nullptr);
 #endif
 }
 

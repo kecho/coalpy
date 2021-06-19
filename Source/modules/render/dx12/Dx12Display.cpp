@@ -5,6 +5,7 @@
 #include <coalpy.core/Assert.h>
 #include "Dx12Display.h"
 #include "Dx12Device.h"
+#include "Dx12Queues.h"
 #include "Dx12Formats.h"
 #include <D3D12.h>
 #include <dxgi1_5.h>
@@ -53,7 +54,7 @@ Dx12Display::Dx12Display(const DisplayConfig& config, Dx12Device& device)
     SmartPtr<IDXGISwapChain1> swapChain1;
     
     DX_OK(factory->CreateSwapChainForHwnd(
-        /*m_device.GetQueueManager()->GetDirect()*/nullptr,
+        &m_device.queues().directq(),
         (HWND)config.handle,
         &swapChainDesc,
         NULL, //no fullscreen desc
@@ -63,6 +64,7 @@ Dx12Display::Dx12Display(const DisplayConfig& config, Dx12Device& device)
     DX_OK(swapChain1->QueryInterface(&m_swapChain));
     
 #if 0
+    //TODO creation of swap chain textures.
     TextureConfig surfaceConfig; 
     surfaceConfig.type = TextureType_2d;
     surfaceConfig.width = config.width;
@@ -99,6 +101,7 @@ Dx12Display::Dx12Display(const DisplayConfig& config, Dx12Device& device)
 
 void Dx12Display::resize(unsigned int width, unsigned int height)
 {
+    //dxgi seams to handle this nicely.
 }
 
 Texture Dx12Display::texture()

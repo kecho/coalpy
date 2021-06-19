@@ -2,6 +2,8 @@
 #include <iostream>
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/IWindow.h>
+#include <coalpy.render/IDisplay.h>
+#include <coalpy.render/IDevice.h>
 #include "CoalpyTypeObject.h"
 
 extern coalpy::ModuleOsHandle g_ModuleInstance;
@@ -28,6 +30,11 @@ void Window::constructType(PyTypeObject& t)
 
 int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 {
+    ModuleState& moduleState = parentModule(self);
+    if (!moduleState.checkValidDevice())
+        return -1;
+
+
     auto& window = *(Window*)self;
     WindowDesc desc;
     desc.osHandle = g_ModuleInstance;
@@ -53,8 +60,17 @@ int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     window.object = IWindow::create(desc);
     window.object->setUserData(self);
     {
-        ModuleState& moduleState = parentModule(self);
         moduleState.registerWindow(&window);
+    }
+
+    //create display / swap chain object for this window
+    {
+        render::IDevice& device = moduleState.device();
+        render::DisplayConfig displayConfig;
+        displayConfig.handle = window.object->getHandle();
+        displayConfig.width = desc.width;
+        displayConfig.height = desc.height;
+        device.createDisplay(displayConfig);
     }
     
     return 0;
@@ -81,6 +97,49 @@ void Window::destroy(PyObject* self)
 {
     Window::close(self);
     Py_TYPE(self)->tp_free(self);
+}
+
+class ModuleWindowListener : public IWindowListener
+{
+public:
+    ModuleWindowListener(ModuleState& moduleState)
+    : m_moduleState(moduleState)
+    {
+    }
+
+    virtual void onClose(IWindow& window) override
+    {
+        Window* pyWindow = (Window*)window.userData();
+        if (!pyWindow || !pyWindow->display)
+            return;
+
+        if (pyWindow->display)
+        {
+            pyWindow->display->Release();
+            pyWindow->display = nullptr;
+        }
+    }
+
+    virtual void onResize(int w, int h, IWindow& window) override
+    {
+        Window* pyWindow = (Window*)window.userData();
+        if (!pyWindow || !pyWindow->display)
+            return;
+
+        pyWindow->display->resize(w, h);
+    }
+
+    virtual ~ModuleWindowListener()
+    {
+    }
+
+private:
+    ModuleState& m_moduleState;
+};
+
+IWindowListener* Window::createWindowListener(ModuleState& module)
+{
+    return new ModuleWindowListener(module);
 }
 
 

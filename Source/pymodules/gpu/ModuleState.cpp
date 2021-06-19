@@ -5,6 +5,7 @@
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.render/IDevice.h>
 #include "CoalpyTypeObject.h"
+#include "Window.h"
 #include <iostream>
 
 extern coalpy::ModuleOsHandle g_ModuleInstance;
@@ -50,6 +51,10 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
         m_device = render::IDevice::create(devConfig);
     }
 
+    {
+        m_windowListener = Window::createWindowListener(*this);
+    }
+
     registerTypes(types, typesCount);
 }
 
@@ -70,8 +75,22 @@ void ModuleState::registerTypes(CoalpyTypeObject** types, int typesCount)
         CPY_ASSERT_MSG(m_types[i] != nullptr, "Missing type");
 }
 
+bool ModuleState::checkValidDevice()
+{
+    if (m_device && m_device->info().valid)
+        return true;
+
+    PyErr_SetString(exObj(),
+        "Current gpu device used is invalid. "
+        "Check coalpy.gpu.get_adapters and select "
+        "a valid adapter using coalpy.gpu.set_current_adapter.");
+
+    return false;
+}
+
 ModuleState::~ModuleState()
 {
+    delete m_windowListener;
     delete m_device;
     delete m_db;
     delete m_fs;

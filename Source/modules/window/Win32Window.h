@@ -1,6 +1,7 @@
 #pragma once
 
 #include <coalpy.window/IWindow.h>
+#include <set>
 #include "Config.h"
 
 #if ENABLE_WIN32_WINDOW
@@ -24,6 +25,10 @@ public:
         unsigned long retCode;
     };
 
+    void setListener(IWindowListener* listener) { m_listener = listener; }
+
+    static std::set<Win32Window*> s_allWindows;
+
     HandleMessageRet handleMessage(
         unsigned message, unsigned int* wparam, unsigned long* lparam);
 
@@ -32,6 +37,7 @@ private:
     void destroyWindow();
     WindowDesc m_desc;
     Win32State& m_state;
+    IWindowListener* m_listener = nullptr;
 };
 
 }

@@ -201,6 +201,8 @@ PyObject* run(PyObject* self, PyObject* args)
         return openedWindows != 0;
     };
 
+    runArgs.listener = &state.windowListener();
+
     stopwatch.start();
     IWindow::run(runArgs); //block
     if (raiseException)

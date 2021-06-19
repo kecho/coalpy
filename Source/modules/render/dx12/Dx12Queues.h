@@ -28,12 +28,12 @@ public:
     ID3D12CommandQueue& copyq()   { return *(m_containers[(int)WorkType::Copy].queue); }
 
 private:
-    struct QueueContainers
+    struct QueueContainer
     {
         ID3D12CommandQueue* queue = nullptr;
     };
 
-    QueueContainers m_containers[(int)WorkType::Count];
+    QueueContainer m_containers[(int)WorkType::Count];
     Dx12Device& m_device;
 };
 

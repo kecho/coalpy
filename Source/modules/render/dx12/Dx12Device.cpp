@@ -14,6 +14,7 @@
 #include <D3D12.h>
 
 #include "Dx12Device.h"
+#include "Dx12Queues.h"
 #include <coalpy.core/SmartPtr.h>
 #include <coalpy.core/String.h>
 #include <vector>
@@ -114,10 +115,14 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
     m_info.index = selectedDeviceIdx;
     m_info.valid = true;
     m_info.name = ws2s(wdesc);
+
+    m_queues = new Dx12Queues(*this);
 }
 
 Dx12Device::~Dx12Device()
 {
+    delete m_queues;
+
     if (m_device)
         m_device->Release();
 
