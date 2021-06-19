@@ -327,7 +327,7 @@ namespace InternalFileSystem
         const int DestBufferSize = 1024;
         char destination[DestBufferSize];
         auto charsWritten = GetFullPathNameA(path.c_str(), 1024, destination, NULL);
-        CPY_ASSERT(charsWritten != DestBufferSize, "getAbsolutePath failed, not enough characters (path too long)");
+        CPY_ASSERT_MSG(charsWritten != DestBufferSize, "getAbsolutePath failed, not enough characters (path too long)");
         if (charsWritten == 0)
         {
             outDir = path;
