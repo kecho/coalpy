@@ -45,6 +45,12 @@ public:
     virtual const DeviceInfo& info() const = 0;
 
     virtual Texture createTexture(const TextureDesc& config) = 0;
+    virtual Buffer  createBuffer (const BufferDesc& config) = 0;
+    virtual InResourceTable   createInResourceTable  (const ResourceTableDesc& config) = 0;
+    virtual OutResourceTable  createOutResourceTable (const ResourceTableDesc& config) = 0;
+    virtual void release(ResourceHandle resource) = 0;
+    virtual void release(ResourceTable table) = 0;
+
     virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) = 0;
 };
 

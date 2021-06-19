@@ -23,7 +23,13 @@ public:
     virtual ~Dx12Device();
 
     static void enumerate(std::vector<DeviceInfo>& outputList);
-    Texture platCreateTexture(const TextureDesc& desc);
+
+    virtual Texture createTexture(const TextureDesc& desc) override;
+    virtual Buffer  createBuffer (const BufferDesc& config) override;
+    virtual InResourceTable   createInResourceTable  (const ResourceTableDesc& config) override;
+    virtual OutResourceTable  createOutResourceTable (const ResourceTableDesc& config) override;
+    virtual void release(ResourceHandle resource) override;
+    virtual void release(ResourceTable table) override;
 
     ID3D12Device2& device() { return *m_device; }
     Dx12Queues& queues() { return *m_queues; }

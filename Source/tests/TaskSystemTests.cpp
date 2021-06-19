@@ -176,10 +176,10 @@ public:
     virtual const TestCase* getCases(int& caseCounts) const
     {
         static TestCase sCases[] = {
-            { "testSimpleParallel", testParallel0 },
-            { "testSimpleParallelRestart", testParallel0 },
-            { "testDependencies", testTaskDeps },
-            { "testYield", testTaskYield }
+            { "simpleParallel", testParallel0 },
+            { "simpleParallelRestart", testParallel0 },
+            { "dependencies", testTaskDeps },
+            { "yield", testTaskYield }
         };
 
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

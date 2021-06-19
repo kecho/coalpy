@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace coalpy
 {
 
@@ -40,6 +42,9 @@ struct ApplicationContext
     
     static const ApplicationContext& get();
     static void set(const ApplicationContext& ctx);
+
+    std::string rootDir() const;
+    std::string resourceRootDir() const;
 };
 
 }

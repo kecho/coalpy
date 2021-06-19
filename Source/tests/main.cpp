@@ -25,6 +25,7 @@ extern TestSuite* coreSuite();
 extern TestSuite* fileSystemSuite();
 extern TestSuite* taskSystemSuite();
 extern TestSuite* shaderSuite();
+extern TestSuite* renderSuite();
 
 }
 
@@ -32,7 +33,8 @@ CreateSuiteFn g_suites[] = {
     coreSuite,
     taskSystemSuite,
     fileSystemSuite,
-    shaderSuite
+    shaderSuite,
+    renderSuite
 };
 
 int g_totalErrors = 0;

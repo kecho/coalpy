@@ -265,13 +265,7 @@ public:
     virtual TestContext* createContext()
     {
         auto testContext = new ShaderServiceContext();
-
-        std::string rootDir;
-        auto appContext = ApplicationContext::get();
-        std::string appName = appContext.argv[0];
-        FileUtils::getDirName(appName, rootDir);
-        testContext->rootDir = rootDir;
-        std::string resourceDir = rootDir + (rootDir == "" ? ".\\" : "\\") + "coalpy\\resources\\"; 
+        std::string resourceDir = ApplicationContext::get().resourceRootDir();
 
         {
             TaskSystemDesc desc;

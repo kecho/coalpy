@@ -132,9 +132,32 @@ Dx12Device::~Dx12Device()
     shutdownCardInfos(g_cardInfos);
 }
 
-Texture Dx12Device::platCreateTexture(const TextureDesc& desc)
+Texture Dx12Device::createTexture(const TextureDesc& desc)
 {
     return Texture();
+}
+
+Buffer Dx12Device::createBuffer (const BufferDesc& config)
+{
+    return Buffer();
+}
+
+InResourceTable Dx12Device::createInResourceTable(const ResourceTableDesc& config)
+{
+    return InResourceTable();
+}
+
+OutResourceTable Dx12Device::createOutResourceTable (const ResourceTableDesc& config)
+{
+    return OutResourceTable();
+}
+
+void Dx12Device::release(ResourceHandle resource)
+{
+}
+
+void Dx12Device::release(ResourceTable table)
+{
 }
 
 void Dx12Device::enumerate(std::vector<DeviceInfo>& outputList)

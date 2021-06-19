@@ -17,7 +17,6 @@ public:
     TDevice(const DeviceConfig& config);
     virtual ~TDevice();
 
-    virtual Texture createTexture(const TextureDesc& desc) override;
     virtual const DeviceConfig& config() const override { return m_config; }
 
 protected:
@@ -34,12 +33,6 @@ TDevice<PlatDevice>::TDevice(const DeviceConfig& config)
 template<class PlatDevice>
 TDevice<PlatDevice>::~TDevice()
 {
-}
-
-template<class PlatDevice>
-Texture TDevice<PlatDevice>::createTexture(const TextureDesc& desc)
-{
-    return ((PlatDevice*)this)->platCreateTexture(desc);
 }
 
 }
