@@ -27,7 +27,7 @@ def on_render(render_args : gpu.RenderArgs):
     return 0   
 
 def main():
-    w = gpu.Window(1280, 720, on_render)
+    w = gpu.Window("coalpy demo 0", 1280, 720, on_render)
     gpu.run()
 
 if __name__ == "__main__":

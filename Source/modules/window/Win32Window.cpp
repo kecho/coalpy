@@ -118,7 +118,7 @@ void Win32Window::createWindow()
     
     m_state.windowHandle = CreateWindowEx(0,
                                   g_windowClassName,
-                                  g_windowName,
+                                  m_desc.title.c_str(),
                                   windowStyle,
                                   100, 100,
                                   windowWidth, windowHeight,
@@ -226,13 +226,16 @@ void IWindow::run(const WindowRunArgs& args)
     MSG currMsg;
     while (!finished)
     {
-        PeekMessage(&currMsg, NULL, NULL, NULL, PM_REMOVE);
+        bool onMessage = PeekMessage(&currMsg, NULL, NULL, NULL, PM_REMOVE);
         //run all windows here
         if (args.onRender)
             finished = !args.onRender();
 
-        TranslateMessage(&currMsg);
-        DispatchMessage(&currMsg);
+        if (onMessage)
+        {
+            TranslateMessage(&currMsg);
+            DispatchMessage(&currMsg);
+        }
     }
 
     for (auto w : Win32Window::s_allWindows)

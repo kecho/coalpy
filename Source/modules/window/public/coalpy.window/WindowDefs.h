@@ -2,6 +2,7 @@
 
 #include <coalpy.core/Os.h>
 #include <functional>
+#include <string>
 
 namespace coalpy
 {
@@ -21,6 +22,7 @@ public:
 struct WindowDesc
 {
     ModuleOsHandle osHandle;
+    std::string title;
     int width;
     int height;
 };

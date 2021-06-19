@@ -19,6 +19,7 @@ void Window::constructType(PyTypeObject& t)
     t.tp_basicsize = sizeof(Window);
     t.tp_doc   = "Class that represnts a window.\n"
                  "Constructor Arguments:\n"
+                 "title  : String title for the window.\n"
                  "width  : initial width of window and swap chain texture.\n"
                  "height : initial height of window and swap chain texture.\n"
                  "on_render : Rendering function. The function has 1 argument of type RenderArgs and no return. See RenderArgs for more info.\n";
@@ -36,19 +37,22 @@ int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 
 
     auto& window = *(Window*)self;
+    const char* windowTitle = "coalpy.gpu.window";
     WindowDesc desc;
     desc.osHandle = g_ModuleInstance;
     desc.width = 400;
     desc.height = 400;
     window.onRenderCallback = nullptr;
 
-    static char* keywords[] = { "width", "height", "on_render", nullptr };
+    static char* keywords[] = { "title", "width", "height", "on_render", nullptr };
     if (!PyArg_ParseTupleAndKeywords(
-            vargs, kwds, "|iiO:Window", keywords,
-            &desc.width, &desc.height, &window.onRenderCallback))
+            vargs, kwds, "|siiO:Window", keywords,
+            &windowTitle, &desc.width, &desc.height, &window.onRenderCallback))
     {
         return -1;
     }
+
+    desc.title = windowTitle;
 
     Py_XINCREF(window.onRenderCallback);
     if (!PyCallable_Check(window.onRenderCallback))
