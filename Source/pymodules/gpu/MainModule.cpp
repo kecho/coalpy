@@ -30,6 +30,7 @@ BOOL WINAPI DllMain(
             break;
 
         case DLL_PROCESS_DETACH:
+            coalpy::gpu::ModuleState::clean();
             g_ModuleInstance = nullptr;
             for (auto t : g_allTypes)
                 delete t;

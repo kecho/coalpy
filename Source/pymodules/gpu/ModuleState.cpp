@@ -16,6 +16,8 @@ namespace coalpy
 namespace gpu
 {
 
+std::set<ModuleState*> ModuleState::s_allModules;
+
 ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
 : m_fs(nullptr), m_ts(nullptr)
 {
@@ -55,6 +57,7 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
         m_windowListener = Window::createWindowListener(*this);
     }
 
+    s_allModules.insert(this);
     registerTypes(types, typesCount);
 }
 
@@ -90,6 +93,10 @@ bool ModuleState::checkValidDevice()
 
 ModuleState::~ModuleState()
 {
+    s_allModules.erase(this);
+    for (auto w : m_windows)
+        w->display = nullptr;
+
     delete m_windowListener;
     delete m_device;
     delete m_db;
@@ -138,6 +145,14 @@ void ModuleState::onShaderCompileError(ShaderHandle handle, const char* shaderNa
 {
     std::lock_guard lock(m_shaderErrorMutex);
     std::cerr << "[" << shaderName << "] " << shaderErrorString << std::endl;
+}
+
+void ModuleState::clean()
+{
+    for (auto* m : s_allModules)
+        delete m;
+    
+    s_allModules.clear();
 }
 
 }

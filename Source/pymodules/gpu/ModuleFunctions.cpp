@@ -205,6 +205,8 @@ PyObject* run(PyObject* self, PyObject* args)
 
     stopwatch.start();
     IWindow::run(runArgs); //block
+
+    CPY_ASSERT(((PyObject*)renderArgs)->ob_refcnt == 1);
     if (raiseException)
     {
         Py_DECREF(renderArgs);

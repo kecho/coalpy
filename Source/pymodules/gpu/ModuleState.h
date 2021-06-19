@@ -60,6 +60,8 @@ public:
 
     bool checkValidDevice();
 
+    static void clean();
+
 private:
     void onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString);
     void registerTypes(CoalpyTypeObject** types, int typesCount);
@@ -74,6 +76,8 @@ private:
     std::set<Window*> m_windows;
 
     std::mutex m_shaderErrorMutex;
+
+    static std::set<ModuleState*> s_allModules;
 };
 
 }
