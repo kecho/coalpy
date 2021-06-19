@@ -70,7 +70,7 @@ int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         displayConfig.handle = window.object->getHandle();
         displayConfig.width = desc.width;
         displayConfig.height = desc.height;
-        device.createDisplay(displayConfig);
+        window.display = device.createDisplay(displayConfig);
     }
     
     return 0;
@@ -113,11 +113,7 @@ public:
         if (!pyWindow || !pyWindow->display)
             return;
 
-        if (pyWindow->display)
-        {
-            pyWindow->display->Release();
-            pyWindow->display = nullptr;
-        }
+        pyWindow->display = nullptr; //refcount decrease
     }
 
     virtual void onResize(int w, int h, IWindow& window) override

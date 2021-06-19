@@ -4,6 +4,7 @@
 #include <Python.h>
 #include <coalpy.render/IDisplay.h>
 #include <coalpy.window/WindowDefs.h>
+#include <coalpy.core/SmartPtr.h>
 #include "TypeIds.h"
 
 namespace coalpy
@@ -27,7 +28,7 @@ struct Window
     PyObject_HEAD
     PyObject* onRenderCallback;
     IWindow*  object;
-    render::IDisplay* display;
+    SmartPtr<render::IDisplay> display;
 
     //Functions
     static const TypeId s_typeId = TypeId::Window;

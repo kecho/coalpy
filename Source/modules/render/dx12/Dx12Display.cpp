@@ -101,7 +101,7 @@ Dx12Display::Dx12Display(const DisplayConfig& config, Dx12Device& device)
 
 void Dx12Display::resize(unsigned int width, unsigned int height)
 {
-    //dxgi seams to handle this nicely.
+    DX_OK(m_swapChain->ResizeBuffers(m_config.buffering, width, height, getDxFormat(m_config.format), 0));
 }
 
 Texture Dx12Display::texture()
