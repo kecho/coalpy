@@ -41,12 +41,21 @@ BOOL WINAPI DllMain(
 
 #endif
 
+static const char* s_Documentation = ""
+    " << coalpy >> Compute Abstraction Layer for Python \n"
+    " by Kleber A Garcia 2021 (c). \n"
+    "coalpy is a compute abstraction layer for python. It brings\n"
+    "advanced rendering features focused on compute shaders and an easy interface\n"
+    "to create graphical applications, without dealing with graphics APIs complexity.\n"
+    "Start by creating a shader, create a window, passing an onRender function, create a command list\n"
+    "and start using your GPU!\n";
+
 PyMODINIT_FUNC PyInit_gpu(void)
 {
     static PyModuleDef moduleDef = {
         PyModuleDef_HEAD_INIT,
         "gpu", //name
-        nullptr,  //module documentation
+        s_Documentation,  //module documentation
         sizeof(coalpy::gpu::ModuleState), //size of state object
         nullptr, //methods
         nullptr, //slots

@@ -55,8 +55,9 @@ int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     desc.title = windowTitle;
 
     Py_XINCREF(window.onRenderCallback);
-    if (!PyCallable_Check(window.onRenderCallback))
+    if (window.onRenderCallback != nullptr && !PyCallable_Check(window.onRenderCallback))
     {
+        PyErr_SetString(moduleState.exObj(), "on_render argument must be a callback function receiving 1 argument of type coalpy.gpy.RenderArgs");
         Py_XDECREF(window.onRenderCallback);
         return -1;
     }
