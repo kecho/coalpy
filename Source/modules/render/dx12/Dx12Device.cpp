@@ -20,6 +20,7 @@
 #include <vector>
 #include <algorithm>
 #include "Dx12Display.h"
+#include "Dx12ResourceCollection.h"
 
 namespace coalpy
 {
@@ -117,11 +118,13 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
     m_info.name = ws2s(wdesc);
 
     m_queues = new Dx12Queues(*this);
+    m_resources = new Dx12ResourceCollection(*this);
 }
 
 Dx12Device::~Dx12Device()
 {
     delete m_queues;
+    delete m_resources;
 
     if (m_device)
         m_device->Release();

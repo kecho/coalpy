@@ -13,6 +13,7 @@ namespace render
 {
 
 class Dx12Queues;
+class Dx12ResourceCollection;
 
 class Dx12Device : public TDevice<Dx12Device>
 {
@@ -33,6 +34,7 @@ public:
 
     ID3D12Device2& device() { return *m_device; }
     Dx12Queues& queues() { return *m_queues; }
+    Dx12ResourceCollection& resources() { return *m_resources; }
 
     virtual const DeviceInfo& info() const override { return m_info; }
     virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) override;
@@ -40,8 +42,10 @@ public:
 private:
     ID3D12Debug* m_debugLayer;
     ID3D12Device2* m_device;
+    Dx12ResourceCollection* m_resources;
     Dx12Queues* m_queues;
     DeviceInfo m_info;
+    
 };
 
 }
