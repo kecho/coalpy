@@ -23,12 +23,15 @@ Dx12Resource::Dx12Resource(Dx12Device& device, const Dx12ResourceConfig& config)
         //Core resource setup
         if ((m_config.memFlags & MemFlag_GpuWrite) != 0 || (m_config.memFlags & MemFlag_GpuRead) != 0)
         {
+            auto& descriptorPool = m_device.descriptors();
             if ((m_config.memFlags & MemFlag_GpuRead) != 0)
             {
+                m_srv = descriptorPool.allocateSrvOrUavOrCbv();
             }
 
             if ((m_config.memFlags & MemFlag_GpuWrite) != 0)
             {
+                m_uav = descriptorPool.allocateSrvOrUavOrCbv();
                 m_data.resDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
             }
         }
@@ -52,14 +55,14 @@ void Dx12Resource::init()
 
     if ((m_config.memFlags & MemFlag_GpuRead) != 0)
     {
-		//mDevice->GetD3D()->CreateShaderResourceView(
-		//	mData.resource, &mData.srvDesc, mSrvHandle.handle);
+		m_device.device().CreateShaderResourceView(
+			m_data.resource, &m_data.srvDesc, m_srv.handle);
     }
 
     if ((m_config.memFlags & MemFlag_GpuRead) != 0)
     {
-		//mDevice->GetD3D()->CreateUnorderedAccessView(
-		//	mData.resource, nullptr, &mData.uavDesc, mUavHandle.handle);
+		m_device.device().CreateUnorderedAccessView(
+			m_data.resource, nullptr, &m_data.uavDesc, m_uav.handle);
     }
 
 #if ENABLE_RENDER_RESOURCE_NAMES

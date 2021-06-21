@@ -1,8 +1,9 @@
 #pragma once
 
-#include <D3D12.h>
+#include <d3d12.h>
 #include <coalpy.render/Resources.h>
 #include <string>
+#include "Dx12DescriptorPool.h"
 
 namespace coalpy
 {
@@ -35,8 +36,8 @@ public:
     void* mappedMemory();
 
 protected:
-    //Dx12RDMgr::Handle m_srvHandle;
-    //Dx12RDMgr::Handle m_uavHandle;
+    Dx12Descriptor m_srv = {};
+    Dx12Descriptor m_uav = {};
 
     struct Data
     {
