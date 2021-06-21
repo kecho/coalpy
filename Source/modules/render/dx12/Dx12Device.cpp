@@ -11,16 +11,17 @@
 #endif
 
 #include <dxgi1_6.h>
-#include <D3D12.h>
-
-#include "Dx12Device.h"
-#include "Dx12Queues.h"
+#include <d3d12.h>
+#include <algorithm>
 #include <coalpy.core/SmartPtr.h>
 #include <coalpy.core/String.h>
 #include <vector>
-#include <algorithm>
+
+#include "Dx12Device.h"
+#include "Dx12Queues.h"
 #include "Dx12Display.h"
 #include "Dx12ResourceCollection.h"
+#include "Dx12DescriptorPool.h"
 
 namespace coalpy
 {
@@ -117,14 +118,16 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
     m_info.valid = true;
     m_info.name = ws2s(wdesc);
 
+    m_descriptors = new Dx12DescriptorPool(*this);
     m_queues = new Dx12Queues(*this);
     m_resources = new Dx12ResourceCollection(*this);
 }
 
 Dx12Device::~Dx12Device()
 {
-    delete m_queues;
     delete m_resources;
+    delete m_queues;
+    delete m_descriptors;
 
     if (m_device)
         m_device->Release();

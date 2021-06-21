@@ -29,11 +29,12 @@ enum class TextureType
     CubeMapArray
 };
 
-enum MemFlags
+enum MemFlags : int
 {
-    CpuRead  = 1 << 0,
-    CpuWrite = 1 << 1,
-    GpuWrite = 1 << 2,
+    MemFlag_CpuRead  = 1 << 0,
+    MemFlag_CpuWrite = 1 << 1,
+    MemFlag_GpuRead  = 1 << 2,
+    MemFlag_GpuWrite = 1 << 3
 };
 
 enum class BufferType
@@ -51,7 +52,7 @@ struct TextureDesc
     unsigned int height = 1u;
     unsigned int depth  = 1u;
     unsigned int mipLevels = 1u;
-    MemFlags flags = GpuWrite;
+    MemFlags flags = MemFlag_GpuWrite;
 };
 
 struct BufferDesc
@@ -61,7 +62,7 @@ struct BufferDesc
     Format format = Format::RGBA_8_UINT;
     int elementsCount  = 1;
     int structuredBufferStride = -1;
-    MemFlags flags = GpuWrite;
+    MemFlags flags = MemFlag_GpuWrite;
 };
 
 struct ResourceTableDesc

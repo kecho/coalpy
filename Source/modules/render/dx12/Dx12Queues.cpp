@@ -3,6 +3,7 @@
 
 #include "Dx12Queues.h"
 #include "Dx12Device.h"
+#include "Dx12Fence.h"
 #include <D3D12.h>
 
 namespace coalpy
@@ -42,6 +43,9 @@ Dx12Queues::Dx12Queues(Dx12Device& device)
 
         qDesc.Type = translateQueueType((WorkType)queueIt);
         DX_OK(m_device.device().CreateCommandQueue(&qDesc, DX_RET(qcontainer.queue)));
+
+        if (qcontainer.queue)
+            qcontainer.fence = new Dx12Fence(device, *qcontainer.queue);
     }
 }
 
@@ -49,6 +53,7 @@ Dx12Queues::~Dx12Queues()
 {
     for (auto& q : m_containers)
     {
+        delete q.fence;
         if (q.queue)
             q.queue->Release();
     }

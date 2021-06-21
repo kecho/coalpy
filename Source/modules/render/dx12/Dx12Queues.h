@@ -8,6 +8,7 @@ namespace render
 {
 
 class Dx12Device;
+class Dx12Fence;
 
 enum class WorkType
 {
@@ -31,6 +32,7 @@ private:
     struct QueueContainer
     {
         ID3D12CommandQueue* queue = nullptr;
+        Dx12Fence* fence = nullptr;
     };
 
     QueueContainer m_containers[(int)WorkType::Count];
