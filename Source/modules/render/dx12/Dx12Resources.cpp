@@ -91,8 +91,8 @@ void Dx12Resource::init()
 		m_device.device().CreateShaderResourceView(
 			m_data.resource, &m_data.srvDesc, m_srv.handle);
     }
-
-    if ((m_config.memFlags & MemFlag_GpuRead) != 0)
+    
+    if ((m_config.memFlags & MemFlag_GpuWrite) != 0)
     {
 		m_device.device().CreateUnorderedAccessView(
 			m_data.resource, nullptr, &m_data.uavDesc, m_uav.handle);
@@ -100,7 +100,7 @@ void Dx12Resource::init()
 
 #if ENABLE_RENDER_RESOURCE_NAMES
     {
-	    std::wstring wname = wname = s2ws(m_config.name);
+	    std::wstring wname = s2ws(m_config.name);
 	    m_data.resource->SetName(wname.c_str());
     }
 #endif
@@ -114,9 +114,6 @@ void Dx12Resource::acquireD3D12Resource(ID3D12Resource* resource)
         m_data.resource->Release();
 
     m_data.resource = resource;
-
-    if (m_data.resource)
-        m_data.resource->AddRef();
 }
 
 void* Dx12Resource::mappedMemory()
@@ -126,14 +123,14 @@ void* Dx12Resource::mappedMemory()
 
 Dx12Resource::~Dx12Resource()
 {
-    if (m_data.resource)
+    if (m_ownsResource && m_data.resource)
         m_data.resource->Release();
 
     auto& descriptorPool = m_device.descriptors();
-    if ((m_config.memFlags & MemFlag_GpuRead) != 0)
-        descriptorPool.release(m_srv);
-    if ((m_config.memFlags & MemFlag_GpuWrite) != 0)
-        descriptorPool.release(m_uav);
+    //if ((m_config.memFlags & MemFlag_GpuRead) != 0)
+    //    descriptorPool.release(m_srv);
+    //if ((m_config.memFlags & MemFlag_GpuWrite) != 0)
+    //    descriptorPool.release(m_uav);
 }
 
 Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc)

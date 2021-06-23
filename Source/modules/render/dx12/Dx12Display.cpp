@@ -7,7 +7,8 @@
 #include "Dx12Device.h"
 #include "Dx12Queues.h"
 #include "Dx12Formats.h"
-#include <D3D12.h>
+#include "Dx12Fence.h"
+#include "Dx12ResourceCollection.h"
 #include <dxgi1_5.h>
 
 namespace coalpy
@@ -63,54 +64,74 @@ Dx12Display::Dx12Display(const DisplayConfig& config, Dx12Device& device)
     
     DX_OK(swapChain1->QueryInterface(&m_swapChain));
     
-#if 0
-    //TODO creation of swap chain textures.
-    TextureConfig surfaceConfig; 
-    surfaceConfig.type = TextureType_2d;
-    surfaceConfig.width = config.width;
-    surfaceConfig.height = config.height;
-    surfaceConfig.depth = 1;
-    surfaceConfig.mipLevels = 1;
-    surfaceConfig.name = "DisplayBuffer";
-    surfaceConfig.format = config.format;
-    surfaceConfig.bindFlags = BindFlags_Rt;
-    surfaceConfig.usage = ResourceUsage_Static;
+    m_surfaceDesc.type = TextureType::k2d;
+    m_surfaceDesc.width = config.width;
+    m_surfaceDesc.height = config.height;
+    m_surfaceDesc.depth = 1;
+    m_surfaceDesc.mipLevels = 1;
+    m_surfaceDesc.name = "DisplayBuffer";
+    m_surfaceDesc.format = config.format;
+    m_surfaceDesc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
+    m_buffering = config.buffering;
     
-    for (int i = 0; i < (int)mConfig.buffering; ++i)
+    acquireTextures();
+    m_fenceVals.resize(m_buffering, 0);
+}
+
+
+void Dx12Display::acquireTextures()
+{
+    for (int i = 0; i < m_buffering; ++i)
     {
-        ID3D12Resource* resource = nullptr;
-        //Record RTVs
-        DX_VALID(mSwapChain->GetBuffer(i, __uuidof(ID3D12Resource), reinterpret_cast<void**>(&resource)));
-    
-        Dx12TextureRef t = D12_NEW(parentDevice->GetAllocator(), "DisplayBufferAlloc") Dx12Texture(surfaceConfig, parentDevice);
-        t->AcquireD3D12Resource(resource);
-        t->init();
-        mTextures.push_back(t);
-    
-        RenderTargetConfig rtConfig;
-        rtConfig.colorCount = 1u;
-        rtConfig.colors[0] = &(*t);
-        Dx12RenderTargetRef rt = D12_NEW(parentDevice->GetAllocator(), "DisplayBufferRt") Dx12RenderTarget(rtConfig, parentDevice);
-        mRts.push_back(rt);
-    
-        mFenceVals.push_back(0ull);
+        ID3D12Resource* resource;
+        DX_OK(m_swapChain->GetBuffer(i, DX_RET(resource)));
+        Texture t = m_device.resources().createTexture(m_surfaceDesc, resource);
+        m_resources.push_back(resource);
+        m_textures.push_back(t);
     }
-#endif
 }
 
 
 void Dx12Display::resize(unsigned int width, unsigned int height)
 {
+    for (auto t : m_textures)
+        m_device.release(t);
+
+    m_textures.clear();
+
+    for (auto r : m_resources)
+        r->Release();
+    m_resources.clear();
+
     DX_OK(m_swapChain->ResizeBuffers(m_config.buffering, width, height, getDxFormat(m_config.format), 0));
+
+    m_surfaceDesc.width  = width;
+    m_surfaceDesc.height = height;
+    acquireTextures();
 }
 
 Texture Dx12Display::texture()
 {
-    return Texture();
+    return m_textures[m_swapChain->GetCurrentBackBufferIndex()];
+}
+
+UINT64 Dx12Display::fenceVal() const
+{
+    return m_fenceVals[m_swapChain->GetCurrentBackBufferIndex()];
+}
+
+void Dx12Display::present(Dx12Fence& fence)
+{
+    auto bufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+    DX_OK(m_swapChain->Present(1u, 0u));
+    m_fenceVals[bufferIndex] = fence.signal();
 }
 
 Dx12Display::~Dx12Display()
 {
+    for (auto t : m_textures)
+        m_device.resources().release(t);
+
     if (m_swapChain)
         m_swapChain->Release();
 }

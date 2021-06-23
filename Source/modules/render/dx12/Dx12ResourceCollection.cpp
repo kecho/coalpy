@@ -22,7 +22,7 @@ Dx12ResourceCollection::~Dx12ResourceCollection()
 {
 }
 
-Texture Dx12ResourceCollection::createTexture(const TextureDesc& desc)
+Texture Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3D12Resource* resource)
 {
     std::unique_lock lock(m_resourceMutex);
     ResourceHandle resHandle;
@@ -33,10 +33,13 @@ Texture Dx12ResourceCollection::createTexture(const TextureDesc& desc)
     
     outPtr->type = ResType::Texture;
     outPtr->resource = new Dx12Texture(m_device, desc);
+    if (resource)
+        outPtr->resource->acquireD3D12Resource(resource);
+    outPtr->resource->init();
     return Texture { resHandle.handleId };
 }
 
-Buffer  Dx12ResourceCollection::createBuffer (const BufferDesc& desc)
+Buffer Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12Resource* resource)
 {
     std::unique_lock lock(m_resourceMutex);
     ResourceHandle resHandle;
@@ -47,6 +50,9 @@ Buffer  Dx12ResourceCollection::createBuffer (const BufferDesc& desc)
     
     outPtr->type = ResType::Buffer;
     outPtr->resource = new Dx12Buffer(m_device, desc);
+    if (resource)
+        outPtr->resource->acquireD3D12Resource(resource);
+    outPtr->resource->init();
     return Buffer { resHandle.handleId };
 }
 

@@ -160,6 +160,7 @@ OutResourceTable Dx12Device::createOutResourceTable (const ResourceTableDesc& co
 
 void Dx12Device::release(ResourceHandle resource)
 {
+    m_resources->release(resource);
 }
 
 void Dx12Device::release(ResourceTable table)
