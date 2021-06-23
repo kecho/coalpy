@@ -109,7 +109,7 @@ namespace coalpy
         IDevice& device = *renderTestCtx.device;
 
         BufferDesc desc;
-        desc.name << "SimpleBuffer";
+        desc.name = "SimpleBuffer";
         desc.format = Format::RGBA_32_SINT;
         desc.elementsCount = 20;
         Buffer buff = device.createBuffer(desc);
@@ -125,7 +125,7 @@ namespace coalpy
         IDevice& device = *renderTestCtx.device;
 
         TextureDesc desc;
-        desc.name << "SimpleBuffer";
+        desc.name = "SimpleBuffer";
         desc.format = Format::RGBA_32_SINT;
         desc.width = 128u;
         desc.height = 128u;

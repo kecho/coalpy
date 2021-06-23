@@ -1,7 +1,7 @@
 #pragma once
 #include <coalpy.core/GenericHandle.h>
 #include <coalpy.core/Formats.h>
-#include <sstream>
+#include <string>
 
 namespace coalpy
 {
@@ -9,7 +9,7 @@ namespace coalpy
 namespace render
 {
 
-using ResourceName = std::stringstream;
+using ResourceName = std::string;
 
 struct ResourceHandle : public GenericHandle<unsigned int> {};
 struct ResourceTable  : public GenericHandle<unsigned int> {};
@@ -43,26 +43,28 @@ enum class BufferType
     Structured
 };
 
-struct TextureDesc
+struct ResourceDesc
 {
     ResourceName name;
+    MemFlags memFlags;
+};
+
+struct TextureDesc : public ResourceDesc
+{
     TextureType type = TextureType::k2d;
     Format format = Format::RGBA_8_UINT;
     unsigned int width = 1u;
     unsigned int height = 1u;
     unsigned int depth  = 1u;
     unsigned int mipLevels = 1u;
-    MemFlags flags = MemFlag_GpuWrite;
 };
 
-struct BufferDesc
+struct BufferDesc : public ResourceDesc
 {
-    ResourceName name;
     BufferType type = BufferType::Standard;
     Format format = Format::RGBA_8_UINT;
     int elementsCount  = 1;
     int structuredBufferStride = -1;
-    MemFlags flags = MemFlag_GpuWrite;
 };
 
 struct ResourceTableDesc

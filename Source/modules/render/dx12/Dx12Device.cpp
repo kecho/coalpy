@@ -140,12 +140,12 @@ Dx12Device::~Dx12Device()
 
 Texture Dx12Device::createTexture(const TextureDesc& desc)
 {
-    return Texture();
+    return m_resources->createTexture(desc);
 }
 
 Buffer Dx12Device::createBuffer (const BufferDesc& config)
 {
-    return Buffer();
+    return m_resources->createBuffer(config);
 }
 
 InResourceTable Dx12Device::createInResourceTable(const ResourceTableDesc& config)
