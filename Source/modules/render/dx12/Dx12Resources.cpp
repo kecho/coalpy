@@ -251,9 +251,9 @@ Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc)
 
     m_data.resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     m_data.resDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-    m_data.resDesc.Width = desc.type == BufferType::Standard
+    m_data.resDesc.Width = (desc.type == BufferType::Standard
                            ? getDxFormatStride(desc.format)
-                           : (desc.stride * desc.elementCount);
+                           : desc.stride) * desc.elementCount;
     m_data.resDesc.Height = 1u;
     m_data.resDesc.DepthOrArraySize = 1u;
     m_data.resDesc.MipLevels = 1u;

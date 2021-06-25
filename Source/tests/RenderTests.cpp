@@ -136,13 +136,63 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testCreateTables(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+
+        
+
+        TextureDesc texDesc;
+        texDesc.name = "SimpleBuffer";
+        texDesc.format = Format::RGBA_32_SINT;
+        texDesc.width = 128u;
+        texDesc.height = 128u;
+        texDesc.memFlags = (MemFlags)(MemFlag_GpuWrite | MemFlag_GpuRead);
+
+    
+        BufferDesc buffDesc;
+        buffDesc.name = "SimpleBuffer";
+        buffDesc.format = Format::RGBA_32_SINT;
+        buffDesc.elementCount = 20;
+        buffDesc.memFlags = (MemFlags)(MemFlag_GpuWrite | MemFlag_GpuRead);
+
+        const int resourceCount = 16;
+        ResourceHandle handles[resourceCount];
+        for (int i = 0; i < resourceCount; ++i)
+        {
+            handles[i] = ((i & 0x1) ? (ResourceHandle)device.createTexture(texDesc) : (ResourceHandle)device.createBuffer(buffDesc));
+            CPY_ASSERT(handles[i].valid());
+        }
+
+        ResourceTableDesc tableDesc;
+        tableDesc.resources = handles;
+        tableDesc.resourcesCount = resourceCount;
+
+        InResourceTable inTable = device.createInResourceTable(tableDesc);
+        CPY_ASSERT(inTable.valid());
+
+        OutResourceTable outTable = device.createOutResourceTable(tableDesc);
+        CPY_ASSERT(outTable.valid());
+
+        for (auto& h : handles)
+            device.release(h);
+
+        device.release(inTable);
+        device.release(outTable);
+
+        renderTestCtx.end();
+    }
+
     //registration of tests
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
     {
         static TestCase sCases[] = {
             { "createBuffer",  testCreateBuffer },
-            { "createTexture", testCreateTexture }
+            { "createTexture", testCreateTexture },
+            { "createTables",  testCreateTables }
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

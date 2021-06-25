@@ -22,8 +22,8 @@ public:
 
     Texture createTexture(const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr);
     Buffer  createBuffer (const BufferDesc& desc, ID3D12Resource* resourceToAcquire = nullptr);
-    InResourceTable  createInputResourceTable(const ResourceTableDesc& desc);
-    OutResourceTable createOutputResourceTable(const ResourceTableDesc& desc);
+    InResourceTable  createInResourceTable(const ResourceTableDesc& desc);
+    OutResourceTable createOutResourceTable(const ResourceTableDesc& desc);
 
     void release(ResourceHandle resource);
     void release(ResourceTable resource);

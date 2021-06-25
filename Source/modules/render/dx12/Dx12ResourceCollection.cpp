@@ -74,6 +74,16 @@ ResourceTable Dx12ResourceCollection::createResourceTable(const ResourceTableDes
         if (container->resource == nullptr)
             return ResourceTable();
 
+        auto& config = container->resource->config();
+        if (((config.memFlags & MemFlag_GpuRead) == 0 && !isUav)
+         || ((config.memFlags & MemFlag_GpuWrite) == 0 && isUav))
+        {
+            CPY_ASSERT_FMT(false, "Tried to create resource table %s but memflags are incorrect:%d",
+                (desc.name.empty() ? "<no-name>" : desc.name.c_str()),
+                config.memFlags);
+            return ResourceTable();
+        }
+
         gatheredResources.push_back(&(*container->resource));
     }
 
@@ -83,13 +93,13 @@ ResourceTable Dx12ResourceCollection::createResourceTable(const ResourceTableDes
     return handle;
 }
 
-InResourceTable Dx12ResourceCollection::createInputResourceTable(const ResourceTableDesc& desc)
+InResourceTable Dx12ResourceCollection::createInResourceTable(const ResourceTableDesc& desc)
 {
     ResourceTable handle = createResourceTable(desc, false);
     return InResourceTable { handle.handleId };
 }
 
-OutResourceTable Dx12ResourceCollection::createOutputResourceTable(const ResourceTableDesc& desc)
+OutResourceTable Dx12ResourceCollection::createOutResourceTable(const ResourceTableDesc& desc)
 {
     ResourceTable handle = createResourceTable(desc, true);
     return OutResourceTable { handle.handleId };
@@ -104,6 +114,16 @@ void Dx12ResourceCollection::release(ResourceHandle handle)
         return;
     (*m_resources[handle]) = {};
     m_resources.free(handle, false);
+}
+
+void Dx12ResourceCollection::release(ResourceTable handle)
+{
+    std::unique_lock lock(m_resourceMutex);
+    bool isValid = handle.valid() && m_resourceTables.contains(handle);
+    CPY_ASSERT(isValid);
+    if (!isValid)
+        return;
+    m_resourceTables.free(handle);
 }
 
 }

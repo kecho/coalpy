@@ -150,12 +150,12 @@ Buffer Dx12Device::createBuffer (const BufferDesc& config)
 
 InResourceTable Dx12Device::createInResourceTable(const ResourceTableDesc& config)
 {
-    return InResourceTable();
+    return m_resources->createInResourceTable(config);;
 }
 
 OutResourceTable Dx12Device::createOutResourceTable (const ResourceTableDesc& config)
 {
-    return OutResourceTable();
+    return m_resources->createOutResourceTable(config);
 }
 
 void Dx12Device::release(ResourceHandle resource)
@@ -165,6 +165,7 @@ void Dx12Device::release(ResourceHandle resource)
 
 void Dx12Device::release(ResourceTable table)
 {
+    m_resources->release(table);
 }
 
 void Dx12Device::enumerate(std::vector<DeviceInfo>& outputList)
@@ -177,7 +178,6 @@ void Dx12Device::enumerate(std::vector<DeviceInfo>& outputList)
         cacheCardInfos(localCardInfos);
         cardInfos = &localCardInfos;
     }
-
 
     int index = 0;
     for (SmartPtr<IDXGIAdapter4>& card : cardInfos->cards)
