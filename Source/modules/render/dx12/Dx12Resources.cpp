@@ -12,7 +12,7 @@ namespace coalpy
 namespace render
 {
 
-Dx12Resource::Dx12Resource(Dx12Device& device, const ResourceDesc& config)
+Dx12Resource::Dx12Resource(Dx12Device& device, const ResourceDesc& config, bool canDenyShaderResources)
 : m_device(device)
 {
     m_config = config;
@@ -37,7 +37,7 @@ Dx12Resource::Dx12Resource(Dx12Device& device, const ResourceDesc& config)
                 m_data.resDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
             }
         }
-        else
+        else if (canDenyShaderResources)
         {
             m_data.resDesc.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
         }
@@ -127,14 +127,14 @@ Dx12Resource::~Dx12Resource()
         m_data.resource->Release();
 
     auto& descriptorPool = m_device.descriptors();
-    //if ((m_config.memFlags & MemFlag_GpuRead) != 0)
-    //    descriptorPool.release(m_srv);
-    //if ((m_config.memFlags & MemFlag_GpuWrite) != 0)
-    //    descriptorPool.release(m_uav);
+    if ((m_config.memFlags & MemFlag_GpuRead) != 0)
+        descriptorPool.release(m_srv);
+    if ((m_config.memFlags & MemFlag_GpuWrite) != 0)
+        descriptorPool.release(m_uav);
 }
 
 Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc)
-: Dx12Resource(device, desc)
+: Dx12Resource(device, desc, false /*always allow shader resources*/)
 , m_texDesc(desc)
 {
     D3D12_RESOURCE_DIMENSION dim = D3D12_RESOURCE_DIMENSION_UNKNOWN;
@@ -225,6 +225,43 @@ Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc)
 : Dx12Resource(device, desc)
 , m_buffDesc(desc)
 {
+    if ((desc.memFlags & MemFlag_GpuRead) != 0)
+    {
+        auto& srvDesc = m_data.srvDesc;
+        srvDesc.Format = desc.type == BufferType::Standard ? getDxFormat(desc.format) :  ( desc.type == BufferType::Raw ? DXGI_FORMAT_R32_TYPELESS : DXGI_FORMAT_UNKNOWN);
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Buffer.FirstElement = 0u;
+        srvDesc.Buffer.NumElements = desc.elementCount;
+        srvDesc.Buffer.StructureByteStride = desc.type == BufferType::Structured ? desc.stride : 0;
+        srvDesc.Buffer.Flags = desc.type == BufferType::Raw ? D3D12_BUFFER_SRV_FLAG_RAW : D3D12_BUFFER_SRV_FLAG_NONE;
+    }
+
+    if ((desc.memFlags & MemFlag_GpuWrite) != 0)
+    {
+        auto& uavDesc = m_data.uavDesc;
+        uavDesc.Format = desc.type == BufferType::Standard ? getDxFormat(desc.format) :  ( desc.type == BufferType::Raw ? DXGI_FORMAT_R32_TYPELESS : DXGI_FORMAT_UNKNOWN);
+        uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+        uavDesc.Buffer.FirstElement = 0u;
+        uavDesc.Buffer.NumElements = desc.elementCount;
+        uavDesc.Buffer.StructureByteStride = desc.type == BufferType::Structured ? desc.stride : 0;
+        uavDesc.Buffer.CounterOffsetInBytes = 0u;
+        uavDesc.Buffer.Flags = desc.type == BufferType::Raw ? D3D12_BUFFER_UAV_FLAG_RAW : D3D12_BUFFER_UAV_FLAG_NONE;
+    }
+
+    m_data.resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    m_data.resDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+    m_data.resDesc.Width = desc.type == BufferType::Standard
+                           ? getDxFormatStride(desc.format)
+                           : (desc.stride * desc.elementCount);
+    m_data.resDesc.Height = 1u;
+    m_data.resDesc.DepthOrArraySize = 1u;
+    m_data.resDesc.MipLevels = 1u;
+    m_data.resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    //m_data.resDesc.Flags = check Dx12Resource constructor;
+    m_data.resDesc.Format = DXGI_FORMAT_UNKNOWN;
+    m_data.resDesc.SampleDesc.Count = 1u;
+    m_data.resDesc.SampleDesc.Quality = 0u;
 }
 
 Dx12Buffer::~Dx12Buffer()

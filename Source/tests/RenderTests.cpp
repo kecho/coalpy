@@ -111,7 +111,7 @@ namespace coalpy
         BufferDesc desc;
         desc.name = "SimpleBuffer";
         desc.format = Format::RGBA_32_SINT;
-        desc.elementsCount = 20;
+        desc.elementCount = 20;
         Buffer buff = device.createBuffer(desc);
         CPY_ASSERT(buff.valid());
         device.release(buff);
@@ -129,7 +129,6 @@ namespace coalpy
         desc.format = Format::RGBA_32_SINT;
         desc.width = 128u;
         desc.height = 128u;
-        desc.mipLevels = 128u;
         Texture tex = device.createTexture(desc);
         CPY_ASSERT(tex.valid());
         device.release(tex);

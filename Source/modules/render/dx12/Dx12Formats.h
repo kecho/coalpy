@@ -9,6 +9,7 @@ namespace render
 {
 
 DXGI_FORMAT getDxFormat(Format format);
+int getDxFormatStride(Format format);
 
 }
 }

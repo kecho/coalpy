@@ -60,6 +60,57 @@ const DXGI_FORMAT g_formatTranslations[(int)Format::MAX_COUNT] =
        DXGI_FORMAT_R8_TYPELESS           // R8_TYPELESS
 };
 
+const int g_strides[] = {
+//b * c  // byte * components
+  4 * 4 ,// RGBA_32_FLOAT,
+  4 * 4 ,// RGBA_32_UINT,
+  4 * 4 ,// RGBA_32_SINT,
+  4 * 4 ,// RGBA_32_TYPELESS,
+  4 * 3 ,// RGB_32_FLOAT,
+  4 * 3 ,// RGB_32_UINT,
+  4 * 3 ,// RGB_32_SINT,
+  4 * 3 ,// RGB_32_TYPELESS,
+  4 * 2 ,// RG_32_FLOAT,
+  4 * 2 ,// RG_32_UINT,
+  4 * 2 ,// RG_32_SINT,
+  4 * 2 ,// RG_32_TYPELESS,
+  2 * 4 ,// RGBA_16_FLOAT,
+  2 * 4 ,// RGBA_16_UINT,
+  2 * 4 ,// RGBA_16_SINT,
+  2 * 4 ,// RGBA_16_UNORM,
+  2 * 4 ,// RGBA_16_SNORM,
+  2 * 4 ,// RGBA_16_TYPELESS,
+  1 * 4 ,// RGBA_8_UINT,
+  1 * 4 ,// RGBA_8_SINT,
+  1 * 4 ,// RGBA_8_UNORM,
+  1 * 4 ,// RGBA_8_UNORM_SRGB,
+  1 * 4 ,// RGBA_8_SNORM,
+  1 * 4 ,// RGBA_8_TYPELESS,
+  4 * 1 ,// D32_FLOAT,
+  4 * 1 ,// R32_FLOAT,
+  4 * 1 ,// R32_UINT,
+  4 * 1 ,// R32_SINT,
+  4 * 1 ,// R32_TYPELESS,
+  2 * 1 ,// D16_FLOAT,
+  2 * 1 ,// R16_FLOAT,
+  2 * 1 ,// R16_UINT,
+  2 * 1 ,// R16_SINT,
+  2 * 1 ,// R16_UNORM,
+  2 * 1 ,// R16_SNORM,
+  2 * 1 ,// R16_TYPELESS,
+  2 * 2 ,// RG16_FLOAT,
+  2 * 2 ,// RG16_UINT,
+  2 * 2 ,// RG16_SINT,
+  2 * 2 ,// RG16_UNORM,
+  2 * 2 ,// RG16_SNORM,
+  2 * 2 ,// RG16_TYPELESS,
+  1 * 1 ,// R8_UNORM
+  1 * 1 ,// R8_SINT
+  1 * 1 ,// R8_UINT
+  1 * 1 ,// R8_SNORM
+  1 * 1  // R8_TYPELESS
+};
+
 }
 
 DXGI_FORMAT getDxFormat(Format format)
@@ -67,6 +118,13 @@ DXGI_FORMAT getDxFormat(Format format)
     CPY_ERROR((int)format >= 0 && (int)format < (int)Format::MAX_COUNT);
     return g_formatTranslations[(int)format];
 }
+
+int getDxFormatStride(Format format)
+{
+    CPY_ERROR((int)format >= 0 && (int)format < (int)Format::MAX_COUNT);
+    return g_strides[(int)format];
+}
+
 
 }
 }

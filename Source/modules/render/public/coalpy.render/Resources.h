@@ -40,13 +40,14 @@ enum MemFlags : int
 enum class BufferType
 {
     Standard,
-    Structured
+    Structured,
+    Raw
 };
 
 struct ResourceDesc
 {
     ResourceName name;
-    MemFlags memFlags;
+    MemFlags memFlags = {};
 };
 
 struct TextureDesc : public ResourceDesc
@@ -63,8 +64,8 @@ struct BufferDesc : public ResourceDesc
 {
     BufferType type = BufferType::Standard;
     Format format = Format::RGBA_8_UINT;
-    int elementsCount  = 1;
-    int structuredBufferStride = -1;
+    int elementCount  = 1;
+    int stride = 4;
 };
 
 struct ResourceTableDesc
