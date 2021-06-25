@@ -268,6 +268,29 @@ Dx12Buffer::~Dx12Buffer()
 {
 }
 
+Dx12ResourceTable::Dx12ResourceTable(Dx12Device& device, Dx12Resource** resources, int count, bool isUav)
+: m_device(device)
+{
+    std::vector<Dx12Descriptor> descriptors;
+    m_resources.insert(m_resources.end(), resources, resources + count);
+    for (auto& r : m_resources)
+    {
+        if (!r)
+            continue;
+        descriptors.push_back(isUav ? r->uav() : r->srv());
+    }
+
+    m_cpuTable = m_device.descriptors().allocateTable(
+        Dx12DescriptorTableType::SrvCbvUav,
+        descriptors.data(), (int)descriptors.size());
+}
+
+Dx12ResourceTable::~Dx12ResourceTable()
+{
+    m_device.descriptors().release(m_cpuTable);
+}
+
+
 }
 }
 

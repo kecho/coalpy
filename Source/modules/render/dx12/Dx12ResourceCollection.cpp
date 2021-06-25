@@ -7,6 +7,7 @@
 #include "Dx12ResourceCollection.h"
 #include "Dx12Device.h"
 #include <coalpy.core/Assert.h>
+#include <vector>
 
 namespace coalpy
 {
@@ -54,6 +55,44 @@ Buffer Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12Resour
         outPtr->resource->acquireD3D12Resource(resource);
     outPtr->resource->init();
     return Buffer { resHandle.handleId };
+}
+
+ResourceTable Dx12ResourceCollection::createResourceTable(const ResourceTableDesc& desc, bool isUav)
+{
+    std::unique_lock lock(m_resourceMutex);
+    std::vector<Dx12Resource*> gatheredResources;
+    for (int i = 0; i < desc.resourcesCount; ++i)
+    {
+        ResourceHandle h = desc.resources[i];
+        bool foundResource = m_resources.contains(h);
+        CPY_ASSERT(foundResource);
+        if (!foundResource)
+            return ResourceTable();
+
+        SmartPtr<ResourceContainer>& container = m_resources[h];
+        CPY_ASSERT(container->resource != nullptr);
+        if (container->resource == nullptr)
+            return ResourceTable();
+
+        gatheredResources.push_back(&(*container->resource));
+    }
+
+    ResourceTable handle;
+    auto& outPtr = m_resourceTables.allocate(handle);
+    outPtr = new Dx12ResourceTable(m_device, gatheredResources.data(), (int)gatheredResources.size(), isUav); 
+    return handle;
+}
+
+InResourceTable Dx12ResourceCollection::createInputResourceTable(const ResourceTableDesc& desc)
+{
+    ResourceTable handle = createResourceTable(desc, false);
+    return InResourceTable { handle.handleId };
+}
+
+OutResourceTable Dx12ResourceCollection::createOutputResourceTable(const ResourceTableDesc& desc)
+{
+    ResourceTable handle = createResourceTable(desc, true);
+    return OutResourceTable { handle.handleId };
 }
 
 void Dx12ResourceCollection::release(ResourceHandle handle)

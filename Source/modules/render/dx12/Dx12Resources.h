@@ -3,8 +3,10 @@
 #include <d3d12.h>
 #include <coalpy.core/RefCounted.h>
 #include <coalpy.render/Resources.h>
-#include <string>
 #include "Dx12DescriptorPool.h"
+#include <string>
+#include <vector>
+#include <functional>
 
 namespace coalpy
 {
@@ -31,6 +33,9 @@ public:
     
     D3D12_GPU_VIRTUAL_ADDRESS gpuVA() const { return m_data.gpuVirtualAddress; }
     void* mappedMemory();
+
+    const Dx12Descriptor srv() const { return m_srv; }
+    const Dx12Descriptor uav() const { return m_uav; }
 
 protected:
     Dx12Descriptor m_srv = {};
@@ -84,6 +89,18 @@ public:
 
 protected:
     BufferDesc m_buffDesc;
+};
+
+class Dx12ResourceTable : public RefCounted
+{
+public:
+    Dx12ResourceTable(Dx12Device& device, Dx12Resource** resources, int count, bool isUav);
+    ~Dx12ResourceTable();
+
+private:
+    Dx12Device& m_device;
+    std::vector<SmartPtr<Dx12Resource>> m_resources;
+    Dx12DescriptorTable m_cpuTable;
 };
 
 }

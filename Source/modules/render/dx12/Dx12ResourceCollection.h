@@ -22,9 +22,14 @@ public:
 
     Texture createTexture(const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr);
     Buffer  createBuffer (const BufferDesc& desc, ID3D12Resource* resourceToAcquire = nullptr);
+    InResourceTable  createInputResourceTable(const ResourceTableDesc& desc);
+    OutResourceTable createOutputResourceTable(const ResourceTableDesc& desc);
+
     void release(ResourceHandle resource);
+    void release(ResourceTable resource);
 
 private:
+    ResourceTable createResourceTable(const ResourceTableDesc& desc, bool isUav);
     enum class ResType { Texture, Buffer };
     class ResourceContainer : public RefCounted
     {
@@ -36,6 +41,7 @@ private:
     Dx12Device& m_device;
     std::mutex m_resourceMutex;
     HandleContainer<ResourceHandle, SmartPtr<ResourceContainer>> m_resources;
+    HandleContainer<ResourceTable , SmartPtr<Dx12ResourceTable>> m_resourceTables;
 };
 
 }
