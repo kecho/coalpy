@@ -79,7 +79,7 @@ Dx12Resource::Dx12Resource(Dx12Device& device, const ResourceDesc& config, bool 
 
 void Dx12Resource::init()
 {
-    if (m_ownsResource)
+    if (m_data.resource == nullptr)
     {
         DX_OK(m_device.device().CreateCommittedResource(
             &m_data.heapProps, m_data.heapFlags, &m_data.resDesc,
@@ -108,8 +108,8 @@ void Dx12Resource::init()
 
 void Dx12Resource::acquireD3D12Resource(ID3D12Resource* resource)
 {
-    m_ownsResource = false;
     m_resolveGpuAddress = false;
+    resource->AddRef();
     if (m_data.resource != nullptr)
         m_data.resource->Release();
 
@@ -123,7 +123,7 @@ void* Dx12Resource::mappedMemory()
 
 Dx12Resource::~Dx12Resource()
 {
-    if (m_ownsResource && m_data.resource)
+    if (m_data.resource)
         m_data.resource->Release();
 
     auto& descriptorPool = m_device.descriptors();

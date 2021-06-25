@@ -84,10 +84,9 @@ void Dx12Display::acquireTextures()
 {
     for (int i = 0; i < m_buffering; ++i)
     {
-        ID3D12Resource* resource;
+        SmartPtr<ID3D12Resource> resource;
         DX_OK(m_swapChain->GetBuffer(i, DX_RET(resource)));
         Texture t = m_device.resources().createTexture(m_surfaceDesc, resource);
-        m_resources.push_back(resource);
         m_textures.push_back(t);
     }
 }
@@ -99,10 +98,6 @@ void Dx12Display::resize(unsigned int width, unsigned int height)
         m_device.release(t);
 
     m_textures.clear();
-
-    for (auto r : m_resources)
-        r->Release();
-    m_resources.clear();
 
     DX_OK(m_swapChain->ResizeBuffers(m_config.buffering, width, height, getDxFormat(m_config.format), 0));
 
@@ -132,6 +127,8 @@ Dx12Display::~Dx12Display()
 {
     for (auto t : m_textures)
         m_device.resources().release(t);
+
+    m_textures.clear();
 
     if (m_swapChain)
         m_swapChain->Release();

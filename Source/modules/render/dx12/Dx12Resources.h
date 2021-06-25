@@ -55,7 +55,6 @@ protected:
         D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddress;
     } m_data;
 
-    bool m_ownsResource = true;
     bool m_resolveGpuAddress = true;
 
     Usage m_usage = Usage::Default;

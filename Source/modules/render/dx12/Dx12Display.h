@@ -1,6 +1,7 @@
 #pragma once
 #include <coalpy.render/Resources.h>
 #include <coalpy.render/IDisplay.h>
+#include <coalpy.core/SmartPtr.h>
 #include <vector>
 #include <d3d12.h>
 
@@ -29,9 +30,8 @@ public:
 private:
     TextureDesc m_surfaceDesc;
     int m_buffering = 0;
-    std::vector<ID3D12Resource*> m_resources;
     std::vector<Texture> m_textures;
-    std::vector<UINT64> m_fenceVals;
+    std::vector<UINT64>  m_fenceVals;
     IDXGISwapChain4* m_swapChain;
     Dx12Device& m_device;
     
