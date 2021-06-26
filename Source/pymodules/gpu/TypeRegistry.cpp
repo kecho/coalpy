@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "Shader.h"
 #include "RenderArgs.h"
+#include "Resources.h"
 #include "CoalpyTypeObject.h"
 
 namespace coalpy
@@ -15,6 +16,8 @@ void constructTypes(TypeList& outTypes)
     RegisterType(Window,     outTypes);
     RegisterType(Shader,     outTypes);
     RegisterType(RenderArgs, outTypes);
+    RegisterType(Buffer,     outTypes);
+    RegisterType(Texture,    outTypes);
 }
 
 }

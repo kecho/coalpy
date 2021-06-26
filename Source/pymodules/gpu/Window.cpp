@@ -35,7 +35,6 @@ int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     if (!moduleState.checkValidDevice())
         return -1;
 
-
     auto& window = *(Window*)self;
     const char* windowTitle = "coalpy.gpu.window";
     WindowDesc desc;

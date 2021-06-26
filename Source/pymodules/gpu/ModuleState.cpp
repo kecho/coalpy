@@ -68,10 +68,12 @@ void ModuleState::registerTypes(CoalpyTypeObject** types, int typesCount)
 
     for (int i = 0; i < (int)TypeId::Counts; ++i)
     {
-        CPY_ASSERT(m_types[i] == nullptr);
-        CPY_ASSERT((int)types[i]->typeId == i);
-        m_types[i] = types[i];
-        types[i]->moduleState = this;
+        CoalpyTypeObject* obj = types[i];
+        auto typeIndex = (int)obj->typeId;
+
+        CPY_ASSERT(m_types[typeIndex] == nullptr);
+        m_types[typeIndex] = types[i];
+        m_types[typeIndex]->moduleState = this;
     }
 
     for (int i = 0; i < (int)TypeId::Counts; ++i)
