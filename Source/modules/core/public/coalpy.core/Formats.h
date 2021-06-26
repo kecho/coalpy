@@ -57,5 +57,7 @@ enum class Format
     MAX_COUNT
 };
 
+extern const char* getFormatName(Format f);
+
 
 }

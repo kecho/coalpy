@@ -26,7 +26,8 @@ enum class TextureType
     k2dArray,
     k3d,
     CubeMap,
-    CubeMapArray
+    CubeMapArray,
+    Count
 };
 
 enum MemFlags : int
@@ -41,7 +42,8 @@ enum class BufferType
 {
     Standard,
     Structured,
-    Raw
+    Raw,
+    Count
 };
 
 struct ResourceDesc

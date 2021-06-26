@@ -8,6 +8,19 @@ namespace coalpy
 namespace gpu
 {
 
+bool validateEnum(ModuleState& state, int value, int count, const char* name, const char* typeName)
+{
+    if (value >= count || value < 0)
+    {
+        PyErr_Format(state.exObj(),
+            "Invalid enum value encountered %d in parameter %s. Range of this enum is [0,%d]. For valid values, see coalpy.gpu.%s",
+            value, name, (count -1), typeName);
+        return false;
+    }
+
+    return true;
+}
+
 void Buffer::constructType(PyTypeObject& t)
 {
     t.tp_name = "gpu.Buffer";
@@ -25,9 +38,22 @@ int Buffer::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     if (!moduleState.checkValidDevice())
         return -1;
 
+    static char* arguments[] = { "name", "mem_flags", "type", "format", "element_count", "stride", nullptr };
+    const char* name = "<unknown>";
+    render::BufferDesc buffDesc;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|siiiii", arguments, &name, &buffDesc.memFlags, &buffDesc.type, &buffDesc.format, &buffDesc.elementCount, &buffDesc.stride))
+        return -1;
+
+    buffDesc.name = name;
+
+    //validate
+    if (!validateEnum(moduleState, (int)buffDesc.type, (int)render::BufferType::Count, "type", "BufferType"))
+        return -1;
+    if (!validateEnum(moduleState, (int)buffDesc.format, (int)Format::MAX_COUNT, "format", "Format"))
+        return -1;
+
     auto* buffer = (Buffer*)self;
-    render::BufferDesc desc;
-    buffer->buffer = moduleState.device().createBuffer(desc);
+    buffer->buffer = moduleState.device().createBuffer(buffDesc);
 
     return 0;
 }
