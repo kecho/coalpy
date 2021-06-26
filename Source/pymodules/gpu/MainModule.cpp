@@ -107,6 +107,8 @@ PyMODINIT_FUNC PyInit_gpu(void)
     Py_XINCREF(exceptionObject);
     state->setExObj(exceptionObject);
 
+    coalpy::gpu::processTypes(typeList, *moduleObj);
+
     if (PyModule_AddObject(moduleObj, "exception_object", exceptionObject) < 0) {
         Py_XDECREF(exceptionObject);
         Py_CLEAR(exceptionObject);

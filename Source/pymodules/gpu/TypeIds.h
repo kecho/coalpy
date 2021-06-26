@@ -12,7 +12,10 @@ enum class TypeId : int
     RenderArgs,
     Texture,
     Buffer,
-    Counts
+    Counts,
+
+    //special type, reserved for enums
+    GenericEnum
 };
 
 

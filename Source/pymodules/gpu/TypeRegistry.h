@@ -11,10 +11,11 @@ namespace gpu
 {
 
 struct CoalpyTypeObject;
+class ModuleState;
 
 using TypeList = std::vector<CoalpyTypeObject*>;
-//registration table
 void constructTypes(TypeList& outTypes);
+void processTypes(TypeList& typeList, PyObject& moduleObject);
 
 }
 }

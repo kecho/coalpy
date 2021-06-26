@@ -70,6 +70,8 @@ void ModuleState::registerTypes(CoalpyTypeObject** types, int typesCount)
     {
         CoalpyTypeObject* obj = types[i];
         auto typeIndex = (int)obj->typeId;
+        if (typeIndex >= (int)TypeId::Counts)
+            continue;
 
         CPY_ASSERT(m_types[typeIndex] == nullptr);
         m_types[typeIndex] = types[i];

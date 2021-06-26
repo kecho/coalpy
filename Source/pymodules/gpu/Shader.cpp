@@ -5,6 +5,7 @@
 #include <coalpy.files/Utils.h>
 #include <coalpy.render/IShaderDb.h>
 #include <string>
+#include <iostream>
 
 namespace coalpy
 {
