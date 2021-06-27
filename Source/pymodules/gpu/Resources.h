@@ -36,6 +36,32 @@ struct Buffer
     static void destroy(PyObject* self);
 };
 
+struct InResourceTable
+{
+    //Data
+    PyObject_HEAD
+    render::InResourceTable table;
+
+    //Functions
+    static const TypeId s_typeId = TypeId::InResourceTable;
+    static void constructType(PyTypeObject& t);
+    static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
+    static void destroy(PyObject* self);
+};
+
+struct OutResourceTable
+{
+    //Data
+    PyObject_HEAD
+    render::OutResourceTable table;
+
+    //Functions
+    static const TypeId s_typeId = TypeId::OutResourceTable;
+    static void constructType(PyTypeObject& t);
+    static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
+    static void destroy(PyObject* self);
+};
+
 }
 }
 

@@ -48,11 +48,13 @@ CoalpyTypeObject* registerFormats()
 void constructTypes(TypeList& outTypes)
 {
     //** Register Types **//
-    RegisterType(Window,     outTypes);
-    RegisterType(Shader,     outTypes);
-    RegisterType(RenderArgs, outTypes);
-    RegisterType(Buffer,     outTypes);
-    RegisterType(Texture,    outTypes);
+    RegisterType(Window,             outTypes);
+    RegisterType(Shader,             outTypes);
+    RegisterType(RenderArgs,         outTypes);
+    RegisterType(Buffer,             outTypes);
+    RegisterType(Texture,            outTypes);
+    RegisterType(InResourceTable,    outTypes);
+    RegisterType(OutResourceTable,   outTypes);
     
     //** Register Enums **//
     {

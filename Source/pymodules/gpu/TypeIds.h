@@ -12,6 +12,8 @@ enum class TypeId : int
     RenderArgs,
     Texture,
     Buffer,
+    InResourceTable,
+    OutResourceTable,
     Counts,
 
     //special type, reserved for enums

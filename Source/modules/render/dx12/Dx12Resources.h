@@ -27,7 +27,7 @@ public:
     void acquireD3D12Resource(ID3D12Resource* resource);
     ID3D12Resource& d3dResource() const { return *m_data.resource; }
     ID3D12Resource& d3dResource() { return *m_data.resource; }
-    virtual void init();
+    virtual bool init();
 
     const ResourceDesc& config() const { return m_config; }
     

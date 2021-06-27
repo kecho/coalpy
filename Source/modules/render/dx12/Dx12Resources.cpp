@@ -77,13 +77,16 @@ Dx12Resource::Dx12Resource(Dx12Device& device, const ResourceDesc& config, bool 
     m_data.gpuVirtualAddress = {};
 }
 
-void Dx12Resource::init()
+bool Dx12Resource::init()
 {
     if (m_data.resource == nullptr)
     {
-        DX_OK(m_device.device().CreateCommittedResource(
+        HRESULT r = m_device.device().CreateCommittedResource(
             &m_data.heapProps, m_data.heapFlags, &m_data.resDesc,
-	    	defaultState(), nullptr, DX_RET(m_data.resource)));
+	    	defaultState(), nullptr, DX_RET(m_data.resource));
+        CPY_ASSERT_MSG(r == S_OK, "CreateCommittedResource has failed");
+        if (r != S_OK)
+            return false;
     }
 
     if ((m_config.memFlags & MemFlag_GpuRead) != 0)
@@ -104,6 +107,8 @@ void Dx12Resource::init()
 	    m_data.resource->SetName(wname.c_str());
     }
 #endif
+
+    return true;
 }
 
 void Dx12Resource::acquireD3D12Resource(ID3D12Resource* resource)

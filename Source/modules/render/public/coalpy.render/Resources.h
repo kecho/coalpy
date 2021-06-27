@@ -49,7 +49,7 @@ enum class BufferType
 struct ResourceDesc
 {
     ResourceName name;
-    MemFlags memFlags = {};
+    MemFlags memFlags = (MemFlags)(MemFlag_GpuWrite | MemFlag_GpuRead);
 };
 
 struct TextureDesc : public ResourceDesc

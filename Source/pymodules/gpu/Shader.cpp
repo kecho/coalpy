@@ -42,7 +42,12 @@ void Shader::constructType(PyTypeObject& t)
 
 int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 {
+    auto& shader = *(Shader*)self;
+    shader.handle = ShaderHandle();
+
     ModuleState& moduleState = parentModule(self);
+    if (!moduleState.checkValidDevice())
+        return -1;
 
     const char* shaderName = nullptr;
     const char* shaderFile = nullptr;
@@ -58,8 +63,6 @@ int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         std::string filePath = shaderFile;
         FileUtils::getFileName(filePath, sshaderName);
     }
-
-    auto& shader = *(Shader*)self;
 
     ShaderDesc desc;
     desc.type = ShaderType::Compute;

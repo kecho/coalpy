@@ -31,11 +31,15 @@ void Window::constructType(PyTypeObject& t)
 
 int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 {
+    auto& window = *(Window*)self;
+    window.object = nullptr;
+    window.onRenderCallback = nullptr;
+    new (&window.display) SmartPtr<render::IDevice>();
+
     ModuleState& moduleState = parentModule(self);
     if (!moduleState.checkValidDevice())
         return -1;
 
-    auto& window = *(Window*)self;
     const char* windowTitle = "coalpy.gpu.window";
     WindowDesc desc;
     desc.osHandle = g_ModuleInstance;

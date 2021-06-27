@@ -86,6 +86,9 @@ void freeModule(void* modulePtr)
 PyObject* inlineShader(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     ModuleState& state = getState(self);
+    if (!state.checkValidDevice())
+        return nullptr;
+
     const char* shaderName = nullptr;
     const char* shaderSource = nullptr;
     const char* mainFunction = "main";
@@ -96,6 +99,7 @@ PyObject* inlineShader(PyObject* self, PyObject* vargs, PyObject* kwds)
 
     PyObject* obj = PyType_GenericAlloc(state.getType(TypeId::Shader), 1); 
     Shader* shaderObj = reinterpret_cast<Shader*>(obj);
+    shaderObj->handle = ShaderHandle();
 
     ShaderInlineDesc desc;
     desc.type = ShaderType::Compute;
