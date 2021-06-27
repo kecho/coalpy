@@ -73,6 +73,7 @@ Dx12Display::Dx12Display(const DisplayConfig& config, Dx12Device& device)
     m_surfaceDesc.format = config.format;
     // Piece of shit dx12 does not allow UAV access to swap chain. Why microsoft?
     //m_surfaceDesc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
+    m_surfaceDesc.memFlags = {};
     m_buffering = config.buffering;
     
     acquireTextures();
