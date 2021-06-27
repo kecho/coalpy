@@ -138,7 +138,6 @@ function _G.DeployPyPackage(packageName, pythonLibName, binaries, scriptsDir)
 
     for i, v in ipairs(binaries) do
         local targetName =  binaryDst..npath.get_filename(v)
-        print(targetName)
         local cpCmd = CopyFile {
             Pass = "Deploy",
             Source = v,
