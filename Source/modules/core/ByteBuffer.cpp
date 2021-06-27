@@ -45,7 +45,8 @@ void ByteBuffer::append(const u8* data, size_t size)
 {
     size_t totalNewSize = std::max(m_capacity, m_size + size);
     reserve(totalNewSize);
-    memcpy(m_data + m_size, data, size);
+    if (data)
+        memcpy(m_data + m_size, data, size);
     m_size += size;
 }
 

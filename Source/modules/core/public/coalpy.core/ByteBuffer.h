@@ -18,7 +18,14 @@ public:
     const u8* data() const { return m_data; }
     size_t size() const { return m_size; }
 
+    template<typename StructType>
+    void append(StructType* t)
+    {
+        append((const u8*)t, sizeof(StructType));
+    }
+
     void append(const u8* data, size_t size);
+    inline void appendEmpty(size_t size) { append(nullptr, size); }
     void resize(size_t newSize);
     void free();
     void forget();
