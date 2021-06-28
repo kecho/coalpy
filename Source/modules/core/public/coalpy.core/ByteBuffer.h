@@ -19,7 +19,7 @@ public:
     size_t size() const { return m_size; }
 
     template<typename StructType>
-    void append(StructType* t)
+    void append(const StructType* t)
     {
         append((const u8*)t, sizeof(StructType));
     }

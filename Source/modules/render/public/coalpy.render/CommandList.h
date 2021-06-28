@@ -2,7 +2,6 @@
 
 #include <coalpy.render/Resources.h>
 #include <coalpy.render/ShaderDefs.h>
-#include <coalpy.core/ByteBuffer.h>
 
 namespace coalpy
 {
@@ -12,16 +11,18 @@ namespace render
 typedef uint64_t MemOffset;
 typedef uint64_t MemSize;
 
+class InternalCommandList;
+
 class GpuCommand
 {
 protected:
-    GpuCommand(MemOffset offset, ByteBuffer* buffer)
-    : m_offset(offset), m_buffer(buffer)
+    GpuCommand(MemOffset offset, InternalCommandList* parent)
+    : m_offset(offset), m_parent(parent)
     {
     }
     
     GpuCommand()
-    : m_offset(0ull), m_buffer(nullptr)
+    : m_offset(0ull), m_parent(nullptr)
     {
     }
 
@@ -32,7 +33,7 @@ protected:
     }
 
     MemOffset m_offset;
-    ByteBuffer* m_buffer;
+    InternalCommandList* m_parent;
 };
 
 class ComputeCommand : private GpuCommand
@@ -49,11 +50,12 @@ public:
     void setDispatch(const char* debugNameMarker, int x, int y, int z);
 
 private:
+    int m_inputResourcesParamIndex = -1;
+    int m_outputResourcesParamIndex = -1;
+    int m_constantBuffersParamIndex = -1;
+    int m_debugNameMarkerParamIndex = -1;
     ComputeCommand() {}
-    ComputeCommand(MemOffset offset, ByteBuffer* buffer)
-        : GpuCommand(offset, buffer)
-    {
-    }
+    ComputeCommand(MemOffset offset, InternalCommandList* parent);
 };
 
 class CopyCommand : private GpuCommand
@@ -64,8 +66,8 @@ public:
 
 private:
     CopyCommand() {}
-    CopyCommand(MemOffset offset, ByteBuffer* buffer)
-        : GpuCommand(offset, buffer)
+    CopyCommand(MemOffset offset, InternalCommandList* parent)
+        : GpuCommand(offset, parent)
     {
     }
 };
@@ -78,22 +80,21 @@ public:
 
 private:
     UploadCommand() {}
-    UploadCommand(MemOffset offset, ByteBuffer* buffer)
-        : GpuCommand(offset, buffer)
-    {
-    }
+    UploadCommand(MemOffset offset, InternalCommandList* parent);
+
+    int m_sourceParamIndex = -1;
 };
 
 struct DownloadCommand : private GpuCommand
 {
     friend class CommandList;
 public:
-    void setData(ResourceHandle source, void* destinationBuffer, int destinationSize);
+    void setData(ResourceHandle source);
 
 private:
     DownloadCommand() {}
-    DownloadCommand(MemOffset offset, ByteBuffer* buffer)
-    : GpuCommand(offset, buffer)
+    DownloadCommand(MemOffset offset, InternalCommandList* parent)
+    : GpuCommand(offset, parent)
     {
     }
 };
@@ -108,15 +109,15 @@ public:
     CopyCommand      addCopyCommand();
     UploadCommand    addUploadCommand();
     DownloadCommand  addDownloadCommand();
-    void close();
 
-    const ByteBuffer& data() const { return m_buffer; }
+    unsigned char* data();
+    size_t size() const;
+    void close();
 
 private:
     template<typename AbiType>
     MemOffset allocate();
-    ByteBuffer m_buffer;
-    bool m_closed;
+    InternalCommandList& m_internal;
 };
 
 
