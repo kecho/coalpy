@@ -1,67 +1,11 @@
 #include <coalpy.render/CommandList.h>
+#include <coalpy.render/AbiCommands.h>
 #include <coalpy.core/Assert.h>
 
 namespace coalpy
 {
 namespace render
 { 
-
-typedef uint64_t MemOffset;
-typedef uint64_t MemSize;
-
-enum class AbiCmdTypes : int
-{
-    CommandListSentinel = 1,
-    Compute = 2, 
-    Copy = 3, 
-    Upload = 4,
-    Download = 5,
-};
-
-struct AbiComputeCmd
-{
-    static const AbiCmdTypes sType = AbiCmdTypes::Compute;
-
-    ShaderHandle shader;
-
-    MemOffset constants;
-    int       constantCounts;
-
-    MemOffset inResourceTables;
-    int       inResourceCounts;
-
-    MemOffset outResourceTables;
-    int       outResourceCounts;
-
-    MemOffset debugName;
-    int debugNameSize;
-    int x;
-    int y;
-    int z;
-};
-
-struct AbiCopyCmd
-{
-    static const AbiCmdTypes sType = AbiCmdTypes::Copy;
-    ResourceHandle source;
-    ResourceHandle destination;
-};
-
-struct AbiUploadCmd
-{
-    static const AbiCmdTypes sType = AbiCmdTypes::Upload;
-    ResourceHandle destination;
-    MemOffset sourceOffset; 
-    MemSize   sourceSize; 
-};
-
-struct AbiDownloadCmd
-{
-    static const AbiCmdTypes sType = AbiCmdTypes::Download;
-    ResourceHandle source;
-    MemOffset destinationOffset; 
-    MemSize   destinationSize; 
-};
 
 CommandList::CommandList()
 : m_closed(false)
@@ -78,7 +22,8 @@ ComputeCommand CommandList::addComputeCommand()
     if (m_closed)
         return {};
     
-    return {};
+    MemOffset offset = allocate<AbiComputeCmd>();
+    return ComputeCommand(offset, &m_buffer);
 }
 
 
@@ -89,6 +34,8 @@ MemOffset CommandList::allocate()
     m_buffer.append(&t);
     auto offset = (MemOffset)m_buffer.size();
     m_buffer.appendEmpty(sizeof(AbiType));
+    auto* abiObj = (AbiType*)(m_buffer.data() + offset);
+    new (abiObj) AbiType;
     return offset;
 }
 
@@ -108,7 +55,18 @@ UploadCommand CommandList::addUploadCommand()
     if (m_closed)
         return {};
 
-    return {};
+    MemOffset offset = allocate<AbiUploadCmd>();
+    return UploadCommand(offset, &m_buffer);
+}
+
+DownloadCommand CommandList::addDownloadCommand()
+{
+    CPY_ASSERT_MSG(!m_closed, "Command list has been closed. Mutability is not permitted anymore.");
+    if (m_closed)
+        return {};
+
+    MemOffset offset = allocate<AbiDownloadCmd>();
+    return DownloadCommand(offset, &m_buffer);
 }
 
 
@@ -142,6 +100,10 @@ void UploadCommand::setData(const void* source, int sourceSize, ResourceHandle d
 
 void DownloadCommand::setData(ResourceHandle source, void* destinationBuffer, int destinationSize)
 {
+    auto* cmdData = data<AbiDownloadCmd>();
+    cmdData->source = source;
+    cmdData->destinationOffset = (MemOffset)destinationBuffer;
+    cmdData->destinationSize = destinationSize;
 }
 
 }

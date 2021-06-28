@@ -12,7 +12,30 @@ namespace render
 typedef uint64_t MemOffset;
 typedef uint64_t MemSize;
 
-class ComputeCommand
+class GpuCommand
+{
+protected:
+    GpuCommand(MemOffset offset, ByteBuffer* buffer)
+    : m_offset(offset), m_buffer(buffer)
+    {
+    }
+    
+    GpuCommand()
+    : m_offset(0ull), m_buffer(nullptr)
+    {
+    }
+
+    template<typename AbiType>
+    AbiType* data()
+    {
+        return (AbiType*)(m_buffer->data() + m_offset);
+    }
+
+    MemOffset m_offset;
+    ByteBuffer* m_buffer;
+};
+
+class ComputeCommand : private GpuCommand
 {
     friend class CommandList;
 public:
@@ -26,64 +49,53 @@ public:
     void setDispatch(const char* debugNameMarker, int x, int y, int z);
 
 private:
-    ComputeCommand() : m_offset(0ull), m_buffer(nullptr) {}
+    ComputeCommand() {}
     ComputeCommand(MemOffset offset, ByteBuffer* buffer)
-        : m_offset(offset), m_buffer(buffer)
+        : GpuCommand(offset, buffer)
     {
     }
-
-    MemOffset m_offset;
-    ByteBuffer* m_buffer;
 };
 
-class CopyCommand
+class CopyCommand : private GpuCommand
 {
     friend class CommandList;
 public:
     void setResources(ResourceHandle source, ResourceHandle destination);
 
 private:
-    CopyCommand() : m_offset(0ull), m_buffer(nullptr) {}
+    CopyCommand() {}
     CopyCommand(MemOffset offset, ByteBuffer* buffer)
-        : m_offset(offset), m_buffer(buffer)
+        : GpuCommand(offset, buffer)
     {
     }
-
-    MemOffset m_offset;
-    ByteBuffer* m_buffer;
 };
 
-struct UploadCommand
+struct UploadCommand : private GpuCommand
 {
     friend class CommandList;
 public:
     void setData(const void* source, int sourceSize, ResourceHandle destination);
 
 private:
-    UploadCommand() : m_offset(0ull), m_buffer(nullptr) {}
+    UploadCommand() {}
     UploadCommand(MemOffset offset, ByteBuffer* buffer)
-        : m_offset(offset), m_buffer(buffer)
+        : GpuCommand(offset, buffer)
     {
     }
-
-    MemOffset m_offset;
-    ByteBuffer* m_buffer;
 };
 
-struct DownloadCommand
+struct DownloadCommand : private GpuCommand
 {
     friend class CommandList;
 public:
     void setData(ResourceHandle source, void* destinationBuffer, int destinationSize);
 
 private:
+    DownloadCommand() {}
     DownloadCommand(MemOffset offset, ByteBuffer* buffer)
-        : m_offset(offset), m_buffer(buffer)
+    : GpuCommand(offset, buffer)
     {
     }
-
-    MemOffset m_offset;
-    ByteBuffer* m_buffer;
 };
 
 class CommandList
