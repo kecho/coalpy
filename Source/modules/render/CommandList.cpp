@@ -1,5 +1,4 @@
 #include <coalpy.render/CommandList.h>
-#include <coalpy.render/AbiCommands.h>
 #include <coalpy.core/ByteBuffer.h>
 #include <coalpy.core/Assert.h>
 #include <vector>
@@ -12,7 +11,7 @@ namespace render
 struct CmdPendingMemory
 {
     const u8* src = nullptr;
-    const MemSize srcByteSize = 0;
+    MemSize srcByteSize = 0;
     MemOffset destinationOffset; //offset to pointer / size blob member
 };
 
@@ -24,19 +23,14 @@ public:
     bool closed = false;
 
     template<typename ElementType>
-    int registerArrayParam(AbiPtr<ElementType>& ptr)
+    void deferArrayStore(AbiPtr<ElementType>& param, const ElementType* srcArray, int counts)
     {
-        int index = (int)pendingMemory.size();
-        pendingMemory.emplace_back();
-        pendingMemory.back().destinationOffset = (u8*)&ptr.offset - buffer.data();
-        return index;
-    }
+        if (counts == 0)
+            return;
 
-    template<typename ElementType>
-    void storeArrayParam(int paramIndex, const ElementType* srcArray, int counts)
-    {
-        CPY_ASSERT(paramIndex >= 0 && paramIndex < (int)pendingMemory.srcArray());
-        auto& pendingMem = pendingMemory[paramIndex];
+        pendingMemory.emplace_back();
+        auto& pendingMem = pendingMemory.back();
+        pendingMem.destinationOffset = (u8*)&param.offset - buffer.data();
         pendingMem.src         = (const u8*)srcArray;
         pendingMem.srcByteSize = (MemSize)(sizeof(ElementType) * counts);
     }
@@ -55,6 +49,7 @@ CommandList::~CommandList()
 
 u8* CommandList::data()
 {
+    CPY_ASSERT_MSG(m_internal.closed, "Command list has not been finalized. Data should not be accessed.");
     return m_internal.buffer.data();
 }
 
@@ -63,7 +58,7 @@ size_t CommandList::size() const
     return m_internal.buffer.size();
 }
 
-void CommandList::close()
+void CommandList::finalize()
 {
     if (m_internal.closed)
         return;
@@ -84,129 +79,62 @@ void CommandList::close()
     header.commandListSize = m_internal.buffer.size();
 
     m_internal.closed = true;
-    
 }
 
 template<typename AbiType>
-MemOffset CommandList::allocate()
+AbiType& CommandList::allocate()
 {
     auto& buffer = m_internal.buffer;
     auto offset = (MemOffset)buffer.size();
     buffer.appendEmpty(sizeof(AbiType));
     auto* abiObj = (AbiType*)(buffer.data() + offset);
     new (abiObj) AbiType;
-    return offset;
+    return *abiObj;
 }
 
-ComputeCommand CommandList::addComputeCommand()
+void CommandList::writeCommand(const ComputeCommand& cmd)
 {
-    CPY_ASSERT_MSG(!m_internal.closed, "Command list has been closed. Mutability is not permitted anymore.");
-    if (m_internal.closed)
-        return {};
-    
-    MemOffset offset = allocate<AbiComputeCmd>();
-    return ComputeCommand(offset, &m_internal);
+    auto& abiCmd = allocate<AbiComputeCmd>();
+
+    abiCmd.shader = cmd.m_shader;
+
+    m_internal.deferArrayStore(abiCmd.constants, cmd.m_constBuffers, cmd.m_constBuffersCounts);
+    abiCmd.constantCounts = cmd.m_constBuffersCounts;
+
+    m_internal.deferArrayStore(abiCmd.inResourceTables, cmd.m_inTables, cmd.m_inTablesCounts);
+    abiCmd.inResourceTablesCounts = cmd.m_inTablesCounts;
+
+    m_internal.deferArrayStore(abiCmd.outResourceTables, cmd.m_outTables, cmd.m_outTablesCounts);
+    abiCmd.outResourceTablesCounts = cmd.m_outTablesCounts;
+
+    const char* str = cmd.m_debugName ? cmd.m_debugName : "";
+    int strSz = strlen(cmd.m_debugName) + 1;
+    m_internal.deferArrayStore(abiCmd.debugName, cmd.m_debugName, strSz);
+    abiCmd.debugNameSize = strSz;
+    abiCmd.x = cmd.m_x;
+    abiCmd.y = cmd.m_y;
+    abiCmd.z = cmd.m_z;
 }
 
-CopyCommand CommandList::addCopyCommand()
+void CommandList::writeCommand(const CopyCommand& cmd)
 {
-    CPY_ASSERT_MSG(!m_internal.closed, "Command list has been closed. Mutability is not permitted anymore.");
-    if (m_internal.closed)
-        return {};
-
-    MemOffset offset = allocate<AbiCopyCmd>();
-    return CopyCommand(offset, &m_internal);
+    auto& abiCmd = allocate<AbiCopyCmd>();
+    abiCmd.source = cmd.m_source;
+    abiCmd.destination = cmd.m_destination;
 }
 
-UploadCommand CommandList::addUploadCommand()
+void CommandList::writeCommand(const UploadCommand& cmd)
 {
-    CPY_ASSERT_MSG(!m_internal.closed, "Command list has been closed. Mutability is not permitted anymore.");
-    if (m_internal.closed)
-        return {};
-
-    MemOffset offset = allocate<AbiUploadCmd>();
-    return UploadCommand(offset, &m_internal);
+    auto& abiCmd = allocate<AbiUploadCmd>();
+    abiCmd.destination = cmd.m_destination;
+    m_internal.deferArrayStore(abiCmd.sources, cmd.m_source, cmd.m_sourceSize);
+    abiCmd.sourceSize = cmd.m_sourceSize;
 }
 
-DownloadCommand CommandList::addDownloadCommand()
+void CommandList::writeCommand(const DownloadCommand& cmd)
 {
-    CPY_ASSERT_MSG(!m_internal.closed, "Command list has been closed. Mutability is not permitted anymore.");
-    if (m_internal.closed)
-        return {};
-
-    MemOffset offset = allocate<AbiDownloadCmd>();
-    return DownloadCommand(offset, &m_internal);
-}
-
-ComputeCommand::ComputeCommand(MemOffset offset, InternalCommandList* parent)
-: GpuCommand(offset, parent)
-{
-    auto& cmdData = *data<AbiComputeCmd>();
-    m_inputResourcesParamIndex  = parent->registerArrayParam(cmdData.constants);
-    m_outputResourcesParamIndex = parent->registerArrayParam(cmdData.inResourceTables);
-    m_constantBuffersParamIndex = parent->registerArrayParam(cmdData.outResourceTables);
-    m_debugNameMarkerParamIndex = parent->registerArrayParam(cmdData.debugName);
-}
-
-void ComputeCommand::setShader(ShaderHandle shader)
-{
-    auto& cmdData = *data<AbiComputeCmd>();
-    cmdData.shader = shader;
-}
-
-void ComputeCommand::setConstants(Buffer* constBuffers, int bufferCounts)
-{
-    m_parent->storeArrayParam(m_constantBuffersParamIndex, constBuffers, bufferCounts);
-}
-
-void ComputeCommand::setInResources(InResourceTable* inTables, int tablesCount)
-{
-    m_parent->storeArrayParam(m_inputResourcesParamIndex, inTables, tablesCount);
-}
-
-void ComputeCommand::setOutResources(OutResourceTable* outTables, int tablesCount)
-{
-    m_parent->storeArrayParam(m_outputResourcesParamIndex, outTables, tablesCount);
-}
-
-void ComputeCommand::setDispatch(const char* debugNameMarker, int x, int y, int z)
-{
-    auto& cmdData = *data<AbiComputeCmd>();
-    cmdData.x = x;
-    cmdData.y = y;
-    cmdData.z = z;
-    if (debugNameMarker)
-    {
-        int charLen = strlen(debugNameMarker) + 1;
-        m_parent->storeArrayParam(m_debugNameMarkerParamIndex, debugNameMarker, charLen);
-        cmdData.debugNameSize = charLen;
-    }
-}
-
-void CopyCommand::setResources(ResourceHandle source, ResourceHandle destination)
-{
-    auto& cmdData = *data<AbiCopyCmd>();
-    cmdData.source = source;
-    cmdData.destination = destination;
-}
-
-UploadCommand::UploadCommand(MemOffset offset, InternalCommandList* parent)
-: GpuCommand(offset, parent)
-{
-    auto& cmdData = *data<AbiUploadCmd>();
-    m_sourceParamIndex = parent->registerArrayParam(cmdData.sources);
-}
-
-void UploadCommand::setData(const void* source, int sourceSize, ResourceHandle destination)
-{
-    auto& cmdData = *data<AbiUploadCmd>();
-    m_parent->storeArrayParam(m_sourceParamIndex, (const char*)source, sourceSize);
-}
-
-void DownloadCommand::setData(ResourceHandle source)
-{
-    auto& cmdData = *data<AbiDownloadCmd>();
-    cmdData.source = source;
+    auto& abiCmd = allocate<AbiDownloadCmd>();
+    abiCmd.source = cmd.m_source;   
 }
 
 }

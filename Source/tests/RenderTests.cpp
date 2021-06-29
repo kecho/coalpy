@@ -4,6 +4,7 @@
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.render/IDevice.h>
+#include <coalpy.render/CommandList.h>
 
 using namespace coalpy::render;
 
@@ -185,6 +186,108 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testCommandListAbi(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+
+        TextureDesc texDesc;
+
+        const int inputTexturesCount = 4;
+        const int outputTexturesCount = 3;
+        Texture inputTextures[inputTexturesCount];
+        Texture outputTextures[outputTexturesCount];
+
+        for (Texture& t : inputTextures)
+            t = device.createTexture(texDesc);
+
+        for (Texture& t : outputTextures)
+            t = device.createTexture(texDesc);
+
+        ResourceTableDesc tableDesc;
+
+        tableDesc.resources = inputTextures;
+        tableDesc.resourcesCount = inputTexturesCount;
+        InResourceTable inputTable = device.createInResourceTable(tableDesc);
+
+        tableDesc.resources = outputTextures;
+        tableDesc.resourcesCount = outputTexturesCount;
+        OutResourceTable outputTable = device.createOutResourceTable(tableDesc);
+
+        BufferDesc buffDesc;
+        Buffer cbuffer = device.createBuffer(buffDesc);
+
+        CommandList cmdList;
+
+        const char testString[] = "hello world";
+        int testStringSize = sizeof(testString);
+
+        {
+            UploadCommand cmd;
+            cmd.setData(testString, (int)testStringSize, cbuffer);
+            cmdList.writeCommand(cmd);
+        }
+
+        const char* dispatchNameStr = "testDispatch";
+        {
+            ComputeCommand cmd;
+            cmd.setConstants(&cbuffer, 1);
+            cmd.setInResources(&inputTable, 1);
+            cmd.setOutResources(&outputTable, 1);
+            cmd.setDispatch("testDispatch", 8,8,1);
+            cmdList.writeCommand(cmd);
+        }
+
+        cmdList.finalize();
+
+        //Verify
+        unsigned char* data = cmdList.data();
+        MemOffset offset = {};
+        {
+            auto* header = (AbiCommandListHeader*)(data + offset);
+            CPY_ASSERT(header->sentinel == (int)AbiCmdTypes::CommandListSentinel);
+            CPY_ASSERT(header->commandListSize == cmdList.size());
+            offset += sizeof(AbiCommandListHeader);
+        }
+
+        {
+            auto* uploadCommand = (AbiUploadCmd*)(data + offset);
+            CPY_ASSERT(uploadCommand->sentinel == (int)AbiCmdTypes::Upload);
+            CPY_ASSERT(uploadCommand->destination == cbuffer);
+            const char* str = uploadCommand->sources.data(data);
+            CPY_ASSERT(!strcmp(str, testString));
+            CPY_ASSERT(testStringSize == uploadCommand->sourceSize);
+            offset += sizeof(AbiUploadCmd);
+        }
+
+        {
+            auto* computeCommand = (AbiComputeCmd*)(data + offset);
+            CPY_ASSERT(computeCommand->x == 8);
+            CPY_ASSERT(computeCommand->y == 8);
+            CPY_ASSERT(computeCommand->z == 1);
+            CPY_ASSERT(computeCommand->constantCounts == 1);
+            CPY_ASSERT(*computeCommand->constants.data(data) == cbuffer);
+            CPY_ASSERT(computeCommand->inResourceTablesCounts == 1);
+            CPY_ASSERT(*computeCommand->inResourceTables.data(data) == inputTable);
+            CPY_ASSERT(computeCommand->outResourceTablesCounts == 1);
+            CPY_ASSERT(*computeCommand->outResourceTables.data(data) == outputTable);
+            CPY_ASSERT(!strcmp(computeCommand->debugName.data(data), dispatchNameStr));
+            offset += sizeof(AbiComputeCmd);
+
+        }
+
+        for (Texture& t : inputTextures)
+            device.release(t);
+        for (Texture& t : outputTextures)
+            device.release(t);
+        device.release(cbuffer);
+        device.release(inputTable);
+        device.release(outputTable);
+
+        renderTestCtx.end();
+    }
+
     //registration of tests
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
@@ -192,7 +295,8 @@ namespace coalpy
         static TestCase sCases[] = {
             { "createBuffer",  testCreateBuffer },
             { "createTexture", testCreateTexture },
-            { "createTables",  testCreateTables }
+            { "createTables",  testCreateTables },
+            { "commandListAbi",  testCommandListAbi }
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

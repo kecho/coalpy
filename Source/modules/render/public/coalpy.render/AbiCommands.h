@@ -47,10 +47,10 @@ struct AbiComputeCmd
     int       constantCounts = 0;
 
     AbiPtr<InResourceTable> inResourceTables;
-    int       inResourceCounts = 0;
+    int       inResourceTablesCounts = 0;
 
     AbiPtr<OutResourceTable> outResourceTables;
-    int       outResourceCounts = 0;
+    int       outResourceTablesCounts = 0;
 
     AbiPtr<char> debugName;
     int debugNameSize = 0;
@@ -71,7 +71,7 @@ struct AbiUploadCmd
     int sentinel = (int)AbiCmdTypes::Upload;
     ResourceHandle destination;
     AbiPtr<char> sources; 
-    int  sourcesCount = 0; 
+    int  sourceSize = 0; 
 };
 
 struct AbiDownloadCmd

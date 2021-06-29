@@ -2,102 +2,112 @@
 
 #include <coalpy.render/Resources.h>
 #include <coalpy.render/ShaderDefs.h>
+#include <coalpy.render/AbiCommands.h>
 
 namespace coalpy
 {
 namespace render
 {
 
-typedef uint64_t MemOffset;
-typedef uint64_t MemSize;
+class ComputeCommand
+{
+    friend class CommandList;
+public:
+    inline void setShader(ShaderHandle shader)
+    {
+        m_shader = shader;
+    }
+
+    inline void setConstants(Buffer* constBuffers, int bufferCounts)
+    {
+        m_constBuffers = constBuffers;
+        m_constBuffersCounts = bufferCounts;
+    }
+
+    inline void setInResources(InResourceTable* inTables, int inTablesCounts)
+    {
+        m_inTables = inTables;
+        m_inTablesCounts = inTablesCounts;
+    }
+
+    inline void setOutResources(OutResourceTable* outTables, int outTablesCounts)
+    {
+        m_outTables = outTables;
+        m_outTablesCounts = outTablesCounts;
+    }
+
+    inline void setDispatch(const char* debugNameMarker, int x, int y, int z)
+    {
+        m_debugName = debugNameMarker;
+        m_x = x;
+        m_y = y;
+        m_z = z;
+    }
+
+private:
+    ShaderHandle m_shader;
+
+    const Buffer* m_constBuffers;
+    int m_constBuffersCounts = 0;
+
+    const InResourceTable* m_inTables;
+    int m_inTablesCounts = 0;
+
+    const OutResourceTable* m_outTables;
+    int m_outTablesCounts = 0;
+
+    const char* m_debugName = "";
+    int m_x = 1;
+    int m_y = 1;
+    int m_z = 1;
+};
+
+class CopyCommand
+{
+    friend class CommandList;
+public:
+    void setResources(ResourceHandle source, ResourceHandle destination)
+    {
+        m_source = source;
+        m_destination = destination;
+    }
+
+private:
+    ResourceHandle m_source;
+    ResourceHandle m_destination;
+};
+
+struct UploadCommand
+{
+    friend class CommandList;
+public:
+    void setData(const char* source, int sourceSize, ResourceHandle destination)
+    {
+        m_source = source;
+        m_sourceSize = sourceSize;
+        m_destination = destination;
+    }
+
+private:
+    const char* m_source;
+    int m_sourceSize;
+    ResourceHandle m_destination;
+};
+
+struct DownloadCommand
+{
+    friend class CommandList;
+public:
+    void setData(ResourceHandle source)
+    {
+        ResourceHandle m_source;
+    }
+
+private:
+    ResourceHandle m_source;
+};
 
 class InternalCommandList;
-
-class GpuCommand
-{
-protected:
-    GpuCommand(MemOffset offset, InternalCommandList* parent)
-    : m_offset(offset), m_parent(parent)
-    {
-    }
-    
-    GpuCommand()
-    : m_offset(0ull), m_parent(nullptr)
-    {
-    }
-
-    template<typename AbiType>
-    AbiType* data()
-    {
-        return (AbiType*)(m_buffer->data() + m_offset);
-    }
-
-    MemOffset m_offset;
-    InternalCommandList* m_parent;
-};
-
-class ComputeCommand : private GpuCommand
-{
-    friend class CommandList;
-public:
-    inline void setConstants(Buffer constBuffer) { setConstants(&constBuffer, 1); }
-    inline void setInResources(InResourceTable inTables) { setInResources(&inTables, 1); }
-    inline void setOutResources(OutResourceTable outTables) { setOutResources(&outTables, 1); }
-    void setShader(ShaderHandle shader);
-    void setConstants(Buffer* constBuffers, int bufferCounts);
-    void setInResources(InResourceTable* inTables, int inputTablesCount);
-    void setOutResources(OutResourceTable* outTables, int inputTablesCount);
-    void setDispatch(const char* debugNameMarker, int x, int y, int z);
-
-private:
-    int m_inputResourcesParamIndex = -1;
-    int m_outputResourcesParamIndex = -1;
-    int m_constantBuffersParamIndex = -1;
-    int m_debugNameMarkerParamIndex = -1;
-    ComputeCommand() {}
-    ComputeCommand(MemOffset offset, InternalCommandList* parent);
-};
-
-class CopyCommand : private GpuCommand
-{
-    friend class CommandList;
-public:
-    void setResources(ResourceHandle source, ResourceHandle destination);
-
-private:
-    CopyCommand() {}
-    CopyCommand(MemOffset offset, InternalCommandList* parent)
-        : GpuCommand(offset, parent)
-    {
-    }
-};
-
-struct UploadCommand : private GpuCommand
-{
-    friend class CommandList;
-public:
-    void setData(const void* source, int sourceSize, ResourceHandle destination);
-
-private:
-    UploadCommand() {}
-    UploadCommand(MemOffset offset, InternalCommandList* parent);
-
-    int m_sourceParamIndex = -1;
-};
-
-struct DownloadCommand : private GpuCommand
-{
-    friend class CommandList;
-public:
-    void setData(ResourceHandle source);
-
-private:
-    DownloadCommand() {}
-    DownloadCommand(MemOffset offset, InternalCommandList* parent)
-    : GpuCommand(offset, parent)
-    {
-    }
-};
 
 class CommandList
 {
@@ -105,18 +115,18 @@ public:
     CommandList();
     ~CommandList();
 
-    ComputeCommand   addComputeCommand();
-    CopyCommand      addCopyCommand();
-    UploadCommand    addUploadCommand();
-    DownloadCommand  addDownloadCommand();
+    void writeCommand(const ComputeCommand& cmd);
+    void writeCommand(const CopyCommand& cmd);
+    void writeCommand(const UploadCommand& cmd);
+    void writeCommand(const DownloadCommand& cmd);
+    void finalize();
 
     unsigned char* data();
     size_t size() const;
-    void close();
 
 private:
     template<typename AbiType>
-    MemOffset allocate();
+    AbiType& allocate();
     InternalCommandList& m_internal;
 };
 
