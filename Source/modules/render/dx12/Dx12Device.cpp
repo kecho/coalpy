@@ -168,6 +168,30 @@ void Dx12Device::release(ResourceTable table)
     m_resources->release(table);
 }
 
+CommandBundleCompileResult Dx12Device::compile(CommandList* commandLists, int listCounts)
+{
+    return {};
+}
+
+ScheduleStatus Dx12Device::schedule(CommandListBundle bundle, ScheduleFlags flags = ScheduleFlags_ReleaseOnSchedule)
+{
+    return {};
+}
+
+WaitBundleStatus Dx12Device::waitOnCpu(CommandListBundle bundle, int milliseconds)
+{
+    return {};
+}
+
+DownloadStatus Dx12Device::getDownloadStatus(CommandListBundle bundle, ResourceHandle handle)
+{
+    return {};
+}
+
+void Dx12Device::release(CommandListBundle bundle)
+{
+}
+
 void Dx12Device::enumerate(std::vector<DeviceInfo>& outputList)
 {
     CardInfos* cardInfos = &g_cardInfos;

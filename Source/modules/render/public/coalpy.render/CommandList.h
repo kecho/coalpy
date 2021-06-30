@@ -100,7 +100,7 @@ struct DownloadCommand
 public:
     void setData(ResourceHandle source)
     {
-        ResourceHandle m_source;
+        m_source = source;
     }
 
 private:

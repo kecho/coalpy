@@ -30,8 +30,14 @@ public:
     virtual Buffer  createBuffer (const BufferDesc& config) override;
     virtual InResourceTable   createInResourceTable  (const ResourceTableDesc& config) override;
     virtual OutResourceTable  createOutResourceTable (const ResourceTableDesc& config) override;
+
+    virtual CommandBundleCompileResult compile(CommandList* commandLists, int listCounts) override;
+    virtual ScheduleStatus  schedule(CommandListBundle bundle, ScheduleFlags flags) override;
+    virtual WaitBundleStatus waitOnCpu(CommandListBundle bundle, int milliseconds = -1) override;
+    virtual DownloadStatus getDownloadStatus(CommandListBundle bundle, ResourceHandle handle) override;
     virtual void release(ResourceHandle resource) override;
     virtual void release(ResourceTable table) override;
+    virtual void release(CommandListBundle bundle) override;
 
     ID3D12Device2& device() { return *m_device; }
     Dx12Queues& queues() { return *m_queues; }
