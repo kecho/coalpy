@@ -57,8 +57,8 @@ public:
     virtual void release(CommandListBundle bundle) = 0;
 
     virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) = 0;
-    virtual CommandBundleCompileResult compile(CommandList* commandLists, int listCounts) = 0;
-    virtual ScheduleStatus   schedule(CommandListBundle bundle, ScheduleFlags flags = ScheduleFlags_ReleaseOnSchedule) = 0;
+    virtual CommandBundleCompileResult compile(CommandList** commandLists, int listCounts) = 0;
+    virtual ScheduleStatus   schedule(CommandListBundle bundle, ScheduleFlags flags = ScheduleFlags_None) = 0;
     virtual WaitBundleStatus waitOnCpu(CommandListBundle bundle, int milliseconds = -1) = 0;
     virtual DownloadStatus getDownloadStatus(CommandListBundle bundle, ResourceHandle handle) = 0;
 };

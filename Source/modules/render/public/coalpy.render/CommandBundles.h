@@ -33,7 +33,8 @@ enum class DownloadResult
 
 enum ScheduleFlags : int
 {
-    ScheduleFlags_ReleaseOnSchedule = 1 << 0,
+    ScheduleFlags_None = 0,
+    ScheduleFlags_ManualRelease = 1 << 0,
 };
 
 struct ScheduleStatus

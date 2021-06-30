@@ -5,6 +5,7 @@
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.render/IDevice.h>
 #include <coalpy.render/CommandList.h>
+#include <iostream>
 
 using namespace coalpy::render;
 
@@ -45,6 +46,7 @@ namespace coalpy
         virtual TestContext* createContext() override
         {
             auto ctx = new RenderTestContext();
+            auto resourceDir = ApplicationContext::get().resourceRootDir();
 
             {
                 TaskSystemDesc desc;
@@ -57,7 +59,7 @@ namespace coalpy
                 ctx->fs = IFileSystem::create(desc);
             }
 
-            ctx->rootResourceDir = ApplicationContext::get().resourceRootDir();
+            ctx->rootResourceDir = resourceDir;
 
             return ctx;
         }
@@ -67,6 +69,7 @@ namespace coalpy
             auto testContext = static_cast<RenderTestContext*>(context);
             CPY_ASSERT(testContext->db == nullptr);
             CPY_ASSERT(testContext->device == nullptr);
+            delete testContext->db;
             delete testContext->fs;
             delete testContext->ts;
             delete testContext;
@@ -80,6 +83,10 @@ namespace coalpy
 
         {
             ShaderDbDesc desc = { rootResourceDir.c_str(), fs, ts };
+            desc.onErrorFn = [](ShaderHandle handle, const char* shaderName, const char* shaderErrorStr)
+            {
+                std::cerr << shaderName << ":" << shaderErrorStr << std::endl;
+            };
             db = IShaderDb::create(desc);
         }
 
@@ -288,6 +295,79 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testRenderMemoryDownload(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+        IShaderDb& db = *renderTestCtx.db;
+
+        const char* writeNumberComputeSrc = R"(
+            RWBuffer<uint> output : register(u0);
+
+            [numthreads(64,1,1)]
+            void csMain(uint3 dti : SV_DispatchThreadID)
+            {
+                output[dti.x] = dti.x;
+            }
+        )";
+
+        ShaderInlineDesc shaderDesc{ ShaderType::Compute, "setNumsShader", "csMain", writeNumberComputeSrc };
+        ShaderHandle shader = db.requestCompile(shaderDesc);
+        db.resolve(shader);
+        CPY_ASSERT(db.isValid(shader));
+
+        int totalElements = 128;
+        BufferDesc buffDesc;
+        buffDesc.format = Format::RGBA_32_UINT;
+        buffDesc.elementCount = totalElements;
+        Buffer buff = device.createBuffer(buffDesc);
+
+        ResourceTableDesc tableDesc;
+        tableDesc.resources = &buff;
+        tableDesc.resourcesCount = 1;
+        OutResourceTable outTable = device.createOutResourceTable(tableDesc);
+        CommandList commandList;
+        {
+            ComputeCommand cmd;
+            cmd.setShader(shader);
+            cmd.setOutResources(&outTable, 1);
+            cmd.setDispatch("SetNumers", totalElements / 64, 1, 1);
+            commandList.writeCommand(cmd);
+        }
+
+        {
+            DownloadCommand downloadCmd;
+            downloadCmd.setData(buff);
+            commandList.writeCommand(downloadCmd);
+        }
+
+        CommandList* lists[] = { &commandList };
+        auto result = device.compile(lists, 1);
+        CPY_ASSERT(result.success());
+
+        auto scheduleResult = device.schedule(result.bundle, ScheduleFlags_ManualRelease); 
+        CPY_ASSERT(scheduleResult.success());
+
+        auto resultStatus = device.waitOnCpu(result.bundle);
+        CPY_ASSERT(resultStatus.success());
+
+        auto downloadStatus = device.getDownloadStatus(result.bundle, buff);
+        CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
+        CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(unsigned int) * totalElements);
+        if (downloadStatus.downloadPtr != nullptr && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements)
+        {
+            auto* ptr = (unsigned int*)downloadStatus.downloadPtr;
+            for (int i = 0; i < totalElements; ++i)
+                CPY_ASSERT(ptr[i] == i);
+        }
+
+        device.release(result.bundle);
+        device.release(outTable);
+        device.release(buff);
+        renderTestCtx.end();
+    }
+
     //registration of tests
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
@@ -296,7 +376,8 @@ namespace coalpy
             { "createBuffer",  testCreateBuffer },
             { "createTexture", testCreateTexture },
             { "createTables",  testCreateTables },
-            { "commandListAbi",  testCommandListAbi }
+            { "commandListAbi",  testCommandListAbi },
+            { "renderMemoryDownload",  testRenderMemoryDownload }
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

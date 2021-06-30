@@ -31,7 +31,7 @@ public:
     virtual InResourceTable   createInResourceTable  (const ResourceTableDesc& config) override;
     virtual OutResourceTable  createOutResourceTable (const ResourceTableDesc& config) override;
 
-    virtual CommandBundleCompileResult compile(CommandList* commandLists, int listCounts) override;
+    virtual CommandBundleCompileResult compile(CommandList** commandLists, int listCounts) override;
     virtual ScheduleStatus  schedule(CommandListBundle bundle, ScheduleFlags flags) override;
     virtual WaitBundleStatus waitOnCpu(CommandListBundle bundle, int milliseconds = -1) override;
     virtual DownloadStatus getDownloadStatus(CommandListBundle bundle, ResourceHandle handle) override;

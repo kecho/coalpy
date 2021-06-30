@@ -168,12 +168,12 @@ void Dx12Device::release(ResourceTable table)
     m_resources->release(table);
 }
 
-CommandBundleCompileResult Dx12Device::compile(CommandList* commandLists, int listCounts)
+CommandBundleCompileResult Dx12Device::compile(CommandList** commandLists, int listCounts)
 {
     return {};
 }
 
-ScheduleStatus Dx12Device::schedule(CommandListBundle bundle, ScheduleFlags flags = ScheduleFlags_ReleaseOnSchedule)
+ScheduleStatus Dx12Device::schedule(CommandListBundle bundle, ScheduleFlags flags)
 {
     return {};
 }
