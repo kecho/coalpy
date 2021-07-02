@@ -4,7 +4,7 @@
 #include <coalpy.core/SmartPtr.h>
 #include <coalpy.render/Resources.h>
 #include <coalpy.render/IDisplay.h>
-#include <coalpy.render/CommandBundles.h>
+#include <coalpy.render/CommandDefs.h>
 #include <string>
 #include <vector>
 
@@ -54,13 +54,12 @@ public:
 
     virtual void release(ResourceHandle resource) = 0;
     virtual void release(ResourceTable table) = 0;
-    virtual void release(CommandListBundle bundle) = 0;
+    virtual void release(WorkHandle handle) = 0;
 
     virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) = 0;
-    virtual CommandBundleCompileResult compile(CommandList** commandLists, int listCounts) = 0;
-    virtual ScheduleStatus   schedule(CommandListBundle bundle, ScheduleFlags flags = ScheduleFlags_None) = 0;
-    virtual WaitBundleStatus waitOnCpu(CommandListBundle bundle, int milliseconds = -1) = 0;
-    virtual DownloadStatus getDownloadStatus(CommandListBundle bundle, ResourceHandle handle) = 0;
+    virtual ScheduleStatus schedule(CommandList** commandLists, int listCounts, ScheduleFlags flags = ScheduleFlags_None) = 0;
+    virtual WaitStatus waitOnCpu(WorkHandle bundle, int milliseconds = 0) = 0;
+    virtual DownloadStatus getDownloadStatus(WorkHandle workHandle, ResourceHandle handle) = 0;
 };
 
 

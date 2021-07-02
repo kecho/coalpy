@@ -7,15 +7,11 @@ namespace coalpy
 namespace render
 {
 
-struct CommandListBundle : GenericHandle<unsigned int> { };
-
-enum class CompileListErrorType
-{
-    Ok
-};
+struct WorkHandle : GenericHandle<unsigned int> { };
 
 enum class ScheduleErrorType
 {
+    CompilationError,
     Ok
 };
 
@@ -34,25 +30,18 @@ enum class DownloadResult
 enum ScheduleFlags : int
 {
     ScheduleFlags_None = 0,
-    ScheduleFlags_ManualRelease = 1 << 0,
+    ScheduleFlags_GetWorkHandle = 1 << 0,
 };
 
 struct ScheduleStatus
 {
     bool success() const { return type == ScheduleErrorType::Ok; }
+    WorkHandle workHandle;
     ScheduleErrorType type;
     std::string message;
 };
 
-struct CommandBundleCompileResult
-{
-    bool success() const { return type == CompileListErrorType::Ok; }
-    CommandListBundle bundle;
-    CompileListErrorType type;
-    std::string message;
-};
-
-struct WaitBundleStatus
+struct WaitStatus
 {
     bool success() const { return type == WaitErrorType::Ok; }
     WaitErrorType type;

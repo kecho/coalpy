@@ -80,3 +80,26 @@ struct ResourceTableDesc
 }
 
 }
+
+namespace std
+{
+
+template<>
+struct hash<coalpy::render::ResourceHandle>
+{
+    size_t operator()(const coalpy::render::ResourceHandle h) const
+    {
+        return (size_t)h.handleId;
+    }
+};
+
+template<>
+struct hash<coalpy::render::ResourceTable>
+{
+    size_t operator()(const coalpy::render::ResourceTable h) const
+    {
+        return (size_t)h.handleId;
+    }
+};
+
+}

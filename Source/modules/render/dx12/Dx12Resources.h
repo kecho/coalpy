@@ -18,7 +18,9 @@ class Dx12Device;
 class Dx12Resource : public RefCounted
 {
 public:
-    Dx12Resource(Dx12Device& device, const ResourceDesc& config,
+    Dx12Resource(
+        Dx12Device& device,
+        const ResourceDesc& config,
         bool canDenyShaderResources = true);
 
     virtual ~Dx12Resource();

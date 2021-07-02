@@ -211,7 +211,6 @@ Dx12Compiler::Dx12Compiler(const ShaderDbDesc& desc)
 
 Dx12Compiler::~Dx12Compiler()
 {
-    //DxcPool::collectGarbage();
 }
 
 void Dx12Compiler::compileShader(const Dx12CompileArgs& args)

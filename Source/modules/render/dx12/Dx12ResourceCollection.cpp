@@ -6,6 +6,7 @@
 
 #include "Dx12ResourceCollection.h"
 #include "Dx12Device.h"
+#include "WorkBundleDb.h"
 #include <coalpy.core/Assert.h>
 #include <vector>
 
@@ -14,13 +15,16 @@ namespace coalpy
 namespace render
 {
 
-Dx12ResourceCollection::Dx12ResourceCollection(Dx12Device& device)
+Dx12ResourceCollection::Dx12ResourceCollection(Dx12Device& device, WorkBundleDb& workDb)
 : m_device(device)
+, m_workDb(workDb)
 {
 }
 
 Dx12ResourceCollection::~Dx12ResourceCollection()
 {
+    m_workDb.clearAllTables();
+    m_workDb.clearAllResources();
 }
 
 Texture Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3D12Resource* resource)
@@ -37,6 +41,7 @@ Texture Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3D12Res
     if (resource)
         outPtr->resource->acquireD3D12Resource(resource);
     outPtr->resource->init();
+    m_workDb.registerResource(resHandle, ResourceGpuState::Default);
     return Texture { resHandle.handleId };
 }
 
@@ -54,6 +59,7 @@ Buffer Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12Resour
     if (resource)
         outPtr->resource->acquireD3D12Resource(resource);
     outPtr->resource->init();
+    m_workDb.registerResource(resHandle, ResourceGpuState::Default);
     return Buffer { resHandle.handleId };
 }
 
@@ -96,12 +102,14 @@ ResourceTable Dx12ResourceCollection::createResourceTable(const ResourceTableDes
 InResourceTable Dx12ResourceCollection::createInResourceTable(const ResourceTableDesc& desc)
 {
     ResourceTable handle = createResourceTable(desc, false);
+    m_workDb.registerTable(handle, desc.resources, desc.resourcesCount, false);
     return InResourceTable { handle.handleId };
 }
 
 OutResourceTable Dx12ResourceCollection::createOutResourceTable(const ResourceTableDesc& desc)
 {
     ResourceTable handle = createResourceTable(desc, true);
+    m_workDb.registerTable(handle, desc.resources, desc.resourcesCount, true);
     return OutResourceTable { handle.handleId };
 }
 
@@ -114,6 +122,7 @@ void Dx12ResourceCollection::release(ResourceHandle handle)
         return;
     (*m_resources[handle]) = {};
     m_resources.free(handle, false);
+    m_workDb.unregisterResource(handle);
 }
 
 void Dx12ResourceCollection::release(ResourceTable handle)
@@ -124,6 +133,7 @@ void Dx12ResourceCollection::release(ResourceTable handle)
     if (!isValid)
         return;
     m_resourceTables.free(handle);
+    m_workDb.unregisterTable(handle);
 }
 
 }

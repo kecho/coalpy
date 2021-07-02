@@ -174,7 +174,7 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
 
     m_descriptors = new Dx12DescriptorPool(*this);
     m_queues = new Dx12Queues(*this);
-    m_resources = new Dx12ResourceCollection(*this);
+    m_resources = new Dx12ResourceCollection(*this, m_workDb);
 
     m_computeRootSignature = createComputeRootSignature(*m_device);
 
@@ -237,28 +237,14 @@ void Dx12Device::release(ResourceTable table)
     m_resources->release(table);
 }
 
-CommandBundleCompileResult Dx12Device::compile(CommandList** commandLists, int listCounts)
+WaitStatus Dx12Device::waitOnCpu(WorkHandle handle, int milliseconds)
 {
     return {};
 }
 
-ScheduleStatus Dx12Device::schedule(CommandListBundle bundle, ScheduleFlags flags)
+DownloadStatus Dx12Device::getDownloadStatus(WorkHandle bundle, ResourceHandle handle)
 {
     return {};
-}
-
-WaitBundleStatus Dx12Device::waitOnCpu(CommandListBundle bundle, int milliseconds)
-{
-    return {};
-}
-
-DownloadStatus Dx12Device::getDownloadStatus(CommandListBundle bundle, ResourceHandle handle)
-{
-    return {};
-}
-
-void Dx12Device::release(CommandListBundle bundle)
-{
 }
 
 void Dx12Device::enumerate(std::vector<DeviceInfo>& outputList)

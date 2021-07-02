@@ -343,16 +343,13 @@ namespace coalpy
         }
 
         CommandList* lists[] = { &commandList };
-        auto result = device.compile(lists, 1);
+        auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle); 
         CPY_ASSERT(result.success());
 
-        auto scheduleResult = device.schedule(result.bundle, ScheduleFlags_ManualRelease); 
-        CPY_ASSERT(scheduleResult.success());
+        auto waitStatus = device.waitOnCpu(result.workHandle);
+        CPY_ASSERT(waitStatus.success());
 
-        auto resultStatus = device.waitOnCpu(result.bundle);
-        CPY_ASSERT(resultStatus.success());
-
-        auto downloadStatus = device.getDownloadStatus(result.bundle, buff);
+        auto downloadStatus = device.getDownloadStatus(result.workHandle, buff);
         CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
         CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(unsigned int) * totalElements);
         if (downloadStatus.downloadPtr != nullptr && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements)
@@ -362,7 +359,7 @@ namespace coalpy
                 CPY_ASSERT(ptr[i] == i);
         }
 
-        device.release(result.bundle);
+        device.release(result.workHandle);
         device.release(outTable);
         device.release(buff);
         renderTestCtx.end();

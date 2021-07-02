@@ -12,12 +12,13 @@ namespace coalpy
 namespace render
 {
 
+class WorkBundleDb;
 class Dx12Device;
 
 class Dx12ResourceCollection
 {
 public:
-    Dx12ResourceCollection(Dx12Device& device);
+    Dx12ResourceCollection(Dx12Device& device, WorkBundleDb& workDb);
     ~Dx12ResourceCollection();
 
     Texture createTexture(const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr);
@@ -39,6 +40,7 @@ private:
     };
 
     Dx12Device& m_device;
+    WorkBundleDb& m_workDb;
     std::mutex m_resourceMutex;
     HandleContainer<ResourceHandle, SmartPtr<ResourceContainer>> m_resources;
     HandleContainer<ResourceTable , SmartPtr<Dx12ResourceTable>> m_resourceTables;
