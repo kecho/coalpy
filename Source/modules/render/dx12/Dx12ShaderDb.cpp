@@ -12,10 +12,12 @@
 
 #include "Dx12ShaderDb.h" 
 #include "Dx12Compiler.h"
+#include "Dx12Device.h"
 #include <coalpy.core/ByteBuffer.h>
 
 #include <iostream>
 #include <windows.h>
+#include <d3d12.h>
 #include <dxc/inc/dxcapi.h>
 
 namespace coalpy
@@ -368,9 +370,30 @@ void Dx12ShaderDb::resolve(ShaderHandle handle)
         {
             std::shared_lock lock(m_shadersMutex);
             delete compileState;
+            
+            if (m_parentDevice != nullptr && shaderState->recipe.type == ShaderType::Compute)
+            {
+                bool psoResult = updateComputePipelineState(*shaderState);
+                if (!psoResult && m_desc.onErrorFn != nullptr)
+                    m_desc.onErrorFn(handle, shaderState->debugName.c_str(), "Compute PSO creation failed. Check D3D12 error log.");
+            }
+
             shaderState->compiling = false;
         }
     }
+}
+
+bool Dx12ShaderDb::updateComputePipelineState(ShaderState& state)
+{
+    CPY_ASSERT(m_parentDevice != nullptr);
+    D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
+    desc.pRootSignature = &m_parentDevice->defaultComputeRootSignature();
+    desc.CS.pShaderBytecode = state.shaderBlob->GetBufferPointer();
+    desc.CS.BytecodeLength = state.shaderBlob->GetBufferSize();
+    ID3D12PipelineState* pso;
+    HRESULT result = m_parentDevice->device().CreateComputePipelineState(&desc, DX_RET(pso));
+    state.csPso = pso;
+    return result == S_OK;
 }
 
 bool Dx12ShaderDb::isValid(ShaderHandle handle) const

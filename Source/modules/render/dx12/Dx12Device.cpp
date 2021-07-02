@@ -20,6 +20,7 @@
 #include "Dx12Device.h"
 #include "Dx12Queues.h"
 #include "Dx12Display.h"
+#include "Dx12ShaderDb.h"
 #include "Dx12ResourceCollection.h"
 #include "Dx12DescriptorPool.h"
 
@@ -81,12 +82,65 @@ void shutdownCardInfos(CardInfos& cardInfos)
         cardInfos = CardInfos();
 }
 
+ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device)
+{
+    static const int totalNumberTables = (int)Dx12Device::MaxNumTables * (int)Dx12Device::TableTypes::Count;
+    D3D12_ROOT_PARAMETER1 rootParams[totalNumberTables];
+    D3D12_DESCRIPTOR_RANGE1 ranges[totalNumberTables];
+
+    static const D3D12_DESCRIPTOR_RANGE_TYPE g_rangeTypes[(int)Dx12Device::TableTypes::Count] = {
+        D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+        D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
+        D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
+        D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER
+    };
+
+    for (int tableTypeId = 0; tableTypeId < (int)Dx12Device::TableTypes::Count; ++tableTypeId)
+    {
+        for (int tableId = 0; tableId < (int)Dx12Device::MaxNumTables; ++tableId)
+        {
+            auto tableType = (Dx12Device::TableTypes)tableTypeId;
+            int tableIndex = tableTypeId * (int)Dx12Device::MaxNumTables + tableId;
+            auto& rootParam = rootParams[tableIndex];
+            rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+
+            rootParam.DescriptorTable.NumDescriptorRanges = 1;
+            {
+                auto& typeRange = ranges[tableIndex];
+                typeRange.RangeType = g_rangeTypes[tableTypeId];
+                typeRange.NumDescriptors = UINT_MAX;
+                typeRange.BaseShaderRegister = 0;
+                typeRange.RegisterSpace = tableId;
+                typeRange.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE; 
+                typeRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+                rootParam.DescriptorTable.pDescriptorRanges = &typeRange;
+            }
+
+            rootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+        }
+    }
+
+    D3D12_VERSIONED_ROOT_SIGNATURE_DESC desc;
+    desc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
+    desc.Desc_1_1 = {};
+    desc.Desc_1_1.NumParameters = totalNumberTables;
+    desc.Desc_1_1.pParameters = rootParams;
+    desc.Desc_1_1.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
+
+    ID3D12RootSignature* outRootSignature = nullptr;
+    SmartPtr<ID3DBlob> rootSignatureBlob;
+    DX_OK(D3D12SerializeVersionedRootSignature(&desc, (ID3DBlob**)&rootSignatureBlob, nullptr));
+    DX_OK(device.CreateRootSignature(0u, rootSignatureBlob->GetBufferPointer(), rootSignatureBlob->GetBufferSize(), DX_RET(outRootSignature)));
+    return outRootSignature;
+}
+
 }
 
 Dx12Device::Dx12Device(const DeviceConfig& config)
 : TDevice<Dx12Device>(config)
 , m_debugLayer(nullptr)
 , m_device(nullptr)
+, m_shaderDb(nullptr)
 {
     m_info = {};
     cacheCardInfos(g_cardInfos);
@@ -121,6 +175,15 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
     m_descriptors = new Dx12DescriptorPool(*this);
     m_queues = new Dx12Queues(*this);
     m_resources = new Dx12ResourceCollection(*this);
+
+    m_computeRootSignature = createComputeRootSignature(*m_device);
+
+    if (config.shaderDb)
+    {
+        m_shaderDb = static_cast<Dx12ShaderDb*>(config.shaderDb);
+        CPY_ASSERT_MSG(m_shaderDb->parentDevice() == nullptr, "shader database can only belong to 1 and only 1 device");
+        m_shaderDb->setParentDevice(this);
+    }
 }
 
 Dx12Device::~Dx12Device()
@@ -134,6 +197,12 @@ Dx12Device::~Dx12Device()
 
     if (m_debugLayer)
         m_debugLayer->Release();
+
+    if (m_computeRootSignature)
+        m_computeRootSignature->Release();
+
+    if (m_shaderDb && m_shaderDb->parentDevice() == this)
+        m_shaderDb->setParentDevice(nullptr);
 
     shutdownCardInfos(g_cardInfos);
 }

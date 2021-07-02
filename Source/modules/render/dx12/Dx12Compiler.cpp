@@ -218,9 +218,9 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
 {
     //latest and greatest shader model 6.6 baby!!
     static const wchar_t* s_targets[ShaderType::Count] = {
-        L"vs_6_6", //Vertex
-        L"ps_6_6", //Pixel
-        L"cs_6_6"  //Compute
+        L"vs_6_5", //Vertex
+        L"ps_6_5", //Pixel
+        L"cs_6_5"  //Compute
     };
 
     DxcCompilerScope scope;

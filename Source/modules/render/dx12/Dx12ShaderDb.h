@@ -7,6 +7,8 @@
 #include <atomic>
 #include <set>
 
+struct ID3D12PipelineState;
+
 namespace coalpy
 {
 
@@ -64,6 +66,11 @@ namespace std
 namespace coalpy
 {
 
+namespace render
+{
+    class Dx12Device;
+}
+
 class Dx12ShaderDb : public IShaderDb
 {
 public:
@@ -75,6 +82,9 @@ public:
     virtual ~Dx12ShaderDb();
 
     void requestRecompile(ShaderHandle handle);
+
+    void setParentDevice(render::Dx12Device* device) { m_parentDevice = device; }
+    render::Dx12Device* parentDevice() const { return m_parentDevice; }
 
 private:
     void prepareIoJob(Dx12CompileState& state, const std::string& resolvedPath);
@@ -101,7 +111,10 @@ private:
         IDxcBlob* shaderBlob;
         std::atomic<bool> compiling;
         Dx12CompileState* compileState;
+        std::atomic<ID3D12PipelineState*> csPso;
     };
+
+    bool updateComputePipelineState(ShaderState& state);
 
     ShaderState& createShaderState(ShaderHandle& outHandle);
 
@@ -116,6 +129,7 @@ private:
     using ShaderHandleToFilesMap = std::unordered_map<ShaderHandle, std::set<Dx12FileLookup>>;
     FileToShaderHandlesMap m_fileToShaders;
     ShaderHandleToFilesMap m_shadersToFiles;
+    render::Dx12Device* m_parentDevice = nullptr;
 };
 
 }
