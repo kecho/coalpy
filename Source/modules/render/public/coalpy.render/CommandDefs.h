@@ -11,7 +11,9 @@ struct WorkHandle : GenericHandle<unsigned int> { };
 
 enum class ScheduleErrorType
 {
-    CompilationError,
+    BadTableInfo,
+    ResourceStateNotFound,
+    CorruptedCommandListSentinel,
     Ok
 };
 

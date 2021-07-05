@@ -17,8 +17,8 @@ namespace render
 
 enum class ResourceGpuState
 {
-    CurrentState,
     Default,
+    IndirectArgs,
     Srv,
     Uav,
     Cbv,
@@ -36,13 +36,12 @@ enum class BarrierType
 struct ResourceBarrier
 {
     ResourceHandle resource;
-    ResourceGpuState prevState = ResourceGpuState::CurrentState;
-    ResourceGpuState postState = ResourceGpuState::CurrentState;
+    ResourceGpuState prevState = ResourceGpuState::Default;
+    ResourceGpuState postState = ResourceGpuState::Default;
     BarrierType type = BarrierType::Immediate;
-    int subresourceIndex = 0;
 };
 
-struct BarrierSchedule
+struct CommandInfo
 {
     MemOffset commandOffset = {};
     std::vector<ResourceBarrier> preBarrier;
@@ -52,13 +51,27 @@ struct BarrierSchedule
 struct ProcessedList
 {
     int listIndex = 0;
-    std::vector<BarrierSchedule> barrierSchedules;
+    std::vector<CommandInfo> commandSchedule;
 };
 
 struct WorkBundle
 {
     std::vector<ProcessedList> processedLists;
 };
+
+struct WorkTableInfo
+{
+    bool isUav;
+    std::vector<ResourceHandle> resources;
+};
+
+struct WorkResourceInfo
+{
+    ResourceGpuState gpuState = ResourceGpuState::Default;
+};
+
+using WorkTableInfos = std::unordered_map<ResourceTable,  WorkTableInfo>;
+using WorkResourceInfos = std::unordered_map<ResourceHandle, WorkResourceInfo>;
 
 class WorkBundleDb
 {
@@ -81,19 +94,8 @@ private:
     std::mutex m_workMutex;
     HandleContainer<WorkHandle, WorkBundle> m_works;
 
-    struct TableInfo
-    {
-        bool isUav;
-        std::vector<ResourceHandle> resources;
-    };
-
-    struct ResourceInfo
-    {
-        ResourceGpuState gpuState = ResourceGpuState::Default;
-    };
-
-    std::unordered_map<ResourceTable,  TableInfo>    m_tables;
-    std::unordered_map<ResourceHandle, ResourceInfo> m_resources;
+    WorkTableInfos m_tables;
+    WorkResourceInfos m_resources;
 };
 
 }

@@ -14,6 +14,7 @@ typedef uint64_t MemSize;
 enum class AbiCmdTypes : int
 {
     CommandListSentinel = 'CMDL',
+    CommandListEndSentinel = 'CMDE',
     Compute = 'COMP', 
     Copy = 'COPY', 
     Upload = 'UPLD',
@@ -26,6 +27,7 @@ struct AbiPtr
     MemOffset offset = (MemOffset)-1;
     const size_t stride() const { return sizeof(ElementType); }
     ElementType* data(unsigned char* buffer) { return (ElementType*)(buffer + offset); }
+    const ElementType* data(const unsigned char* buffer) const { return (const ElementType*)(buffer + offset); }
 };
 
 struct AbiCommandListHeader

@@ -3,7 +3,9 @@
 #include <d3d12.h>
 #include <coalpy.core/RefCounted.h>
 #include <coalpy.render/Resources.h>
+#include <coalpy.core/Assert.h>
 #include "Dx12DescriptorPool.h"
+#include "WorkBundleDb.h"
 #include <string>
 #include <vector>
 #include <functional>
@@ -15,6 +17,29 @@ namespace render
 
 class Dx12Device;
 
+inline ResourceGpuState getGpuState(D3D12_RESOURCE_STATES state)
+{
+    switch (state)
+    {
+        case D3D12_RESOURCE_STATE_COMMON:
+            return ResourceGpuState::Default;
+        case D3D12_RESOURCE_STATE_UNORDERED_ACCESS:
+            return ResourceGpuState::Uav;
+        case D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE:
+            return ResourceGpuState::Srv;
+        case D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT:
+            return ResourceGpuState::IndirectArgs;
+        case D3D12_RESOURCE_STATE_COPY_DEST:
+            return ResourceGpuState::CopyDst;
+        case D3D12_RESOURCE_STATE_COPY_SOURCE:
+            return ResourceGpuState::CopySrc;
+        case D3D12_RESOURCE_STATE_GENERIC_READ:
+            return ResourceGpuState::Cbv;
+    }
+    CPY_ASSERT_FMT(false, "D3d12 state used is not handled in coalpy's rendering", state);
+    return ResourceGpuState::Default;
+}
+
 class Dx12Resource : public RefCounted
 {
 public:
@@ -25,7 +50,8 @@ public:
 
     virtual ~Dx12Resource();
 
-    D3D12_RESOURCE_STATES defaultState() const { return m_defaultState; }
+    D3D12_RESOURCE_STATES defaultD3d12State() const { return m_defaultState; }
+    ResourceGpuState defaultGpuState() const { return getGpuState(defaultD3d12State()); }
     void acquireD3D12Resource(ID3D12Resource* resource);
     ID3D12Resource& d3dResource() const { return *m_data.resource; }
     ID3D12Resource& d3dResource() { return *m_data.resource; }

@@ -83,7 +83,7 @@ bool Dx12Resource::init()
     {
         HRESULT r = m_device.device().CreateCommittedResource(
             &m_data.heapProps, m_data.heapFlags, &m_data.resDesc,
-	    	defaultState(), nullptr, DX_RET(m_data.resource));
+	    	defaultD3d12State(), nullptr, DX_RET(m_data.resource));
         CPY_ASSERT_MSG(r == S_OK, "CreateCommittedResource has failed");
         if (r != S_OK)
             return false;

@@ -63,6 +63,9 @@ void CommandList::finalize()
     if (m_internal.closed)
         return;
 
+    int endSentinel = (int)AbiCmdTypes::CommandListEndSentinel;
+    m_internal.buffer.append(&endSentinel);
+
     for (auto& pendingMem : m_internal.pendingMemory)
     {
         MemOffset currOffset = (MemOffset)m_internal.buffer.size();
