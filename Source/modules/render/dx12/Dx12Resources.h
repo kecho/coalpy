@@ -40,6 +40,29 @@ inline ResourceGpuState getGpuState(D3D12_RESOURCE_STATES state)
     return ResourceGpuState::Default;
 }
 
+inline D3D12_RESOURCE_STATES getDx12GpuState(ResourceGpuState state)
+{
+    switch (state)
+    {
+        case ResourceGpuState::Default:
+            return D3D12_RESOURCE_STATE_COMMON;
+        case ResourceGpuState::Uav:
+            return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+        case ResourceGpuState::Srv:
+            return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+        case ResourceGpuState::IndirectArgs:
+            return D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
+        case ResourceGpuState::CopyDst:
+            return D3D12_RESOURCE_STATE_COPY_DEST;
+        case ResourceGpuState::CopySrc:
+            return D3D12_RESOURCE_STATE_COPY_SOURCE;
+        case ResourceGpuState::Cbv:
+            return D3D12_RESOURCE_STATE_GENERIC_READ;
+    }
+    CPY_ASSERT_FMT(false, "D3d12 state used is not handled in coalpy's rendering", state);
+    return D3D12_RESOURCE_STATE_COMMON;
+}
+
 class Dx12Resource : public RefCounted
 {
 public:

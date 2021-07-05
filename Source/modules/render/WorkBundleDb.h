@@ -54,9 +54,19 @@ struct ProcessedList
     std::vector<CommandInfo> commandSchedule;
 };
 
+struct WorkResourceState
+{
+    int listIndex;
+    int commandIndex;
+    ResourceGpuState state;
+};
+
+using ResourceStateMap = std::unordered_map<ResourceHandle, WorkResourceState>;
+
 struct WorkBundle
 {
     std::vector<ProcessedList> processedLists;
+    ResourceStateMap states;
 };
 
 struct WorkTableInfo
@@ -89,6 +99,12 @@ public:
     void registerResource(ResourceHandle handle, ResourceGpuState initialState);
     void unregisterResource(ResourceHandle handle);
     void clearAllResources() { m_resources.clear(); }
+
+    bool writeResourceStates(WorkHandle handle);
+
+    void lock() { m_workMutex.lock(); }
+    WorkBundle& unsafeGetWorkBundle(WorkHandle handle) { return m_works[handle]; }
+    void unlock() { m_workMutex.unlock(); }
 
 private:
     std::mutex m_workMutex;

@@ -23,6 +23,7 @@
 #include "Dx12ShaderDb.h"
 #include "Dx12ResourceCollection.h"
 #include "Dx12DescriptorPool.h"
+#include "Dx12WorkBundle.h"
 
 namespace coalpy
 {
@@ -280,6 +281,22 @@ void Dx12Device::enumerate(std::vector<DeviceInfo>& outputList)
 
     if (cardInfos == &localCardInfos)
         shutdownCardInfos(*cardInfos);
+}
+
+ScheduleStatus Dx12Device::internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle)
+{
+    ScheduleStatus status;
+    status.workHandle = workHandle;
+    
+    Dx12WorkBundle dx12WorkBundle;
+    {
+        m_workDb.lock();
+        WorkBundle& workBundle = m_workDb.unsafeGetWorkBundle(workHandle);
+        dx12WorkBundle.load(workBundle);
+        m_workDb.unlock();
+    }
+
+    return status;
 }
 
 SmartPtr<IDisplay> Dx12Device::createDisplay(const DisplayConfig& config)

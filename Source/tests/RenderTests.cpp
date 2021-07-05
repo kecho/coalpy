@@ -249,17 +249,17 @@ namespace coalpy
         cmdList.finalize();
 
         //Verify
-        unsigned char* data = cmdList.data();
+        const unsigned char* data = cmdList.data();
         MemOffset offset = {};
         {
-            auto* header = (AbiCommandListHeader*)(data + offset);
+            const auto* header = (const AbiCommandListHeader*)(data + offset);
             CPY_ASSERT(header->sentinel == (int)AbiCmdTypes::CommandListSentinel);
             CPY_ASSERT(header->commandListSize == cmdList.size());
             offset += sizeof(AbiCommandListHeader);
         }
 
         {
-            auto* uploadCommand = (AbiUploadCmd*)(data + offset);
+            const auto* uploadCommand = (const AbiUploadCmd*)(data + offset);
             CPY_ASSERT(uploadCommand->sentinel == (int)AbiCmdTypes::Upload);
             CPY_ASSERT(uploadCommand->destination == cbuffer);
             const char* str = uploadCommand->sources.data(data);
@@ -269,7 +269,7 @@ namespace coalpy
         }
 
         {
-            auto* computeCommand = (AbiComputeCmd*)(data + offset);
+            const auto* computeCommand = (const AbiComputeCmd*)(data + offset);
             CPY_ASSERT(computeCommand->x == 8);
             CPY_ASSERT(computeCommand->y == 8);
             CPY_ASSERT(computeCommand->z == 1);

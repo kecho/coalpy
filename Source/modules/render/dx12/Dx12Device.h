@@ -20,7 +20,6 @@ class Dx12Queues;
 class Dx12DescriptorPool;
 class Dx12ResourceCollection;
 
-
 class Dx12Device : public TDevice<Dx12Device>
 {
 public:
@@ -66,6 +65,8 @@ public:
         CPY_ASSERT(registerSpace < (int)Dx12Device::MaxNumTables);
         return (int)type * (int)TableTypes::Count + (registerSpace & 0x7);
     }
+
+    ScheduleStatus internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle); 
 
 private:
     ID3D12Debug* m_debugLayer;

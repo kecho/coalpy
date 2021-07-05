@@ -47,7 +47,7 @@ CommandList::~CommandList()
     delete &m_internal;
 }
 
-u8* CommandList::data()
+const u8* CommandList::data() const
 {
     CPY_ASSERT_MSG(m_internal.closed, "Command list has not been finalized. Data should not be accessed.");
     return m_internal.buffer.data();
@@ -82,6 +82,11 @@ void CommandList::finalize()
     header.commandListSize = m_internal.buffer.size();
 
     m_internal.closed = true;
+}
+
+bool CommandList::isFinalized() const
+{
+    return m_internal.closed;
 }
 
 template<typename AbiType>

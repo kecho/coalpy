@@ -121,7 +121,8 @@ public:
     void writeCommand(const DownloadCommand& cmd);
     void finalize();
 
-    unsigned char* data();
+    bool isFinalized() const;
+    const unsigned char* data() const;
     size_t size() const;
 
 private:

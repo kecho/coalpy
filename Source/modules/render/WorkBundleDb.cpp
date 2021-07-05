@@ -12,24 +12,15 @@ namespace
 {
 
 
-struct WorkResourceState
-{
-    int listIndex;
-    int commandIndex;
-    ResourceGpuState state;
-};
-
-using ResourceStateMap = std::unordered_map<ResourceHandle, WorkResourceState>;
-
 struct WorkBuildContext
 {
     //current context info (which list and command we are at)
-    int listIndex;
-    int currentCommandIndex;
-    MemOffset command;
+    int listIndex = -1;
+    int currentCommandIndex = -1;
+    MemOffset command = 0;
 
     //output of the context, error and mutable states
-    ScheduleErrorType errorType;
+    ScheduleErrorType errorType = ScheduleErrorType::Ok;
     std::string errorMsg;
     ResourceStateMap states;
     std::vector<ProcessedList> processedList;
@@ -310,24 +301,59 @@ ScheduleStatus WorkBundleDb::build(CommandList** lists, int listCount)
     //todo build the bundle here
     {
         std::unique_lock lock(m_workMutex);
-        auto& workData = m_works.allocate(handle);
-
         //todo error handling
-        WorkBuildContext ctx = {};
+        WorkBuildContext ctx;
         ctx.resourceInfos = &m_resources;
         ctx.tableInfos = &m_tables;
         for (int l = 0; l < listCount; ++l)
         {
+            CommandList* list = lists[l];
+            if (!list)
+            {
+                std::stringstream ss;
+                ss << "List at index " << l << " is a null pointer.";
+                ctx.errorType = ScheduleErrorType::NullListFound;
+                ctx.errorMsg = ss.str();
+                break;
+            }
+
+            if (!list->isFinalized())
+            {
+                std::stringstream ss;
+                ss << "List at index " << l << " not finalized.";
+                ctx.errorType = ScheduleErrorType::ListNotFinalized;
+                ctx.errorMsg = ss.str();
+                break;
+            }
+
             ctx.listIndex = l;
             ctx.currentCommandIndex = 0;
             ctx.command = 0;
             ctx.processedList.emplace_back();
-            parseCommandList(lists[l]->data(), ctx);
+            parseCommandList(list->data(), ctx);
         }
+
+        if (ctx.errorType != ScheduleErrorType::Ok)
+            return ScheduleStatus { handle, ctx.errorType, std::move(ctx.errorMsg) };
+
+        auto& workData = m_works.allocate(handle);
         workData.processedLists = std::move(ctx.processedList);
+        workData.states = std::move(ctx.states);
     }
 
     return ScheduleStatus { handle, ScheduleErrorType::Ok, "" };
+}
+
+bool WorkBundleDb::writeResourceStates(WorkHandle handle)
+{
+    std::unique_lock lock(m_workMutex);
+    CPY_ASSERT(handle.valid());
+    CPY_ASSERT(m_works.contains(handle));
+    if (!handle.valid() || !m_works.contains(handle))
+        return false;
+
+    auto& bundle = m_works[handle];
+    return commitResourceStates(bundle.states, m_resources);
 }
 
 void WorkBundleDb::release(WorkHandle handle)
