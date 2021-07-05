@@ -5,6 +5,7 @@
 #include "Dx12Device.h"
 #include "Dx12Fence.h"
 #include <D3D12.h>
+#include <coalpy.core/Assert.h>
 
 namespace coalpy
 {
@@ -53,10 +54,74 @@ Dx12Queues::~Dx12Queues()
 {
     for (auto& q : m_containers)
     {
+        //wait for any pending command list.
+        for (auto& allocatorRec : q.allocatorPool)
+            q.fence->waitOnCpu(allocatorRec.fenceValue);
+
         delete q.fence;
         if (q.queue)
             q.queue->Release();
     }
+}
+
+void Dx12Queues::allocate(WorkType type, Dx12List& outList)
+{
+    CPY_ASSERT((int)type >= 0 && (int)type < (int)WorkType::Count);
+    auto& container = m_containers[(int)type];
+
+    UINT64 currentFenceValue = container.fence->value();
+    SmartPtr<ID3D12CommandAllocator> newAllocator;
+    //find an allocator candidate that is free
+    for (int i = 0; i < (int)container.allocatorPool.size(); ++i)
+    {
+        auto& record = container.allocatorPool[i];
+        if (record.fenceValue <= currentFenceValue)
+        {
+            newAllocator = record.allocator;
+            record = container.allocatorPool[container.allocatorPool.size() - 1];
+            container.allocatorPool.pop_back();
+            break;
+        }
+    }
+
+    auto dx12ListType = getDx12WorkType(type);
+    if (newAllocator == nullptr)
+        DX_OK(m_device.device().CreateCommandAllocator(dx12ListType, DX_RET(newAllocator)));
+
+    SmartPtr<ID3D12GraphicsCommandList6> newList;
+    if (!container.listPool.empty())
+    {
+        newList = container.listPool.back();
+        container.listPool.pop_back();
+        DX_OK(newList->Reset(&(*newAllocator), nullptr));
+    }
+    else
+    {
+        DX_OK(m_device.device().CreateCommandList(0u, dx12ListType, &(*newAllocator), nullptr, DX_RET(newList)));
+    }
+
+    outList.workType = type;
+    outList.list = newList;
+    outList.allocator = newAllocator;
+}
+
+void Dx12Queues::deallocate(Dx12List& list, UINT64 fenceValue)
+{
+    CPY_ASSERT((int)list.workType >= 0 && (int)list.workType < (int)WorkType::Count);
+    auto& container = m_containers[(int)list.workType];
+
+    container.listPool.push_back(list.list);
+    AllocatorRecord newRecord = { fenceValue, list.allocator };
+    container.allocatorPool.push_back(newRecord);
+    
+    list = {};
+}
+
+UINT64 Dx12Queues::signalFence(WorkType type)
+{
+    CPY_ASSERT((int)type >= 0 && (int)type < (int)WorkType::Count);
+    auto& container = m_containers[(int)type];
+    return container.fence->signal();
 }
 
 }

@@ -55,7 +55,7 @@ Dx12Display::Dx12Display(const DisplayConfig& config, Dx12Device& device)
     SmartPtr<IDXGISwapChain1> swapChain1;
     
     DX_OK(factory->CreateSwapChainForHwnd(
-        &m_device.queues().directq(),
+        &m_device.queues().cmdQueue(WorkType::Graphics),
         (HWND)config.handle,
         &swapChainDesc,
         NULL, //no fullscreen desc

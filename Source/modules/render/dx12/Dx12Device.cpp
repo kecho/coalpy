@@ -288,13 +288,15 @@ ScheduleStatus Dx12Device::internalSchedule(CommandList** commandLists, int list
     ScheduleStatus status;
     status.workHandle = workHandle;
     
-    Dx12WorkBundle dx12WorkBundle;
+    Dx12WorkBundle dx12WorkBundle(*this);
     {
         m_workDb.lock();
         WorkBundle& workBundle = m_workDb.unsafeGetWorkBundle(workHandle);
         dx12WorkBundle.load(workBundle);
         m_workDb.unlock();
     }
+
+    dx12WorkBundle.execute(commandLists, listCounts);
 
     return status;
 }
