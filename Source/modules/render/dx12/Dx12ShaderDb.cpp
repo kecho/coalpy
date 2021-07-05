@@ -60,6 +60,12 @@ Dx12ShaderDb::~Dx12ShaderDb()
 
         if (state->shaderBlob)
             state->shaderBlob->Release();
+
+        if (state->csPso)
+        {
+            ID3D12PipelineState* oldPso = state->csPso;
+            oldPso->Release();
+        }
         delete state;
     });
 
@@ -392,7 +398,10 @@ bool Dx12ShaderDb::updateComputePipelineState(ShaderState& state)
     desc.CS.BytecodeLength = state.shaderBlob->GetBufferSize();
     ID3D12PipelineState* pso;
     HRESULT result = m_parentDevice->device().CreateComputePipelineState(&desc, DX_RET(pso));
+    ID3D12PipelineState* oldPso = state.csPso;
     state.csPso = pso;
+    if (oldPso)
+        oldPso->Release();
     return result == S_OK;
 }
 

@@ -311,18 +311,18 @@ namespace coalpy
                 output[dti.x] = dti.x;
             }
         )";
-
+        
         ShaderInlineDesc shaderDesc{ ShaderType::Compute, "setNumsShader", "csMain", writeNumberComputeSrc };
         ShaderHandle shader = db.requestCompile(shaderDesc);
         db.resolve(shader);
         CPY_ASSERT(db.isValid(shader));
-
+        
         int totalElements = 128;
         BufferDesc buffDesc;
         buffDesc.format = Format::RGBA_32_UINT;
         buffDesc.elementCount = totalElements;
         Buffer buff = device.createBuffer(buffDesc);
-
+        
         ResourceTableDesc tableDesc;
         tableDesc.resources = &buff;
         tableDesc.resourcesCount = 1;
@@ -344,6 +344,7 @@ namespace coalpy
 
         commandList.finalize();
         CommandList* lists[] = { &commandList };
+        
         auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle); 
         CPY_ASSERT(result.success());
 
@@ -361,6 +362,7 @@ namespace coalpy
         }
 
         device.release(result.workHandle);
+        
         device.release(outTable);
         device.release(buff);
         renderTestCtx.end();
