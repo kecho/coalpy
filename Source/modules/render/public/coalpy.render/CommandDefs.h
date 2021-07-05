@@ -11,10 +11,10 @@ struct WorkHandle : GenericHandle<unsigned int> { };
 
 enum class ScheduleErrorType
 {
+    Ok,
     BadTableInfo,
     ResourceStateNotFound,
     CorruptedCommandListSentinel,
-    Ok
 };
 
 enum class WaitErrorType

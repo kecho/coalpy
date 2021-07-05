@@ -42,7 +42,7 @@ struct WorkBuildContext
 bool transitionResource(
     ResourceHandle resource,
     ResourceGpuState newState,
-    WorkBuildContext context)
+    WorkBuildContext& context)
 {
     const WorkResourceInfos& resourceInfos = *context.resourceInfos;
     auto it = context.states.find(resource);
@@ -51,7 +51,7 @@ bool transitionResource(
 
     if (it != context.states.end())
     {
-        WorkResourceState* currState = &it->second;
+        currState = &it->second;
         canSplitBarrier = currState->listIndex != context.listIndex ||
             (context.currentCommandIndex - currState->commandIndex) >= 2;
     }
@@ -238,7 +238,7 @@ bool processDownload(const AbiDownloadCmd* cmd, const unsigned char* data, WorkB
     return false;
 }
 
-void ParseCommandList(const unsigned char* data, WorkBuildContext& context)
+void parseCommandList(const unsigned char* data, WorkBuildContext& context)
 {
     MemOffset offset = 0ull;
     const auto& header = *((AbiCommandListHeader*)data);
@@ -271,19 +271,19 @@ void ParseCommandList(const unsigned char* data, WorkBuildContext& context)
                 offset += sizeof(int);
                 break;
             case AbiCmdTypes::Compute:
-                finished = processCompute((const AbiComputeCmd*)(data + offset), data, context);
+                finished = !processCompute((const AbiComputeCmd*)(data + offset), data, context);
                 offset += sizeof(AbiComputeCmd);
                 break;
             case AbiCmdTypes::Copy:
-                finished = processCopy((const AbiCopyCmd*)(data + offset), data, context);
+                finished = !processCopy((const AbiCopyCmd*)(data + offset), data, context);
                 offset += sizeof(AbiCopyCmd);
                 break;
             case AbiCmdTypes::Upload:
-                finished = processUpload((const AbiUploadCmd*)(data + offset), data, context);
+                finished = !processUpload((const AbiUploadCmd*)(data + offset), data, context);
                 offset += sizeof(AbiUploadCmd);
                 break;
             case AbiCmdTypes::Download:
-                finished = processDownload((const AbiDownloadCmd*)(data + offset), data, context);
+                finished = !processDownload((const AbiDownloadCmd*)(data + offset), data, context);
                 offset += sizeof(AbiDownloadCmd);
                 break;
             default:
@@ -310,7 +310,21 @@ ScheduleStatus WorkBundleDb::build(CommandList** lists, int listCount)
     //todo build the bundle here
     {
         std::unique_lock lock(m_workMutex);
-        m_works.allocate(handle);
+        auto& workData = m_works.allocate(handle);
+
+        //todo error handling
+        WorkBuildContext ctx = {};
+        ctx.resourceInfos = &m_resources;
+        ctx.tableInfos = &m_tables;
+        for (int l = 0; l < listCount; ++l)
+        {
+            ctx.listIndex = l;
+            ctx.currentCommandIndex = 0;
+            ctx.command = 0;
+            ctx.processedList.emplace_back();
+            parseCommandList(lists[l]->data(), ctx);
+        }
+        workData.processedLists = std::move(ctx.processedList);
     }
 
     return ScheduleStatus { handle, ScheduleErrorType::Ok, "" };

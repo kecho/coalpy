@@ -342,6 +342,7 @@ namespace coalpy
             commandList.writeCommand(downloadCmd);
         }
 
+        commandList.finalize();
         CommandList* lists[] = { &commandList };
         auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle); 
         CPY_ASSERT(result.success());
