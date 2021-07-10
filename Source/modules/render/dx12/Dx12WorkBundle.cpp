@@ -80,6 +80,46 @@ void Dx12WorkBundle::uploadAllTables()
     }
 }
 
+void Dx12WorkBundle::applyBarriers(const std::vector<ResourceBarrier>& barriers, ID3D12GraphicsCommandList6& outList)
+{
+    if (barriers.empty())
+        return;
+
+    std::vector<D3D12_RESOURCE_BARRIER> resultBarriers;
+    resultBarriers.reserve(barriers.size());
+    Dx12ResourceCollection& resources = m_device.resources();
+    for (const auto& b : barriers)
+    {
+        if (b.prevState == b.postState)
+            continue;
+
+        Dx12Resource& r = resources.unsafeGetResource(b.resource);
+        
+        resultBarriers.emplace_back();
+        D3D12_RESOURCE_BARRIER& d3d12barrier = resultBarriers.back();
+        d3d12barrier = {};
+        d3d12barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        if (b.type == BarrierType::Begin)
+        {
+            d3d12barrier.Flags |= D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
+        }
+        else if (b.type == BarrierType::End)
+        {
+            d3d12barrier.Flags |= D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+        }
+
+        d3d12barrier.Transition.pResource = &r.d3dResource();
+        d3d12barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        d3d12barrier.Transition.StateBefore = getDx12GpuState(b.prevState);
+        d3d12barrier.Transition.StateAfter  = getDx12GpuState(b.postState);
+    }
+
+    if (resultBarriers.empty())
+        return;
+
+    outList.ResourceBarrier((UINT)resultBarriers.size(), resultBarriers.data());
+}
+
 void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, ID3D12GraphicsCommandList6& outList)
 {
     CPY_ASSERT(cmdList->isFinalized());
@@ -89,8 +129,35 @@ void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList,
     {
         const CommandInfo& cmdInfo = pl.commandSchedule[commandIndex];
         const unsigned char* cmdBlob = listData + cmdInfo.commandOffset;
-        
-
+        AbiCmdTypes cmdType = *((AbiCmdTypes*)cmdBlob);
+        applyBarriers(cmdInfo.preBarrier, outList);
+        switch (cmdType)
+        {
+        case AbiCmdTypes::Compute:
+            {
+                const auto* abiCmd = (const AbiComputeCmd*)cmdBlob;
+            }
+            break;
+        case AbiCmdTypes::Copy:
+            {
+                const auto* abiCmd = (const AbiCopyCmd*)cmdBlob;
+            }
+            break;
+        case AbiCmdTypes::Upload:
+            {
+                const auto* abiCmd = (const AbiUploadCmd*)cmdBlob;
+            }
+            break;
+        case AbiCmdTypes::Download:
+            {
+                const auto* abiCmd = (const AbiDownloadCmd*)cmdBlob;
+            }
+            break;
+        default:
+            CPY_ASSERT_FMT(false, "Unrecognized serialized command %d", cmdType);
+            return;
+        }
+        applyBarriers(cmdInfo.postBarrier, outList);
     }
 }
 
