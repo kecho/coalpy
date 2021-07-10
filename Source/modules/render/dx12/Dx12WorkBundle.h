@@ -28,6 +28,7 @@ private:
     void uploadAllTables();
     void applyBarriers(const std::vector<ResourceBarrier>& barriers, ID3D12GraphicsCommandList6& outList);
     void buildCommandList(int listIndex, const CommandList* cmdList, ID3D12GraphicsCommandList6& outList);
+    void buildComputeCmd(const unsigned char* data, const AbiComputeCmd* computeCmd, ID3D12GraphicsCommandList6& outList);
 
     Dx12Device& m_device;
     WorkBundle m_workBundle;

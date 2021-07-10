@@ -2,6 +2,7 @@
 #include "Dx12Device.h"
 #include "Dx12Resources.h"
 #include "Dx12ResourceCollection.h"
+#include "Dx12ShaderDb.h"
 #include "Dx12Queues.h"
 
 namespace coalpy
@@ -88,6 +89,7 @@ void Dx12WorkBundle::applyBarriers(const std::vector<ResourceBarrier>& barriers,
     std::vector<D3D12_RESOURCE_BARRIER> resultBarriers;
     resultBarriers.reserve(barriers.size());
     Dx12ResourceCollection& resources = m_device.resources();
+
     for (const auto& b : barriers)
     {
         if (b.prevState == b.postState)
@@ -120,6 +122,52 @@ void Dx12WorkBundle::applyBarriers(const std::vector<ResourceBarrier>& barriers,
     outList.ResourceBarrier((UINT)resultBarriers.size(), resultBarriers.data());
 }
 
+void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiComputeCmd* computeCmd, ID3D12GraphicsCommandList6& outList)
+{
+    Dx12ShaderDb& db = m_device.shaderDb();
+
+    //TODO: optimize this resolve.
+    db.resolve(computeCmd->shader);
+    ID3D12PipelineState* pso = db.unsafeGetCsPso(computeCmd->shader);
+    CPY_ASSERT(pso != nullptr);
+    if (pso == nullptr)
+        return;
+
+    //TODO: prune this.
+    outList.SetDescriptorHeaps(1, &m_srvUavTable.ownerHeap);
+
+    //TODO: set this once per cmd list
+    outList.SetComputeRootSignature(&m_device.defaultComputeRootSignature());
+
+    outList.SetPipelineState(pso);
+
+    const InResourceTable* inTables = computeCmd->inResourceTables.data(data);
+    for (int inTableId = 0; inTableId < computeCmd->inResourceTablesCounts; ++inTableId)
+    {
+        auto it = m_workBundle.tableAllocations.find((ResourceTable)inTables[inTableId]);
+        CPY_ASSERT(it != m_workBundle.tableAllocations.end());
+        if (it == m_workBundle.tableAllocations.end())
+            return;
+
+        D3D12_GPU_DESCRIPTOR_HANDLE descriptor = m_srvUavTable.getGpuHandle(it->second.offset);
+        outList.SetComputeRootDescriptorTable(m_device.tableIndex(Dx12Device::TableTypes::Srv, inTableId) , descriptor);
+    }
+
+    const OutResourceTable* outTables = computeCmd->outResourceTables.data(data);
+    for (int outTableId = 0; outTableId < computeCmd->outResourceTablesCounts; ++outTableId)
+    {
+        auto it = m_workBundle.tableAllocations.find((ResourceTable)outTables[outTableId]);
+        CPY_ASSERT(it != m_workBundle.tableAllocations.end());
+        if (it == m_workBundle.tableAllocations.end())
+            return;
+
+        D3D12_GPU_DESCRIPTOR_HANDLE descriptor = m_srvUavTable.getGpuHandle(it->second.offset);
+        outList.SetComputeRootDescriptorTable(m_device.tableIndex(Dx12Device::TableTypes::Uav, outTableId) , descriptor);
+    }
+
+    outList.Dispatch(computeCmd->x, computeCmd->y, computeCmd->z);
+}
+
 void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, ID3D12GraphicsCommandList6& outList)
 {
     CPY_ASSERT(cmdList->isFinalized());
@@ -136,6 +184,7 @@ void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList,
         case AbiCmdTypes::Compute:
             {
                 const auto* abiCmd = (const AbiComputeCmd*)cmdBlob;
+                buildComputeCmd(listData, abiCmd, outList);
             }
             break;
         case AbiCmdTypes::Copy:
@@ -198,7 +247,7 @@ void Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount)
         buildCommandList(i, commandLists[i], *list.list);
     }
 
-   // cmdQueue.ExecuteCommandLists(dx12Lists.size(), dx12Lists.data());
+    //cmdQueue.ExecuteCommandLists(dx12Lists.size(), dx12Lists.data());
 
     UINT64 fenceVal = queues.signalFence(workType);
     for (auto l : lists)

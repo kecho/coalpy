@@ -86,6 +86,11 @@ public:
     void setParentDevice(render::Dx12Device* device) { m_parentDevice = device; }
     render::Dx12Device* parentDevice() const { return m_parentDevice; }
 
+    ID3D12PipelineState* unsafeGetCsPso(ShaderHandle handle)
+    {
+        return m_shaders[handle]->csPso;
+    }
+
 private:
     void prepareIoJob(Dx12CompileState& state, const std::string& resolvedPath);
     void prepareCompileJobs(Dx12CompileState& state);
