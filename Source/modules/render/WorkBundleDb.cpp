@@ -23,11 +23,21 @@ struct WorkBuildContext
     ScheduleErrorType errorType = ScheduleErrorType::Ok;
     std::string errorMsg;
     ResourceStateMap states;
+    TableGpuAllocationMap tableAllocations;
+    ConstantDescriptorOffsetMap constantDescriptorOffsets;
     std::vector<ProcessedList> processedList;
+    int totalTableSize = 0;
+    int totalConstantBuffers = 0;
+    int totalUploadBufferSize = 0;
 
     //immutable data, current state of tables and resources in gpu
     const WorkResourceInfos* resourceInfos = nullptr;
     const WorkTableInfos* tableInfos = nullptr;
+
+    CommandInfo& currentCommandInfo()
+    {
+        return processedList[listIndex].commandSchedule[currentCommandIndex];
+    }
 };
 
 bool transitionResource(
@@ -155,6 +165,43 @@ bool transitionTable(
     return true;
 }
 
+bool processTable(
+    ResourceTable table,
+    WorkBuildContext& context)
+{
+    if (!transitionTable(table, context))
+        return false;
+
+    if (context.tableAllocations.find(table) != context.tableAllocations.end())
+        return true;
+
+    const WorkTableInfos& tableInfos = *context.tableInfos;
+    const auto& tableInfoIt = tableInfos.find(table);
+    if (tableInfoIt == tableInfos.end())
+        return false;
+
+    TableAllocation& allocation = context.tableAllocations[table];
+    allocation.offset = context.totalTableSize;
+    allocation.count = tableInfoIt->second.resources.size();
+    context.totalTableSize += allocation.count;
+    return true;
+}
+
+void registerConstantBuffers(const Buffer* buffers, int constantCounts, WorkBuildContext& context)
+{
+    CommandInfo& cmdInfo = context.currentCommandInfo();
+    for (int b = 0; b < constantCounts; ++b)
+    {
+        ResourceHandle h = buffers[b];
+        auto it = context.constantDescriptorOffsets.find(h);
+        if (it == context.constantDescriptorOffsets.end())
+        {
+            int offset = context.totalConstantBuffers; 
+            context.constantDescriptorOffsets[h] = offset;
+        }
+    }
+}
+
 bool commitResourceStates(const ResourceStateMap& input, WorkResourceInfos& resourceInfos)
 {
     for (auto& it : input)
@@ -167,7 +214,7 @@ bool commitResourceStates(const ResourceStateMap& input, WorkResourceInfos& reso
     }
 
     return true;
-} 
+}
 
 bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBuildContext& context)
 {
@@ -175,7 +222,7 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         const InResourceTable* inTables = cmd->inResourceTables.data(data);
         for (int i = 0; i < cmd->inResourceTablesCounts; ++i)
         {
-            if (!transitionTable(inTables[i], context))
+            if (!processTable(inTables[i], context))
                 return false;
         }
     }
@@ -185,7 +232,7 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         const OutResourceTable* outTables = cmd->outResourceTables.data(data);
         for (int i = 0; i < cmd->outResourceTablesCounts; ++i)
         {
-            if (!transitionTable(outTables[i], context))
+            if (!processTable(outTables[i], context))
                 return false;
         }
     }
@@ -196,7 +243,10 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         {
             if (!transitionResource(cbuffers[i], ResourceGpuState::Cbv, context))
                 return false;
+
         }
+
+        registerConstantBuffers(cbuffers, cmd->constantCounts, context);
     }
 
     return true;
@@ -218,6 +268,9 @@ bool processUpload(const AbiUploadCmd* cmd, const unsigned char* data, WorkBuild
     if (!transitionResource(cmd->destination, ResourceGpuState::CopyDst, context))
         return false;
 
+    CommandInfo& info = context.currentCommandInfo();
+    info.uploadBufferOffset = context.totalUploadBufferSize;
+    context.totalUploadBufferSize += cmd->sourceSize;
     return true;
 }
 
@@ -339,6 +392,11 @@ ScheduleStatus WorkBundleDb::build(CommandList** lists, int listCount)
         auto& workData = m_works.allocate(handle);
         workData.processedLists = std::move(ctx.processedList);
         workData.states = std::move(ctx.states);
+        workData.tableAllocations = std::move(ctx.tableAllocations);
+        workData.constantDescriptorOffsets = std::move(ctx.constantDescriptorOffsets);
+        workData.totalTableSize = ctx.totalTableSize;
+        workData.totalConstantBuffers = ctx.totalConstantBuffers;
+        workData.totalUploadBufferSize = ctx.totalUploadBufferSize;
     }
 
     return ScheduleStatus { handle, ScheduleErrorType::Ok, "" };

@@ -3,6 +3,7 @@
 #include "Dx12Resources.h"
 #include "Dx12Device.h"
 #include "Dx12Formats.h"
+#include "Dx12Utils.h"
 #include <coalpy.core/String.h>
 #include <string>
 
@@ -87,6 +88,8 @@ bool Dx12Resource::init()
         CPY_ASSERT_MSG(r == S_OK, "CreateCommittedResource has failed");
         if (r != S_OK)
             return false;
+        
+        m_data.gpuVirtualAddress = m_data.resource->GetGPUVirtualAddress();
     }
 
     if ((m_config.memFlags & MemFlag_GpuRead) != 0)
@@ -259,6 +262,10 @@ Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc)
     m_data.resDesc.Width = (desc.type == BufferType::Standard
                            ? getDxFormatStride(desc.format)
                            : desc.stride) * desc.elementCount;
+
+    if (m_buffDesc.isConstantBuffer)
+        m_data.resDesc.Width = alignByte<UINT>(m_data.resDesc.Width, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+
     m_data.resDesc.Height = 1u;
     m_data.resDesc.DepthOrArraySize = 1u;
     m_data.resDesc.MipLevels = 1u;
@@ -267,6 +274,23 @@ Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc)
     m_data.resDesc.Format = DXGI_FORMAT_UNKNOWN;
     m_data.resDesc.SampleDesc.Count = 1u;
     m_data.resDesc.SampleDesc.Quality = 0u;
+}
+
+bool Dx12Buffer::init()
+{
+    if (!Dx12Resource::init())
+        return false;
+
+    if (m_buffDesc.isConstantBuffer)
+    {
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+        cbvDesc.BufferLocation = m_data.gpuVirtualAddress;
+        cbvDesc.SizeInBytes = m_data.resDesc.Width;
+        m_device.device().CreateConstantBufferView(
+            &cbvDesc, m_cbv.handle);
+    }
+
+    return true;
 }
 
 Dx12Buffer::~Dx12Buffer()

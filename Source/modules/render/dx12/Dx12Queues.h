@@ -11,6 +11,8 @@ namespace render
 
 class Dx12Device;
 class Dx12Fence;
+class Dx12GpuUploadPool;
+class Dx12GpuDescriptorTablePool;
 
 enum class WorkType
 {
@@ -43,6 +45,12 @@ inline D3D12_COMMAND_LIST_TYPE getDx12WorkType(WorkType type)
     }
 }
 
+struct Dx12MemoryPools
+{
+    Dx12GpuUploadPool* uploadPool = nullptr;
+    Dx12GpuDescriptorTablePool* tablePool = nullptr;
+};
+
 class Dx12Queues
 {
 public:
@@ -50,6 +58,7 @@ public:
     ~Dx12Queues();
 
     ID3D12CommandQueue& cmdQueue(WorkType type) { return *(m_containers[(int)type].queue); }
+    Dx12MemoryPools& memPools(WorkType type) { return m_containers[(int)type].memPools; }
     
     void allocate(WorkType workType, Dx12List& outList);
     UINT64 signalFence(WorkType workType);
@@ -69,6 +78,7 @@ private:
         Dx12Fence* fence = nullptr;
         std::vector<AllocatorRecord> allocatorPool;
         std::vector<SmartPtr<ID3D12GraphicsCommandList6>> listPool;
+        Dx12MemoryPools memPools;
     };
 
     QueueContainer m_containers[(int)WorkType::Count];

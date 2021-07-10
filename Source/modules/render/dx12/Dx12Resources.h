@@ -137,8 +137,11 @@ public:
     virtual ~Dx12Buffer();
 
     const BufferDesc& bufferDesc() const { return m_buffDesc; }
+    virtual bool init() override;
 
+    const Dx12Descriptor& cbv() const { return m_cbv; }
 protected:
+    Dx12Descriptor m_cbv = {};
     BufferDesc m_buffDesc;
 };
 
@@ -148,6 +151,7 @@ public:
     Dx12ResourceTable(Dx12Device& device, Dx12Resource** resources, int count, bool isUav);
     ~Dx12ResourceTable();
 
+    const Dx12DescriptorTable& cpuTable() const { return m_cpuTable; }
 private:
     Dx12Device& m_device;
     std::vector<SmartPtr<Dx12Resource>> m_resources;

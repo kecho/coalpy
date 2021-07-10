@@ -29,6 +29,9 @@ public:
     void release(ResourceHandle resource);
     void release(ResourceTable resource);
 
+    Dx12ResourceTable& unsafeGetTable(ResourceTable handle) { return *(m_resourceTables[handle]); }
+    Dx12Resource& unsafeGetResource(ResourceHandle handle) { return *(m_resources[handle]->resource); }
+
 private:
     ResourceTable createResourceTable(const ResourceTableDesc& desc, bool isUav);
     enum class ResType { Texture, Buffer };

@@ -4,6 +4,7 @@
 #include "Dx12Queues.h"
 #include "Dx12Device.h"
 #include "Dx12Fence.h"
+#include "Dx12GpuMemPools.h"
 #include <D3D12.h>
 #include <coalpy.core/Assert.h>
 
@@ -47,6 +48,9 @@ Dx12Queues::Dx12Queues(Dx12Device& device)
 
         if (qcontainer.queue)
             qcontainer.fence = new Dx12Fence(device, *qcontainer.queue);
+
+        qcontainer.memPools.uploadPool = new Dx12GpuUploadPool(device, *qcontainer.queue, 4 * 1024 * 1024);
+        qcontainer.memPools.tablePool = new Dx12GpuDescriptorTablePool(device, *qcontainer.queue, 512, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     }
 }
 
@@ -61,6 +65,9 @@ Dx12Queues::~Dx12Queues()
         delete q.fence;
         if (q.queue)
             q.queue->Release();
+
+        delete q.memPools.uploadPool;
+        delete q.memPools.tablePool;
     }
 }
 
