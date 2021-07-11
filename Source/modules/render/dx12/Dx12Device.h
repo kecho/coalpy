@@ -64,7 +64,7 @@ public:
     int tableIndex(TableTypes type, int registerSpace) const
     {
         CPY_ASSERT(registerSpace < (int)Dx12Device::MaxNumTables);
-        return (int)type * (int)TableTypes::Count + (registerSpace & 0x7);
+        return (int)type * (int)MaxNumTables + (registerSpace & 0x7);
     }
 
     ScheduleStatus internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle); 

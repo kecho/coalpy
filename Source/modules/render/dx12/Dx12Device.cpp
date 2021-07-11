@@ -112,7 +112,7 @@ ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device)
                 typeRange.NumDescriptors = UINT_MAX;
                 typeRange.BaseShaderRegister = 0;
                 typeRange.RegisterSpace = tableId;
-                typeRange.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE; 
+                typeRange.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
                 typeRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
                 rootParam.DescriptorTable.pDescriptorRanges = &typeRange;
             }

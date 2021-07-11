@@ -312,6 +312,7 @@ Dx12ResourceTable::Dx12ResourceTable(Dx12Device& device, Dx12Resource** resource
     m_cpuTable = m_device.descriptors().allocateTable(
         Dx12DescriptorTableType::SrvCbvUav,
         descriptors.data(), (int)descriptors.size());
+        
 }
 
 Dx12ResourceTable::~Dx12ResourceTable()

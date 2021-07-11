@@ -5,6 +5,7 @@
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.render/IDevice.h>
 #include <coalpy.render/CommandList.h>
+#include <coalpy.core/Stopwatch.h>
 #include <iostream>
 
 using namespace coalpy::render;
@@ -327,6 +328,7 @@ namespace coalpy
         tableDesc.resources = &buff;
         tableDesc.resourcesCount = 1;
         OutResourceTable outTable = device.createOutResourceTable(tableDesc);
+
         CommandList commandList;
         {
             ComputeCommand cmd;
@@ -347,7 +349,6 @@ namespace coalpy
         
         auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle); 
         CPY_ASSERT(result.success());
-
         auto waitStatus = device.waitOnCpu(result.workHandle);
         CPY_ASSERT(waitStatus.success());
 

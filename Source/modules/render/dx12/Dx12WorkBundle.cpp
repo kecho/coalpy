@@ -133,11 +133,11 @@ void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompute
     if (pso == nullptr)
         return;
 
-    //TODO: prune this.
-    outList.SetDescriptorHeaps(1, &m_srvUavTable.ownerHeap);
-
     //TODO: set this once per cmd list
     outList.SetComputeRootSignature(&m_device.defaultComputeRootSignature());
+
+    //TODO: prune this.
+    outList.SetDescriptorHeaps(1, &m_srvUavTable.ownerHeap);
 
     outList.SetPipelineState(pso);
 
@@ -208,6 +208,8 @@ void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList,
         }
         applyBarriers(cmdInfo.postBarrier, outList);
     }
+
+    outList.Close();
 }
 
 void Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount)
@@ -240,14 +242,14 @@ void Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount)
     for (int i = 0; i < commandListsCount; ++i)
     {
         lists.emplace_back();
-        Dx12List list = lists.back();
+        Dx12List& list = lists.back();
         queues.allocate(workType, list);
         dx12Lists.push_back(list.list);
 
         buildCommandList(i, commandLists[i], *list.list);
     }
 
-    //cmdQueue.ExecuteCommandLists(dx12Lists.size(), dx12Lists.data());
+    cmdQueue.ExecuteCommandLists(dx12Lists.size(), dx12Lists.data());
 
     UINT64 fenceVal = queues.signalFence(workType);
     for (auto l : lists)
