@@ -7,6 +7,7 @@
 #include <coalpy.core/HandleContainer.h>
 #include <vector>
 #include <mutex>
+#include <set>
 #include <unordered_map>
 
 namespace coalpy
@@ -45,6 +46,7 @@ struct CommandInfo
 {
     MemOffset commandOffset = {};
     int uploadBufferOffset = 0;
+    int commandDownloadIndex = -1;
     std::vector<ResourceBarrier> preBarrier;
     std::vector<ResourceBarrier> postBarrier;
 };
@@ -58,6 +60,8 @@ struct TableAllocation
 struct ProcessedList
 {
     int listIndex = 0;
+    int computeCommandsCount = 0;
+    int downloadCommandsCount = 0;
     std::vector<CommandInfo> commandSchedule;
 };
 
@@ -71,6 +75,7 @@ struct WorkResourceState
 using ResourceStateMap = std::unordered_map<ResourceHandle, WorkResourceState>;
 using TableGpuAllocationMap = std::unordered_map<ResourceTable, TableAllocation>;
 using ConstantDescriptorOffsetMap = std::unordered_map<ResourceHandle, int>;
+using ResourceSet = std::set<ResourceHandle>;
 
 struct WorkBundle
 {
@@ -80,6 +85,7 @@ struct WorkBundle
     int totalTableSize = 0;
     int totalConstantBuffers = 0;
     int totalUploadBufferSize = 0;
+    ResourceSet resourcesToDownload;
     TableGpuAllocationMap tableAllocations;
     ConstantDescriptorOffsetMap constantDescriptorOffsets;
 };
@@ -92,6 +98,7 @@ struct WorkTableInfo
 
 struct WorkResourceInfo
 {
+    MemFlags memFlags = {};
     ResourceGpuState gpuState = ResourceGpuState::Default;
 };
 
@@ -111,7 +118,7 @@ public:
     void unregisterTable(ResourceTable table);
     void clearAllTables() { m_tables.clear(); }
 
-    void registerResource(ResourceHandle handle, ResourceGpuState initialState);
+    void registerResource(ResourceHandle handle, MemFlags flags, ResourceGpuState initialState);
     void unregisterResource(ResourceHandle handle);
     void clearAllResources() { m_resources.clear(); }
 

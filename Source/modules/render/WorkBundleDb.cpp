@@ -23,6 +23,7 @@ struct WorkBuildContext
     ScheduleErrorType errorType = ScheduleErrorType::Ok;
     std::string errorMsg;
     ResourceStateMap states;
+    ResourceSet resourcesToDownload;
     TableGpuAllocationMap tableAllocations;
     ConstantDescriptorOffsetMap constantDescriptorOffsets;
     std::vector<ProcessedList> processedList;
@@ -34,9 +35,14 @@ struct WorkBuildContext
     const WorkResourceInfos* resourceInfos = nullptr;
     const WorkTableInfos* tableInfos = nullptr;
 
+    ProcessedList& currentListInfo()
+    {
+        return processedList[listIndex];
+    }
+
     CommandInfo& currentCommandInfo()
     {
-        return processedList[listIndex].commandSchedule[currentCommandIndex];
+        return currentListInfo().commandSchedule[currentCommandIndex];
     }
 };
 
@@ -249,6 +255,8 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         registerConstantBuffers(cbuffers, cmd->constantCounts, context);
     }
 
+    ++context.currentListInfo().computeCommandsCount;
+
     return true;
 }
 
@@ -276,10 +284,38 @@ bool processUpload(const AbiUploadCmd* cmd, const unsigned char* data, WorkBuild
 
 bool processDownload(const AbiDownloadCmd* cmd, const unsigned char* data, WorkBuildContext& context)
 {
-    if (!transitionResource(cmd->source, ResourceGpuState::CopySrc, context))
+    const auto& resourceInfos = *context.resourceInfos;
+    auto& resourceInfoIt = resourceInfos.find(cmd->source);
+    if (resourceInfoIt == resourceInfos.end())
+    {
+        std::stringstream ss;
+        ss << "Could not find resource with ID: " << cmd->source.handleId;
+        context.errorType = ScheduleErrorType::InvalidResource;
+        context.errorMsg = ss.str();
         return false;
+    }
 
-    return false;
+    if (resourceInfoIt->second.memFlags != MemFlag_CpuRead)
+    {
+        std::stringstream ss;
+        ss << "Read CPU flag not found on resource requesting a download, resource ID: " << cmd->source.handleId;
+        context.errorType = ScheduleErrorType::ReadCpuFlagNotFound;
+        context.errorMsg = ss.str();
+        return false;
+    }
+
+    auto it = context.resourcesToDownload.insert(cmd->source);
+    if (!it.second)
+    {
+        context.errorType = ScheduleErrorType::MultipleDownloadsOnSameResource;
+        context.errorMsg = "Multiple downloads on the same resource during the same schedule call. You are only allowed to download a resource once per scheduling bundle.";
+        return false;
+    }
+
+    context.currentCommandInfo().commandDownloadIndex = context.currentListInfo().downloadCommandsCount;
+    ++context.currentListInfo().downloadCommandsCount;
+
+    return true;
 }
 
 void parseCommandList(const unsigned char* data, WorkBuildContext& context)
@@ -394,6 +430,7 @@ ScheduleStatus WorkBundleDb::build(CommandList** lists, int listCount)
         workData.states = std::move(ctx.states);
         workData.tableAllocations = std::move(ctx.tableAllocations);
         workData.constantDescriptorOffsets = std::move(ctx.constantDescriptorOffsets);
+        workData.resourcesToDownload = std::move(ctx.resourcesToDownload);
         workData.totalTableSize = ctx.totalTableSize;
         workData.totalConstantBuffers = ctx.totalConstantBuffers;
         workData.totalUploadBufferSize = ctx.totalUploadBufferSize;
@@ -437,9 +474,10 @@ void WorkBundleDb::unregisterTable(ResourceTable table)
     m_tables.erase(table);
 }
 
-void WorkBundleDb::registerResource(ResourceHandle handle, ResourceGpuState initialState)
+void WorkBundleDb::registerResource(ResourceHandle handle, MemFlags flags, ResourceGpuState initialState)
 {
     auto& resInfo = m_resources[handle];
+    resInfo.memFlags = flags;
     resInfo.gpuState = initialState;
 }
 

@@ -3,6 +3,7 @@
 #include <coalpy.render/Resources.h>
 #include "WorkBundleDb.h"
 #include "Dx12GpuMemPools.h"
+#include "Dx12Queues.h"
 #include <d3d12.h>
 #include <unordered_map>
 #include <vector>
@@ -16,6 +17,16 @@ class CommandList;
 class Dx12Queues;
 class Dx12Device;
 
+struct Dx12ResourceDownloadState
+{
+    WorkType queueType = WorkType::Graphics;
+    UINT64 fenceValue = {};
+    void* mappedMemory = {};
+    ResourceHandle resource;
+};
+
+using Dx12DownloadResourceMap = std::unordered_map<ResourceHandle, Dx12ResourceDownloadState>;
+
 class Dx12WorkBundle
 {
 public:
@@ -24,11 +35,15 @@ public:
 
     void execute(CommandList** commandLists, int commandListsCount);
 
+    void getDownloadResourceMap(Dx12DownloadResourceMap& downloadMap);
+
 private:
     void uploadAllTables();
     void applyBarriers(const std::vector<ResourceBarrier>& barriers, ID3D12GraphicsCommandList6& outList);
-    void buildCommandList(int listIndex, const CommandList* cmdList, ID3D12GraphicsCommandList6& outList);
+    void buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, ID3D12GraphicsCommandList6& outList);
     void buildComputeCmd(const unsigned char* data, const AbiComputeCmd* computeCmd, ID3D12GraphicsCommandList6& outList);
+    void buildDownloadCmd(const unsigned char* data, const AbiDownloadCmd* downloadCmd,  const CommandInfo& cmdInfo, WorkType workType, ID3D12GraphicsCommandList6& outList);
+    void buildCopyCmd(const unsigned char* data, const AbiCopyCmd* copyCmd, ID3D12GraphicsCommandList6& outList);
 
     Dx12Device& m_device;
     WorkBundle m_workBundle;
@@ -36,6 +51,8 @@ private:
     Dx12GpuDescriptorTable m_cbvTable;
     Dx12GpuMemoryBlock m_uploadMemBlock;
     std::unordered_map<ResourceHandle, D3D12_RESOURCE_STATES> m_states;
+    std::vector<Dx12ResourceDownloadState> m_downloadStates;
+    UINT64 m_currentFenceValue = {};
 };
 
 }

@@ -137,6 +137,11 @@ ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device)
 
 }
 
+struct Dx12WorkInformationMap
+{
+    std::unordered_map<int, Dx12DownloadResourceMap> downloadMaps;
+};
+
 Dx12Device::Dx12Device(const DeviceConfig& config)
 : TDevice<Dx12Device>(config)
 , m_debugLayer(nullptr)
@@ -144,6 +149,7 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
 , m_shaderDb(nullptr)
 {
     m_info = {};
+    m_dx12WorkInfos = new Dx12WorkInformationMap;
     cacheCardInfos(g_cardInfos);
 
 #if _DEBUG
@@ -192,6 +198,7 @@ Dx12Device::~Dx12Device()
     delete m_resources;
     delete m_queues;
     delete m_descriptors;
+    delete m_dx12WorkInfos;
 
     if (m_device)
         m_device->Release();
@@ -245,7 +252,21 @@ WaitStatus Dx12Device::waitOnCpu(WorkHandle handle, int milliseconds)
 
 DownloadStatus Dx12Device::getDownloadStatus(WorkHandle bundle, ResourceHandle handle)
 {
-    return {};
+    auto it = m_dx12WorkInfos->downloadMaps.find(bundle.handleId);
+    if (it == m_dx12WorkInfos->downloadMaps.end())
+        return DownloadStatus { DownloadResult::Invalid, nullptr, 0u };
+
+    auto downloadStateIt = it->second.find(handle);
+    if (downloadStateIt == it->second.end())
+        return DownloadStatus { DownloadResult::Invalid, nullptr, 0u };
+
+    auto& downloadState = downloadStateIt->second;
+    UINT64 currentFenceValue = queues().currentFenceValue(downloadState.queueType);
+    if (downloadState.fenceValue >= currentFenceValue)
+    {
+        return DownloadStatus { DownloadResult::Ok, downloadState.mappedMemory, 0u };
+    }
+    return DownloadStatus { DownloadResult::NotReady, nullptr, 0u };
 }
 
 void Dx12Device::enumerate(std::vector<DeviceInfo>& outputList)
@@ -289,16 +310,31 @@ ScheduleStatus Dx12Device::internalSchedule(CommandList** commandLists, int list
     status.workHandle = workHandle;
     
     Dx12WorkBundle dx12WorkBundle(*this);
+    bool hasDownloads = false;
     {
         m_workDb.lock();
         WorkBundle& workBundle = m_workDb.unsafeGetWorkBundle(workHandle);
+        hasDownloads = (int)workBundle.resourcesToDownload.size() > 0;
         dx12WorkBundle.load(workBundle);
         m_workDb.unlock();
     }
 
     dx12WorkBundle.execute(commandLists, listCounts);
 
+    if (hasDownloads)
+    {
+        m_workDb.lock();
+        Dx12DownloadResourceMap downloadStateMap;
+        dx12WorkBundle.getDownloadResourceMap(downloadStateMap);
+        m_dx12WorkInfos->downloadMaps[workHandle.handleId] = std::move(downloadStateMap);
+        m_workDb.unlock();
+    }
     return status;
+}
+
+void Dx12Device::internalReleaseWorkHandle(WorkHandle handle)
+{
+    m_dx12WorkInfos->downloadMaps.erase(handle.handleId);
 }
 
 SmartPtr<IDisplay> Dx12Device::createDisplay(const DisplayConfig& config)

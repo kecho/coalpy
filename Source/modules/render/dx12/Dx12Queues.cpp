@@ -131,6 +131,13 @@ UINT64 Dx12Queues::signalFence(WorkType type)
     return container.fence->signal();
 }
 
+UINT64 Dx12Queues::currentFenceValue(WorkType type)
+{
+    CPY_ASSERT((int)type >= 0 && (int)type < (int)WorkType::Count);
+    auto& container = m_containers[(int)type];
+    return container.fence->value();
+}
+
 }
 }
 

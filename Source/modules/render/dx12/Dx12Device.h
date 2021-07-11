@@ -2,6 +2,7 @@
 
 #include <TDevice.h>
 #include <coalpy.render/Resources.h>
+#include <unordered_map>
 
 struct IDXGIFactory2;
 struct ID3D12Device2;
@@ -19,6 +20,7 @@ namespace render
 class Dx12Queues;
 class Dx12DescriptorPool;
 class Dx12ResourceCollection;
+struct Dx12WorkInformationMap;
 
 class Dx12Device : public TDevice<Dx12Device>
 {
@@ -45,6 +47,7 @@ public:
     virtual InResourceTable   createInResourceTable  (const ResourceTableDesc& config) override;
     virtual OutResourceTable  createOutResourceTable (const ResourceTableDesc& config) override;
 
+    void internalReleaseWorkHandle(WorkHandle handle);
     virtual WaitStatus waitOnCpu(WorkHandle handle, int milliseconds = 0) override;
     virtual DownloadStatus getDownloadStatus(WorkHandle bundle, ResourceHandle handle) override;
     virtual void release(ResourceHandle resource) override;
@@ -78,6 +81,8 @@ private:
     Dx12Queues* m_queues;
     Dx12ShaderDb* m_shaderDb;
     DeviceInfo m_info;
+
+    Dx12WorkInformationMap* m_dx12WorkInfos;
 };
 
 }

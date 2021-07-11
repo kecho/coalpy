@@ -15,8 +15,11 @@ enum class ScheduleErrorType
     NullListFound,
     ListNotFinalized,
     BadTableInfo,
+    ReadCpuFlagNotFound,
     CommitResourceStateFail,
+    InvalidResource,
     ResourceStateNotFound,
+    MultipleDownloadsOnSameResource,
     CorruptedCommandListSentinel,
 };
 

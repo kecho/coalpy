@@ -320,9 +320,13 @@ namespace coalpy
         
         int totalElements = 128;
         BufferDesc buffDesc;
-        buffDesc.format = Format::RGBA_32_UINT;
+        buffDesc.memFlags = (MemFlags)MemFlag_GpuWrite;
+        buffDesc.format = Format::R32_SINT;
         buffDesc.elementCount = totalElements;
         Buffer buff = device.createBuffer(buffDesc);
+
+        buffDesc.memFlags = MemFlag_CpuRead;
+        Buffer readbackBuff = device.createBuffer(buffDesc);
         
         ResourceTableDesc tableDesc;
         tableDesc.resources = &buff;
@@ -339,8 +343,14 @@ namespace coalpy
         }
 
         {
+            CopyCommand cmd;
+            cmd.setResources(buff, readbackBuff);
+            commandList.writeCommand(cmd);
+        }
+
+        {
             DownloadCommand downloadCmd;
-            downloadCmd.setData(buff);
+            downloadCmd.setData(readbackBuff);
             commandList.writeCommand(downloadCmd);
         }
 
@@ -348,14 +358,15 @@ namespace coalpy
         CommandList* lists[] = { &commandList };
         
         auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle); 
-        CPY_ASSERT(result.success());
+        CPY_ASSERT_MSG(result.success(), result.message.c_str());
         auto waitStatus = device.waitOnCpu(result.workHandle);
         CPY_ASSERT(waitStatus.success());
 
-        auto downloadStatus = device.getDownloadStatus(result.workHandle, buff);
+        auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff);
+        CPY_ASSERT(downloadStatus.success());
         CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
         CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(unsigned int) * totalElements);
-        if (downloadStatus.downloadPtr != nullptr && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements)
+        if (downloadStatus.downloadPtr != nullptr /*TODO: do the size && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements*/)
         {
             auto* ptr = (unsigned int*)downloadStatus.downloadPtr;
             for (int i = 0; i < totalElements; ++i)
@@ -366,6 +377,7 @@ namespace coalpy
         
         device.release(outTable);
         device.release(buff);
+        device.release(readbackBuff);
         renderTestCtx.end();
     }
 

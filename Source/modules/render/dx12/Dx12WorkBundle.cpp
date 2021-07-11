@@ -3,7 +3,6 @@
 #include "Dx12Resources.h"
 #include "Dx12ResourceCollection.h"
 #include "Dx12ShaderDb.h"
-#include "Dx12Queues.h"
 
 namespace coalpy
 {
@@ -168,7 +167,32 @@ void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompute
     outList.Dispatch(computeCmd->x, computeCmd->y, computeCmd->z);
 }
 
-void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, ID3D12GraphicsCommandList6& outList)
+void Dx12WorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd* copyCmd, ID3D12GraphicsCommandList6& outList)
+{
+    Dx12ResourceCollection& resources = m_device.resources();
+    Dx12Resource& src = resources.unsafeGetResource(copyCmd->source);
+    Dx12Resource& dst = resources.unsafeGetResource(copyCmd->destination);
+    outList.CopyResource(&dst.d3dResource(), &src.d3dResource());
+}
+
+void Dx12WorkBundle::buildDownloadCmd(
+    const unsigned char* data, const AbiDownloadCmd* downloadCmd,
+    const CommandInfo& cmdInfo, WorkType workType,
+    ID3D12GraphicsCommandList6& outList)
+{
+    Dx12ResourceCollection& resources = m_device.resources();
+    CPY_ASSERT(cmdInfo.commandDownloadIndex >= 0 && cmdInfo.commandDownloadIndex < (int)m_downloadStates.size());
+    CPY_ASSERT(downloadCmd->source.valid());
+    auto& downloadState = m_downloadStates[cmdInfo.commandDownloadIndex];
+    downloadState.queueType = workType;
+    downloadState.fenceValue = m_currentFenceValue + 1;
+    downloadState.resource = downloadCmd->source;
+    Dx12Resource& dx12Resource = resources.unsafeGetResource(downloadCmd->source);
+    downloadState.mappedMemory = dx12Resource.mappedMemory();
+    CPY_ASSERT(downloadState.mappedMemory != nullptr);
+}
+
+void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, ID3D12GraphicsCommandList6& outList)
 {
     CPY_ASSERT(cmdList->isFinalized());
     const unsigned char* listData = cmdList->data();
@@ -190,6 +214,7 @@ void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList,
         case AbiCmdTypes::Copy:
             {
                 const auto* abiCmd = (const AbiCopyCmd*)cmdBlob;
+                buildCopyCmd(listData, abiCmd, outList);
             }
             break;
         case AbiCmdTypes::Upload:
@@ -200,6 +225,7 @@ void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList,
         case AbiCmdTypes::Download:
             {
                 const auto* abiCmd = (const AbiDownloadCmd*)cmdBlob;
+                buildDownloadCmd(listData, abiCmd, cmdInfo, workType, outList);
             }
             break;
         default:
@@ -223,6 +249,7 @@ void Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount)
 
     pools.uploadPool->beginUsage();
     pools.tablePool->beginUsage();
+    m_downloadStates.resize((int)m_workBundle.resourcesToDownload.size());
 
     if (m_workBundle.totalUploadBufferSize)
         m_uploadMemBlock = pools.uploadPool->allocUploadBlock(m_workBundle.totalUploadBufferSize);
@@ -239,6 +266,7 @@ void Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount)
 
     std::vector<Dx12List> lists;
     std::vector<ID3D12CommandList*> dx12Lists;
+    m_currentFenceValue = queues.currentFenceValue(workType);
     for (int i = 0; i < commandListsCount; ++i)
     {
         lists.emplace_back();
@@ -246,7 +274,7 @@ void Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount)
         queues.allocate(workType, list);
         dx12Lists.push_back(list.list);
 
-        buildCommandList(i, commandLists[i], *list.list);
+        buildCommandList(i, commandLists[i], workType, *list.list);
     }
 
     cmdQueue.ExecuteCommandLists(dx12Lists.size(), dx12Lists.data());
@@ -257,6 +285,12 @@ void Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount)
 
     pools.tablePool->endUsage();
     pools.uploadPool->endUsage();
+}
+
+void Dx12WorkBundle::getDownloadResourceMap(Dx12DownloadResourceMap& downloadMap)
+{
+    for (auto& state : m_downloadStates)
+        downloadMap[state.resource] = state;
 }
 
 }

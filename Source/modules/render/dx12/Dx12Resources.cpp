@@ -51,7 +51,8 @@ Dx12Resource::Dx12Resource(Dx12Device& device, const ResourceDesc& config, bool 
         }
         else if ((m_config.memFlags & (MemFlag_GpuWrite | MemFlag_GpuRead)) == 0)
         {
-            m_usage = Usage::Readback;
+            if ((m_config.memFlags & MemFlag_CpuRead) != 0)
+                m_usage = Usage::Readback;
         }
 
         switch (m_usage)
@@ -104,6 +105,11 @@ bool Dx12Resource::init()
 			m_data.resource, nullptr, &m_data.uavDesc, m_uav.handle);
     }
 
+    if (m_data.heapProps.Type == D3D12_HEAP_TYPE_READBACK || m_data.heapProps.Type == D3D12_HEAP_TYPE_UPLOAD)
+    {
+        DX_OK(m_data.resource->Map(0u, nullptr, &m_data.mappedMemory));
+    }
+
 #if ENABLE_RENDER_RESOURCE_NAMES
     {
 	    std::wstring wname = s2ws(m_config.name);
@@ -132,7 +138,14 @@ void* Dx12Resource::mappedMemory()
 Dx12Resource::~Dx12Resource()
 {
     if (m_data.resource)
+    {
+        if (m_data.mappedMemory)
+        {
+            m_data.resource->Unmap(0u, nullptr);
+        }
+        m_data.mappedMemory = {};
         m_data.resource->Release();
+    }
 
     auto& descriptorPool = m_device.descriptors();
     if ((m_config.memFlags & MemFlag_GpuRead) != 0)

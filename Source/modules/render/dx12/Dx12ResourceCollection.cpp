@@ -41,7 +41,7 @@ Texture Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3D12Res
     if (resource)
         outPtr->resource->acquireD3D12Resource(resource);
     outPtr->resource->init();
-    m_workDb.registerResource(resHandle, outPtr->resource->defaultGpuState());
+    m_workDb.registerResource(resHandle, desc.memFlags, outPtr->resource->defaultGpuState());
     return Texture { resHandle.handleId };
 }
 
@@ -59,7 +59,7 @@ Buffer Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12Resour
     if (resource)
         outPtr->resource->acquireD3D12Resource(resource);
     outPtr->resource->init();
-    m_workDb.registerResource(resHandle, outPtr->resource->defaultGpuState());
+    m_workDb.registerResource(resHandle, desc.memFlags, outPtr->resource->defaultGpuState());
     return Buffer { resHandle.handleId };
 }
 

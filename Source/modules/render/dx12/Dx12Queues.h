@@ -61,6 +61,7 @@ public:
     Dx12MemoryPools& memPools(WorkType type) { return m_containers[(int)type].memPools; }
     
     void allocate(WorkType workType, Dx12List& outList);
+    UINT64 currentFenceValue(WorkType workType);
     UINT64 signalFence(WorkType workType);
     void deallocate(Dx12List& list, UINT64 fenceValue);
 

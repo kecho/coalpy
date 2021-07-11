@@ -9,6 +9,8 @@ namespace coalpy
 namespace render
 {
 
+class Dx12Device;
+
 struct Dx12GpuMemoryBlock
 {
     size_t uploadSize = 0ull;

@@ -105,8 +105,6 @@ protected:
         D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc;
         D3D12_HEAP_FLAGS heapFlags;
         ID3D12Resource* resource;
-        UINT64 memoryOffset;
-        const ID3D12Resource* externResource;
         void* mappedMemory;
         D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddress;
     } m_data;
