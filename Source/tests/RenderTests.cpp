@@ -380,6 +380,157 @@ namespace coalpy
         device.release(readbackBuff);
         renderTestCtx.end();
     }
+    
+    void testSimpleComputePingPong(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+        IShaderDb& db = *renderTestCtx.db;
+
+        const char* pingShaderSrc = R"(
+            RWBuffer<uint> output : register(u0);
+            RWBuffer<uint> output1 : register(u1);
+
+            [numthreads(64,1,1)]
+            void csMain(uint3 dti : SV_DispatchThreadID)
+            {
+                output[dti.x] = dti.x + 1;
+                output1[dti.x] = dti.x + 2;
+            }
+        )";
+
+        const char* pongShaderSrc = R"(
+            Buffer<uint> input : register(t0);
+            Buffer<uint> input1 : register(t1);
+
+            RWBuffer<uint> output : register(u0);
+            RWBuffer<uint> output1 : register(u1);
+
+            [numthreads(64,1,1)]
+            void csMain(uint3 dti : SV_DispatchThreadID)
+            {
+                output[dti.x] = input[dti.x] + 10;
+                output1[dti.x] = input1[dti.x] + 10;
+            }
+        )";
+        
+        ShaderInlineDesc shaderDesc0{ ShaderType::Compute, "pingShader", "csMain", pingShaderSrc };
+        ShaderHandle pingShader = db.requestCompile(shaderDesc0);
+        db.resolve(pingShader);
+        CPY_ASSERT(db.isValid(pingShader));
+
+        ShaderInlineDesc shaderDesc1{ ShaderType::Compute, "pongShader", "csMain", pingShaderSrc };
+        ShaderHandle pongShader = db.requestCompile(shaderDesc1);
+        db.resolve(pongShader);
+        CPY_ASSERT(db.isValid(pongShader));
+        
+        int totalElements = 128;
+
+        BufferDesc buffDesc;
+        buffDesc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
+        buffDesc.format = Format::R32_SINT;
+        buffDesc.elementCount = totalElements;
+
+        Buffer pingBuffs[2];
+        pingBuffs[0] = device.createBuffer(buffDesc);
+        pingBuffs[1] = device.createBuffer(buffDesc);
+
+        Buffer pongBuffs[2];
+        pongBuffs[0] = device.createBuffer(buffDesc);
+        pongBuffs[1] = device.createBuffer(buffDesc);
+
+        buffDesc.memFlags = MemFlag_CpuRead;
+        Buffer readbackBuff0 = device.createBuffer(buffDesc);
+        Buffer readbackBuff1 = device.createBuffer(buffDesc);
+        
+        ResourceTableDesc tableDesc;
+
+        tableDesc.resources = pingBuffs;
+        tableDesc.resourcesCount = 2;
+        OutResourceTable pingOutTable = device.createOutResourceTable(tableDesc);
+
+        tableDesc.resources = pingBuffs;
+        tableDesc.resourcesCount = 2;
+        InResourceTable pongInTable = device.createInResourceTable(tableDesc);
+
+        tableDesc.resources = pongBuffs;
+        tableDesc.resourcesCount = 2;
+        OutResourceTable pongOutTable = device.createOutResourceTable(tableDesc);
+
+        CommandList commandList;
+        {
+            ComputeCommand cmd;
+            cmd.setShader(pingShader);
+            cmd.setOutResources(&pingOutTable, 1);
+            cmd.setDispatch("Ping", totalElements / 64, 1, 1);
+            commandList.writeCommand(cmd);
+        }
+
+        {
+            ComputeCommand cmd;
+            cmd.setShader(pongShader);
+            cmd.setInResources(&pongInTable, 1);
+            cmd.setOutResources(&pongOutTable, 1);
+            cmd.setDispatch("Pong", totalElements / 64, 1, 1);
+            commandList.writeCommand(cmd);
+        }
+
+        {
+            CopyCommand cmd;
+            cmd.setResources(pongBuffs[0], readbackBuff0);
+            commandList.writeCommand(cmd);
+        }
+
+        {
+            CopyCommand cmd;
+            cmd.setResources(pongBuffs[1], readbackBuff1);
+            commandList.writeCommand(cmd);
+        }
+
+        {
+            DownloadCommand downloadCmd;
+            downloadCmd.setData(readbackBuff0);
+            commandList.writeCommand(downloadCmd);
+        }
+        {
+            DownloadCommand downloadCmd;
+            downloadCmd.setData(readbackBuff1);
+            commandList.writeCommand(downloadCmd);
+        }
+
+        commandList.finalize();
+        CommandList* lists[] = { &commandList };
+        
+        auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle); 
+        CPY_ASSERT_MSG(result.success(), result.message.c_str());
+        auto waitStatus = device.waitOnCpu(result.workHandle);
+        CPY_ASSERT(waitStatus.success());
+
+        //auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff);
+        //CPY_ASSERT(downloadStatus.success());
+        //CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
+        //CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(unsigned int) * totalElements);
+        //if (downloadStatus.downloadPtr != nullptr /*TODO: do the size && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements*/)
+        //{
+        //    auto* ptr = (unsigned int*)downloadStatus.downloadPtr;
+        //    for (int i = 0; i < totalElements; ++i)
+        //        CPY_ASSERT(ptr[i] == (i + 1));
+        //}
+
+        device.release(result.workHandle);
+        
+        device.release(pingBuffs[0]);
+        device.release(pingBuffs[1]);
+        device.release(pongBuffs[0]);
+        device.release(pongBuffs[1]);
+        device.release(readbackBuff0);
+        device.release(readbackBuff1);
+        device.release(pingOutTable);
+        device.release(pongInTable);
+        device.release(pongOutTable);
+        renderTestCtx.end();
+    }
 
     //registration of tests
 
@@ -391,6 +542,7 @@ namespace coalpy
             { "createTables",  testCreateTables },
             { "commandListAbi",  testCommandListAbi },
             { "renderMemoryDownload",  testRenderMemoryDownload }
+            /*{ "simpleComputePingPong",  testSimpleComputePingPong }*/
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
