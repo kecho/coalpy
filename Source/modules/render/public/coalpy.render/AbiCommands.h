@@ -42,6 +42,7 @@ struct AbiCommandListHeader
 struct AbiComputeCmd
 {
     int sentinel = (int)AbiCmdTypes::Compute;
+    MemSize cmdSize = {};
 
     ShaderHandle shader;
 
@@ -64,6 +65,7 @@ struct AbiComputeCmd
 struct AbiCopyCmd
 {
     int sentinel = (int)AbiCmdTypes::Copy;
+    MemSize cmdSize = {};
     ResourceHandle source;
     ResourceHandle destination;
 };
@@ -71,6 +73,7 @@ struct AbiCopyCmd
 struct AbiUploadCmd
 {
     int sentinel = (int)AbiCmdTypes::Upload;
+    MemSize cmdSize = {};
     ResourceHandle destination;
     AbiPtr<char> sources; 
     int  sourceSize = 0; 
@@ -79,6 +82,7 @@ struct AbiUploadCmd
 struct AbiDownloadCmd
 {
     int sentinel = (int)AbiCmdTypes::Download;
+    MemSize cmdSize = {};
     ResourceHandle source;
 };
 

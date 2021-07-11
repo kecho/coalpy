@@ -58,14 +58,8 @@ size_t CommandList::size() const
     return m_internal.buffer.size();
 }
 
-void CommandList::finalize()
+void CommandList::flushDeferredStores()
 {
-    if (m_internal.closed)
-        return;
-
-    int endSentinel = (int)AbiCmdTypes::CommandListEndSentinel;
-    m_internal.buffer.append(&endSentinel);
-
     for (auto& pendingMem : m_internal.pendingMemory)
     {
         MemOffset currOffset = (MemOffset)m_internal.buffer.size();
@@ -75,7 +69,16 @@ void CommandList::finalize()
         m_internal.buffer.append(pendingMem.src, pendingMem.srcByteSize);
     }
 
-    m_internal.pendingMemory = {};
+    m_internal.pendingMemory.clear();
+}
+
+void CommandList::finalize()
+{
+    if (m_internal.closed)
+        return;
+
+    int endSentinel = (int)AbiCmdTypes::CommandListEndSentinel;
+    m_internal.buffer.append(&endSentinel);
 
     //store the size
     AbiCommandListHeader& header = *((AbiCommandListHeader*)(m_internal.buffer.data()));
@@ -100,6 +103,16 @@ AbiType& CommandList::allocate()
     return *abiObj;
 }
 
+template<typename AbiType>
+void CommandList::finalizeCommand(AbiType& t)
+{
+    MemOffset offset = (MemOffset)((const u8*)&t - m_internal.buffer.data());
+    flushDeferredStores();
+
+    AbiType* obj = (AbiType*)(m_internal.buffer.data() + offset);
+    obj->cmdSize = m_internal.buffer.size() - offset;
+}
+
 void CommandList::writeCommand(const ComputeCommand& cmd)
 {
     auto& abiCmd = allocate<AbiComputeCmd>();
@@ -122,6 +135,8 @@ void CommandList::writeCommand(const ComputeCommand& cmd)
     abiCmd.x = cmd.m_x;
     abiCmd.y = cmd.m_y;
     abiCmd.z = cmd.m_z;
+
+    finalizeCommand(abiCmd);
 }
 
 void CommandList::writeCommand(const CopyCommand& cmd)
@@ -129,6 +144,7 @@ void CommandList::writeCommand(const CopyCommand& cmd)
     auto& abiCmd = allocate<AbiCopyCmd>();
     abiCmd.source = cmd.m_source;
     abiCmd.destination = cmd.m_destination;
+    finalizeCommand(abiCmd);
 }
 
 void CommandList::writeCommand(const UploadCommand& cmd)
@@ -137,12 +153,14 @@ void CommandList::writeCommand(const UploadCommand& cmd)
     abiCmd.destination = cmd.m_destination;
     m_internal.deferArrayStore(abiCmd.sources, cmd.m_source, cmd.m_sourceSize);
     abiCmd.sourceSize = cmd.m_sourceSize;
+    finalizeCommand(abiCmd);
 }
 
 void CommandList::writeCommand(const DownloadCommand& cmd)
 {
     auto& abiCmd = allocate<AbiDownloadCmd>();
     abiCmd.source = cmd.m_source;   
+    finalizeCommand(abiCmd);
 }
 
 }

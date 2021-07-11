@@ -351,20 +351,32 @@ void parseCommandList(const unsigned char* data, WorkBuildContext& context)
                 offset += sizeof(int);
                 break;
             case AbiCmdTypes::Compute:
-                finished = !processCompute((const AbiComputeCmd*)(data + offset), data, context);
-                offset += sizeof(AbiComputeCmd);
+                {
+                    const auto* abiCmd = (const AbiComputeCmd*)(data + offset);
+                    finished = !processCompute(abiCmd, data, context);
+                    offset += abiCmd->cmdSize;
+                }
                 break;
             case AbiCmdTypes::Copy:
-                finished = !processCopy((const AbiCopyCmd*)(data + offset), data, context);
-                offset += sizeof(AbiCopyCmd);
+                {
+                    const auto* abiCmd = (const AbiCopyCmd*)(data + offset);
+                    finished = !processCopy(abiCmd, data, context);
+                    offset += abiCmd->cmdSize;
+                }
                 break;
             case AbiCmdTypes::Upload:
-                finished = !processUpload((const AbiUploadCmd*)(data + offset), data, context);
-                offset += sizeof(AbiUploadCmd);
+                {
+                    const auto* abiCmd = (const AbiUploadCmd*)(data + offset);
+                    finished = !processUpload(abiCmd, data, context);
+                    offset += abiCmd->cmdSize;
+                }
                 break;
             case AbiCmdTypes::Download:
-                finished = !processDownload((const AbiDownloadCmd*)(data + offset), data, context);
-                offset += sizeof(AbiDownloadCmd);
+                {
+                    const auto* abiCmd = (const AbiDownloadCmd*)(data + offset);
+                    finished = !processDownload(abiCmd, data, context);
+                    offset += abiCmd->cmdSize;
+                }
                 break;
             default:
             {

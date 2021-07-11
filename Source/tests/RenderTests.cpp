@@ -266,7 +266,7 @@ namespace coalpy
             const char* str = uploadCommand->sources.data(data);
             CPY_ASSERT(!strcmp(str, testString));
             CPY_ASSERT(testStringSize == uploadCommand->sourceSize);
-            offset += sizeof(AbiUploadCmd);
+            offset += uploadCommand->cmdSize;
         }
 
         {
@@ -281,7 +281,7 @@ namespace coalpy
             CPY_ASSERT(computeCommand->outResourceTablesCounts == 1);
             CPY_ASSERT(*computeCommand->outResourceTables.data(data) == outputTable);
             CPY_ASSERT(!strcmp(computeCommand->debugName.data(data), dispatchNameStr));
-            offset += sizeof(AbiComputeCmd);
+            offset += computeCommand->cmdSize;
 
         }
 
@@ -420,7 +420,7 @@ namespace coalpy
         db.resolve(pingShader);
         CPY_ASSERT(db.isValid(pingShader));
 
-        ShaderInlineDesc shaderDesc1{ ShaderType::Compute, "pongShader", "csMain", pingShaderSrc };
+        ShaderInlineDesc shaderDesc1{ ShaderType::Compute, "pongShader", "csMain", pongShaderSrc };
         ShaderHandle pongShader = db.requestCompile(shaderDesc1);
         db.resolve(pongShader);
         CPY_ASSERT(db.isValid(pongShader));
@@ -507,16 +507,31 @@ namespace coalpy
         auto waitStatus = device.waitOnCpu(result.workHandle);
         CPY_ASSERT(waitStatus.success());
 
-        //auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff);
-        //CPY_ASSERT(downloadStatus.success());
-        //CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
-        //CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(unsigned int) * totalElements);
-        //if (downloadStatus.downloadPtr != nullptr /*TODO: do the size && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements*/)
-        //{
-        //    auto* ptr = (unsigned int*)downloadStatus.downloadPtr;
-        //    for (int i = 0; i < totalElements; ++i)
-        //        CPY_ASSERT(ptr[i] == (i + 1));
-        //}
+        {
+            auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff0);
+            CPY_ASSERT(downloadStatus.success());
+            CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
+            CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(unsigned int) * totalElements);
+            if (downloadStatus.downloadPtr != nullptr /*TODO: do the size && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements*/)
+            {
+                auto* ptr = (unsigned int*)downloadStatus.downloadPtr;
+                for (int i = 0; i < totalElements; ++i)
+                    CPY_ASSERT(ptr[i] == (i + 1 + 10));
+            }
+        }
+
+        {
+            auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff1);
+            CPY_ASSERT(downloadStatus.success());
+            CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
+            CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(unsigned int) * totalElements);
+            if (downloadStatus.downloadPtr != nullptr /*TODO: do the size && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements*/)
+            {
+                auto* ptr = (unsigned int*)downloadStatus.downloadPtr;
+                for (int i = 0; i < totalElements; ++i)
+                    CPY_ASSERT(ptr[i] == (i + 2 + 10));
+            }
+        }
 
         device.release(result.workHandle);
         
@@ -541,8 +556,8 @@ namespace coalpy
             { "createTexture", testCreateTexture },
             { "createTables",  testCreateTables },
             { "commandListAbi",  testCommandListAbi },
-            { "renderMemoryDownload",  testRenderMemoryDownload }
-            /*{ "simpleComputePingPong",  testSimpleComputePingPong }*/
+            { "renderMemoryDownload",  testRenderMemoryDownload },
+            { "simpleComputePingPong",  testSimpleComputePingPong }
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

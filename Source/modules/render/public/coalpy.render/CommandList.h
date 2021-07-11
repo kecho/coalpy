@@ -128,7 +128,12 @@ public:
 private:
     template<typename AbiType>
     AbiType& allocate();
+
+    template<typename AbiType>
+    void finalizeCommand(AbiType& t);
+
     InternalCommandList& m_internal;
+    void flushDeferredStores();
 };
 
 
