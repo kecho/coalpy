@@ -22,7 +22,7 @@ public:
     UINT64 value() const { return m_fenceValue; }
     UINT64 signal();
     void signal(UINT64 value);
-    void waitOnCpu(UINT64 valueToWait);
+    void waitOnCpu(UINT64 valueToWait, DWORD timeMs = INFINITE);
     void waitOnGpu(UINT64 valueToWait, ID3D12CommandQueue* externalQueue = nullptr);
     ID3D12Fence& fence() { return *m_fence; }
 

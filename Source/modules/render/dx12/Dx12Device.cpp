@@ -24,6 +24,7 @@
 #include "Dx12ResourceCollection.h"
 #include "Dx12DescriptorPool.h"
 #include "Dx12WorkBundle.h"
+#include "Dx12Fence.h"
 
 namespace coalpy
 {
@@ -137,9 +138,15 @@ ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device)
 
 }
 
+struct Dx12WorkInfo
+{
+    UINT64 fenceValue = {};
+    Dx12DownloadResourceMap downloadMap;
+};
+
 struct Dx12WorkInformationMap
 {
-    std::unordered_map<int, Dx12DownloadResourceMap> downloadMaps;
+    std::unordered_map<int, Dx12WorkInfo> workMap;
 };
 
 Dx12Device::Dx12Device(const DeviceConfig& config)
@@ -247,22 +254,34 @@ void Dx12Device::release(ResourceTable table)
 
 WaitStatus Dx12Device::waitOnCpu(WorkHandle handle, int milliseconds)
 {
-    return {};
+    auto workInfoIt = m_dx12WorkInfos->workMap.find(handle.handleId);
+    if (workInfoIt == m_dx12WorkInfos->workMap.end())
+        return WaitStatus { WaitErrorType::Invalid, "Invalid work handle." };    
+
+    Dx12Fence& fence = queues().getFence(WorkType::Graphics);
+
+    if (milliseconds != 0u)
+        fence.waitOnCpu(workInfoIt->second.fenceValue, milliseconds < 0 ? INFINITE : milliseconds);
+
+    if (fence.isComplete(workInfoIt->second.fenceValue))
+        return WaitStatus { WaitErrorType::Ok, "" };
+    else
+        return WaitStatus { WaitErrorType::NotReady, "" };
 }
 
 DownloadStatus Dx12Device::getDownloadStatus(WorkHandle bundle, ResourceHandle handle)
 {
-    auto it = m_dx12WorkInfos->downloadMaps.find(bundle.handleId);
-    if (it == m_dx12WorkInfos->downloadMaps.end())
+    auto it = m_dx12WorkInfos->workMap.find(bundle.handleId);
+    if (it == m_dx12WorkInfos->workMap.end())
         return DownloadStatus { DownloadResult::Invalid, nullptr, 0u };
 
-    auto downloadStateIt = it->second.find(handle);
-    if (downloadStateIt == it->second.end())
+    auto downloadStateIt = it->second.downloadMap.find(handle);
+    if (downloadStateIt == it->second.downloadMap.end())
         return DownloadStatus { DownloadResult::Invalid, nullptr, 0u };
 
     auto& downloadState = downloadStateIt->second;
-    UINT64 currentFenceValue = queues().currentFenceValue(downloadState.queueType);
-    if (downloadState.fenceValue >= currentFenceValue)
+    Dx12Fence& fence = queues().getFence(downloadState.queueType);
+    if (fence.isComplete(downloadState.fenceValue))
     {
         return DownloadStatus { DownloadResult::Ok, downloadState.mappedMemory, 0u };
     }
@@ -310,23 +329,21 @@ ScheduleStatus Dx12Device::internalSchedule(CommandList** commandLists, int list
     status.workHandle = workHandle;
     
     Dx12WorkBundle dx12WorkBundle(*this);
-    bool hasDownloads = false;
     {
         m_workDb.lock();
         WorkBundle& workBundle = m_workDb.unsafeGetWorkBundle(workHandle);
-        hasDownloads = (int)workBundle.resourcesToDownload.size() > 0;
         dx12WorkBundle.load(workBundle);
         m_workDb.unlock();
     }
 
-    dx12WorkBundle.execute(commandLists, listCounts);
+    UINT64 fenceValue = dx12WorkBundle.execute(commandLists, listCounts);
 
-    if (hasDownloads)
     {
         m_workDb.lock();
-        Dx12DownloadResourceMap downloadStateMap;
-        dx12WorkBundle.getDownloadResourceMap(downloadStateMap);
-        m_dx12WorkInfos->downloadMaps[workHandle.handleId] = std::move(downloadStateMap);
+        Dx12WorkInfo workInfo;
+        workInfo.fenceValue = fenceValue;
+        dx12WorkBundle.getDownloadResourceMap(workInfo.downloadMap);
+        m_dx12WorkInfos->workMap[workHandle.handleId] = std::move(workInfo);
         m_workDb.unlock();
     }
     return status;
@@ -334,7 +351,7 @@ ScheduleStatus Dx12Device::internalSchedule(CommandList** commandLists, int list
 
 void Dx12Device::internalReleaseWorkHandle(WorkHandle handle)
 {
-    m_dx12WorkInfos->downloadMaps.erase(handle.handleId);
+    m_dx12WorkInfos->workMap.erase(handle.handleId);
 }
 
 SmartPtr<IDisplay> Dx12Device::createDisplay(const DisplayConfig& config)

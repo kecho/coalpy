@@ -33,7 +33,7 @@ public:
     Dx12WorkBundle(Dx12Device& device) : m_device(device) {}
     bool load(const WorkBundle& workBundle);
 
-    void execute(CommandList** commandLists, int commandListsCount);
+    UINT64 execute(CommandList** commandLists, int commandListsCount);
 
     void getDownloadResourceMap(Dx12DownloadResourceMap& downloadMap);
 

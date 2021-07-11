@@ -46,12 +46,12 @@ bool Dx12Fence::isComplete(UINT64 valueToCmp)
     return (m_fence->GetCompletedValue() >= valueToCmp);
 }
 
-void Dx12Fence::waitOnCpu(UINT64 valueToWait)
+void Dx12Fence::waitOnCpu(UINT64 valueToWait, DWORD timeMs)
 {
     if (m_fence->GetCompletedValue() < valueToWait)
     {
         DX_OK(m_fence->SetEventOnCompletion(valueToWait, m_event));
-        WaitForSingleObject(m_event, INFINITE);
+        WaitForSingleObject(m_event, timeMs);
     }
 }
 

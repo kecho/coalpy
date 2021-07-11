@@ -238,7 +238,7 @@ void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList,
     outList.Close();
 }
 
-void Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount)
+UINT64 Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount)
 {
     CPY_ASSERT(commandListsCount == (int)m_workBundle.processedLists.size());
 
@@ -285,6 +285,7 @@ void Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount)
 
     pools.tablePool->endUsage();
     pools.uploadPool->endUsage();
+    return fenceVal;
 }
 
 void Dx12WorkBundle::getDownloadResourceMap(Dx12DownloadResourceMap& downloadMap)

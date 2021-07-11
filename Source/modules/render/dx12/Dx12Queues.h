@@ -59,6 +59,7 @@ public:
 
     ID3D12CommandQueue& cmdQueue(WorkType type) { return *(m_containers[(int)type].queue); }
     Dx12MemoryPools& memPools(WorkType type) { return m_containers[(int)type].memPools; }
+    Dx12Fence& getFence(WorkType type) { return *(m_containers[(int)type].fence); }
     
     void allocate(WorkType workType, Dx12List& outList);
     UINT64 currentFenceValue(WorkType workType);

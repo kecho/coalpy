@@ -309,7 +309,7 @@ namespace coalpy
             [numthreads(64,1,1)]
             void csMain(uint3 dti : SV_DispatchThreadID)
             {
-                output[dti.x] = dti.x;
+                output[dti.x] = dti.x + 1;
             }
         )";
         
@@ -370,7 +370,7 @@ namespace coalpy
         {
             auto* ptr = (unsigned int*)downloadStatus.downloadPtr;
             for (int i = 0; i < totalElements; ++i)
-                CPY_ASSERT(ptr[i] == i);
+                CPY_ASSERT(ptr[i] == (i + 1));
         }
 
         device.release(result.workHandle);

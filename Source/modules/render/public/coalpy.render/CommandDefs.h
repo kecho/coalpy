@@ -25,7 +25,9 @@ enum class ScheduleErrorType
 
 enum class WaitErrorType
 {
-    Ok
+    Ok,
+    NotReady,
+    Invalid,
 };
 
 enum class DownloadResult
