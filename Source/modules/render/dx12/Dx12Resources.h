@@ -88,6 +88,8 @@ public:
     const Dx12Descriptor srv() const { return m_srv; }
     const Dx12Descriptor uav() const { return m_uav; }
 
+    bool isBuffer() const { return m_data.resDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER; };
+
 protected:
     Dx12Descriptor m_srv = {};
     Dx12Descriptor m_uav = {};

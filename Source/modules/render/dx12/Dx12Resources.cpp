@@ -296,6 +296,8 @@ bool Dx12Buffer::init()
 
     if (m_buffDesc.isConstantBuffer)
     {
+        m_cbv = m_device.descriptors().allocateSrvOrUavOrCbv();
+
         D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
         cbvDesc.BufferLocation = m_data.gpuVirtualAddress;
         cbvDesc.SizeInBytes = m_data.resDesc.Width;
@@ -308,6 +310,8 @@ bool Dx12Buffer::init()
 
 Dx12Buffer::~Dx12Buffer()
 {
+    if (m_buffDesc.isConstantBuffer)
+        m_device.descriptors().release(m_cbv);
 }
 
 Dx12ResourceTable::Dx12ResourceTable(Dx12Device& device, Dx12Resource** resources, int count, bool isUav)

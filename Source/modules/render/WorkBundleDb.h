@@ -47,6 +47,8 @@ struct CommandInfo
     MemOffset commandOffset = {};
     int uploadBufferOffset = 0;
     int commandDownloadIndex = -1;
+    int constantBufferTableOffset = -1;
+    int constantBufferCount = 0;
     std::vector<ResourceBarrier> preBarrier;
     std::vector<ResourceBarrier> postBarrier;
 };
@@ -74,8 +76,7 @@ struct WorkResourceState
 
 using ResourceStateMap = std::unordered_map<ResourceHandle, WorkResourceState>;
 using TableGpuAllocationMap = std::unordered_map<ResourceTable, TableAllocation>;
-using ConstantDescriptorOffsetMap = std::unordered_map<ResourceHandle, int>;
-using ResourceSet = std::set<ResourceHandle>;
+using ResourceSet  = std::set<ResourceHandle>;
 
 struct WorkBundle
 {
@@ -85,9 +86,9 @@ struct WorkBundle
     int totalTableSize = 0;
     int totalConstantBuffers = 0;
     int totalUploadBufferSize = 0;
+
     ResourceSet resourcesToDownload;
     TableGpuAllocationMap tableAllocations;
-    ConstantDescriptorOffsetMap constantDescriptorOffsets;
 };
 
 struct WorkTableInfo

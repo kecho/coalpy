@@ -34,7 +34,7 @@ void Dx12WorkBundle::uploadAllTables()
     dstDescCounts.reserve(totalDescriptors);
 
     Dx12ResourceCollection& resources = m_device.resources();
-    if (m_srvUavTable.ownerHeap != nullptr)
+    if (m_srvUavTable.ownerHeap != nullptr && m_workBundle.totalTableSize)
     {
         for (auto& it : m_workBundle.tableAllocations)
         {
@@ -50,25 +50,6 @@ void Dx12WorkBundle::uploadAllTables()
             CPY_ASSERT(it.second.count == cpuTable.count);
         }
     }
-
-    if (m_cbvTable.ownerHeap != nullptr)
-    {
-        for (auto& it : m_workBundle.constantDescriptorOffsets)
-        {
-            CPY_ASSERT(it.first.valid());
-            Dx12Buffer& r = (Dx12Buffer&)resources.unsafeGetResource(it.first);
-            CPY_ASSERT(r.bufferDesc().isConstantBuffer);
-            if (!r.bufferDesc().isConstantBuffer)
-                continue;
-
-            srcDescBase.push_back(r.cbv().handle);
-            srcDescCounts.push_back(1);
-
-            dstDescBase.push_back(m_cbvTable.getCpuHandle(it.second));
-            dstDescCounts.push_back(1);
-        }
-    }
-
     if (!dstDescBase.empty())
     {
         m_device.device().CopyDescriptors(
@@ -121,7 +102,7 @@ void Dx12WorkBundle::applyBarriers(const std::vector<ResourceBarrier>& barriers,
     outList.ResourceBarrier((UINT)resultBarriers.size(), resultBarriers.data());
 }
 
-void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiComputeCmd* computeCmd, ID3D12GraphicsCommandList6& outList)
+void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiComputeCmd* computeCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandList6& outList)
 {
     Dx12ShaderDb& db = m_device.shaderDb();
 
@@ -139,6 +120,23 @@ void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompute
     outList.SetDescriptorHeaps(1, &m_srvUavTable.ownerHeap);
 
     outList.SetPipelineState(pso);
+
+    //TODO: this can be taken outside
+    if (computeCmd->constantCounts > 0)
+    {
+        CPY_ASSERT(cmdInfo.constantBufferTableOffset >= 0);
+        const Buffer* buffers = computeCmd->constants.data(data);
+        for (int cbufferId = 0; cbufferId < computeCmd->constantCounts; ++cbufferId)
+        {
+            Dx12Resource& resource = m_device.resources().unsafeGetResource(buffers[cbufferId]);
+            CPY_ASSERT(resource.isBuffer());
+            Dx12Buffer& buff = (Dx12Buffer&)resource;
+            m_device.device().CopyDescriptorsSimple(1, m_cbvTable.getCpuHandle(cbufferId + cmdInfo.constantBufferTableOffset), buff.cbv().handle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        }
+
+        D3D12_GPU_DESCRIPTOR_HANDLE descriptor = m_cbvTable.getGpuHandle(cmdInfo.constantBufferTableOffset);
+        outList.SetComputeRootDescriptorTable(m_device.tableIndex(Dx12Device::TableTypes::Cbv, 0), descriptor); //one and oonly one table for cbv
+    }
 
     const InResourceTable* inTables = computeCmd->inResourceTables.data(data);
     for (int inTableId = 0; inTableId < computeCmd->inResourceTablesCounts; ++inTableId)
@@ -192,6 +190,34 @@ void Dx12WorkBundle::buildDownloadCmd(
     CPY_ASSERT(downloadState.mappedMemory != nullptr);
 }
 
+void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCmd* uploadCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandList6& outList)
+{
+    //TODO: this can be jobified.
+    {
+        CPY_ASSERT(cmdInfo.uploadBufferOffset < m_uploadMemBlock.uploadSize);
+        CPY_ASSERT(uploadCmd->sourceSize <= (m_uploadMemBlock.uploadSize - cmdInfo.uploadBufferOffset));
+        memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + cmdInfo.uploadBufferOffset, uploadCmd->sources.data(data), uploadCmd->sourceSize);
+    }
+
+    
+    Dx12ResourceCollection& resources = m_device.resources();
+    Dx12Resource& destinationResource = resources.unsafeGetResource(uploadCmd->destination);
+    if (destinationResource.isBuffer())
+    {
+        outList.CopyBufferRegion(
+            &destinationResource.d3dResource(),
+            0ull,
+            m_uploadMemBlock.buffer,
+            m_uploadMemBlock.offset + cmdInfo.uploadBufferOffset,
+            uploadCmd->sourceSize);
+    }
+    else
+    {
+        CPY_ASSERT_MSG(false, "upload command not ready for non buffer resources.");
+    }
+
+}
+
 void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, ID3D12GraphicsCommandList6& outList)
 {
     CPY_ASSERT(cmdList->isFinalized());
@@ -208,7 +234,7 @@ void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList,
         case AbiCmdTypes::Compute:
             {
                 const auto* abiCmd = (const AbiComputeCmd*)cmdBlob;
-                buildComputeCmd(listData, abiCmd, outList);
+                buildComputeCmd(listData, abiCmd, cmdInfo, outList);
             }
             break;
         case AbiCmdTypes::Copy:
@@ -220,6 +246,7 @@ void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList,
         case AbiCmdTypes::Upload:
             {
                 const auto* abiCmd = (const AbiUploadCmd*)cmdBlob;
+                buildUploadCmd(listData, abiCmd, cmdInfo, outList);
             }
             break;
         case AbiCmdTypes::Download:

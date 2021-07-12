@@ -25,7 +25,6 @@ struct WorkBuildContext
     ResourceStateMap states;
     ResourceSet resourcesToDownload;
     TableGpuAllocationMap tableAllocations;
-    ConstantDescriptorOffsetMap constantDescriptorOffsets;
     std::vector<ProcessedList> processedList;
     int totalTableSize = 0;
     int totalConstantBuffers = 0;
@@ -193,21 +192,6 @@ bool processTable(
     return true;
 }
 
-void registerConstantBuffers(const Buffer* buffers, int constantCounts, WorkBuildContext& context)
-{
-    CommandInfo& cmdInfo = context.currentCommandInfo();
-    for (int b = 0; b < constantCounts; ++b)
-    {
-        ResourceHandle h = buffers[b];
-        auto it = context.constantDescriptorOffsets.find(h);
-        if (it == context.constantDescriptorOffsets.end())
-        {
-            int offset = context.totalConstantBuffers; 
-            context.constantDescriptorOffsets[h] = offset;
-        }
-    }
-}
-
 bool commitResourceStates(const ResourceStateMap& input, WorkResourceInfos& resourceInfos)
 {
     for (auto& it : input)
@@ -249,10 +233,12 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         {
             if (!transitionResource(cbuffers[i], ResourceGpuState::Cbv, context))
                 return false;
-
         }
 
-        registerConstantBuffers(cbuffers, cmd->constantCounts, context);
+        CommandInfo& cmdInfo = context.currentCommandInfo();
+        cmdInfo.constantBufferCount = cmd->constantCounts;
+        cmdInfo.constantBufferTableOffset = context.totalConstantBuffers;
+        context.totalConstantBuffers += cmdInfo.constantBufferCount;
     }
 
     ++context.currentListInfo().computeCommandsCount;
@@ -441,7 +427,6 @@ ScheduleStatus WorkBundleDb::build(CommandList** lists, int listCount)
         workData.processedLists = std::move(ctx.processedList);
         workData.states = std::move(ctx.states);
         workData.tableAllocations = std::move(ctx.tableAllocations);
-        workData.constantDescriptorOffsets = std::move(ctx.constantDescriptorOffsets);
         workData.resourcesToDownload = std::move(ctx.resourcesToDownload);
         workData.totalTableSize = ctx.totalTableSize;
         workData.totalConstantBuffers = ctx.totalConstantBuffers;

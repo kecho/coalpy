@@ -547,6 +547,119 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testCachedConstantBuffer(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+        IShaderDb& db = *renderTestCtx.db;
+
+        const char* cbufferTestSrc = R"(
+            cbuffer Constants : register(b0)
+            {
+                int4 a;
+                int4 b;
+            }
+
+            RWBuffer<int4> output : register(u0);
+
+            [numthreads(1,1,1)]
+            void csMain(uint3 dti : SV_DispatchThreadID)
+            {
+                output[0] = a;
+                output[1] = b;
+            }
+        )";
+
+        ShaderInlineDesc shaderDesc{ ShaderType::Compute, "cbufferTestShader", "csMain", cbufferTestSrc };
+        ShaderHandle shader = db.requestCompile(shaderDesc);
+        db.resolve(shader);
+        CPY_ASSERT(db.isValid(shader));
+
+        int totalElements = 2;
+
+        BufferDesc buffDesc;
+        buffDesc.memFlags = (MemFlags)MemFlag_GpuRead;
+        buffDesc.format = Format::RGBA_32_SINT;
+        buffDesc.elementCount = totalElements;
+        buffDesc.isConstantBuffer = true;
+        Buffer constantBuffer = device.createBuffer(buffDesc);
+
+        buffDesc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
+        buffDesc.isConstantBuffer = false;
+        Buffer resultBuffer = device.createBuffer(buffDesc);
+
+        buffDesc.memFlags = MemFlag_CpuRead;
+        Buffer readbackBuff = device.createBuffer(buffDesc);
+        
+        ResourceTableDesc tableDesc;
+
+        tableDesc.resources = &resultBuffer;
+        tableDesc.resourcesCount = 1;
+        OutResourceTable outTable = device.createOutResourceTable(tableDesc);
+
+        const int constantsData[4 * 2] = {
+            -1, 0, 1, 2,
+             3, 4, 5, 6
+        };
+
+        CommandList commandList;
+        {
+            UploadCommand cmd;
+            cmd.setData((const char*)constantsData, (int)sizeof(constantsData), constantBuffer);
+            commandList.writeCommand(cmd);
+        }
+
+        {
+            ComputeCommand cmd;
+            cmd.setShader(shader);
+            cmd.setConstants(&constantBuffer, 1);
+            cmd.setOutResources(&outTable, 1);
+            cmd.setDispatch("testCbuffer", 1, 1, 1);
+            commandList.writeCommand(cmd);
+        }
+
+        {
+            CopyCommand cmd;
+            cmd.setResources(resultBuffer, readbackBuff);
+            commandList.writeCommand(cmd);
+        }
+
+        {
+            DownloadCommand downloadCmd;
+            downloadCmd.setData(readbackBuff);
+            commandList.writeCommand(downloadCmd);
+        }
+
+        commandList.finalize();
+        CommandList* lists[] = { &commandList };
+        
+        auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle); 
+        CPY_ASSERT_MSG(result.success(), result.message.c_str());
+        auto waitStatus = device.waitOnCpu(result.workHandle);
+        CPY_ASSERT(waitStatus.success());
+
+        {
+            auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff);
+            CPY_ASSERT(downloadStatus.success());
+            CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
+            CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(unsigned int) * totalElements);
+            if (downloadStatus.downloadPtr != nullptr /*TODO: do the size && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements*/)
+            {
+                auto* ptr = (int*)downloadStatus.downloadPtr;
+                for (int i = 0; i < totalElements; ++i)
+                    CPY_ASSERT(ptr[i] == constantsData[i]);
+            }
+        }
+
+        device.release(result.workHandle);
+        device.release(constantBuffer);
+        device.release(resultBuffer);
+        device.release(readbackBuff);
+        device.release(outTable);
+        renderTestCtx.end();
+    }
+
     //registration of tests
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
@@ -557,7 +670,8 @@ namespace coalpy
             { "createTables",  testCreateTables },
             { "commandListAbi",  testCommandListAbi },
             { "renderMemoryDownload",  testRenderMemoryDownload },
-            { "simpleComputePingPong",  testSimpleComputePingPong }
+            { "simpleComputePingPong",  testSimpleComputePingPong },
+            { "cachedConstantBuffer",  testCachedConstantBuffer }
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
