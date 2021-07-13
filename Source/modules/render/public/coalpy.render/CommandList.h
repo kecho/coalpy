@@ -24,6 +24,14 @@ public:
         m_constBuffersCounts = bufferCounts;
     }
 
+    inline void setInlineConstant(const char* buffer, int bufferSize)
+    {
+        m_constBuffers = nullptr;
+        m_constBuffersCounts = 0;
+        m_inlineConstantBuffer = buffer;
+        m_inlineConstantBufferSize = bufferSize;
+    }
+
     inline void setInResources(InResourceTable* inTables, int inTablesCounts)
     {
         m_inTables = inTables;
@@ -55,6 +63,9 @@ private:
 
     const OutResourceTable* m_outTables;
     int m_outTablesCounts = 0;
+
+    const char* m_inlineConstantBuffer = nullptr;
+    int m_inlineConstantBufferSize = 0;
 
     const char* m_debugName = "";
     int m_x = 1;

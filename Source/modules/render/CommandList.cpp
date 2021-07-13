@@ -122,6 +122,9 @@ void CommandList::writeCommand(const ComputeCommand& cmd)
     m_internal.deferArrayStore(abiCmd.constants, cmd.m_constBuffers, cmd.m_constBuffersCounts);
     abiCmd.constantCounts = cmd.m_constBuffersCounts;
 
+    m_internal.deferArrayStore(abiCmd.inlineConstantBuffer, cmd.m_inlineConstantBuffer, cmd.m_inlineConstantBufferSize);
+    abiCmd.inlineConstantBufferSize = cmd.m_inlineConstantBufferSize;
+
     m_internal.deferArrayStore(abiCmd.inResourceTables, cmd.m_inTables, cmd.m_inTablesCounts);
     abiCmd.inResourceTablesCounts = cmd.m_inTablesCounts;
 

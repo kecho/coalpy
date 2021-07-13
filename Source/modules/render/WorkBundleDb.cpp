@@ -229,16 +229,29 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
 
     {
         const Buffer* cbuffers = cmd->constants.data(data);
-        for (int i = 0; i < cmd->constantCounts; ++i)
-        {
-            if (!transitionResource(cbuffers[i], ResourceGpuState::Cbv, context))
-                return false;
-        }
-
         CommandInfo& cmdInfo = context.currentCommandInfo();
-        cmdInfo.constantBufferCount = cmd->constantCounts;
-        cmdInfo.constantBufferTableOffset = context.totalConstantBuffers;
-        context.totalConstantBuffers += cmdInfo.constantBufferCount;
+        if (cmd->inlineConstantBufferSize > 0)
+        {
+            //TODO: hack, dx12 requires aligned buffers to be 256.
+            int alignedBufferSize = ((cmd->inlineConstantBufferSize + 255)/256) * 256;
+            cmdInfo.uploadBufferOffset = context.totalUploadBufferSize;
+            context.totalUploadBufferSize += alignedBufferSize;
+
+            cmdInfo.constantBufferTableOffset = context.totalConstantBuffers;
+            ++context.totalConstantBuffers;
+        }
+        else
+        {
+            for (int i = 0; i < cmd->constantCounts; ++i)
+            {
+                if (!transitionResource(cbuffers[i], ResourceGpuState::Cbv, context))
+                    return false;
+            }
+
+            cmdInfo.constantBufferCount = cmd->constantCounts;
+            cmdInfo.constantBufferTableOffset = context.totalConstantBuffers;
+            context.totalConstantBuffers += cmdInfo.constantBufferCount;
+        }
     }
 
     ++context.currentListInfo().computeCommandsCount;

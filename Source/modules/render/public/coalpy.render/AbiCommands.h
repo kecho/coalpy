@@ -49,6 +49,9 @@ struct AbiComputeCmd
     AbiPtr<Buffer> constants;
     int       constantCounts = 0;
 
+    AbiPtr<char> inlineConstantBuffer;
+    int       inlineConstantBufferSize = 0;
+
     AbiPtr<InResourceTable> inResourceTables;
     int       inResourceTablesCounts = 0;
 

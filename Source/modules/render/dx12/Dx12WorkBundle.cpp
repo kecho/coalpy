@@ -3,6 +3,7 @@
 #include "Dx12Resources.h"
 #include "Dx12ResourceCollection.h"
 #include "Dx12ShaderDb.h"
+#include "Dx12Utils.h"
 
 namespace coalpy
 {
@@ -122,7 +123,19 @@ void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompute
     outList.SetPipelineState(pso);
 
     //TODO: this can be taken outside
-    if (computeCmd->constantCounts > 0)
+    if (computeCmd->inlineConstantBufferSize > 0)
+    {
+        CPY_ASSERT(computeCmd->inlineConstantBufferSize <= (m_uploadMemBlock.uploadSize - cmdInfo.uploadBufferOffset));
+        memcpy((char*)m_uploadMemBlock.mappedBuffer + cmdInfo.uploadBufferOffset, computeCmd->inlineConstantBuffer.data(data), computeCmd->inlineConstantBufferSize);
+        
+        //HACK: dx12 requires aligned buffers to be 256, this size has been hacked to be aligned in WorkBundleDb, processCompte()
+        UINT alignedSize = alignByte(computeCmd->inlineConstantBufferSize, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbufferDesc = { m_uploadMemBlock.gpuVA + cmdInfo.uploadBufferOffset, alignedSize };
+        m_device.device().CreateConstantBufferView(&cbufferDesc, m_cbvTable.getCpuHandle(cmdInfo.constantBufferTableOffset));
+        outList.SetComputeRootDescriptorTable(m_device.tableIndex(Dx12Device::TableTypes::Cbv, 0), m_cbvTable.getGpuHandle(cmdInfo.constantBufferTableOffset)); //one and only one table for cbv
+    }
+    else if (computeCmd->constantCounts > 0)
     {
         CPY_ASSERT(cmdInfo.constantBufferTableOffset >= 0);
         const Buffer* buffers = computeCmd->constants.data(data);
