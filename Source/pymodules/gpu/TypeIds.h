@@ -11,6 +11,7 @@ enum class TypeId : int
     Shader,
     RenderArgs,
     Texture,
+    CommandList,
     Buffer,
     InResourceTable,
     OutResourceTable,

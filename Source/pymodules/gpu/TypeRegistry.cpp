@@ -5,6 +5,7 @@
 #include "RenderArgs.h"
 #include "Resources.h"
 #include "RenderEnum.h"
+#include "CommandList.h"
 #include "CoalpyTypeObject.h"
 #include <coalpy.core/Formats.h>
 #include <coalpy.core/Assert.h>
@@ -52,6 +53,7 @@ void constructTypes(TypeList& outTypes)
     RegisterType(Shader,             outTypes);
     RegisterType(RenderArgs,         outTypes);
     RegisterType(Buffer,             outTypes);
+    RegisterType(CommandList,        outTypes);
     RegisterType(Texture,            outTypes);
     RegisterType(InResourceTable,    outTypes);
     RegisterType(OutResourceTable,   outTypes);

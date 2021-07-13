@@ -50,6 +50,12 @@ PyMethodDef g_defs[] = {
         "index: the desired device index. See coalpy.gpu.get_adapters for a full list.\n"
     ),
 
+    KW_FN(
+        schedule,
+        schedule,
+        ""
+    ),
+
 
     VA_FN(run, run, "Runs window rendering callbacks. This function blocks until all the existing windows are closed."),
 
@@ -218,6 +224,11 @@ PyObject* run(PyObject* self, PyObject* args)
     }
 
     Py_DECREF(renderArgs);
+    Py_RETURN_NONE;
+}
+
+PyObject* schedule(PyObject* self, PyObject* args)
+{
     Py_RETURN_NONE;
 }
 
