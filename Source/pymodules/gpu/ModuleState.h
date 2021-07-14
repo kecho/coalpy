@@ -5,6 +5,7 @@
 #include "TypeIds.h"
 #include <set>
 #include <coalpy.render/ShaderDefs.h>
+#include <vector>
 #include <mutex>
 
 namespace coalpy
@@ -18,6 +19,7 @@ class ITaskSystem;
 namespace render
 {
     class IDevice;
+    class CommandList;
 }
 
 namespace gpu
@@ -62,6 +64,9 @@ public:
 
     static void clean();
 
+    render::CommandList* newCommandList();
+    void deleteCommandList(render::CommandList* cmdList);
+
 private:
     void onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString);
     void registerTypes(CoalpyTypeObject** types, int typesCount);
@@ -74,6 +79,8 @@ private:
     PyObject* m_exObj;
     CoalpyTypeObject* m_types[(int)TypeId::Counts];
     std::set<Window*> m_windows;
+
+    std::vector<render::CommandList*> m_commandListPool;
 
     std::mutex m_shaderErrorMutex;
 

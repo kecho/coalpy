@@ -4,6 +4,7 @@
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.render/IDevice.h>
+#include <coalpy.render/CommandList.h>
 #include "CoalpyTypeObject.h"
 #include "Window.h"
 #include <iostream>
@@ -101,6 +102,10 @@ ModuleState::~ModuleState()
     for (auto w : m_windows)
         w->display = nullptr;
 
+    for (auto* cmdList : m_commandListPool)
+        delete cmdList;
+    m_commandListPool.clear();
+
     delete m_windowListener;
     delete m_device;
     delete m_db;
@@ -149,6 +154,26 @@ void ModuleState::onShaderCompileError(ShaderHandle handle, const char* shaderNa
 {
     std::lock_guard lock(m_shaderErrorMutex);
     std::cerr << "[" << shaderName << "] " << shaderErrorString << std::endl;
+}
+
+render::CommandList* ModuleState::newCommandList()
+{
+    if (m_commandListPool.empty())
+    {
+        return new render::CommandList();
+    }
+    else
+    {
+        auto* cmdList = m_commandListPool.back();
+        m_commandListPool.pop_back();
+        return cmdList;
+    }
+}
+
+void ModuleState::deleteCommandList(render::CommandList* cmdList)
+{
+    cmdList->reset();
+    m_commandListPool.push_back(cmdList);
 }
 
 void ModuleState::clean()

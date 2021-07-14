@@ -130,6 +130,7 @@ public:
     void writeCommand(const CopyCommand& cmd);
     void writeCommand(const UploadCommand& cmd);
     void writeCommand(const DownloadCommand& cmd);
+    void reset();
     void finalize();
 
     bool isFinalized() const;

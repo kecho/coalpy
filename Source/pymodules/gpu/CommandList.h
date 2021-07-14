@@ -4,9 +4,16 @@
 #include <Python.h>
 #include "TypeIds.h"
 #include <coalpy.render/CommandList.h>
+#include <vector>
 
 namespace coalpy
 {
+
+namespace render
+{
+class CommandList;
+}
+
 namespace gpu
 {
 
@@ -14,6 +21,9 @@ struct CommandList
 {
     //Data
     PyObject_HEAD
+
+    render::CommandList* cmdList;
+    std::vector<PyObject*> references;
 
     //Functions
     static const TypeId s_typeId = TypeId::CommandList;

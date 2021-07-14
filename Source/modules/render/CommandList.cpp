@@ -22,6 +22,12 @@ public:
     std::vector<CmdPendingMemory> pendingMemory;
     bool closed = false;
 
+    void reset()
+    {
+        buffer.resize(0);
+        pendingMemory.clear();
+        closed = false;
+    }
     template<typename ElementType>
     void deferArrayStore(AbiPtr<ElementType>& param, const ElementType* srcArray, int counts)
     {
@@ -140,6 +146,11 @@ void CommandList::writeCommand(const ComputeCommand& cmd)
     abiCmd.z = cmd.m_z;
 
     finalizeCommand(abiCmd);
+}
+
+void CommandList::reset()
+{
+    m_internal.reset();
 }
 
 void CommandList::writeCommand(const CopyCommand& cmd)
