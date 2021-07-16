@@ -72,12 +72,21 @@ static bool getListOfBuffers(
     std::vector<render::Buffer>& bufferList,
     std::vector<PyObject*> references)
 {
+    PyTypeObject* bufferType = moduleState.getType(TypeId::Buffer);
     if (!PyList_Check(opaqueList))
+    {
+        if (opaqueList->ob_type == bufferType)
+        {
+            Buffer& buff = *((Buffer*)opaqueList);
+            bufferList.push_back(buff.buffer);
+            references.push_back(opaqueList);
+            return true;
+        }
         return false;
+    }
 
     auto& listObj = *((PyListObject*)opaqueList);
     int listSize = Py_SIZE(opaqueList);
-    PyTypeObject* bufferType = moduleState.getType(TypeId::Buffer);
     for (int i = 0; i < listSize; ++i)
     {
         PyObject* obj = listObj.ob_item[i];
@@ -99,12 +108,21 @@ static bool getListOfTables(
     std::vector<TableType>& bufferList,
     std::vector<PyObject*> references)
 {
+    PyTypeObject* pyObjType = moduleState.getType(PyTableType::s_typeId);
     if (!PyList_Check(opaqueList))
+    {
+        if (opaqueList->ob_type == pyObjType)
+        {
+            PyTableType& tobj = *((PyTableType*)opaqueList);
+            bufferList.push_back(tobj.table);
+            references.push_back(opaqueList);
+            return true;
+        }
         return false;
+    }
 
     auto& listObj = *((PyListObject*)opaqueList);
     int listSize = Py_SIZE(opaqueList);
-    PyTypeObject* pyObjType = moduleState.getType(PyTableType::s_typeId);
     for (int i = 0; i < listSize; ++i)
     {
         PyObject* obj = listObj.ob_item[i];

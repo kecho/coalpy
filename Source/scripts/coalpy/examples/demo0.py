@@ -20,7 +20,7 @@ def main():
         cmdList.dispatch(
             x = xv, y = yv, z = 1,
             shader = s1,
-            output_tables = [output_table]
+            output_tables = output_table
         )
 
         gpu.schedule([cmdList])
