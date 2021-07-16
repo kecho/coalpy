@@ -201,13 +201,13 @@ void Dx12ShaderDb::requestRecompile(ShaderHandle handle)
         m_desc.ts->depends(compileState.compileStep, m_desc.fs->asTask(compileState.readStep));
     }
 
+    shaderState->compileState = &compileState;
     compileState.shaderHandle = handle;
     Task patchTask = m_desc.ts->createTask(TaskDesc(
         [this, &compileState, shaderState](TaskContext& ctx)
         {
             std::unique_lock lock(m_shadersMutex);
             shaderState->compiling = true;
-            shaderState->compileState = &compileState;
         }));
 
     m_desc.ts->depends(patchTask, compileState.compileStep);
@@ -259,7 +259,9 @@ void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
         compileState.shaderName.c_str(),
         [&compileState, this](TaskContext& ctx)
     {
-        m_compiler.compileShader(compileState.compileArgs);
+        compileState.success = false;
+        if (compileState.compileArgs.source != nullptr)
+            m_compiler.compileShader(compileState.compileArgs);
     }));
 
     if (m_desc.onErrorFn)
@@ -394,6 +396,9 @@ bool Dx12ShaderDb::updateComputePipelineState(ShaderState& state)
     CPY_ASSERT(m_parentDevice != nullptr);
     D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
     desc.pRootSignature = &m_parentDevice->defaultComputeRootSignature();
+    if (!state.shaderBlob)
+        return false;
+
     desc.CS.pShaderBytecode = state.shaderBlob->GetBufferPointer();
     desc.CS.BytecodeLength = state.shaderBlob->GetBufferSize();
     ID3D12PipelineState* pso;

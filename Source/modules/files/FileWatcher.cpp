@@ -74,10 +74,13 @@ bool findResults(
         FILE_NOTIFY_INFORMATION* curr = bytesReturned ? infos : nullptr;
         while (curr != nullptr)
         {
-            std::wstring wfilename;
-            wfilename.assign(curr->FileName, curr->FileNameLength / sizeof(wchar_t));
-            std::string filename = ws2s(wfilename);
-            caughtFiles.insert(filename);
+            if (curr->Action == FILE_ACTION_MODIFIED)
+            {
+                std::wstring wfilename;
+                wfilename.assign(curr->FileName, curr->FileNameLength / sizeof(wchar_t));
+                std::string filename = ws2s(wfilename);
+                caughtFiles.insert(filename);
+            }
             curr = curr->NextEntryOffset == 0 ? nullptr : (FILE_NOTIFY_INFORMATION*)((char*)curr + curr->NextEntryOffset);
         }
     }

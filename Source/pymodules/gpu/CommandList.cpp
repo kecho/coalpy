@@ -1,5 +1,6 @@
 #include "CommandList.h"
 #include "ModuleState.h"
+#include "Shader.h"
 #include "CoalpyTypeObject.h"
 #include "HelperMacros.h"
 #include "Resources.h"
@@ -123,15 +124,16 @@ namespace methods
     PyObject* cmdDispatch(PyObject* self, PyObject* vargs, PyObject* kwds)
     {
         ModuleState& moduleState = parentModule(self);
-        static char* arguments[] = { "x", "y", "z", "name", "constants", "input_tables", "output_tables", nullptr };
+        static char* arguments[] = { "x", "y", "z", "shader", "name", "constants", "input_tables", "output_tables", nullptr };
         int x = 1;
         int y = 1;
         int z = 1;
         const char* name = nullptr;
+        PyObject* shader = nullptr;
         PyObject* constants = nullptr;
         PyObject* input_tables = nullptr;
         PyObject* output_tables = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "iii|sOOO", arguments, &x, &y, &z, &name, &constants, &input_tables, &output_tables))
+        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "iiiO|sOOO", arguments, &x, &y, &z, &shader, &name, &constants, &input_tables, &output_tables))
             return nullptr;
         
         if (x <= 0 || y <= 0 || z <= 0)
@@ -145,9 +147,23 @@ namespace methods
         render::ComputeCommand cmd;
         cmd.setDispatch(name ? name : "", x, y, z);
 
+        std::vector<render::Buffer> bufferList;
+        std::vector<render::InResourceTable> inTables;
+        std::vector<render::OutResourceTable> outTables;
+
+        PyTypeObject* shaderType = moduleState.getType(Shader::s_typeId);
+        if (shader->ob_type != shaderType)
+        {
+            PyErr_SetString(moduleState.exObj(), "shader parameter must be of type coalpy.gpu.Shader");
+            return nullptr;
+        }
+
+        Shader& shaderObj = *((Shader*)shader);
+        cmdList.references.push_back(shader);
+        cmd.setShader(shaderObj.handle);
+
         if (constants)
         {
-            std::vector<render::Buffer> bufferList;
             if (getListOfBuffers(moduleState, constants, bufferList, cmdList.references))
             {
                 if (!bufferList.empty())
@@ -157,31 +173,29 @@ namespace methods
 
         if (input_tables)
         {
-            std::vector<render::InResourceTable> tables;
-            if (!getListOfTables<InResourceTable, render::InResourceTable>(moduleState, input_tables, tables, cmdList.references))
+            if (!getListOfTables<InResourceTable, render::InResourceTable>(moduleState, input_tables, inTables, cmdList.references))
             {
                 PyErr_SetString(moduleState.exObj(), "input_tables argument must be a list of InResourceTable");
                 return nullptr;
             }
 
-            if (!tables.empty())
+            if (!inTables.empty())
             {
-                cmd.setInResources(tables.data(), (int)tables.size());
+                cmd.setInResources(inTables.data(), (int)inTables.size());
             }
         }
 
         if (output_tables)
         {
-            std::vector<render::OutResourceTable> tables;
-            if (!getListOfTables<OutResourceTable, render::OutResourceTable>(moduleState, output_tables, tables, cmdList.references))
+            if (!getListOfTables<OutResourceTable, render::OutResourceTable>(moduleState, output_tables, outTables, cmdList.references))
             {
                 PyErr_SetString(moduleState.exObj(), "output_tables argument must be a list of OutResourceTable");
                 return nullptr;
             }
 
-            if (!tables.empty())
+            if (!outTables.empty())
             {
-                cmd.setOutResources(tables.data(), (int)tables.size());
+                cmd.setOutResources(outTables.data(), (int)outTables.size());
             }
         }
 

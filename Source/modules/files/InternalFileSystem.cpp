@@ -28,17 +28,32 @@ namespace InternalFileSystem
 
     OpaqueFileHandle openFile(const char* filename, RequestType request)
     {
-        HANDLE h = CreateFileA(
-            filename, //file name
-            request == RequestType::Read ? GENERIC_READ : GENERIC_WRITE, //dwDesiredAccess
-            request == RequestType::Read ? FILE_SHARE_READ : 0u, //dwShareMode
-            NULL, //lpSecurityAttributes
-            request == RequestType::Read ? OPEN_EXISTING : CREATE_ALWAYS,//dwCreationDisposition
-            FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, //dwFlagsAndAttributes
-            NULL); //template attribute
+        bool retry = true;
+        UINT attempt = 0;
+        HANDLE h = INVALID_HANDLE_VALUE;
+        while (retry)
+        {
+            h = CreateFileA(
+                filename, //file name
+                request == RequestType::Read ? GENERIC_READ : GENERIC_WRITE, //dwDesiredAccess
+                request == RequestType::Read ? (FILE_SHARE_READ | FILE_SHARE_WRITE) : 0u, //dwShareMode
+                NULL, //lpSecurityAttributes
+                request == RequestType::Read ? OPEN_EXISTING : CREATE_ALWAYS,//dwCreationDisposition
+                FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, //dwFlagsAndAttributes
+                NULL); //template attribute
 
-        if (h == INVALID_HANDLE_VALUE)
-            return nullptr;
+            ++attempt;
+            if (h == INVALID_HANDLE_VALUE)
+            {
+                if (GetLastError() == ERROR_SHARING_VIOLATION && attempt < 10)
+                {
+                    Sleep(2.0); //sleep for 2ms, if this is the 10th attempt, just fail.
+                    continue;
+                }
+                return nullptr;
+            }
+            retry = false;
+        }
 
         auto* wf = new WindowsFile;
         wf->h = h;

@@ -1,6 +1,7 @@
 #include "Window.h"
 #include "Resources.h"
 #include <iostream>
+#include <structmember.h>
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/IWindow.h>
 #include <coalpy.render/IDisplay.h>
@@ -13,6 +14,12 @@ namespace coalpy
 {
 namespace gpu
 {
+
+
+static PyMemberDef g_windowMembers[] = {
+    { "display_texture", T_OBJECT, offsetof(Window, displayTexture), READONLY, "" },
+    { nullptr }
+};
 
 void Window::constructType(PyTypeObject& t)
 {
@@ -27,6 +34,7 @@ void Window::constructType(PyTypeObject& t)
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
     t.tp_init = Window::init;
+    t.tp_members = g_windowMembers;
     t.tp_dealloc = Window::destroy;
 }
 
@@ -109,6 +117,9 @@ void Window::close(PyObject* self)
 void Window::destroy(PyObject* self)
 {
     Window::close(self);
+    auto w = (Window*)self;
+    w->displayTexture->texture = render::Texture(); //invalidate texture
+    Py_DECREF(w->displayTexture);
     Py_TYPE(self)->tp_free(self);
 }
 

@@ -1,6 +1,7 @@
 #include "ModuleFunctions.h"
 #include "ModuleState.h"
 #include "HelperMacros.h"
+#include "CommandList.h"
 #include <string>
 #include "Window.h"
 #include "Shader.h"
@@ -218,7 +219,6 @@ PyObject* run(PyObject* self, PyObject* args)
     stopwatch.start();
     IWindow::run(runArgs); //block
 
-    CPY_ASSERT(((PyObject*)renderArgs)->ob_refcnt == 1);
     if (raiseException)
     {
         Py_DECREF(renderArgs);
@@ -229,8 +229,51 @@ PyObject* run(PyObject* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
-PyObject* schedule(PyObject* self, PyObject* args)
+PyObject* schedule(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
+    ModuleState& moduleState = getState(self);
+    if (!moduleState.checkValidDevice())
+    {
+        PyErr_SetString(moduleState.exObj(), "Cant schedule, current device is invalid.");
+        return nullptr;
+    }
+
+    char* arguments[] = { "command_lists", nullptr };
+    PyObject* cmdListsArg = nullptr;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "O", arguments, &cmdListsArg))
+            return nullptr;
+
+    if (!PyList_Check(cmdListsArg) || Py_SIZE(cmdListsArg) == 0)
+    {
+        PyErr_SetString(moduleState.exObj(), "argument command lists must be a non empty list");
+        return nullptr;
+    }
+
+    int commandListsCounts = Py_SIZE(cmdListsArg);
+    auto& listObj = *((PyListObject*)cmdListsArg);
+    std::vector<render::CommandList*> cmdListsVector;
+    PyTypeObject* pyCmdListType = moduleState.getType(CommandList::s_typeId);
+    for (int i = 0; i < commandListsCounts; ++i)
+    {
+        PyObject* obj = listObj.ob_item[i];
+        if (obj->ob_type != pyCmdListType)
+        {
+            PyErr_SetString(moduleState.exObj(), "object inside command list argument list must be of type CommandList.");
+            return nullptr;
+        }
+
+        CommandList& cmdListObj = *((CommandList*)obj);
+        cmdListObj.cmdList->finalize();
+        cmdListsVector.push_back(cmdListObj.cmdList);
+    }
+
+    auto result = moduleState.device().schedule(cmdListsVector.data(), (int)cmdListsVector.size());
+    if (!result.success())
+    {
+        PyErr_Format(moduleState.exObj(), "schedule call failed, reson: %s", result.message.c_str());
+        return nullptr;
+    }
+
     Py_RETURN_NONE;
 }
 
