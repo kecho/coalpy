@@ -11,8 +11,6 @@ print("Current device: {}".format(info[1]))
 
 s1 = gpu.Shader(file="coalpy/examples/testShader.hlsl", name="testShader")
 
-s1.resolve();
-
 def main():
 
     def on_render(render_args : gpu.RenderArgs):
