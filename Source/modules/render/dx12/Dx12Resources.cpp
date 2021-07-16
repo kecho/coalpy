@@ -90,7 +90,8 @@ bool Dx12Resource::init()
         if (r != S_OK)
             return false;
         
-        m_data.gpuVirtualAddress = m_data.resource->GetGPUVirtualAddress();
+        if (isBuffer())
+            m_data.gpuVirtualAddress = m_data.resource->GetGPUVirtualAddress();
     }
 
     if ((m_config.memFlags & MemFlag_GpuRead) != 0)

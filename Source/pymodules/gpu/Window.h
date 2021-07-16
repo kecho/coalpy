@@ -21,6 +21,7 @@ namespace gpu
 {
 
 class ModuleState;
+class Texture;
 
 struct Window
 {
@@ -29,6 +30,7 @@ struct Window
     PyObject* onRenderCallback;
     IWindow*  object;
     SmartPtr<render::IDisplay> display;
+    Texture* displayTexture;
 
     //Functions
     static const TypeId s_typeId = TypeId::Window;

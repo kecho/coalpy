@@ -27,6 +27,7 @@ public:
     // New width, new height.
     virtual void resize(unsigned int width, unsigned int height) = 0;
     virtual Texture texture() = 0;
+    virtual void present() = 0;
 
     // Gets the config of this display
     const DisplayConfig& config() const { return m_config; }

@@ -9,6 +9,7 @@
 #include "Dx12Formats.h"
 #include "Dx12Fence.h"
 #include "Dx12ResourceCollection.h"
+#include "WorkBundleDb.h"
 #include <dxgi1_5.h>
 
 namespace coalpy
@@ -71,7 +72,7 @@ Dx12Display::Dx12Display(const DisplayConfig& config, Dx12Device& device)
     m_surfaceDesc.mipLevels = 1;
     m_surfaceDesc.name = "DisplayBuffer";
     m_surfaceDesc.format = config.format;
-    // Piece of shit dx12 does not allow UAV access to swap chain. Why microsoft?
+    // Piece of shit dx12 does not allow UAV access to swap chain. See doRetardedDXGIDx12Hack
     //m_surfaceDesc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
     m_surfaceDesc.memFlags = {};
     m_buffering = config.buffering;
@@ -80,6 +81,27 @@ Dx12Display::Dx12Display(const DisplayConfig& config, Dx12Device& device)
     m_fenceVals.resize(m_buffering, 0);
 }
 
+void Dx12Display::createComputeTexture()
+{
+    if (m_computeTexture.valid())
+      m_device.release(m_computeTexture);
+
+    TextureDesc desc = m_surfaceDesc;
+    desc.name = "computeBackbuffer";
+    desc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
+    m_computeTexture = m_device.createTexture(desc);
+
+    m_copyCmdLists.resize(m_buffering);
+    for (int i = 0; i < m_buffering; ++i)
+    {
+        CommandList& list = m_copyCmdLists[i];
+        list.reset();
+        CopyCommand copyCmd;
+        copyCmd.setResources(m_computeTexture, m_textures[i]);
+        list.writeCommand(copyCmd);
+        list.finalize();
+    }
+}
 
 void Dx12Display::acquireTextures()
 {
@@ -90,11 +112,20 @@ void Dx12Display::acquireTextures()
         Texture t = m_device.resources().createTexture(m_surfaceDesc, resource);
         m_textures.push_back(t);
     }
+    createComputeTexture();
 }
 
+void Dx12Display::waitForGpu()
+{
+    Dx12Fence& f = m_device.queues().getFence(WorkType::Graphics);
+    for (auto& fenceVal : m_fenceVals)
+        f.waitOnCpu(fenceVal);
+}
 
 void Dx12Display::resize(unsigned int width, unsigned int height)
 {
+    waitForGpu();
+
     for (auto t : m_textures)
         m_device.release(t);
 
@@ -109,7 +140,8 @@ void Dx12Display::resize(unsigned int width, unsigned int height)
 
 Texture Dx12Display::texture()
 {
-    return m_textures[m_swapChain->GetCurrentBackBufferIndex()];
+    return m_computeTexture;
+    //return m_textures[m_swapChain->GetCurrentBackBufferIndex()];
 }
 
 UINT64 Dx12Display::fenceVal() const
@@ -117,19 +149,113 @@ UINT64 Dx12Display::fenceVal() const
     return m_fenceVals[m_swapChain->GetCurrentBackBufferIndex()];
 }
 
+void Dx12Display::present()
+{
+    Dx12Fence& fence = m_device.queues().getFence(WorkType::Graphics);
+    present(fence);
+}
+
+void Dx12Display::doRetardedDXGIDx12Hack(int bufferIndex)
+{
+    //This is an absolute abomination. So the TL;DR is that for whatever the fuck reason,
+    //microsoft does not support write UAV on the swap chain. I've spoken with folks from AMD
+    //and they are as baffled as I am. 
+    //So what im doing is that im breaking all my careful design to accomodate for this issue.
+    //I have 1 single resource which is a uav, where compute can write, then i shove in a command list
+    //that copies to the swap table.
+    //To avoid exposing the concept of present all the way up to the high level, just using my intermediate API
+    //utilities to submit / manage the resource state and submit a copy into the swap chain.
+    // Thank you microsoft.    
+
+    auto& workDb = m_device.workDb();
+    auto presentTexture = m_textures[bufferIndex];
+    workDb.lock();
+    auto workType = WorkType::Graphics;
+    Dx12List lists;
+    m_device.queues().allocate(workType, lists);
+    Dx12Resource& srcRes = m_device.resources().unsafeGetResource(m_computeTexture);
+    Dx12Resource& dstRes = m_device.resources().unsafeGetResource(presentTexture);
+
+    std::vector<D3D12_RESOURCE_BARRIER> barriers;
+    {
+        auto srcSrcState = getDx12GpuState(workDb.resourceInfos()[m_computeTexture].gpuState);
+        auto dstSrcState = D3D12_RESOURCE_STATE_COPY_SOURCE;
+        if (srcSrcState != dstSrcState)
+        {
+            D3D12_RESOURCE_BARRIER b = {};
+            b.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            b.Transition.pResource = &srcRes.d3dResource();
+            b.Transition.StateBefore = srcSrcState;
+            b.Transition.StateAfter = dstSrcState;
+            workDb.resourceInfos()[m_computeTexture].gpuState = getGpuState(dstSrcState);
+            barriers.push_back(b);
+        }
+
+        if (srcSrcState == D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+        {
+            D3D12_RESOURCE_BARRIER b = {};
+            b.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+            b.UAV.pResource = &srcRes.d3dResource();;
+            barriers.push_back(b);
+        }
+    }
+    {
+        auto dstSrcState = getDx12GpuState(workDb.resourceInfos()[presentTexture].gpuState);
+        auto dstDstState = D3D12_RESOURCE_STATE_COPY_DEST;
+        if (dstSrcState != dstDstState)
+        {
+            D3D12_RESOURCE_BARRIER b = {};
+            b.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            b.Transition.pResource = &dstRes.d3dResource();
+            b.Transition.StateBefore = dstSrcState;
+            b.Transition.StateAfter = dstDstState;
+            workDb.resourceInfos()[presentTexture].gpuState = getGpuState(dstDstState);
+            barriers.push_back(b);
+        }
+    }
+
+    if (!barriers.empty())
+        lists.list->ResourceBarrier(barriers.size(), barriers.data());
+
+    lists.list->CopyResource(&dstRes.d3dResource(), &srcRes.d3dResource());
+    D3D12_RESOURCE_BARRIER presentBarrier = {};
+    presentBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    presentBarrier.Transition.pResource = &dstRes.d3dResource();
+    presentBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+    presentBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+    workDb.resourceInfos()[presentTexture].gpuState = getGpuState(D3D12_RESOURCE_STATE_PRESENT);
+    lists.list->ResourceBarrier(1, &presentBarrier);
+    lists.list->Close();
+    auto& queue = m_device.queues().cmdQueue(workType);
+    ID3D12CommandList* list = &(*lists.list);
+    queue.ExecuteCommandLists(1, &list);
+    auto fenceVal = m_device.queues().signalFence(workType);
+    m_device.queues().deallocate(lists, fenceVal);
+    workDb.unlock();
+}
+
 void Dx12Display::present(Dx12Fence& fence)
 {
     auto bufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+
+    doRetardedDXGIDx12Hack(bufferIndex);
+
     DX_OK(m_swapChain->Present(1u, 0u));
     m_fenceVals[bufferIndex] = fence.signal();
 }
 
 Dx12Display::~Dx12Display()
 {
+    waitForGpu();
+
     for (auto t : m_textures)
         m_device.resources().release(t);
 
     m_textures.clear();
+
+    if (m_computeTexture.valid())
+        m_device.release(m_computeTexture);
+    m_computeTexture = Texture();
 
     if (m_swapChain)
         m_swapChain->Release();

@@ -58,6 +58,8 @@ inline D3D12_RESOURCE_STATES getDx12GpuState(ResourceGpuState state)
             return D3D12_RESOURCE_STATE_COPY_SOURCE;
         case ResourceGpuState::Cbv:
             return D3D12_RESOURCE_STATE_GENERIC_READ;
+        case ResourceGpuState::Present:
+            return D3D12_RESOURCE_STATE_PRESENT;
     }
     CPY_ASSERT_FMT(false, "D3d12 state used is not handled in coalpy's rendering", state);
     return D3D12_RESOURCE_STATE_COMMON;

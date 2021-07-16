@@ -58,6 +58,7 @@ public:
     Dx12ResourceCollection& resources() { return *m_resources; }
     Dx12DescriptorPool& descriptors() { return *m_descriptors; }
     Dx12ShaderDb& shaderDb() { return *m_shaderDb; }
+    WorkBundleDb& workDb() { return m_workDb; } 
 
     virtual const DeviceInfo& info() const override { return m_info; }
     virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) override;

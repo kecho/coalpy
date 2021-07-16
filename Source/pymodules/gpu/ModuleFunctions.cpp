@@ -206,6 +206,8 @@ PyObject* run(PyObject* self, PyObject* args)
                 Py_DECREF(retObj);
             }
 
+            w->display->present();
+
         }
 
         return openedWindows != 0;

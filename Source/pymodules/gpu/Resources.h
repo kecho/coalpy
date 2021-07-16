@@ -15,6 +15,7 @@ struct Texture
     //Data
     PyObject_HEAD
     render::Texture texture;
+    bool owned;
 
     //Functions
     static const TypeId s_typeId = TypeId::Texture;

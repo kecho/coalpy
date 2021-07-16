@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "Resources.h"
 #include <iostream>
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/IWindow.h>
@@ -79,6 +80,10 @@ int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         displayConfig.width = desc.width;
         displayConfig.height = desc.height;
         window.display = device.createDisplay(displayConfig);
+
+        window.displayTexture = moduleState.alloc<Texture>();
+        window.displayTexture->owned = false;
+        window.displayTexture->texture = window.display->texture();
     }
     
     return 0;

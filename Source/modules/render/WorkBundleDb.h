@@ -24,7 +24,8 @@ enum class ResourceGpuState
     Uav,
     Cbv,
     CopySrc,
-    CopyDst
+    CopyDst,
+    Present
 };
 
 enum class BarrierType
@@ -127,6 +128,7 @@ public:
 
     void lock() { m_workMutex.lock(); }
     WorkBundle& unsafeGetWorkBundle(WorkHandle handle) { return m_works[handle]; }
+    WorkResourceInfos& resourceInfos() { return m_resources; }
     void unlock() { m_workMutex.unlock(); }
 
 private:

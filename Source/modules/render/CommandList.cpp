@@ -45,7 +45,7 @@ public:
 CommandList::CommandList()
 : m_internal(*(new InternalCommandList()))
 {
-    allocate<AbiCommandListHeader>();
+    reset();
 }
 
 CommandList::~CommandList()
@@ -151,6 +151,7 @@ void CommandList::writeCommand(const ComputeCommand& cmd)
 void CommandList::reset()
 {
     m_internal.reset();
+    allocate<AbiCommandListHeader>();
 }
 
 void CommandList::writeCommand(const CopyCommand& cmd)

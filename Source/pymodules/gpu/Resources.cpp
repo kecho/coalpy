@@ -86,6 +86,7 @@ int Texture::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 {
     auto* texture = (Texture*)self;
     texture->texture = render::Texture();
+    texture->owned = true;
 
     ModuleState& moduleState = parentModule(self);
     if (!moduleState.checkValidDevice())
@@ -110,7 +111,7 @@ int Texture::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 void Texture::destroy(PyObject* self)
 {
     auto* texture = (Texture*)self;
-    if (!texture->texture.valid())
+    if (!texture->texture.valid() || !texture->owned)
         return;
 
     ModuleState& moduleState = parentModule(self);
