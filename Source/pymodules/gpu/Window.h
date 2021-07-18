@@ -29,6 +29,7 @@ struct Window
     PyObject_HEAD
     PyObject* onRenderCallback;
     IWindow*  object;
+    PyObject* userData;
     SmartPtr<render::IDisplay> display;
     Texture* displayTexture;
 

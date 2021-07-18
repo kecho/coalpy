@@ -155,6 +155,12 @@ void Win32Window::open()
         open();
 }
 
+void Win32Window::dimensions(int& w, int& h) const
+{
+    w = m_desc.width;
+    h = m_desc.height;
+}
+
 Win32Window::HandleMessageRet Win32Window::handleMessage(
     unsigned message,
     unsigned int* wparam,
@@ -176,6 +182,8 @@ Win32Window::HandleMessageRet Win32Window::handleMessage(
         {
             int w = (int)LOWORD(lparam);
             int h = (int)HIWORD(lparam);
+            m_desc.width = w;
+            m_desc.height = h;
             m_listener->onResize(w, h, *this);
         }
         ret.handled = true;

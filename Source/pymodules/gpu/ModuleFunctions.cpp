@@ -164,11 +164,20 @@ PyObject* setCurrentAdapter(PyObject* self, PyObject* args, PyObject* kwds)
 PyObject* run(PyObject* self, PyObject* args)
 {
     ModuleState& state = getState(self);
+    if (state.isInRenderLoop())
+    {
+        PyErr_SetString(state.exObj(), "Cannot call coalpy.gpu.run() method inside itself.");
+        return nullptr;
+    }
 
     //prepare arguments for this run call.
     RenderArgs* renderArgs = state.alloc<RenderArgs>();
+    renderArgs->window = nullptr;
+    renderArgs->userData = nullptr;
     renderArgs->renderTime = 0.0;
     renderArgs->deltaTime = 0.0;
+    renderArgs->width = 0;
+    renderArgs->height = 0;
     
     WindowRunArgs runArgs = {};
     bool raiseException = false;
@@ -194,6 +203,12 @@ PyObject* run(PyObject* self, PyObject* args)
             if (w->object->isClosed())
                 continue;
 
+            renderArgs->window = w;
+            Py_INCREF(w);
+            renderArgs->userData = w->userData;
+            Py_INCREF(w->userData);
+
+            w->object->dimensions(renderArgs->width, renderArgs->height);
             ++openedWindows;
             if (w && w->onRenderCallback != nullptr)
             {
@@ -201,6 +216,10 @@ PyObject* run(PyObject* self, PyObject* args)
                 //means an exception has been risen. Propagate up.
                 if (retObj == nullptr)
                 {
+                    Py_DECREF(renderArgs->window);
+                    renderArgs->window = nullptr;
+                    Py_DECREF(renderArgs->userData);
+                    renderArgs->userData = nullptr;
                     raiseException = true;
                     return false;
                 }
@@ -208,7 +227,10 @@ PyObject* run(PyObject* self, PyObject* args)
             }
 
             w->display->present();
-
+            Py_DECREF(renderArgs->window);
+            renderArgs->window = nullptr;
+            Py_DECREF(renderArgs->userData);
+            renderArgs->userData = nullptr;
         }
 
         return openedWindows != 0;
@@ -217,7 +239,9 @@ PyObject* run(PyObject* self, PyObject* args)
     runArgs.listener = &state.windowListener();
 
     stopwatch.start();
+    state.setRenderLoop(true);
     IWindow::run(runArgs); //block
+    state.setRenderLoop(false);
 
     if (raiseException)
     {

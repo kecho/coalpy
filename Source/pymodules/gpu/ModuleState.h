@@ -67,9 +67,13 @@ public:
     render::CommandList* newCommandList();
     void deleteCommandList(render::CommandList* cmdList);
 
+    void setRenderLoop(bool rl) { m_runningRenderLoop = rl; }
+    bool isInRenderLoop() const { return m_runningRenderLoop; }
 private:
     void onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString);
     void registerTypes(CoalpyTypeObject** types, int typesCount);
+
+    bool m_runningRenderLoop = false;
 
     ITaskSystem*    m_ts;
     IFileSystem*    m_fs;

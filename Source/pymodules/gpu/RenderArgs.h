@@ -10,6 +10,7 @@ namespace coalpy
 namespace gpu
 {
 
+struct Window;
 
 struct RenderArgs
 {
@@ -17,6 +18,10 @@ struct RenderArgs
     PyObject_HEAD
     double renderTime;
     double deltaTime;
+    Window* window;
+    PyObject* userData;
+    int width;
+    int height;
 
     //Functions
     static const TypeId s_typeId = TypeId::RenderArgs;

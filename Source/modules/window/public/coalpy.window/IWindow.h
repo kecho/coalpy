@@ -12,6 +12,7 @@ public:
     static void run(const WindowRunArgs& runArgs);
     virtual WindowOsHandle getHandle() const = 0;
     virtual void open() = 0;
+    virtual void dimensions(int& w, int& h) const = 0;
     virtual bool isClosed() = 0;
     virtual ~IWindow() {}
 

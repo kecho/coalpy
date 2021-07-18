@@ -18,6 +18,7 @@ namespace gpu
 
 static PyMemberDef g_windowMembers[] = {
     { "display_texture", T_OBJECT, offsetof(Window, displayTexture), READONLY, "" },
+    { "user_data", T_OBJECT, offsetof(Window, userData), 0, "" },
     { nullptr }
 };
 
@@ -41,6 +42,8 @@ void Window::constructType(PyTypeObject& t)
 int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 {
     auto& window = *(Window*)self;
+    window.userData = Py_None;
+    Py_INCREF(window.userData);
     window.object = nullptr;
     window.onRenderCallback = nullptr;
     new (&window.display) SmartPtr<render::IDevice>();
@@ -120,6 +123,7 @@ void Window::destroy(PyObject* self)
     auto w = (Window*)self;
     w->displayTexture->texture = render::Texture(); //invalidate texture
     Py_DECREF(w->displayTexture);
+    Py_DECREF(w->userData);
     w->~Window();
     Py_TYPE(self)->tp_free(self);
 }
