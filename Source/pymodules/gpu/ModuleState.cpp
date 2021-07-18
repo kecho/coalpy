@@ -166,6 +166,7 @@ render::CommandList* ModuleState::newCommandList()
     {
         auto* cmdList = m_commandListPool.back();
         m_commandListPool.pop_back();
+        cmdList->reset();
         return cmdList;
     }
 }

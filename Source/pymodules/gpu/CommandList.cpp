@@ -63,6 +63,7 @@ void CommandList::destroy(PyObject* self)
     for (auto* r : pycmdList.references)
         Py_DECREF(r);
 
+    pycmdList.~CommandList();
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -70,7 +71,7 @@ static bool getListOfBuffers(
     ModuleState& moduleState,
     PyObject* opaqueList,
     std::vector<render::Buffer>& bufferList,
-    std::vector<PyObject*> references)
+    std::vector<PyObject*>& references)
 {
     PyTypeObject* bufferType = moduleState.getType(TypeId::Buffer);
     if (!PyList_Check(opaqueList))
@@ -106,7 +107,7 @@ static bool getListOfTables(
     ModuleState& moduleState,
     PyObject* opaqueList,
     std::vector<TableType>& bufferList,
-    std::vector<PyObject*> references)
+    std::vector<PyObject*>& references)
 {
     PyTypeObject* pyObjType = moduleState.getType(PyTableType::s_typeId);
     if (!PyList_Check(opaqueList))

@@ -44,12 +44,12 @@ public:
 
     void endUsage()
     {
-        uint64_t currFenceValue = m_fence.value();
+        uint64_t currFenceValue = m_fence.completedValue();
         for (HeapSlot& slot : m_heaps)
         {
             while (!slot.ranges.empty())
             {
-                if (slot.ranges.front().fenceValue >= m_fence.value())
+                if (slot.ranges.front().fenceValue >= currFenceValue)
                     break;
 
                 slot.capacity += slot.ranges.front().size;

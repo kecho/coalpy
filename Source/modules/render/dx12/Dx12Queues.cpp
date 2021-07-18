@@ -76,7 +76,7 @@ void Dx12Queues::allocate(WorkType type, Dx12List& outList)
     CPY_ASSERT((int)type >= 0 && (int)type < (int)WorkType::Count);
     auto& container = m_containers[(int)type];
 
-    UINT64 currentFenceValue = container.fence->value();
+    UINT64 currentFenceValue = container.fence->completedValue();
     SmartPtr<ID3D12CommandAllocator> newAllocator;
     //find an allocator candidate that is free
     for (int i = 0; i < (int)container.allocatorPool.size(); ++i)
@@ -93,7 +93,13 @@ void Dx12Queues::allocate(WorkType type, Dx12List& outList)
 
     auto dx12ListType = getDx12WorkType(type);
     if (newAllocator == nullptr)
+    {
         DX_OK(m_device.device().CreateCommandAllocator(dx12ListType, DX_RET(newAllocator)));
+    }
+    else
+    {
+        DX_OK(newAllocator->Reset());
+    }
 
     SmartPtr<ID3D12GraphicsCommandList6> newList;
     if (!container.listPool.empty())
@@ -135,7 +141,7 @@ UINT64 Dx12Queues::currentFenceValue(WorkType type)
 {
     CPY_ASSERT((int)type >= 0 && (int)type < (int)WorkType::Count);
     auto& container = m_containers[(int)type];
-    return container.fence->value();
+    return container.fence->completedValue();
 }
 
 }

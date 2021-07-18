@@ -19,7 +19,8 @@ public:
     ~Dx12Fence();
 
     bool isComplete(UINT64 valueToCmp);
-    UINT64 value() const { return m_fenceValue; }
+    UINT64 completedValue();
+    UINT64 nextValue() const { return m_fenceValue; }
     UINT64 signal();
     void signal(UINT64 value);
     void waitOnCpu(UINT64 valueToWait, DWORD timeMs = INFINITE);

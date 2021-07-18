@@ -241,6 +241,9 @@ void Dx12Display::present(Dx12Fence& fence)
     doRetardedDXGIDx12Hack(bufferIndex);
 
     DX_OK(m_swapChain->Present(1u, 0u));
+    UINT64 nextBufferIndex = (bufferIndex + 1) % m_buffering;
+    if (!fence.isComplete(m_fenceVals[nextBufferIndex]))
+        fence.waitOnCpu(m_fenceVals[nextBufferIndex]);
     m_fenceVals[bufferIndex] = fence.signal();
 }
 

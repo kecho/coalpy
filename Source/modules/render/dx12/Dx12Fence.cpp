@@ -35,6 +35,11 @@ UINT64 Dx12Fence::signal()
     return m_fenceValue;
 }
 
+UINT64 Dx12Fence::completedValue()
+{
+    return m_fence->GetCompletedValue();
+}
+
 void Dx12Fence::signal(UINT64 value)
 {
     m_fenceValue = value;
