@@ -1,10 +1,12 @@
 import sys
 import coalpy.gpu as gpu
+import array
 
 print ("<<coalpy demo0>>")
 print ("graphics devices:")
 [print("{}: {}".format(idx, nm)) for (idx, nm) in gpu.get_adapters()]
 
+gpu.set_current_adapter(1)
 info = gpu.get_current_adapter_info()
 print("Current device: {}".format(info[1]))
 
@@ -20,6 +22,7 @@ def main():
         yv = int((480 + 3)/4);
         cmdList.dispatch(
             x = xv, y = yv, z = 1,
+            constants = [1,2,3,4, 0.71, 0.8, 0.1, 0.1],
             shader = s1,
             output_tables = output_table
         )

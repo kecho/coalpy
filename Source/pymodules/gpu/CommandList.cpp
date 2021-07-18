@@ -138,6 +138,55 @@ static bool getListOfTables(
     return true;
 }
 
+static bool getBufferProtocolObject(
+    ModuleState& moduleState,
+    PyObject* constants, 
+    char*& outBufferProtocolPtr, 
+    int& outBufferProtocolSize, 
+    std::vector<Py_buffer>& references)
+{
+    if (!PyObject_CheckBuffer(constants))
+        return false;
+
+    references.emplace_back();
+    auto& view = references.back();
+    if (PyObject_GetBuffer(constants, &view, 0) == -1)
+    {
+        references.pop_back();
+        return false;
+    }
+    outBufferProtocolPtr = (char*)view.buf;
+    outBufferProtocolSize = (int)view.len;
+    return true;
+}
+
+static bool getArrayOfNums(ModuleState& moduleState, PyObject* constants, std::vector<int>& rawNums)
+{
+    if (!PyList_Check(constants))
+        return false;
+
+    auto& listObj = *((PyListObject*)constants);
+    int listSize = Py_SIZE(constants);
+    rawNums.reserve(listSize);
+    for (int i = 0; i < listSize; ++i)
+    {
+        PyObject* obj = listObj.ob_item[i];
+        if (PyLong_Check(obj))
+        {
+            rawNums.push_back((int)PyLong_AsLong(obj));
+        }
+        else if (PyFloat_Check(obj))
+        {
+            float f = (float)(PyFloat_AS_DOUBLE(obj));
+            rawNums.push_back(*reinterpret_cast<int*>((&f)));
+        }
+        else
+            return false;
+    }
+
+    return true;
+}
+
 namespace methods
 {
     PyObject* cmdDispatch(PyObject* self, PyObject* vargs, PyObject* kwds)
@@ -166,6 +215,9 @@ namespace methods
         render::ComputeCommand cmd;
         cmd.setDispatch(name ? name : "", x, y, z);
 
+        //for constants / inline constants. Must be in this scope, because these pointers are needed when writeCommand is called / flushed.
+        std::vector<Py_buffer> bufferViews;
+        std::vector<int> rawNums;
         std::vector<render::Buffer> bufferList;
         std::vector<render::InResourceTable> inTables;
         std::vector<render::OutResourceTable> outTables;
@@ -183,10 +235,33 @@ namespace methods
 
         if (constants)
         {
+            char* bufferProtocolPtr = nullptr;
+            int bufferProtocolSize = 0;
             if (getListOfBuffers(moduleState, constants, bufferList, cmdList.references))
             {
                 if (!bufferList.empty())
                     cmd.setConstants(bufferList.data(), bufferList.size());
+            }
+            else if (getBufferProtocolObject(moduleState, constants, bufferProtocolPtr, bufferProtocolSize, bufferViews))
+            {
+                if (bufferProtocolPtr != nullptr)
+                    cmd.setInlineConstant(bufferProtocolPtr, bufferProtocolSize);
+            }
+            else 
+            {
+                if (!getArrayOfNums(moduleState, constants, rawNums))
+                {
+                    PyErr_SetString(moduleState.exObj(), "Constant buffer must be: a list of Buffer objects, an array of [int|float], an array.array() or any object that follows the python Buffer protocol.");
+                    return nullptr;
+                }
+
+                if (rawNums.empty())
+                {
+                    PyErr_SetString(moduleState.exObj(), "Constant buffer list cannot be empty");
+                    return nullptr;
+                }
+
+                cmd.setInlineConstant((const char*)rawNums.data(), (int)rawNums.size() * (int)sizeof(int));
             }
         }
 
@@ -222,6 +297,9 @@ namespace methods
 
         for (auto* r : cmdList.references)
             Py_INCREF(r);
+
+        for (auto& v : bufferViews)
+            PyBuffer_Release(&v);
 
         Py_RETURN_NONE;
     }
