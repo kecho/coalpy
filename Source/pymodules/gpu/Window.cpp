@@ -120,6 +120,7 @@ void Window::destroy(PyObject* self)
     auto w = (Window*)self;
     w->displayTexture->texture = render::Texture(); //invalidate texture
     Py_DECREF(w->displayTexture);
+    w->~Window();
     Py_TYPE(self)->tp_free(self);
 }
 

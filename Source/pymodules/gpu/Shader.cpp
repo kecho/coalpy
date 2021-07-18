@@ -77,6 +77,8 @@ int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 
 void Shader::destroy(PyObject* self)
 {
+    Shader* shaderObj = (Shader*)self;
+    shaderObj->~Shader();
     Py_TYPE(self)->tp_free(self);
 }
 

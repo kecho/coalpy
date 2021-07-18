@@ -69,6 +69,8 @@ void Buffer::destroy(PyObject* self)
     ModuleState& moduleState = parentModule(self);
 
     moduleState.device().release(buffer->buffer);
+    buffer->~Buffer();
+    Py_TYPE(self)->tp_free(self);
 }
 
 void Texture::constructType(PyTypeObject& t)
@@ -116,6 +118,8 @@ void Texture::destroy(PyObject* self)
 
     ModuleState& moduleState = parentModule(self);
     moduleState.device().release(texture->texture);
+    texture->~Texture();
+    Py_TYPE(self)->tp_free(self);
 }
 
 void InResourceTable::constructType(PyTypeObject& t)
@@ -227,6 +231,8 @@ void InResourceTable::destroy(PyObject* self)
 
     ModuleState& moduleState = parentModule(self);
     moduleState.device().release(table->table);
+    table->~InResourceTable();
+    Py_TYPE(self)->tp_free(self);
 }
 
 void OutResourceTable::constructType(PyTypeObject& t)
@@ -282,6 +288,8 @@ void OutResourceTable::destroy(PyObject* self)
 
     ModuleState& moduleState = parentModule(self);
     moduleState.device().release(table->table);
+    table->~OutResourceTable();
+    Py_TYPE(self)->tp_free(self);
 }
 
 
