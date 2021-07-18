@@ -359,7 +359,7 @@ namespace coalpy
         
         auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle); 
         CPY_ASSERT_MSG(result.success(), result.message.c_str());
-        auto waitStatus = device.waitOnCpu(result.workHandle);
+        auto waitStatus = device.waitOnCpu(result.workHandle, -1);
         CPY_ASSERT(waitStatus.success());
 
         auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff);
@@ -504,7 +504,7 @@ namespace coalpy
         
         auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle); 
         CPY_ASSERT_MSG(result.success(), result.message.c_str());
-        auto waitStatus = device.waitOnCpu(result.workHandle);
+        auto waitStatus = device.waitOnCpu(result.workHandle, -1);
         CPY_ASSERT(waitStatus.success());
 
         {
@@ -636,7 +636,7 @@ namespace coalpy
         
         auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle); 
         CPY_ASSERT_MSG(result.success(), result.message.c_str());
-        auto waitStatus = device.waitOnCpu(result.workHandle);
+        auto waitStatus = device.waitOnCpu(result.workHandle, -1);
         CPY_ASSERT(waitStatus.success());
 
         {
@@ -739,7 +739,7 @@ namespace coalpy
         
         auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle); 
         CPY_ASSERT_MSG(result.success(), result.message.c_str());
-        auto waitStatus = device.waitOnCpu(result.workHandle);
+        auto waitStatus = device.waitOnCpu(result.workHandle, -1);
         CPY_ASSERT(waitStatus.success());
 
         {
