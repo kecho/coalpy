@@ -7,6 +7,7 @@
 #include <coalpy.core/HandleContainer.h>
 #include <vector>
 #include <mutex>
+#include <string>
 #include <set>
 #include <unordered_map>
 
@@ -95,6 +96,7 @@ struct WorkBundle
 struct WorkTableInfo
 {
     bool isUav;
+    std::string name;
     std::vector<ResourceHandle> resources;
 };
 
@@ -116,7 +118,7 @@ public:
     ScheduleStatus build(CommandList** lists, int listCount);
     void release(WorkHandle);
 
-    void registerTable(ResourceTable table, const ResourceHandle* handles, int handleCounts, bool isUav);
+    void registerTable(ResourceTable table, const char* name, const ResourceHandle* handles, int handleCounts, bool isUav);
     void unregisterTable(ResourceTable table);
     void clearAllTables() { m_tables.clear(); }
 
@@ -129,6 +131,7 @@ public:
     void lock() { m_workMutex.lock(); }
     WorkBundle& unsafeGetWorkBundle(WorkHandle handle) { return m_works[handle]; }
     WorkResourceInfos& resourceInfos() { return m_resources; }
+    WorkTableInfos& tableInfos() { return m_tables; }
     void unlock() { m_workMutex.unlock(); }
 
 private:

@@ -4,6 +4,9 @@
 #include <coalpy.core/SmartPtr.h>
 #include "Dx12Resources.h"
 #include <mutex>
+#include <vector>
+#include <set>
+#include <unordered_map>
 
 struct ID3D12Resource;
 
@@ -32,15 +35,31 @@ public:
     Dx12ResourceTable& unsafeGetTable(ResourceTable handle) { return *(m_resourceTables[handle]); }
     Dx12Resource& unsafeGetResource(ResourceHandle handle) { return *(m_resources[handle]->resource); }
 
+    void getParentTables(ResourceHandle resource, std::vector<ResourceTable>& outTables);
+    void recreate(ResourceTable resource);
+    void recreateTexture(Texture handle, const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr);
+
 private:
+
+
     ResourceTable createResourceTable(const ResourceTableDesc& desc, bool isUav);
     enum class ResType { Texture, Buffer };
     class ResourceContainer : public RefCounted
     {
     public:
         ResType type = ResType::Texture;
+        ResourceHandle handle;
         SmartPtr<Dx12Resource> resource;
+        std::set<ResourceTable> parentTables;
     };
+
+    bool convertTableDescToResourceList(
+        const ResourceTableDesc& desc,
+        std::vector<Dx12Resource*>& resources,
+        std::set<ResourceContainer*>& trackedContainers,
+        bool isUav);
+
+    std::unordered_map<ResourceTable, std::set<ResourceHandle>> m_trackedTableToResources;
 
     Dx12Device& m_device;
     WorkBundleDb& m_workDb;

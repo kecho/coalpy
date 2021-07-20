@@ -1,4 +1,5 @@
 import sys
+import math
 import coalpy.gpu as gpu
 import array
 
@@ -18,8 +19,8 @@ def main():
     def on_render(render_args : gpu.RenderArgs):
 
         cmdList = gpu.CommandList()
-        xv = int((480 + 7)/8);
-        yv = int((480 + 3)/4);
+        xv = int(math.ceil((render_args.width)/8));
+        yv = int(math.ceil((render_args.height)/4));
         dims = (1.0/render_args.width, 1.0/render_args.height)
         cmdList.dispatch(
             x = xv, y = yv, z = 1,
@@ -31,7 +32,7 @@ def main():
 
         return 0   
 
-    w = gpu.Window("coalpy demo 0", 480, 480, on_render)
+    w = gpu.Window("coalpy demo 0", 1920, 1080, on_render)
     output_table = gpu.OutResourceTable("SwapTable", [w.display_texture])
 
     gpu.run()

@@ -83,13 +83,19 @@ Dx12Display::Dx12Display(const DisplayConfig& config, Dx12Device& device)
 
 void Dx12Display::createComputeTexture()
 {
-    if (m_computeTexture.valid())
-      m_device.release(m_computeTexture);
-
     TextureDesc desc = m_surfaceDesc;
     desc.name = "computeBackbuffer";
     desc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
-    m_computeTexture = m_device.createTexture(desc);
+    if (!m_computeTexture.valid())
+        m_computeTexture = m_device.resources().createTexture(desc, nullptr, ResourceSpecialFlag_TrackTables);
+    else
+    {
+        std::vector<ResourceTable> parentTables;
+        m_device.resources().getParentTables(m_computeTexture, parentTables);
+        m_device.resources().recreateTexture(m_computeTexture, desc);
+        for (auto t : parentTables)
+            m_device.resources().recreate(t);
+    }
 
     m_copyCmdLists.resize(m_buffering);
     for (int i = 0; i < m_buffering; ++i)

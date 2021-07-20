@@ -19,7 +19,8 @@ enum ResourceSpecialFlags : int
 {
     ResourceSpecialFlag_None = 0,
     ResourceSpecialFlag_NoDeferDelete = 1 << 0,
-    ResourceSpecialFlag_CanDenyShaderResources = 1 << 1
+    ResourceSpecialFlag_CanDenyShaderResources = 1 << 1,
+    ResourceSpecialFlag_TrackTables = 1 << 2,
 };
 
 class Dx12Device;
@@ -98,6 +99,7 @@ public:
     const Dx12Descriptor uav() const { return m_uav; }
 
     bool isBuffer() const { return m_data.resDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER; };
+    ResourceSpecialFlags specialFlags() const { return m_specialFlags; }
 
 protected:
     Dx12Descriptor m_srv = {};

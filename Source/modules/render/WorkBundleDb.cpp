@@ -472,9 +472,10 @@ void WorkBundleDb::release(WorkHandle handle)
     m_works.free(handle);
 }
 
-void WorkBundleDb::registerTable(ResourceTable table, const ResourceHandle* handles, int handleCounts, bool isUav)
+void WorkBundleDb::registerTable(ResourceTable table, const char* name, const ResourceHandle* handles, int handleCounts, bool isUav)
 {
     auto& newInfo = m_tables[table];
+    newInfo.name = name;
     newInfo.isUav = isUav;
     newInfo.resources.assign(handles, handles + handleCounts);
 }

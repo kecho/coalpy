@@ -74,7 +74,7 @@ struct BufferDesc : public ResourceDesc
 struct ResourceTableDesc
 {
     ResourceName name;
-    ResourceHandle* resources = nullptr;
+    const ResourceHandle* resources = nullptr;
     int resourcesCount = 0;
 };
 
