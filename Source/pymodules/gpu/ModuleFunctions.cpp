@@ -54,9 +54,10 @@ PyMethodDef g_defs[] = {
     KW_FN(
         schedule,
         schedule,
-        ""
+        "Submits an array of CommandList objects to the GPU to run shader work on.\n"
+        "Arguments:\n"
+        "command_lists: an array of CommandList objects to run in the GPU."
     ),
-
 
     VA_FN(run, run, "Runs window rendering callbacks. This function blocks until all the existing windows are closed."),
 
