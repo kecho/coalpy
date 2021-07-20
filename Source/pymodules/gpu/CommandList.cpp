@@ -26,7 +26,7 @@ static PyMethodDef g_cmdListMethods[] = {
     KW_FN(dispatch, cmdDispatch, ""),
     KW_FN(copy_resource, cmdCopyResource, ""),
     KW_FN(upload_resource, cmdUploadResource, ""),
-    KW_FN(download_resource, cmdDownloadResource, ""),
+    /*KW_FN(download_resource, cmdDownloadResource, ""),*/
     FN_END
 };
 
@@ -49,6 +49,7 @@ int CommandList::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         return -1;
 
     auto& pycmdList = *((CommandList*)self);
+    new (&pycmdList) CommandList;
     pycmdList.cmdList = moduleState.newCommandList();
 
     return 0;
@@ -187,6 +188,26 @@ static bool getArrayOfNums(ModuleState& moduleState, PyObject* constants, std::v
     return true;
 }
 
+static bool getResourceObject(ModuleState& moduleState, PyObject* obj, render::ResourceHandle& handle)
+{
+    auto* texType = moduleState.getType(Texture::s_typeId);
+    auto* buffType = moduleState.getType(Buffer::s_typeId);
+    if (texType == obj->ob_type)
+    {
+        auto* texObj = (Texture*)obj;
+        handle = texObj->texture;
+        return true;
+    }
+    else if (buffType == obj->ob_type)
+    {
+        auto* buffObj = (Buffer*)obj;
+        handle = buffObj->buffer;
+        return true;
+    }
+
+    return false;
+}
+
 namespace methods
 {
     PyObject* cmdDispatch(PyObject* self, PyObject* vargs, PyObject* kwds)
@@ -221,6 +242,7 @@ namespace methods
         std::vector<render::Buffer> bufferList;
         std::vector<render::InResourceTable> inTables;
         std::vector<render::OutResourceTable> outTables;
+        std::vector<PyObject*> references;
 
         PyTypeObject* shaderType = moduleState.getType(Shader::s_typeId);
         if (shader->ob_type != shaderType)
@@ -230,14 +252,14 @@ namespace methods
         }
 
         Shader& shaderObj = *((Shader*)shader);
-        cmdList.references.push_back(shader);
+        references.push_back(shader);
         cmd.setShader(shaderObj.handle);
 
         if (constants)
         {
             char* bufferProtocolPtr = nullptr;
             int bufferProtocolSize = 0;
-            if (getListOfBuffers(moduleState, constants, bufferList, cmdList.references))
+            if (getListOfBuffers(moduleState, constants, bufferList, references))
             {
                 if (!bufferList.empty())
                     cmd.setConstants(bufferList.data(), bufferList.size());
@@ -267,7 +289,7 @@ namespace methods
 
         if (input_tables)
         {
-            if (!getListOfTables<InResourceTable, render::InResourceTable>(moduleState, input_tables, inTables, cmdList.references))
+            if (!getListOfTables<InResourceTable, render::InResourceTable>(moduleState, input_tables, inTables, references))
             {
                 PyErr_SetString(moduleState.exObj(), "input_tables argument must be a list of InResourceTable");
                 return nullptr;
@@ -281,7 +303,7 @@ namespace methods
 
         if (output_tables)
         {
-            if (!getListOfTables<OutResourceTable, render::OutResourceTable>(moduleState, output_tables, outTables, cmdList.references))
+            if (!getListOfTables<OutResourceTable, render::OutResourceTable>(moduleState, output_tables, outTables, references))
             {
                 PyErr_SetString(moduleState.exObj(), "output_tables argument must be a list of OutResourceTable");
                 return nullptr;
@@ -294,8 +316,8 @@ namespace methods
         }
 
         cmdList.cmdList->writeCommand(cmd);
-
-        for (auto* r : cmdList.references)
+        cmdList.references.insert(cmdList.references.end(), references.begin(), references.end());
+        for (auto* r : references)
             Py_INCREF(r);
 
         for (auto& v : bufferViews)
@@ -306,11 +328,99 @@ namespace methods
 
     PyObject* cmdCopyResource(PyObject* self, PyObject* vargs, PyObject* kwds)
     {
+        ModuleState& moduleState = parentModule(self);
+        auto& cmdList = *((CommandList*)self); 
+        static char* arguments[] = { "source", "destination", nullptr };
+        PyObject* source = nullptr;
+        PyObject* destination = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "OO", arguments, &source, &destination))
+            return nullptr;
+
+        render::ResourceHandle sourceHandle;
+        render::ResourceHandle destHandle;
+        if (!getResourceObject(moduleState, source, sourceHandle))
+        {
+            PyErr_SetString(moduleState.exObj(), "Source resource must be type texture or buffer");
+            return nullptr;
+        }
+
+        if (!getResourceObject(moduleState, destination, destHandle))
+        {
+            PyErr_SetString(moduleState.exObj(), "Destination resource must be type texture or buffer");
+            return nullptr;
+        }
+
+        Py_INCREF(source);
+        cmdList.references.push_back(source);
+        Py_INCREF(destination);
+        cmdList.references.push_back(destination);
+        
+        render::CopyCommand cmd;
+        cmd.setResources(sourceHandle, destHandle);
+        cmdList.cmdList->writeCommand(cmd);
+
         Py_RETURN_NONE;
     }
 
     PyObject* cmdUploadResource(PyObject* self, PyObject* vargs, PyObject* kwds)
     {
+        ModuleState& moduleState = parentModule(self);
+        auto& cmdList = *((CommandList*)self); 
+        static char* arguments[] = { "source", "destination", nullptr };
+        PyObject* source = nullptr;
+        PyObject* destination = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "OO", arguments, &source, &destination))
+            return nullptr;
+
+
+        render::ResourceHandle destHandle;
+        if (!getResourceObject(moduleState, destination, destHandle))
+        {
+            PyErr_SetString(moduleState.exObj(), "Destination resource must be type texture or buffer");
+            return nullptr;
+        }
+
+        char* bufferProtocolPtr = nullptr;
+        int bufferProtocolSize = 0;
+        std::vector<Py_buffer> bufferViews;
+        std::vector<int> rawNums;
+        bool useSrcReference = false;
+        if (getBufferProtocolObject(moduleState, source, bufferProtocolPtr, bufferProtocolSize, bufferViews))
+        {
+            useSrcReference = true;
+        }
+        else
+        {
+            if (!getArrayOfNums(moduleState, source, rawNums))
+            {
+                PyErr_SetString(moduleState.exObj(), "Source buffer must be: an array of [int|float], an array.array() or any object that follows the python Buffer protocol.");
+                return nullptr;
+            }
+
+            if (rawNums.empty())
+            {
+                PyErr_SetString(moduleState.exObj(), "Source buffer list cannot be empty");
+                return nullptr;
+            }
+
+            bufferProtocolPtr = (char*)rawNums.data();
+            bufferProtocolSize = (int)rawNums.size() * sizeof(int);
+        }
+
+        if (bufferProtocolPtr == nullptr || bufferProtocolSize == 0)
+        {
+            PyErr_SetString(moduleState.exObj(), "Source buffer must not be of size 0 or null.");
+            return nullptr;
+        }
+        
+        if (useSrcReference)
+        {
+            Py_INCREF(source);
+            cmdList.references.push_back(source);
+        }
+        Py_INCREF(destination);
+        cmdList.references.push_back(destination);
+
         Py_RETURN_NONE;
     }
 
