@@ -43,7 +43,7 @@ CoalpyTypeObject* registerFormats()
         s_formats.back() = {};
     }
 
-    return RenderEnum::constructEnumType("gpu.EnumFormat", "Format", s_formats.data(), "");
+    return RenderEnum::constructEnumType("gpu.EnumFormat", "Format", s_formats.data(), "Formats supported for Textures and Standard Buffers.");
 }
 
 void constructTypes(TypeList& outTypes)
@@ -61,36 +61,36 @@ void constructTypes(TypeList& outTypes)
     //** Register Enums **//
     {
         static EnumEntry s_TextureType[] = {
-            { "k1d",          (int)render::TextureType::k1d, "" },
-            { "k2d",          (int)render::TextureType::k2d, "" },
-            { "k2dArray",     (int)render::TextureType::k2dArray, "" },
-            { "k3d",          (int)render::TextureType::k3d, "" },
-            { "CubeMap",      (int)render::TextureType::CubeMap, "" },
-            { "CubeMapArray", (int)render::TextureType::CubeMapArray, "" },
+            { "k1d",          (int)render::TextureType::k1d, "One dimensional texture. Width & depth defaults to 1." },
+            { "k2d",          (int)render::TextureType::k2d, "Two dimensional texture. Depth defaults to 1." },
+            { "k2dArray",     (int)render::TextureType::k2dArray, "Two dimensional array texture." },
+            { "k3d",          (int)render::TextureType::k3d, "Volume texture type." },
+            { "CubeMap",      (int)render::TextureType::CubeMap, "Cube map texture." },
+            { "CubeMapArray", (int)render::TextureType::CubeMapArray, "Array of cube maps. Use the Depth as the number of cube maps supported in an array." },
             { nullptr, 0, nullptr }
         };
-        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumTextureType", "TextureType", s_TextureType, "")); 
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumTextureType", "TextureType", s_TextureType, "Type of texture")); 
     }
 
     {
         static EnumEntry s_BufferType[] = {
-            { "Standard",   (int)render::BufferType::Standard, "" },
-            { "Structured", (int)render::BufferType::Structured, "" },
-            { "Raw",        (int)render::BufferType::Raw, "" },
+            { "Standard",   (int)render::BufferType::Standard, "Standard buffer. Obeys the format specified when sampling / writting into it." },
+            { "Structured", (int)render::BufferType::Structured, "Structured buffer, requires stride parameter." },
+            { "Raw",        (int)render::BufferType::Raw, "Raw byte buffer." },
             { nullptr, 0, nullptr }
         };
-        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumBufferType", "BufferType", s_BufferType, "")); 
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumBufferType", "BufferType", s_BufferType, "Type of buffer")); 
     }
 
     {
         static EnumEntry s_MemFlags[] = {
-            { "CpuRead",  render::MemFlag_CpuRead, "" },
-            { "CpuWrite", render::MemFlag_CpuWrite, "" },
-            { "GpuRead",  render::MemFlag_GpuRead, "" },
-            { "GpuWrite", render::MemFlag_GpuWrite, "" },
+            { "CpuRead",  render::MemFlag_CpuRead, "Specify flag in order to read a resource from the CPU" },
+            { "CpuWrite", render::MemFlag_CpuWrite, "Specify flag to write into a resource directly from the CPU" },
+            { "GpuRead",  render::MemFlag_GpuRead, "Specify flag for resource read access from InResourceTable / SRVs" },
+            { "GpuWrite", render::MemFlag_GpuWrite, "Specify flag for resource write access from an OutResourceTable / UAV" },
             { nullptr, 0, nullptr }
         };
-        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumMemFlags", "MemFlags", s_MemFlags, "")); 
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumMemFlags", "MemFlags", s_MemFlags, "Memory access enumerations.")); 
     }
 
     outTypes.push_back(registerFormats());

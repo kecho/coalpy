@@ -25,7 +25,15 @@ void Buffer::constructType(PyTypeObject& t)
 {
     t.tp_name = "gpu.Buffer";
     t.tp_basicsize = sizeof(Buffer);
-    t.tp_doc   = "";
+    t.tp_doc   = "Class that represents a Buffer GPU resource.\n"
+                 "Constructor Arguments (all of them optional):\n"
+                 "name: string to identify the resource with.\n"
+                 "mem_flags: see coalpy.gpu.MemFlags. Default is Gpu_Read and Gpu_Write\n"
+                 "type: see coalpy.gpu.BufferType. Default is Standard\n"
+                 "format: format of buffer. See coalpy.gpu.Format for available formats. This argument is ignored if buffer is Structured or Raw. Default format is RGBA_32_SINT\n"
+                 "element_count: number of elements this buffer will have\n"
+                 "stride: stride count in case of Structured type\n";
+
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
     t.tp_init = Buffer::init;
@@ -77,7 +85,15 @@ void Texture::constructType(PyTypeObject& t)
 {
     t.tp_name = "gpu.Texture";
     t.tp_basicsize = sizeof(Texture);
-    t.tp_doc   = "";
+    t.tp_doc   = "Class that represents a Texture GPU resource.\n"
+                 "Constructor Arguments (all of them optional):\n"
+                 "name: string to identify the resource with.\n"
+                 "mem_flags: see coalpy.gpu.MemFlags. Default is Gpu_Read and Gpu_Write\n"
+                 "type: dimensionality of texture, see coalpy.gpu.TextureType. Default is k2d\n"
+                 "width: the width of the texture in texels. Default is 1\n"
+                 "height: the height of the texture in texels. Default is 1\n"
+                 "depth: the depth of the texture if k2dArray or k3d. Default is 1.\n"
+                 "mip_levels: number of mips supported on this texture.\n";
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
     t.tp_init = Texture::init;

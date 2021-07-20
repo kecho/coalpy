@@ -65,7 +65,7 @@ struct TextureDesc : public ResourceDesc
 struct BufferDesc : public ResourceDesc
 {
     BufferType type = BufferType::Standard;
-    Format format = Format::RGBA_8_UINT;
+    Format format = Format::RGBA_32_SINT;
     bool isConstantBuffer = false;
     int elementCount  = 1;
     int stride = 4;
