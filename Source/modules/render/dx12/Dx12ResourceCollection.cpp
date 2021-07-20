@@ -27,7 +27,7 @@ Dx12ResourceCollection::~Dx12ResourceCollection()
     m_workDb.clearAllResources();
 }
 
-Texture Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3D12Resource* resource)
+Texture Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3D12Resource* resource, ResourceSpecialFlags flags)
 {
     std::unique_lock lock(m_resourceMutex);
     ResourceHandle resHandle;
@@ -37,7 +37,7 @@ Texture Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3D12Res
     CPY_ASSERT(outPtr->resource == nullptr);
     
     outPtr->type = ResType::Texture;
-    outPtr->resource = new Dx12Texture(m_device, desc);
+    outPtr->resource = new Dx12Texture(m_device, desc, flags);
     if (resource)
         outPtr->resource->acquireD3D12Resource(resource);
     outPtr->resource->init();
@@ -45,7 +45,7 @@ Texture Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3D12Res
     return Texture { resHandle.handleId };
 }
 
-Buffer Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12Resource* resource)
+Buffer Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12Resource* resource, ResourceSpecialFlags flags)
 {
     std::unique_lock lock(m_resourceMutex);
     ResourceHandle resHandle;
@@ -55,7 +55,7 @@ Buffer Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12Resour
     CPY_ASSERT(outPtr->resource == nullptr);
     
     outPtr->type = ResType::Buffer;
-    outPtr->resource = new Dx12Buffer(m_device, desc);
+    outPtr->resource = new Dx12Buffer(m_device, desc, flags);
     if (resource)
         outPtr->resource->acquireD3D12Resource(resource);
     outPtr->resource->init();

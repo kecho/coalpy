@@ -21,8 +21,8 @@ public:
     Dx12ResourceCollection(Dx12Device& device, WorkBundleDb& workDb);
     ~Dx12ResourceCollection();
 
-    Texture createTexture(const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr);
-    Buffer  createBuffer (const BufferDesc& desc, ID3D12Resource* resourceToAcquire = nullptr);
+    Texture createTexture(const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr, ResourceSpecialFlags flags = ResourceSpecialFlag_None);
+    Buffer  createBuffer (const BufferDesc& desc, ID3D12Resource* resourceToAcquire = nullptr, ResourceSpecialFlags flags = ResourceSpecialFlag_None);
     InResourceTable  createInResourceTable(const ResourceTableDesc& desc);
     OutResourceTable createOutResourceTable(const ResourceTableDesc& desc);
 

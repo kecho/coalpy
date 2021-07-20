@@ -31,7 +31,8 @@ Dx12Fence::~Dx12Fence()
 
 UINT64 Dx12Fence::signal()
 {
-    signal(m_fenceValue + 1);
+    std::unique_lock lock(m_fenceMutex);
+    internalSignal(m_fenceValue + 1);
     return m_fenceValue;
 }
 
@@ -41,6 +42,12 @@ UINT64 Dx12Fence::completedValue()
 }
 
 void Dx12Fence::signal(UINT64 value)
+{
+    std::unique_lock lock(m_fenceMutex);
+    internalSignal(value);
+}
+
+void Dx12Fence::internalSignal(UINT64 value)
 {
     m_fenceValue = value;
     DX_OK(m_ownerQueue.Signal(m_fence, value));

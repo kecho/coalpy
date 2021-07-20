@@ -109,7 +109,7 @@ void Dx12Display::acquireTextures()
     {
         SmartPtr<ID3D12Resource> resource;
         DX_OK(m_swapChain->GetBuffer(i, DX_RET(resource)));
-        Texture t = m_device.resources().createTexture(m_surfaceDesc, resource);
+        Texture t = m_device.resources().createTexture(m_surfaceDesc, resource, ResourceSpecialFlag_NoDeferDelete);
         m_textures.push_back(t);
     }
     createComputeTexture();

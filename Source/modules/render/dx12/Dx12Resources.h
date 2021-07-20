@@ -15,6 +15,13 @@ namespace coalpy
 namespace render
 {
 
+enum ResourceSpecialFlags : int
+{
+    ResourceSpecialFlag_None = 0,
+    ResourceSpecialFlag_NoDeferDelete = 1 << 0,
+    ResourceSpecialFlag_CanDenyShaderResources = 1 << 1
+};
+
 class Dx12Device;
 
 inline ResourceGpuState getGpuState(D3D12_RESOURCE_STATES state)
@@ -71,7 +78,7 @@ public:
     Dx12Resource(
         Dx12Device& device,
         const ResourceDesc& config,
-        bool canDenyShaderResources = true);
+        ResourceSpecialFlags specialFlags);
 
     virtual ~Dx12Resource();
 
@@ -116,6 +123,7 @@ protected:
     bool m_resolveGpuAddress = true;
 
     Usage m_usage = Usage::Default;
+    ResourceSpecialFlags m_specialFlags = ResourceSpecialFlag_None;
     D3D12_RESOURCE_STATES m_defaultState = D3D12_RESOURCE_STATE_COMMON;
     ResourceDesc m_config;
     Dx12Device& m_device;
@@ -124,7 +132,7 @@ protected:
 class Dx12Texture : public Dx12Resource
 {
 public:
-    Dx12Texture(Dx12Device& device, const TextureDesc& desc);
+    Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSpecialFlags specialFlag);
     virtual ~Dx12Texture();
 
     const TextureDesc& texDesc() const { return m_texDesc; }
@@ -135,7 +143,7 @@ protected:
 class Dx12Buffer : public Dx12Resource
 {
 public:
-    Dx12Buffer(Dx12Device& device, const BufferDesc& desc);
+    Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpecialFlags specialFlag);
     virtual ~Dx12Buffer();
 
     const BufferDesc& bufferDesc() const { return m_buffDesc; }

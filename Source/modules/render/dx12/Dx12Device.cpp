@@ -25,6 +25,7 @@
 #include "Dx12DescriptorPool.h"
 #include "Dx12WorkBundle.h"
 #include "Dx12Fence.h"
+#include "Dx12Gc.h"
 
 namespace coalpy
 {
@@ -154,6 +155,7 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
 , m_debugLayer(nullptr)
 , m_device(nullptr)
 , m_shaderDb(nullptr)
+, m_gc(nullptr)
 {
     m_info = {};
     m_dx12WorkInfos = new Dx12WorkInformationMap;
@@ -188,6 +190,10 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
 
     m_descriptors = new Dx12DescriptorPool(*this);
     m_queues = new Dx12Queues(*this);
+
+
+    m_gc = new Dx12Gc(125/*every 125ms tick*/, m_queues->getFence(WorkType::Graphics));
+
     m_resources = new Dx12ResourceCollection(*this, m_workDb);
 
     m_computeRootSignature = createComputeRootSignature(*m_device);
@@ -198,11 +204,16 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
         CPY_ASSERT_MSG(m_shaderDb->parentDevice() == nullptr, "shader database can only belong to 1 and only 1 device");
         m_shaderDb->setParentDevice(this);
     }
+
+    m_gc->start();
 }
 
 Dx12Device::~Dx12Device()
 {
+    m_gc->stop();
+
     delete m_resources;
+    delete m_gc;
     delete m_queues;
     delete m_descriptors;
     delete m_dx12WorkInfos;
@@ -220,6 +231,12 @@ Dx12Device::~Dx12Device()
         m_shaderDb->setParentDevice(nullptr);
 
     shutdownCardInfos(g_cardInfos);
+
+}
+
+void Dx12Device::deferRelease(ID3D12Pageable& object)
+{
+    m_gc->deferRelease(object);
 }
 
 Texture Dx12Device::createTexture(const TextureDesc& desc)

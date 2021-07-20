@@ -8,6 +8,7 @@ struct IDXGIFactory2;
 struct ID3D12Device2;
 struct ID3D12Debug;
 struct ID3D12RootSignature; 
+struct ID3D12Pageable;
 
 namespace coalpy
 {
@@ -20,6 +21,7 @@ namespace render
 class Dx12Queues;
 class Dx12DescriptorPool;
 class Dx12ResourceCollection;
+class Dx12Gc;
 struct Dx12WorkInformationMap;
 
 class Dx12Device : public TDevice<Dx12Device>
@@ -73,6 +75,8 @@ public:
 
     ScheduleStatus internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle); 
 
+    void deferRelease(ID3D12Pageable& object);
+
 private:
     ID3D12Debug* m_debugLayer;
     ID3D12Device2* m_device;
@@ -81,6 +85,7 @@ private:
     Dx12DescriptorPool* m_descriptors;
     Dx12Queues* m_queues;
     Dx12ShaderDb* m_shaderDb;
+    Dx12Gc* m_gc;
     DeviceInfo m_info;
 
     Dx12WorkInformationMap* m_dx12WorkInfos;

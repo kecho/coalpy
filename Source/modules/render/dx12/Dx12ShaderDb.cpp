@@ -64,6 +64,8 @@ Dx12ShaderDb::~Dx12ShaderDb()
         if (state->csPso)
         {
             ID3D12PipelineState* oldPso = state->csPso;
+            if (m_parentDevice)
+                m_parentDevice->deferRelease(*oldPso);
             oldPso->Release();
         }
         delete state;
@@ -407,7 +409,11 @@ bool Dx12ShaderDb::updateComputePipelineState(ShaderState& state)
     ID3D12PipelineState* oldPso = state.csPso;
     state.csPso = pso;
     if (oldPso)
+    {
+        if (m_parentDevice)
+            m_parentDevice->deferRelease(*oldPso);
         oldPso->Release();
+    }
     return result == S_OK;
 }
 

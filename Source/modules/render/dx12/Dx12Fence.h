@@ -1,6 +1,8 @@
 #pragma once
 
 #include <windows.h>
+#include <atomic>
+#include <shared_mutex>
 
 struct ID3D12Fence;
 struct ID3D12CommandQueue;
@@ -28,11 +30,13 @@ public:
     ID3D12Fence& fence() { return *m_fence; }
 
 private:
+    void internalSignal(UINT64 value);
     Dx12Device& m_device;
     ID3D12CommandQueue& m_ownerQueue;
     ID3D12Fence* m_fence;
     HANDLE m_event;
     UINT64 m_fenceValue;
+    std::shared_mutex m_fenceMutex;
 };
 
 }

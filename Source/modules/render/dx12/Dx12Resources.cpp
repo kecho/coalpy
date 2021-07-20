@@ -13,12 +13,13 @@ namespace coalpy
 namespace render
 {
 
-Dx12Resource::Dx12Resource(Dx12Device& device, const ResourceDesc& config, bool canDenyShaderResources)
+Dx12Resource::Dx12Resource(Dx12Device& device, const ResourceDesc& config, ResourceSpecialFlags specialFlags)
 : m_device(device)
 {
     m_config = config;
+    m_specialFlags = specialFlags;
     m_data = {};
-
+    const bool canDenyShaderResources = (specialFlags & ResourceSpecialFlag_CanDenyShaderResources) != 0;
     {
         m_data.resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 		m_data.heapFlags = D3D12_HEAP_FLAG_NONE;
@@ -126,7 +127,11 @@ void Dx12Resource::acquireD3D12Resource(ID3D12Resource* resource)
     m_resolveGpuAddress = false;
     resource->AddRef();
     if (m_data.resource != nullptr)
+    {
+        if ((m_specialFlags & ResourceSpecialFlag_NoDeferDelete) == 0)
+            m_device.deferRelease(*m_data.resource);
         m_data.resource->Release();
+    }
 
     m_data.resource = resource;
 }
@@ -145,6 +150,10 @@ Dx12Resource::~Dx12Resource()
             m_data.resource->Unmap(0u, nullptr);
         }
         m_data.mappedMemory = {};
+        
+        if ((m_specialFlags & ResourceSpecialFlag_NoDeferDelete) == 0)
+            m_device.deferRelease(*m_data.resource);
+
         m_data.resource->Release();
     }
 
@@ -155,8 +164,8 @@ Dx12Resource::~Dx12Resource()
         descriptorPool.release(m_uav);
 }
 
-Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc)
-: Dx12Resource(device, desc, false /*always allow shader resources*/)
+Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSpecialFlags specialFlags)
+: Dx12Resource(device, desc, specialFlags)
 , m_texDesc(desc)
 {
     D3D12_RESOURCE_DIMENSION dim = D3D12_RESOURCE_DIMENSION_UNKNOWN;
@@ -243,8 +252,8 @@ Dx12Texture::~Dx12Texture()
 {
 }
 
-Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc)
-: Dx12Resource(device, desc)
+Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpecialFlags specialFlags)
+: Dx12Resource(device, desc, ResourceSpecialFlags(specialFlags | ResourceSpecialFlag_CanDenyShaderResources))
 , m_buffDesc(desc)
 {
     if ((desc.memFlags & MemFlag_GpuRead) != 0)
