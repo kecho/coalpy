@@ -13,6 +13,6 @@ RWTexture2D<float4> output : register(u0);
 void main(int3 dti : SV_DispatchThreadID)
 {
     float2 uv = (dti.xy + 0.5) * float2(invWidth, invHeight);
-    float c = sin(0.01*gTime + 200.0*uv.x + 30*cos(0.007*gTime + 20.0 * uv.y));
+    float c = sin(0.01*gTime + 200.0*uv.x + 30*cos(1.0*(sin(0.007*gTime + 20.0 * uv.y))));
     output[dti.xy] = c.xxxx;
 }
