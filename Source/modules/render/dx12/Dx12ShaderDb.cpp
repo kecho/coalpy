@@ -377,14 +377,15 @@ void Dx12ShaderDb::resolve(ShaderHandle handle)
 
         {
             std::shared_lock lock(m_shadersMutex);
-            delete compileState;
             
-            if (m_parentDevice != nullptr && shaderState->recipe.type == ShaderType::Compute)
+            if (m_parentDevice != nullptr && shaderState->recipe.type == ShaderType::Compute && compileState->success)
             {
                 bool psoResult = updateComputePipelineState(*shaderState);
                 if (!psoResult && m_desc.onErrorFn != nullptr)
                     m_desc.onErrorFn(handle, shaderState->debugName.c_str(), "Compute PSO creation failed. Check D3D12 error log.");
             }
+
+            delete compileState;
 
             shaderState->compiling = false;
         }

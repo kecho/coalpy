@@ -2,13 +2,17 @@
 
 cbuffer Constants : register(b0)
 {
-    int4 vals;
-    float4 vals2;
+    float gTime;
+    float invWidth;
+    float invHeight;
+    float unused;
 }
 
 RWTexture2D<float4> output : register(u0);
 [numthreads(8,4,1)]
 void main(int3 dti : SV_DispatchThreadID)
 {
-    output[dti.xy] = vals2.x < 0.7 ? float4(1,0,0,1) : float4(0,0,1,1);
+    float2 uv = (dti.xy + 0.5) * float2(invWidth, invHeight);
+    float c = sin(0.01*gTime + 200.0*uv.x + 30*cos(0.007*gTime + 20.0 * uv.y));
+    output[dti.xy] = c.xxxx;
 }

@@ -20,9 +20,10 @@ def main():
         cmdList = gpu.CommandList()
         xv = int((480 + 7)/8);
         yv = int((480 + 3)/4);
+        dims = (1.0/render_args.width, 1.0/render_args.height)
         cmdList.dispatch(
             x = xv, y = yv, z = 1,
-            constants = [1,2,3,4, 0.71, 0.8, 0.1, 0.1],
+            constants = [float(render_args.render_time), dims[0], dims[1], 0],
             shader = s1,
             output_tables = output_table
         )

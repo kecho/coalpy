@@ -13,8 +13,8 @@ static PyMemberDef g_renderArgMemembers[] = {
     { "delta_time",  T_DOUBLE, offsetof(RenderArgs, deltaTime),  READONLY, "" },
     { "window", T_OBJECT, offsetof(RenderArgs, window), READONLY, "" },
     { "user_data", T_OBJECT, offsetof(RenderArgs, userData), READONLY, "" },
-    { "width",  T_INT, offsetof(RenderArgs, window), READONLY, "" },
-    { "height", T_INT, offsetof(RenderArgs, window), READONLY, "" },
+    { "width",  T_INT, offsetof(RenderArgs, width), READONLY, "" },
+    { "height", T_INT, offsetof(RenderArgs, height), READONLY, "" },
     { nullptr }
 };
 
