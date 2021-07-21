@@ -163,3 +163,35 @@ function _G.DeployPyPackage(packageName, pythonLibName, binaries, scriptsDir)
     end
 end
 
+function _G.DeployPyPipFiles(destFolder, readmefile, pipfiles)
+    local packageDst = "$(OBJECTDIR)$(SEP)"..destFolder
+    local cpReadme = CopyFile {
+        Pass = "Deploy",
+        Source = readmefile,
+        Target = packageDst.."$(SEP)README.md"
+    }
+    Default(cpReadme)
+
+    local cpLicense = CopyFile {
+        Pass = "Deploy",
+        Source = pipfiles.."/LICENSE",
+        Target = packageDst.."$(SEP)LICENSE"
+    }
+    Default(cpLicense)
+
+    local pipMetaFiles = Glob {
+        Dir = pipfiles,
+        Extensions = { "LICENSE", ".toml", ".cfg", ".in" },
+        Recursive = true
+    }
+    for i, v in ipairs(pipMetaFiles) do
+        local targetName = packageDst.."$(SEP)"..path.remove_prefix(pipfiles.."/", v)
+        local cpFile = CopyFile {
+            Pass = "Deploy",
+            Source = v,
+            Target = targetName
+        }
+        Default(cpFile)
+    end
+end
+

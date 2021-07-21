@@ -49,3 +49,7 @@ _G.BuildModules(SourceDir, CoalPyModuleTable, CoalPyModuleIncludes)
 _G.BuildPyLib("gpu", "pymodules/gpu", SourceDir, LibIncludes, CoalPyModules, Libraries)
 _G.BuildProgram("coalpy_tests", "tests", { "CPY_ASSERT_ENABLED=1" }, SourceDir, LibIncludes, CoalPyModules, Libraries)
 _G.DeployPyPackage("coalpy", "gpu", Binaries, ScriptsDir)
+
+-- Deploy PIP package
+_G.DeployPyPackage("coalpy_pip/src/coalpy", "gpu", Binaries, ScriptsDir)
+_G.DeployPyPipFiles("coalpy_pip", SourceDir.."/../README.md", SourceDir.."/pipfiles")
