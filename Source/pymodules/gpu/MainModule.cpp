@@ -15,6 +15,8 @@
 
 coalpy::ModuleOsHandle g_ModuleInstance = nullptr;
 coalpy::gpu::TypeList g_allTypes;
+#define MAX_PY_MOD_PATH 9056
+char g_ModuleFilePath[MAX_PY_MOD_PATH];
 
 #if _WIN32
 
@@ -27,6 +29,8 @@ BOOL WINAPI DllMain(
     { 
         case DLL_PROCESS_ATTACH:
             g_ModuleInstance = (coalpy::ModuleOsHandle)hinstDLL;
+            g_ModuleFilePath[0] = '\0';
+            GetModuleFileNameA(hinstDLL, g_ModuleFilePath, MAX_PY_MOD_PATH);
             break;
 
         case DLL_PROCESS_DETACH:

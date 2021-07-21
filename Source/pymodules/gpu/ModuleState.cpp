@@ -1,5 +1,6 @@
 #include "ModuleState.h"
 #include <coalpy.core/Assert.h>
+#include <coalpy.files/Utils.h>
 #include <coalpy.render/IShaderDb.h>
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.tasks/ITaskSystem.h>
@@ -10,6 +11,7 @@
 #include <iostream>
 
 extern coalpy::ModuleOsHandle g_ModuleInstance;
+extern char g_ModuleFilePath[];
 
 namespace coalpy
 {
@@ -35,7 +37,12 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
     }
 
     {
+        std::string dllname = g_ModuleFilePath;
+        std::string modulePath;
+        FileUtils::getDirName(dllname, modulePath);
+        modulePath += "/resources/";
         ShaderDbDesc desc;
+        desc.compilerDllPath = modulePath.c_str();
         desc.resolveOnDestruction = true; //this is so there is a nice clean destruction
         desc.fs = m_fs;
         desc.ts = m_ts;
