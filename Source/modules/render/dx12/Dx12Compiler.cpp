@@ -13,6 +13,7 @@
 #include <coalpy.files/Utils.h>
 #include <mutex>
 
+#include <sstream>
 #include <string>
 #include <vector>
 #include <windows.h>
@@ -247,11 +248,18 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
     paths.push_back(L"-I.");
     paths.push_back(L"-Icoalpy");
 
+    for (auto& incPath : args.additionalIncludes)
+    {
+        std::stringstream ss;
+        ss << "-I" << incPath;
+        std::wstring pathArg = s2ws(ss.str());
+        paths.push_back(pathArg);
+    }
+
     for (auto& path : paths)
     {
         arguments.push_back(path.c_str());
     }
-    
 
     SmartPtr<IDxcCompilerArgs> compilerArgs;
 

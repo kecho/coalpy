@@ -395,7 +395,6 @@ namespace FileUtils
     {
         InternalFileSystem::getAbsolutePath(path, outDir);
     }
-    
 }
 
 }

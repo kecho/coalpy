@@ -8,6 +8,7 @@ namespace coalpy
 class IShaderDb
 {
 public:
+    virtual void addPath(const char* path) = 0;
     virtual ShaderHandle requestCompile(const ShaderDesc& desc) = 0;
     virtual ShaderHandle requestCompile(const ShaderInlineDesc& desc) = 0;
     virtual void resolve(ShaderHandle handle) = 0;

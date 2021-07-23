@@ -77,6 +77,7 @@ public:
     explicit Dx12ShaderDb(const ShaderDbDesc& desc);
     virtual ShaderHandle requestCompile(const ShaderDesc& desc) override;
     virtual ShaderHandle requestCompile(const ShaderInlineDesc& desc) override;
+    virtual void addPath(const char* path) override;
     virtual void resolve(ShaderHandle handle) override;
     virtual bool isValid(ShaderHandle handle) const override;
     virtual ~Dx12ShaderDb();
@@ -135,6 +136,7 @@ private:
     FileToShaderHandlesMap m_fileToShaders;
     ShaderHandleToFilesMap m_shadersToFiles;
     render::Dx12Device* m_parentDevice = nullptr;
+    std::vector<std::string> m_additionalPaths;
 };
 
 }

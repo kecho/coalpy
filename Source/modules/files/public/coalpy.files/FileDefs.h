@@ -1,6 +1,7 @@
 #pragma once
 #include <coalpy.core/GenericHandle.h>
 #include <coalpy.core/ByteBuffer.h>
+#include <vector>
 #include <string>
 #include <functional>
 
@@ -80,6 +81,7 @@ enum class FileRequestFlags : int
 struct FileReadRequest
 {
     std::string path;
+    std::vector<std::string> additionalRoots;
     FileReadDoneCallback doneCallback;
     int flags;
 

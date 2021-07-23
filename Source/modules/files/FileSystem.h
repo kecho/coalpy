@@ -5,6 +5,7 @@
 #include <coalpy.core/HandleContainer.h>
 #include "InternalFileSystem.h"
 #include <vector>
+#include <queue>
 #include <variant>
 #include <string>
 #include <mutex>
@@ -38,7 +39,7 @@ private:
     struct Request
     {
         InternalFileSystem::RequestType type = InternalFileSystem::RequestType::Read;
-        std::string filename;
+        std::queue<std::string> filenames;
         FileReadDoneCallback readCallback = nullptr;
         FileWriteDoneCallback writeCallback = nullptr;
         InternalFileSystem::OpaqueFileHandle opaqueHandle = {};

@@ -11,9 +11,13 @@
 #include <coalpy.render/IShaderDb.h>
 #include <coalpy.render/IDevice.h>
 #include <coalpy.core/Stopwatch.h>
+#include <coalpy.core/String.h>
+#include <coalpy.files/IFileSystem.h>
+#include <coalpy.files/Utils.h>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <moduleobject.h>
 
 namespace {
 
@@ -49,6 +53,12 @@ PyMethodDef g_defs[] = {
         "Selects an active GPU adapter. For a list of GPU adapters see coalpy.gpu.get_adapters.\n"
         "Argumnets:\n"
         "index: the desired device index. See coalpy.gpu.get_adapters for a full list.\n"
+    ),
+
+    KW_FN(
+        add_shader_path,
+        addShaderPath,
+        ""
     ),
 
     KW_FN(
@@ -160,6 +170,75 @@ PyObject* setCurrentAdapter(PyObject* self, PyObject* args, PyObject* kwds)
         return nullptr;
     
     Py_RETURN_NONE;
+}
+
+PyObject* addShaderPath(PyObject* self, PyObject* args, PyObject* kwds)
+{
+    ModuleState& moduleState = getState(self);
+    if (!moduleState.checkValidDevice())
+    {
+        PyErr_SetString(moduleState.exObj(), "Cant add a shader path, current device is invalid.");
+        return nullptr;
+    }
+
+    PyObject* object = nullptr;
+    static char* argnames[] = { "path", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", argnames, &object))
+        return nullptr;
+
+    std::string path;
+    if (PyUnicode_Check(object))
+    {
+        std::wstring wstr = (const wchar_t*)PyUnicode_AS_DATA(object);
+        path = ws2s(wstr);
+    }
+    else if (PyModule_Check(object))
+    {
+        PyObject* filenameObj = PyModule_GetFilenameObject(object);
+        if (filenameObj == nullptr)
+        {
+            PyErr_SetString(moduleState.exObj(), "Module passed does not contain an __init__.py file or a core location that can be used to extract a path.");
+            return nullptr;
+        }
+
+        if (PyUnicode_Check(filenameObj))
+        {
+            std::wstring wstr = (const wchar_t*)PyUnicode_AS_DATA(filenameObj);
+            std::string coreModulePath = ws2s(wstr);
+            FileUtils::getDirName(coreModulePath, path);
+        }
+
+        Py_DECREF(filenameObj);
+    }
+
+    bool exists = false;
+    bool isDir = false;
+    bool isDots = false;
+    FileAttributes attr;
+    moduleState.fs().getFileAttributes(path.c_str(), attr);
+
+    if (attr.isDot)
+    {
+        PyErr_Format(moduleState.exObj(), "Path passed %s is a dot type (. or ..). These are not permitted.", path.c_str());
+        return nullptr;
+    }
+
+    if (!attr.exists)
+    {
+        PyErr_Format(moduleState.exObj(), "Path passed doesn't exist: %s", path.c_str());
+        return nullptr;
+    }
+
+    if (!attr.isDir)
+    {
+        PyErr_Format(moduleState.exObj(), "Path passed must be a directory: %s", path.c_str());
+        return nullptr;
+    }
+
+    moduleState.db().addPath(path.c_str());
+
+    Py_RETURN_NONE;
+
 }
 
 PyObject* run(PyObject* self, PyObject* args)

@@ -1,6 +1,7 @@
 #include "FileSystem.h"
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.core/Assert.h>
+#include <sstream>
 
 namespace coalpy
 {
@@ -29,7 +30,17 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
         Request*& requestData = m_requests.allocate(asyncHandle);
         requestData = new Request();
         requestData->type = InternalFileSystem::RequestType::Read;
-        requestData->filename = request.path;
+        requestData->filenames.push(request.path);
+        {
+            for (auto& root : request.additionalRoots)
+            {
+                if (root[root.size() - 1] == '/' || root[root.size() - 1] == '\\')
+                    requestData->filenames.push(root + request.path);
+                else
+                    requestData->filenames.push(root + '\\' + request.path);
+            }
+        }
+
         requestData->readCallback = request.doneCallback;
         requestData->opaqueHandle = {};
         requestData->error = IoError::None;
@@ -43,7 +54,21 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                 response.status = FileStatus::Opening;
                 requestData->readCallback(response);
             }
-            requestData->opaqueHandle = InternalFileSystem::openFile(requestData->filename.c_str(), InternalFileSystem::RequestType::Read);
+
+            //pop all the candidate files that don't exist
+            while(!requestData->filenames.empty())
+            {
+                FileAttributes attr;
+                getFileAttributes(requestData->filenames.front().c_str(), attr);
+                if (!attr.exists || attr.isDir || attr.isDot)
+                    requestData->filenames.pop();
+                else
+                    break;
+            } 
+    
+            if (!requestData->filenames.empty())
+                requestData->opaqueHandle = InternalFileSystem::openFile(requestData->filenames.front().c_str(), InternalFileSystem::RequestType::Read);
+
             if (!InternalFileSystem::valid(requestData->opaqueHandle))
             {
                 {
@@ -146,8 +171,8 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
         Request*& requestData = m_requests.allocate(asyncHandle);
         requestData = new Request();
         requestData->type = InternalFileSystem::RequestType::Write;
-        requestData->filename = request.path;
-        InternalFileSystem::fixStringPath(requestData->filename);
+        requestData->filenames.push(request.path);
+        InternalFileSystem::fixStringPath(requestData->filenames.front());
         requestData->writeCallback = request.doneCallback;
         requestData->opaqueHandle = {};
         requestData->error = IoError::None;
@@ -164,7 +189,7 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
                 requestData->writeCallback(response);
             }
 
-            if (!InternalFileSystem::carvePath(requestData->filename))
+            if (!InternalFileSystem::carvePath(requestData->filenames.front()))
             {
                 requestData->error = IoError::FailedCreatingDir;
                 requestData->fileStatus = FileStatus::Fail;
@@ -180,7 +205,7 @@ AsyncFileHandle FileSystem::write(const FileWriteRequest& request)
                 }
                 return;
             }
-            requestData->opaqueHandle = InternalFileSystem::openFile(requestData->filename.c_str(), InternalFileSystem::RequestType::Write);
+            requestData->opaqueHandle = InternalFileSystem::openFile(requestData->filenames.front().c_str(), InternalFileSystem::RequestType::Write);
             if (!InternalFileSystem::valid(requestData->opaqueHandle))
             {
                 {

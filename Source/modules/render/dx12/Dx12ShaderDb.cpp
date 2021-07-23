@@ -74,6 +74,13 @@ Dx12ShaderDb::~Dx12ShaderDb()
     CPY_ASSERT_FMT(unresolvedShaders == 0, "%d unresolved shaders. Expect memory leaks.", unresolvedShaders);
 }
 
+void Dx12ShaderDb::addPath(const char* path)
+{
+    std::unique_lock lock(m_shadersMutex);
+    std::string strpath(path);
+    m_additionalPaths.emplace_back(std::move(strpath));
+}
+
 Dx12ShaderDb::ShaderState& Dx12ShaderDb::createShaderState(ShaderHandle& outHandle)
 {
     ShaderState& shaderState = *(new ShaderState);
@@ -94,11 +101,14 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
 {
     auto* compileState = new Dx12CompileState;
 
-    std::string inputPath = desc.path;
-    std::string resolvedPath;
-    FileUtils::getAbsolutePath(inputPath, resolvedPath);
+    std::string resolvedPath = desc.path;
 
     compileState->compileArgs = {};
+    compileState->compileArgs.additionalIncludes.insert(
+        compileState->compileArgs.additionalIncludes.end(),
+        m_additionalPaths.begin(),
+        m_additionalPaths.end());
+
     compileState->compileArgs.type = desc.type;
     compileState->shaderName = desc.name;
     compileState->mainFn = desc.mainFn;
@@ -112,7 +122,7 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
     shaderState.recipe.type = desc.type;
     shaderState.recipe.name = desc.name;
     shaderState.recipe.mainFn = desc.mainFn;
-    FileUtils::getAbsolutePath(compileState->filePath, shaderState.recipe.path);
+    shaderState.recipe.path = compileState->filePath;
     shaderState.compileState = compileState;
 
     if (m_desc.enableLiveEditing)
@@ -225,7 +235,7 @@ void Dx12ShaderDb::prepareIoJob(Dx12CompileState& compileState, const std::strin
     compileState.compileArgs.mainFn = compileState.mainFn.c_str();
 
     const auto& readPath = compileState.filePath;
-    compileState.readStep = m_desc.fs->read(FileReadRequest(readPath, [&compileState, this](FileReadResponse& response){
+    FileReadRequest readRequest(readPath, [&compileState, this](FileReadResponse& response){
         if (response.status == FileStatus::Reading)
         {
             compileState.buffer.append((const u8*)response.buffer, response.size);
@@ -246,7 +256,10 @@ void Dx12ShaderDb::prepareIoJob(Dx12CompileState& compileState, const std::strin
                 m_desc.onErrorFn(compileState.shaderHandle, compileState.shaderName.c_str(), ss.str().c_str());
             }
         }
-    }));
+    });
+
+    readRequest.additionalRoots.insert(readRequest.additionalRoots.end(), m_additionalPaths.begin(), m_additionalPaths.end());
+    compileState.readStep = m_desc.fs->read(readRequest);
 
     if (m_desc.enableLiveEditing)
     {

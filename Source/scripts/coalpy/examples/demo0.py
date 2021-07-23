@@ -11,8 +11,9 @@ gpu.set_current_adapter(1)
 info = gpu.get_current_adapter_info()
 print("Current device: {}".format(info[1]))
 
+gpu.add_shader_path(gpu) #this adds the main module in the paths.
 
-s1 = gpu.Shader(file="coalpy/examples/testShader.hlsl", name="testShader")
+s1 = gpu.Shader(file="examples/testShader.hlsl", name="testShader")
 
 def main():
 
