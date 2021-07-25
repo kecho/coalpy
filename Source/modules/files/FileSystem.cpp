@@ -1,6 +1,7 @@
 #include "FileSystem.h"
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.core/Assert.h>
+#include <coalpy.files/Utils.h>
 #include <sstream>
 
 namespace coalpy
@@ -75,12 +76,17 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                     requestData->error = IoError::FailedOpening;
                     requestData->fileStatus = FileStatus::Fail;
                     FileReadResponse response;
+                    if (!requestData->filenames.empty())
+                        response.filePath = requestData->filenames.front();
                     response.error = IoError::FailedOpening;
                     response.status = FileStatus::Fail;
                     requestData->readCallback(response);
                 }
                 return;
             }
+
+            std::string resolvedFileName;
+            FileUtils::getAbsolutePath(requestData->filenames.front(), resolvedFileName);
 
             requestData->fileStatus = FileStatus::Reading;
 
@@ -102,6 +108,7 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                     response.status = FileStatus::Reading;
                     response.buffer = readState.output;
                     response.size = readState.bytesRead;
+                    response.filePath = resolvedFileName;
                     requestData->readCallback(response);
                 }
 
@@ -115,6 +122,7 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                         requestData->fileStatus = FileStatus::Fail;
                         FileReadResponse response;
                         response.error = IoError::FailedReading;
+                        response.filePath = resolvedFileName;
                         response.status = FileStatus::Fail;
                         requestData->readCallback(response);
                     }
@@ -128,6 +136,7 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
 
                 requestData->fileStatus = FileStatus::Success;
                 FileReadResponse response;
+                response.filePath = resolvedFileName;
                 response.status = FileStatus::Success;
                 requestData->readCallback(response);
             }

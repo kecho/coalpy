@@ -59,6 +59,7 @@ struct FileReadResponse
 {
     IoError error = IoError::None;
     FileStatus status = FileStatus::Idle;
+    std::string filePath;
     const char* buffer = nullptr;
     int size = 0;
 };

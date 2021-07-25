@@ -36,6 +36,7 @@ public:
     std::shared_mutex fileWatchMutex;
     std::set<std::string> directoriesSet;
     std::vector<std::string> directories;
+    std::vector<bool> waitResults;
     std::vector<WatchHandle> handles;
     std::set<IFileWatchListener*> listeners;
     ThreadQueue<FileWatchMessage> queue;
@@ -51,6 +52,7 @@ namespace
 
 #ifdef _WIN32 
 bool findResults(
+    const std::string& rootDir,
     HANDLE dirHandle,
     OVERLAPPED& overlapped,
     FILE_NOTIFY_INFORMATION* infos,
@@ -58,10 +60,6 @@ bool findResults(
     std::set<std::string>& caughtFiles)
 {
     DWORD bytesReturned = 0;
-
-    auto waitResult = WaitForSingleObject(overlapped.hEvent, millisecondsToWait);
-    if (waitResult == WAIT_TIMEOUT)
-        return true;
 
     auto hasOverlapped = GetOverlappedResult(dirHandle, &overlapped, &bytesReturned, FALSE);
     if (!hasOverlapped)
@@ -75,7 +73,7 @@ bool findResults(
             std::wstring wfilename;
             wfilename.assign(curr->FileName, curr->FileNameLength / sizeof(wchar_t));
             std::string filename = ws2s(wfilename);
-            caughtFiles.insert(filename);
+            caughtFiles.insert(rootDir + "/" + filename);
         }
         curr = curr->NextEntryOffset == 0 ? nullptr : (FILE_NOTIFY_INFORMATION*)((char*)curr + curr->NextEntryOffset);
     }
@@ -107,22 +105,36 @@ bool waitListenForDirs(FileWatchState& state, int millisecondsToWait)
         FILE_NOTIFY_INFORMATION infos[1024] = {};
 
         {
-            DWORD bytesReturned = 0;
-            bool result = ReadDirectoryChangesW(
+            if (!state.waitResults[i])
+            {
+                DWORD bytesReturned = 0;
+                bool result = ReadDirectoryChangesW(
                     dirHandle, (LPVOID)&infos, sizeof(infos), TRUE, FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned,
                     &overlapped, NULL);
+                state.waitResults[i] = true;
+                CPY_ASSERT_FMT(result, "Failed watching directory \"%s\"", state.directories[i].c_str());
 
-            CPY_ASSERT_FMT(result, "Failed watching directory \"%s\"", state.directories[i].c_str());
-            if (!result)
-                return false;
+                if (!result)
+                    return false;
+            }
+
+            if (state.waitResults[i])
+            {
+                auto waitResult = WaitForSingleObject(overlapped.hEvent, i == 0 ? millisecondsToWait : 0);
+                if (waitResult == WAIT_TIMEOUT)
+                    continue;
+            }
 
             if (!findResults(
+                state.directories[i],
                 dirHandle,
                 overlapped,
                 infos,
                 i == 0 ? millisecondsToWait : 0,
                 caughtFiles))
                     return false;
+
+            state.waitResults[i] = false;
         }
     }
 #endif
@@ -212,6 +224,7 @@ void FileWatcher::addDirectory(const char* directory)
 
     m_state->directories.push_back(dirStr);
     m_state->handles.push_back((WatchHandle)dirHandle);
+    m_state->waitResults.push_back(false);
     m_state->events.push_back(CreateEvent(NULL, TRUE, TRUE, NULL));
 #endif
 

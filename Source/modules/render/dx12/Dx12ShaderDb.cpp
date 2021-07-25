@@ -108,7 +108,7 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
 {
     auto* compileState = new Dx12CompileState;
 
-    std::string resolvedPath = desc.path;
+    std::string filePath = desc.path;
 
     compileState->compileArgs = {};
     compileState->compileArgs.additionalIncludes.insert(
@@ -120,7 +120,7 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
     compileState->shaderName = desc.name;
     compileState->mainFn = desc.mainFn;
     compileState->success = false;
-    prepareIoJob(*compileState, resolvedPath);
+    prepareIoJob(*compileState, filePath);
     prepareCompileJobs(*compileState);
 
     ShaderHandle shaderHandle;
@@ -131,14 +131,6 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
     shaderState.recipe.mainFn = desc.mainFn;
     shaderState.recipe.path = compileState->filePath;
     shaderState.compileState = compileState;
-
-    if (m_desc.enableLiveEditing)
-    {
-        Dx12FileLookup fileLookup(resolvedPath);
-        std::unique_lock lock(m_dependencyMutex);
-        m_fileToShaders[fileLookup].insert(shaderHandle);
-        m_shadersToFiles[shaderHandle].insert(fileLookup);
-    }
 
     compileState->shaderHandle = shaderHandle;
     m_desc.ts->depends(compileState->compileStep, m_desc.fs->asTask(compileState->readStep));
@@ -251,6 +243,15 @@ void Dx12ShaderDb::prepareIoJob(Dx12CompileState& compileState, const std::strin
         {
             compileState.compileArgs.source = (const char*)compileState.buffer.data();
             compileState.compileArgs.sourceSize = (int)compileState.buffer.size();
+
+            if (m_desc.enableLiveEditing)
+            {
+                Dx12FileLookup fileLookup(response.filePath);
+                std::unique_lock lock(m_dependencyMutex);
+                m_fileToShaders[fileLookup].insert(compileState.shaderHandle);
+                m_shadersToFiles[compileState.shaderHandle].insert(fileLookup);
+                compileState.files.insert(response.filePath);
+            }
         }
         else if (response.status == FileStatus::Fail)
         {
@@ -267,12 +268,6 @@ void Dx12ShaderDb::prepareIoJob(Dx12CompileState& compileState, const std::strin
 
     readRequest.additionalRoots.insert(readRequest.additionalRoots.end(), m_additionalPaths.begin(), m_additionalPaths.end());
     compileState.readStep = m_desc.fs->read(readRequest);
-
-    if (m_desc.enableLiveEditing)
-    {
-        Dx12FileLookup fileLookup(resolvedPath);
-        compileState.files.insert(fileLookup);
-    }
 }
 
 void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
