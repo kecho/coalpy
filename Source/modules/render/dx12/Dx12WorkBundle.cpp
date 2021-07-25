@@ -211,7 +211,6 @@ void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCm
         CPY_ASSERT(uploadCmd->sourceSize <= (m_uploadMemBlock.uploadSize - cmdInfo.uploadBufferOffset));
         memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + cmdInfo.uploadBufferOffset, uploadCmd->sources.data(data), uploadCmd->sourceSize);
     }
-
     
     Dx12ResourceCollection& resources = m_device.resources();
     Dx12Resource& destinationResource = resources.unsafeGetResource(uploadCmd->destination);

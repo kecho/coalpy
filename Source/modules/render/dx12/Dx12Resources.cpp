@@ -34,10 +34,7 @@ Dx12Resource::Dx12Resource(Dx12Device& device, const ResourceDesc& config, Resou
             }
 
             if ((m_config.memFlags & MemFlag_GpuWrite) != 0)
-            {
-                m_uav = descriptorPool.allocateSrvOrUavOrCbv();
                 m_data.resDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-            }
         }
         else if (canDenyShaderResources)
         {
@@ -101,12 +98,6 @@ bool Dx12Resource::init()
 			m_data.resource, &m_data.srvDesc, m_srv.handle);
     }
     
-    if ((m_config.memFlags & MemFlag_GpuWrite) != 0)
-    {
-		m_device.device().CreateUnorderedAccessView(
-			m_data.resource, nullptr, &m_data.uavDesc, m_uav.handle);
-    }
-
     if (m_data.heapProps.Type == D3D12_HEAP_TYPE_READBACK || m_data.heapProps.Type == D3D12_HEAP_TYPE_UPLOAD)
     {
         DX_OK(m_data.resource->Map(0u, nullptr, &m_data.mappedMemory));
@@ -161,7 +152,11 @@ Dx12Resource::~Dx12Resource()
     if ((m_config.memFlags & MemFlag_GpuRead) != 0)
         descriptorPool.release(m_srv);
     if ((m_config.memFlags & MemFlag_GpuWrite) != 0)
-        descriptorPool.release(m_uav);
+    {
+        for (auto& uav : m_uavs)
+            descriptorPool.release(uav);
+        m_uavs.clear();
+    }
 }
 
 Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSpecialFlags specialFlags)
@@ -171,7 +166,7 @@ Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSp
     D3D12_RESOURCE_DIMENSION dim = D3D12_RESOURCE_DIMENSION_UNKNOWN;
     if (desc.type == TextureType::k1d)
         dim = D3D12_RESOURCE_DIMENSION_TEXTURE1D;
-    else if (desc.type == TextureType::k2d)
+    else if (desc.type == TextureType::k2d || desc.type == TextureType::k2dArray || desc.type == TextureType::CubeMap || desc.type == TextureType::CubeMapArray)
         dim = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     else if (desc.type == TextureType::k3d)
         dim = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
@@ -179,6 +174,19 @@ Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSp
         CPY_ASSERT_FMT(false, "Texture type not supported %d yet", desc.type);
 
     auto dxFormat = getDxFormat(desc.format);
+
+    m_slices = desc.depth;
+    if (desc.type == TextureType::CubeMapArray)
+    {
+        m_slices *= 6;
+    }
+    else if (desc.type == TextureType::CubeMap)
+    {
+        m_slices = 6;
+    }
+    else if (desc.type != TextureType::k2dArray)
+        m_slices = 1;
+
 
     if ((desc.memFlags & MemFlag_GpuRead) != 0)
     {
@@ -191,15 +199,41 @@ Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSp
             srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
             srvDesc.Texture1D.MostDetailedMip = 0u;
             srvDesc.Texture1D.MipLevels = desc.mipLevels;
-            srvDesc.Texture1D.ResourceMinLODClamp = 0u;
+            srvDesc.Texture1D.ResourceMinLODClamp = 0.0f;
         }
         else if (desc.type == TextureType::k2d)
         {
             srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
             srvDesc.Texture2D.MostDetailedMip = 0u;
             srvDesc.Texture2D.MipLevels = desc.mipLevels;
-            srvDesc.Texture2D.ResourceMinLODClamp = 0u;
+            srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
             srvDesc.Texture2D.PlaneSlice = 0u;
+        }
+        else if (desc.type == TextureType::k2dArray)
+        {
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+            srvDesc.Texture2DArray.MostDetailedMip = 0u;
+            srvDesc.Texture2DArray.MipLevels = desc.mipLevels;
+            srvDesc.Texture2DArray.FirstArraySlice = 0u;
+            srvDesc.Texture2DArray.ArraySize = desc.depth;
+            srvDesc.Texture2DArray.PlaneSlice = 0u;
+            srvDesc.Texture2DArray.ResourceMinLODClamp = 0.0f;
+        }
+        else if (desc.type == TextureType::CubeMap)
+        {
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+            srvDesc.TextureCube.MostDetailedMip = 0;
+            srvDesc.TextureCube.MipLevels = desc.mipLevels;
+            srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+        }
+        else if (desc.type == TextureType::CubeMapArray)
+        {
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBEARRAY;
+            srvDesc.TextureCubeArray.MostDetailedMip = 0u;
+            srvDesc.TextureCubeArray.MipLevels = desc.mipLevels;
+            srvDesc.TextureCubeArray.First2DArrayFace = 0;
+            srvDesc.TextureCubeArray.NumCubes = desc.depth;
+            srvDesc.TextureCubeArray.ResourceMinLODClamp = 0.0f;
         }
         else if (desc.type == TextureType::k3d)
         {
@@ -233,6 +267,14 @@ Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSp
             uavDesc.Texture3D.FirstWSlice = 0u;
             uavDesc.Texture3D.WSize = -1;
         }
+        else if (desc.type == TextureType::k2dArray || desc.type == TextureType::CubeMapArray || desc.type == TextureType::CubeMap)
+        {
+            uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+            uavDesc.Texture2DArray.MipSlice = 0;
+            uavDesc.Texture2DArray.FirstArraySlice = 0;
+            uavDesc.Texture2DArray.ArraySize = (UINT)m_slices;
+            uavDesc.Texture2DArray.PlaneSlice = 0;
+        }
     }
 
     m_data.heapFlags |= D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES;
@@ -241,6 +283,7 @@ Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSp
     m_data.resDesc.Alignment = 0u;
     m_data.resDesc.Width = desc.width;
     m_data.resDesc.Height = desc.height;
+    
     m_data.resDesc.DepthOrArraySize = desc.depth;
     m_data.resDesc.MipLevels = desc.mipLevels;
     m_data.resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
@@ -250,6 +293,40 @@ Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSp
 
 Dx12Texture::~Dx12Texture()
 {
+}
+
+bool Dx12Texture::init()
+{
+    if (!Dx12Resource::init())
+        return false;
+    
+    if ((m_config.memFlags & MemFlag_GpuWrite) != 0)
+    {
+        auto& descriptorPool = m_device.descriptors();
+        for (int mipId = 0; mipId < m_texDesc.mipLevels; ++mipId)
+        {
+            auto uav = descriptorPool.allocateSrvOrUavOrCbv();
+            auto mipUavDesc = m_data.uavDesc;
+            switch (m_data.uavDesc.ViewDimension)
+            {
+            case D3D12_UAV_DIMENSION_TEXTURE1D:
+                mipUavDesc.Texture1D.MipSlice = mipId;
+                break;
+            case D3D12_UAV_DIMENSION_TEXTURE2D:
+                mipUavDesc.Texture2D.MipSlice = mipId;
+                break;
+            case D3D12_UAV_DIMENSION_TEXTURE2DARRAY:
+                mipUavDesc.Texture2DArray.MipSlice = mipId;
+                break;
+            case D3D12_UAV_DIMENSION_TEXTURE3D:
+                mipUavDesc.Texture3D.MipSlice = mipId;
+                break;
+            }
+            m_device.device().CreateUnorderedAccessView(
+            	m_data.resource, nullptr, &mipUavDesc, uav.handle);
+            m_uavs.push_back(uav);
+        }
+    }
 }
 
 Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpecialFlags specialFlags)
@@ -303,6 +380,17 @@ bool Dx12Buffer::init()
 {
     if (!Dx12Resource::init())
         return false;
+
+    if ((m_config.memFlags & MemFlag_GpuWrite) != 0)
+    {
+        auto& descriptorPool = m_device.descriptors();
+        if (m_data.uavDesc.ViewDimension == D3D12_UAV_DIMENSION_BUFFER)
+        {
+            m_uavs.push_back(descriptorPool.allocateSrvOrUavOrCbv());
+		    m_device.device().CreateUnorderedAccessView(
+		    	m_data.resource, nullptr, &m_data.uavDesc, m_uavs.back().handle);
+        }
+    }
 
     if (m_buffDesc.isConstantBuffer)
     {

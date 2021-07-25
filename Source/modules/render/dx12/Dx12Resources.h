@@ -96,14 +96,14 @@ public:
     void* mappedMemory();
 
     const Dx12Descriptor srv() const { return m_srv; }
-    const Dx12Descriptor uav() const { return m_uav; }
+    const Dx12Descriptor uav(int mipLevel = 0) const { return m_uavs[mipLevel]; }
 
     bool isBuffer() const { return m_data.resDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER; };
     ResourceSpecialFlags specialFlags() const { return m_specialFlags; }
 
 protected:
     Dx12Descriptor m_srv = {};
-    Dx12Descriptor m_uav = {};
+    std::vector<Dx12Descriptor> m_uavs;
 
     enum class Usage
     {
@@ -135,10 +135,12 @@ class Dx12Texture : public Dx12Resource
 {
 public:
     Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSpecialFlags specialFlag);
+    virtual bool init() override;
     virtual ~Dx12Texture();
 
     const TextureDesc& texDesc() const { return m_texDesc; }
 protected:
+    int m_slices;
     TextureDesc m_texDesc;
 };
 
