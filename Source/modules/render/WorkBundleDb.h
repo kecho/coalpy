@@ -39,6 +39,7 @@ enum class BarrierType
 struct ResourceBarrier
 {
     ResourceHandle resource;
+    bool isUav = false; //ignores previous and post states
     ResourceGpuState prevState = ResourceGpuState::Default;
     ResourceGpuState postState = ResourceGpuState::Default;
     BarrierType type = BarrierType::Immediate;

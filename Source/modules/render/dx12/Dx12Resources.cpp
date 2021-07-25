@@ -327,6 +327,8 @@ bool Dx12Texture::init()
             m_uavs.push_back(uav);
         }
     }
+
+    return true;
 }
 
 Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpecialFlags specialFlags)

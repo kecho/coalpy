@@ -66,10 +66,14 @@ bool transitionResource(
     {
         if (currState->state != newState)
         {
+            auto& srcList = context.processedList[currState->listIndex];
+            CPY_ASSERT(srcList.listIndex == currState->listIndex);
+            auto& dstList = context.processedList[context.listIndex];
+            CPY_ASSERT(dstList.listIndex == context.listIndex);
+            CommandInfo& srcCmd = srcList.commandSchedule[currState->commandIndex];
+            CommandInfo& dstCmd = dstList.commandSchedule[context.currentCommandIndex];
+
             {
-                auto& srcList = context.processedList[currState->listIndex];
-                CPY_ASSERT(srcList.listIndex == currState->listIndex);
-                CommandInfo& srcCmd = srcList.commandSchedule[currState->commandIndex];
                 srcCmd.postBarrier.emplace_back();
                 auto& beginBarrier = srcCmd.postBarrier.back();
                 beginBarrier.resource = resource;
@@ -79,15 +83,31 @@ bool transitionResource(
             }
 
             {
-                auto& dstList = context.processedList[context.listIndex];
-                CPY_ASSERT(dstList.listIndex == context.listIndex);
-                CommandInfo& dstCmd = dstList.commandSchedule[context.currentCommandIndex];
                 dstCmd.preBarrier.emplace_back();
                 auto& endBarrier = dstCmd.preBarrier.back();
                 endBarrier.resource = resource;
                 endBarrier.prevState = currState->state;
                 endBarrier.postState = newState;
                 endBarrier.type = BarrierType::End;
+            }
+
+            if (currState->state == ResourceGpuState::Uav && newState == ResourceGpuState::Uav)
+            {
+                {
+                    srcCmd.postBarrier.emplace_back();
+                    auto& beginBarrier = srcCmd.postBarrier.back();
+                    beginBarrier.resource = resource;
+                    beginBarrier.isUav = true;
+                    beginBarrier.type = BarrierType::Begin;
+                }
+
+                {
+                    dstCmd.preBarrier.emplace_back();
+                    auto& endBarrier = dstCmd.preBarrier.back();
+                    endBarrier.resource = resource;
+                    endBarrier.isUav = true;
+                    endBarrier.type = BarrierType::End;
+                }
             }
 
             currState->state = newState;
@@ -133,6 +153,17 @@ bool transitionResource(
             newBarrier.resource = resource;
             newBarrier.prevState = prevState; 
             newBarrier.postState = newState; 
+            newBarrier.type = BarrierType::Immediate;
+            context.processedList[context.listIndex]
+                .commandSchedule[context.currentCommandIndex]
+                .preBarrier.push_back(newBarrier);
+        }
+
+        if (prevState == ResourceGpuState::Uav && newState == ResourceGpuState::Uav)
+        {
+            ResourceBarrier newBarrier;
+            newBarrier.resource = resource;
+            newBarrier.isUav = true; 
             newBarrier.type = BarrierType::Immediate;
             context.processedList[context.listIndex]
                 .commandSchedule[context.currentCommandIndex]

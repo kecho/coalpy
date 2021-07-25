@@ -151,15 +151,12 @@ namespace coalpy
         renderTestCtx.begin();
         IDevice& device = *renderTestCtx.device;
 
-        
-
         TextureDesc texDesc;
         texDesc.name = "SimpleBuffer";
         texDesc.format = Format::RGBA_32_SINT;
         texDesc.width = 128u;
         texDesc.height = 128u;
         texDesc.memFlags = (MemFlags)(MemFlag_GpuWrite | MemFlag_GpuRead);
-
     
         BufferDesc buffDesc;
         buffDesc.name = "SimpleBuffer";
@@ -762,6 +759,104 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testUavBarrier(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+        IShaderDb& db = *renderTestCtx.db;
+
+        const char* uavShaderTest = R"(
+            RWBuffer<int> output : register(u0);
+
+            cbuffer Constants : register(b0)
+            {
+                int4 counter;
+            }
+
+            [numthreads(1,1,1)]
+            void csMain(uint3 dti : SV_DispatchThreadID)
+            {
+                output[0] = counter.x == 0 ? 1 : output[0] + 1;
+            }
+        )";
+
+        ShaderInlineDesc shaderDesc{ ShaderType::Compute, "uavShaderTest", "csMain", uavShaderTest };
+        ShaderHandle shader = db.requestCompile(shaderDesc);
+        db.resolve(shader);
+        CPY_ASSERT(db.isValid(shader));
+
+        BufferDesc buffDesc;
+        buffDesc.memFlags = (MemFlags)MemFlag_GpuRead;
+        buffDesc.format = Format::RGBA_32_SINT;
+        buffDesc.elementCount = 1;
+        buffDesc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
+        Buffer numBuffer = device.createBuffer(buffDesc);
+
+        buffDesc.memFlags = MemFlag_CpuRead;
+        Buffer readbackBuff = device.createBuffer(buffDesc);
+        
+        ResourceTableDesc tableDesc;
+        tableDesc.resources = &numBuffer;
+        tableDesc.resourcesCount = 1;
+        OutResourceTable outTable = device.createOutResourceTable(tableDesc);
+
+        CommandList commandList;
+
+        for (int i = 0; i < 4; ++i)
+        {
+            ComputeCommand cmd;
+            cmd.setShader(shader);
+            struct 
+            {
+                int counter[4];
+            } constBuff;
+            constBuff.counter[0] = i;
+            cmd.setInlineConstant((const char*)&constBuff, sizeof(constBuff));
+            cmd.setOutResources(&outTable, 1);
+            cmd.setDispatch("uavTestShader", 1, 1, 1);
+            commandList.writeCommand(cmd);
+        }
+
+        {
+            CopyCommand cmd;
+            cmd.setResources(numBuffer, readbackBuff);
+            commandList.writeCommand(cmd);
+        }
+
+        {
+            DownloadCommand downloadCmd;
+            downloadCmd.setData(readbackBuff);
+            commandList.writeCommand(downloadCmd);
+        }
+
+        commandList.finalize();
+        CommandList* lists[] = { &commandList };
+        
+        auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle); 
+        CPY_ASSERT_MSG(result.success(), result.message.c_str());
+        auto waitStatus = device.waitOnCpu(result.workHandle, -1);
+        CPY_ASSERT(waitStatus.success());
+
+        {
+            auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff);
+            CPY_ASSERT(downloadStatus.success());
+            CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
+            CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(int));
+            if (downloadStatus.downloadPtr != nullptr)
+            {
+                auto* ptr = (int*)downloadStatus.downloadPtr;
+                CPY_ASSERT_FMT(*ptr == 4, "Expected 4, found %d", *ptr);
+            }
+        }
+
+        device.release(result.workHandle);
+        device.release(numBuffer);
+        device.release(readbackBuff);
+        device.release(outTable);
+        renderTestCtx.end();
+    }
+
     //registration of tests
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
@@ -774,7 +869,8 @@ namespace coalpy
             { "renderMemoryDownload",  testRenderMemoryDownload },
             { "simpleComputePingPong",  testSimpleComputePingPong },
             { "cachedConstantBuffer",  testCachedConstantBuffer },
-            { "inlineConstantBuffer",  testInlineConstantBuffer }
+            { "inlineConstantBuffer",  testInlineConstantBuffer },
+            { "uavBarrier",  testUavBarrier }
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

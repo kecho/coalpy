@@ -73,7 +73,7 @@ void Dx12WorkBundle::applyBarriers(const std::vector<ResourceBarrier>& barriers,
 
     for (const auto& b : barriers)
     {
-        if (b.prevState == b.postState)
+        if (!b.isUav && b.prevState == b.postState)
             continue;
 
         Dx12Resource& r = resources.unsafeGetResource(b.resource);
@@ -81,7 +81,6 @@ void Dx12WorkBundle::applyBarriers(const std::vector<ResourceBarrier>& barriers,
         resultBarriers.emplace_back();
         D3D12_RESOURCE_BARRIER& d3d12barrier = resultBarriers.back();
         d3d12barrier = {};
-        d3d12barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
         if (b.type == BarrierType::Begin)
         {
             d3d12barrier.Flags |= D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
@@ -91,10 +90,19 @@ void Dx12WorkBundle::applyBarriers(const std::vector<ResourceBarrier>& barriers,
             d3d12barrier.Flags |= D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
         }
 
-        d3d12barrier.Transition.pResource = &r.d3dResource();
-        d3d12barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        d3d12barrier.Transition.StateBefore = getDx12GpuState(b.prevState);
-        d3d12barrier.Transition.StateAfter  = getDx12GpuState(b.postState);
+        if (b.isUav)
+        {
+            d3d12barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+            d3d12barrier.UAV.pResource = &r.d3dResource();
+        }
+        else
+        {
+            d3d12barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            d3d12barrier.Transition.pResource = &r.d3dResource();
+            d3d12barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+            d3d12barrier.Transition.StateBefore = getDx12GpuState(b.prevState);
+            d3d12barrier.Transition.StateAfter  = getDx12GpuState(b.postState);
+        }
     }
 
     if (resultBarriers.empty())
