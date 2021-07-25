@@ -172,9 +172,11 @@ void testFileWatcher(TestContext& ctx)
     for (int i = 0; i < numFiles; ++i)
     {
         std::string fileName = getFileName(i);
+        std::string resolvedPath;
+        FileUtils::getAbsolutePath(fileName, resolvedPath);
         handles[i] = writeFile(fileName, &successes[i]);
         fs.execute(handles[i]);
-        fileWrites[fileName] = 0;
+        fileWrites[resolvedPath] = 0;
     }
 
     for (int i = 0; i < numFiles; ++i)
@@ -198,9 +200,9 @@ void testFileWatcher(TestContext& ctx)
         {
             for (auto& fn : filesChanged)
             {
-                std::stringstream ss;
-                ss << ".testWatchFile\\" << fn;
-                ++m_map[ss.str()];       
+                std::string resolvedPath;
+                FileUtils::getAbsolutePath(fn, resolvedPath);
+                ++m_map[resolvedPath];
             }
         }
 
