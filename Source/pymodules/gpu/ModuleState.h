@@ -15,6 +15,7 @@ class IShaderDb;
 class IFileSystem;
 class IWindowListener;
 class ITaskSystem;
+class IFileWatcher;
 
 namespace render
 {
@@ -78,6 +79,7 @@ private:
     ITaskSystem*    m_ts;
     IFileSystem*    m_fs;
     IShaderDb*      m_db;
+    IFileWatcher*   m_fw;
     render::IDevice* m_device;
     IWindowListener* m_windowListener;
     PyObject* m_exObj;

@@ -2,7 +2,7 @@
 #include <coalpy.core/Assert.h>
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.files/IFileSystem.h>
-#include <coalpy.files/FileWatcher.h>
+#include <coalpy.files/IFileWatcher.h>
 #include <coalpy.files/Utils.h>
 #include <unordered_map>
 #include <sstream>
@@ -163,7 +163,8 @@ void testFileWatcher(TestContext& ctx)
 
     
     int numFiles = 20;
-    std::unordered_map<std::string, int> fileWrites;
+    using FileWritesMap = std::unordered_map<std::string, int>;
+    FileWritesMap fileWrites;
     std::vector<int> successes;
     std::vector<AsyncFileHandle> handles;
     handles.resize(numFiles);
@@ -184,15 +185,32 @@ void testFileWatcher(TestContext& ctx)
         CPY_ASSERT_FMT(successes[i], "Failed writting file \"%s\"", fileName.c_str());
     }
     
-    FileWatcher fieWatcher;
-    fieWatcher.start(".testWatchFile", [&fileWrites](const std::set<std::string>& files) {
-        for (auto& fn : files)
+    FileWatchDesc fwdesc { 100 };
+    IFileWatcher& fileWatcher = *IFileWatcher::create(fwdesc);
+    fileWatcher.start();
+
+    class WatchObj : public IFileWatchListener
+    {
+    public:
+        WatchObj(FileWritesMap& map) : m_map(map) {}
+        virtual ~WatchObj() {}
+        virtual void onFilesChanged(const std::set<std::string>& filesChanged)
         {
-            std::stringstream ss;
-            ss << ".testWatchFile\\" << fn;
-            ++fileWrites[ss.str()];       
+            for (auto& fn : filesChanged)
+            {
+                std::stringstream ss;
+                ss << ".testWatchFile\\" << fn;
+                ++m_map[ss.str()];       
+            }
         }
-    }, 100);
+
+    private:
+        FileWritesMap& m_map;
+    };
+
+    WatchObj watchObj(fileWrites);
+    fileWatcher.addListener(&watchObj); 
+    fileWatcher.addDirectory(".testWatchFile");
 
     for (int i = 0; i < numFiles; ++i)
     {
@@ -209,7 +227,8 @@ void testFileWatcher(TestContext& ctx)
         CPY_ASSERT_FMT(successes[i], "Failed writting file \"%s\"", fileName.c_str());
     }
 
-    fieWatcher.stop();
+    fileWatcher.stop();
+    delete &fileWatcher;
 
     for (auto& it : fileWrites)
     {

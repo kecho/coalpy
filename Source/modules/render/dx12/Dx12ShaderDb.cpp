@@ -5,10 +5,10 @@
 #include <string>
 #include <coalpy.core/Assert.h>
 #include <coalpy.files/IFileSystem.h>
-#include <coalpy.tasks/ITaskSystem.h>
+#include <coalpy.files/IFileWatcher.h>
 #include <coalpy.files/Utils.h>
+#include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.core/String.h>
-#include <coalpy.files/FileWatcher.h>
 
 #include "Dx12ShaderDb.h" 
 #include "Dx12Compiler.h"
@@ -40,9 +40,14 @@ struct Dx12CompileState
 Dx12ShaderDb::Dx12ShaderDb(const ShaderDbDesc& desc)
 : m_compiler(desc)
 , m_desc(desc)
+, m_liveEditWatcher(nullptr)
 {
     if (m_desc.enableLiveEditing)
+    {
+        m_liveEditWatcher = desc.fw;
+        CPY_ASSERT_MSG(m_liveEditWatcher != nullptr, "File watcher must not be null when live editing is turned on.");
         startLiveEdit();
+    }
 }
 
 Dx12ShaderDb::~Dx12ShaderDb()
@@ -79,6 +84,8 @@ void Dx12ShaderDb::addPath(const char* path)
     std::unique_lock lock(m_shadersMutex);
     std::string strpath(path);
     m_additionalPaths.emplace_back(std::move(strpath));
+    if (m_desc.enableLiveEditing && m_liveEditWatcher)
+        m_liveEditWatcher->addDirectory(path);
 }
 
 Dx12ShaderDb::ShaderState& Dx12ShaderDb::createShaderState(ShaderHandle& outHandle)
@@ -439,41 +446,46 @@ bool Dx12ShaderDb::isValid(ShaderHandle handle) const
 
 void Dx12ShaderDb::startLiveEdit()
 {
-    auto liveEditFn = [this](const std::set<std::string>& filesChanged)
+    if  (!m_liveEditWatcher)
+        return;
+
+    for (const auto& p : m_additionalPaths)
+        m_liveEditWatcher->addDirectory(p.c_str());
+
+    m_liveEditWatcher->addListener(this);
+}
+
+void Dx12ShaderDb::onFilesChanged(const std::set<std::string>& filesChanged)
+{
+    std::set<ShaderHandle> handlesToRecompile;
+    for (const auto& fileChanged : filesChanged)
     {
-        std::set<ShaderHandle> handlesToRecompile;
-        for (const auto& fileChanged : filesChanged)
+        std::string resolvedFileName;
+        FileUtils::getAbsolutePath(fileChanged, resolvedFileName);
+        
         {
-            std::string resolvedFileName;
-            FileUtils::getAbsolutePath(fileChanged, resolvedFileName);
-            
-            {
-                std::unique_lock lock(m_dependencyMutex);
-                FileToShaderHandlesMap::iterator shadersIt = m_fileToShaders.find(resolvedFileName);
-                if (shadersIt == m_fileToShaders.end())
-                    continue;
+            std::unique_lock lock(m_dependencyMutex);
+            FileToShaderHandlesMap::iterator shadersIt = m_fileToShaders.find(resolvedFileName);
+            if (shadersIt == m_fileToShaders.end())
+                continue;
 
-                handlesToRecompile.insert(shadersIt->second.begin(), shadersIt->second.end());
-            }
+            handlesToRecompile.insert(shadersIt->second.begin(), shadersIt->second.end());
         }
+    }
 
-        for (auto& handle : handlesToRecompile)
-        {
-
-            //request recompile.
-            requestRecompile(handle);
-        }
-    };
-
-    m_liveEditWatcher.start(
-        ".",
-        liveEditFn
-    );
+    for (auto& handle : handlesToRecompile)
+    {
+        //request recompile.
+        requestRecompile(handle);
+    }
 }
 
 void Dx12ShaderDb::stopLiveEdit()
 {
-    m_liveEditWatcher.stop();
+    if (!m_liveEditWatcher)
+        return;
+
+    m_liveEditWatcher->removeListener(this);
 }
 
 Dx12FileLookup::Dx12FileLookup()

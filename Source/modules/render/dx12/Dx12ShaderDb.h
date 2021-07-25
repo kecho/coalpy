@@ -1,7 +1,7 @@
 #include <coalpy.core/GenericHandle.h>
 #include <coalpy.core/HandleContainer.h>
 #include <coalpy.render/IShaderDb.h>
-#include <coalpy.files/FileWatcher.h>
+#include <coalpy.files/IFileWatcher.h>
 #include <shared_mutex>
 #include "Dx12Compiler.h"
 #include <atomic>
@@ -71,7 +71,7 @@ namespace render
     class Dx12Device;
 }
 
-class Dx12ShaderDb : public IShaderDb
+class Dx12ShaderDb : public IShaderDb, public IFileWatchListener
 {
 public:
     explicit Dx12ShaderDb(const ShaderDbDesc& desc);
@@ -80,6 +80,7 @@ public:
     virtual void addPath(const char* path) override;
     virtual void resolve(ShaderHandle handle) override;
     virtual bool isValid(ShaderHandle handle) const override;
+    virtual void onFilesChanged(const std::set<std::string>& filesChanged) override;
     virtual ~Dx12ShaderDb();
 
     void requestRecompile(ShaderHandle handle);
@@ -129,7 +130,7 @@ private:
 
     void startLiveEdit();
     void stopLiveEdit();
-    FileWatcher m_liveEditWatcher;
+    IFileWatcher* m_liveEditWatcher;
     mutable std::shared_mutex m_dependencyMutex;
     using FileToShaderHandlesMap = std::unordered_map<Dx12FileLookup, std::set<ShaderHandle>>;
     using ShaderHandleToFilesMap = std::unordered_map<ShaderHandle, std::set<Dx12FileLookup>>;

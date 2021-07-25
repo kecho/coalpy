@@ -1,9 +1,10 @@
-#include <coalpy.files/FileWatcher.h>
 #include <coalpy.core/Assert.h>
 #include <coalpy.core/String.h>
 #include <coalpy.tasks/ThreadQueue.h>
 #include <iostream>
 #include <string>
+#include <shared_mutex>
+#include "FileWatcher.h"
 
 #ifdef _WIN32 
 #define WIN32_LEAN_AND_MEAN
@@ -26,10 +27,23 @@ struct FileWatchMessage
     FileWatchMessageType type;
 };
 
+typedef void* WatchHandle;
+
 struct FileWatchState
 {
+public:
     std::thread thread;
+    std::shared_mutex fileWatchMutex;
+    std::set<std::string> directoriesSet;
+    std::vector<std::string> directories;
+    std::vector<WatchHandle> handles;
+    std::set<IFileWatchListener*> listeners;
     ThreadQueue<FileWatchMessage> queue;
+
+#ifdef _WIN32 
+    std::vector<HANDLE> events;
+#endif
+
 };
 
 namespace
@@ -37,116 +51,96 @@ namespace
 
 #ifdef _WIN32 
 bool findResults(
-    FileWatchState& state,
     HANDLE dirHandle,
     OVERLAPPED& overlapped,
     FILE_NOTIFY_INFORMATION* infos,
-    int pollingRateMs,
+    int millisecondsToWait,
     std::set<std::string>& caughtFiles)
 {
-    bool foundResults = false;
     DWORD bytesReturned = 0;
-    while (!foundResults)
+
+    auto waitResult = WaitForSingleObject(overlapped.hEvent, millisecondsToWait);
+    if (waitResult == WAIT_TIMEOUT)
+        return true;
+
+    auto hasOverlapped = GetOverlappedResult(dirHandle, &overlapped, &bytesReturned, FALSE);
+    if (!hasOverlapped)
+        return false;
+
+    FILE_NOTIFY_INFORMATION* curr = bytesReturned ? infos : nullptr;
+    while (curr != nullptr)
     {
-        auto waitResult = WaitForSingleObject(overlapped.hEvent, pollingRateMs);
-        if (waitResult == WAIT_TIMEOUT)
+        if (curr->Action == FILE_ACTION_MODIFIED)
         {
-#if WATCH_SERVICE_DEBUG_OUTPUT
-            std::cout << "timed out" << std::endl;
-#endif
-            FileWatchMessage newMsg;
-            bool hasMessage = false;
-            state.queue.acquireThread();
-            hasMessage = state.queue.unsafePop(newMsg);
-            state.queue.releaseThread();
-            if (hasMessage && newMsg.type == FileWatchMessageType::Exit)
-            {
-                return false;
-            }
-            continue;
+            std::wstring wfilename;
+            wfilename.assign(curr->FileName, curr->FileNameLength / sizeof(wchar_t));
+            std::string filename = ws2s(wfilename);
+            caughtFiles.insert(filename);
         }
-
-        auto hasOverlapped = GetOverlappedResult(dirHandle, &overlapped, &bytesReturned, FALSE);
-        if (!hasOverlapped)
-            continue;
-
-        foundResults = true;
-        FILE_NOTIFY_INFORMATION* curr = bytesReturned ? infos : nullptr;
-        while (curr != nullptr)
-        {
-            if (curr->Action == FILE_ACTION_MODIFIED)
-            {
-                std::wstring wfilename;
-                wfilename.assign(curr->FileName, curr->FileNameLength / sizeof(wchar_t));
-                std::string filename = ws2s(wfilename);
-                caughtFiles.insert(filename);
-            }
-            curr = curr->NextEntryOffset == 0 ? nullptr : (FILE_NOTIFY_INFORMATION*)((char*)curr + curr->NextEntryOffset);
-        }
+        curr = curr->NextEntryOffset == 0 ? nullptr : (FILE_NOTIFY_INFORMATION*)((char*)curr + curr->NextEntryOffset);
     }
+    
     return true;
 }
 #endif
 
-void waitListenForDirs(
-    FileWatchState& state,
-    const char* rootDir,
-    OnFileChangedFn onChangeFn,
-    int pollingRateMs)
+bool waitListenForDirs(FileWatchState& state, int millisecondsToWait)
 {
+    std::set<std::string> caughtFiles;
+
 #ifdef _WIN32 
-    #if WATCH_SERVICE_DEBUG_OUTPUT
-        std::cout << "opening " << rootDir << std::endl;
-    #endif
 
-    HANDLE dirHandle = CreateFileA(
-        rootDir,
-        FILE_LIST_DIRECTORY,
-        FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
+    if (state.handles.empty())
+        return true;
 
-    CPY_ASSERT_FMT(dirHandle != INVALID_HANDLE_VALUE, "Could not open directory \"%s\" for file watching service.", rootDir);
-    if (dirHandle == INVALID_HANDLE_VALUE)
-        return;
-
-    OVERLAPPED overlapped;
-    overlapped.hEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
-    FILE_NOTIFY_INFORMATION infos[1024];
-
-    bool listeningToDirectories = true;
-    while (listeningToDirectories)
+    std::shared_lock lock(state.fileWatchMutex);
+    for (int i = 0; i < (int)state.handles.size(); ++i)
     {
-        DWORD bytesReturned = 0;
-        bool result = ReadDirectoryChangesW(
-                dirHandle, (LPVOID)&infos, sizeof(infos), TRUE, FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned,
-                &overlapped, NULL);
+        #if WATCH_SERVICE_DEBUG_OUTPUT
+            std::cout << "polling filewatch: " << m_state.directories[i] << std::endl;
+        #endif
 
-        if (!result)
+        auto dirHandle = (HANDLE)state.handles[i];
+        auto event = state.events[i];
+        OVERLAPPED overlapped;
+        overlapped.hEvent = event;
+        FILE_NOTIFY_INFORMATION infos[1024] = {};
+
         {
-            CPY_ASSERT_FMT(false, "Failed watching directory \"%s\"", rootDir);
-            listeningToDirectories = false;
-            continue;
+            DWORD bytesReturned = 0;
+            bool result = ReadDirectoryChangesW(
+                    dirHandle, (LPVOID)&infos, sizeof(infos), TRUE, FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned,
+                    &overlapped, NULL);
+
+            CPY_ASSERT_FMT(result, "Failed watching directory \"%s\"", state.directories[i].c_str());
+            if (!result)
+                return false;
+
+            if (!findResults(
+                dirHandle,
+                overlapped,
+                infos,
+                i == 0 ? millisecondsToWait : 0,
+                caughtFiles))
+                    return false;
         }
-
-        std::set<std::string> caughtFiles;
-        listeningToDirectories = findResults(
-            state,
-            dirHandle,
-            overlapped,
-            infos,
-            pollingRateMs,
-            caughtFiles);
-        if (!caughtFiles.empty())
-            onChangeFn(caughtFiles);
     }
-    
-    CloseHandle(overlapped.hEvent);
-    if (dirHandle != INVALID_HANDLE_VALUE)
-        CloseHandle(dirHandle);
-
 #endif
+
+    if (!caughtFiles.empty())
+    {
+        for (auto* listener : state.listeners)
+            listener->onFilesChanged(caughtFiles);
+    }
+
+    return true;
 }
 
+}
+
+FileWatcher::FileWatcher(const FileWatchDesc& desc)
+: m_desc(desc)
+{
 }
 
 FileWatcher::~FileWatcher()
@@ -154,16 +148,11 @@ FileWatcher::~FileWatcher()
     CPY_ASSERT_MSG(m_state == nullptr, "Destroying file watcher without calling stop().");
 }
 
-void FileWatcher::start(
-    const char* directory,
-    OnFileChangedFn onFileChanged,
-    int pollingRateMs)
+void FileWatcher::start()
 {
     CPY_ASSERT(m_state == nullptr);
-    m_rootDir = directory;
-    m_onFileChangedFn = onFileChanged;
-    m_pollingRateMs = pollingRateMs;
     m_state = new FileWatchState;
+
     m_state->thread = std::thread(
         [this]()
     {
@@ -184,8 +173,68 @@ void FileWatcher::stop()
     msg.type = FileWatchMessageType::Exit;
     m_state->queue.push(msg);
     m_state->thread.join();
+
+#ifdef _WIN32 
+    for (auto h : m_state->handles)
+        CloseHandle((HANDLE)h);
+
+    for (auto e : m_state->events)
+        CloseHandle((HANDLE)e);
+#endif
+    
     delete m_state;
     m_state = nullptr;
+}
+
+void FileWatcher::addDirectory(const char* directory)
+{
+    std::unique_lock lock(m_state->fileWatchMutex);
+    std::string dirStr(directory);
+    auto it = m_state->directoriesSet.insert(dirStr);
+    if (!it.second)
+        return;
+
+#ifdef _WIN32 
+    #if WATCH_SERVICE_DEBUG_OUTPUT
+        std::cout << "opening " << dirStr << std::endl;
+    #endif
+
+
+    HANDLE dirHandle = CreateFileA(
+        directory,
+        FILE_LIST_DIRECTORY,
+        FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
+
+    CPY_ASSERT_FMT(dirHandle != INVALID_HANDLE_VALUE, "Could not open directory \"%s\" for file watching service.", directory);
+    if (dirHandle == INVALID_HANDLE_VALUE)
+        return;
+
+    m_state->directories.push_back(dirStr);
+    m_state->handles.push_back((WatchHandle)dirHandle);
+    m_state->events.push_back(CreateEvent(NULL, TRUE, TRUE, NULL));
+#endif
+
+}
+
+void FileWatcher::addListener(IFileWatchListener* listener)
+{
+    CPY_ASSERT(m_state);
+    std::unique_lock lock(m_state->fileWatchMutex);
+    m_state->listeners.insert(listener);
+}
+
+void FileWatcher::removeListener(IFileWatchListener* listener)
+{
+    if (m_state == nullptr)
+        return;
+
+    std::unique_lock lock(m_state->fileWatchMutex);
+    auto it = m_state->listeners.find(listener);
+    CPY_ASSERT(it != m_state->listeners.end());
+    if (it == m_state->listeners.end())
+        return;
+    m_state->listeners.erase(it);
 }
 
 void FileWatcher::onFileListening()
@@ -195,18 +244,23 @@ void FileWatcher::onFileListening()
     while (active)
     {
         FileWatchMessage msg;
-        m_state->queue.waitPop(msg);
-        bool listeningToDirectories = false;
+        bool receivedMessage = m_state->queue.waitPopUntil(msg, m_desc.pollingRateMS);
+        if (!receivedMessage)
+        {
+            FileWatchMessage msg;
+            msg.type = FileWatchMessageType::ListenToDirectories;
+            m_state->queue.push(msg);
+            continue;
+        }
+
         switch (msg.type)
         {
         case FileWatchMessageType::ListenToDirectories:
             {
-                waitListenForDirs(
-                    *m_state,
-                    m_rootDir.c_str(),
-                    m_onFileChangedFn,
-                    m_pollingRateMs);
-                active = false;
+                active = waitListenForDirs(*m_state, m_desc.pollingRateMS);
+                FileWatchMessage msg;
+                msg.type = FileWatchMessageType::ListenToDirectories;
+                m_state->queue.push(msg);
             }
             break;
         case FileWatchMessageType::Exit:
@@ -218,5 +272,9 @@ void FileWatcher::onFileListening()
     }
 }
 
+IFileWatcher* IFileWatcher::create(const FileWatchDesc& desc)
+{
+    return new FileWatcher(desc);
+}
 
 }

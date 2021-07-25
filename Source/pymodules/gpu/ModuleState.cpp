@@ -3,6 +3,7 @@
 #include <coalpy.files/Utils.h>
 #include <coalpy.render/IShaderDb.h>
 #include <coalpy.files/IFileSystem.h>
+#include <coalpy.files/IFileWatcher.h>
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.render/IDevice.h>
 #include <coalpy.render/CommandList.h>
@@ -25,6 +26,12 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
 : m_fs(nullptr), m_ts(nullptr)
 {
     {
+        FileWatchDesc desc { 1000 /*ms*/};
+        m_fw = IFileWatcher::create(desc);
+        m_fw->start();
+    }
+
+    {
         TaskSystemDesc desc;
         desc.threadPoolSize = 16;
         m_ts = ITaskSystem::create(desc);
@@ -41,11 +48,13 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
         std::string modulePath;
         FileUtils::getDirName(dllname, modulePath);
         modulePath += "/resources/";
+
         ShaderDbDesc desc;
         desc.compilerDllPath = modulePath.c_str();
         desc.resolveOnDestruction = true; //this is so there is a nice clean destruction
         desc.fs = m_fs;
         desc.ts = m_ts;
+        desc.fw = m_fw;
         desc.enableLiveEditing = true;
         desc.onErrorFn = [this](ShaderHandle handle, const char* shaderName, const char* shaderErrorStr)
         {
@@ -105,6 +114,9 @@ bool ModuleState::checkValidDevice()
 
 ModuleState::~ModuleState()
 {
+    if (m_fw)
+        m_fw->stop();
+
     s_allModules.erase(this);
     for (auto w : m_windows)
         w->display = nullptr;
@@ -118,6 +130,7 @@ ModuleState::~ModuleState()
     delete m_db;
     delete m_fs;
     delete m_ts;
+    delete m_fw;
 }
 
 void ModuleState::startServices()

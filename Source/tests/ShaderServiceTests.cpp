@@ -279,7 +279,7 @@ public:
         }
 
         {
-            ShaderDbDesc desc = { resourceDir.c_str(), testContext->fs, testContext->ts };
+            ShaderDbDesc desc = { resourceDir.c_str(), testContext->fs, testContext->ts, nullptr };
             testContext->db = IShaderDb::create(desc);
         }
 

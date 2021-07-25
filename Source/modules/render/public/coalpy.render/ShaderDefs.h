@@ -6,6 +6,7 @@
 namespace coalpy
 {
 
+class IFileWatcher;
 class IFileSystem;
 class ITaskSystem;
 
@@ -50,6 +51,7 @@ struct ShaderDbDesc
     const char* compilerDllPath = nullptr;
     IFileSystem* fs = nullptr;
     ITaskSystem* ts = nullptr;
+    IFileWatcher* fw = nullptr;
     OnShaderErrorFn onErrorFn = nullptr;
     bool resolveOnDestruction = false;
     bool enableLiveEditing = false;
