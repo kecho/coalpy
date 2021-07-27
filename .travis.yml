@@ -1,0 +1,16 @@
+os:
+    - windows
+language: c++
+jobs:
+    include:
+        - name: "Python 3.8.0 on Windows"
+          os: windows           # Windows 10.0.17134 N/A Build 17134
+          language: shell       # 'language: python' is an error on Travis CI Windows
+          before_install:
+              - choco install python --version 3.9.0
+              - python -m pip install --upgrade pip
+          env:
+            - PATH=/c/Python39:/c/Python39/Scripts:$PATH
+            - PYTHON39_ROOT=/c/Python39
+script:
+    - ./build.bat
