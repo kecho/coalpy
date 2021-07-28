@@ -47,8 +47,8 @@ public:
     virtual const DeviceConfig& config() const = 0;
     virtual const DeviceInfo& info() const = 0;
 
-    virtual Texture createTexture(const TextureDesc& config) = 0;
-    virtual Buffer  createBuffer (const BufferDesc& config) = 0;
+    virtual TextureResult createTexture(const TextureDesc& config) = 0;
+    virtual BufferResult  createBuffer (const BufferDesc& config) = 0;
     virtual InResourceTable   createInResourceTable  (const ResourceTableDesc& config) = 0;
     virtual OutResourceTable  createOutResourceTable (const ResourceTableDesc& config) = 0;
 

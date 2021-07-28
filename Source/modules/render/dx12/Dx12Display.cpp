@@ -87,12 +87,17 @@ void Dx12Display::createComputeTexture()
     desc.name = "computeBackbuffer";
     desc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
     if (!m_computeTexture.valid())
-        m_computeTexture = m_device.resources().createTexture(desc, nullptr, ResourceSpecialFlag_TrackTables);
+    {
+        TextureResult result = m_device.resources().createTexture(desc, nullptr, ResourceSpecialFlag_TrackTables);
+        CPY_ASSERT_FMT(result.success(), "Could not create swap chain compute texture: %s", result.message.c_str());
+        m_computeTexture = result.texture;
+    }
     else
     {
         std::vector<ResourceTable> parentTables;
         m_device.resources().getParentTables(m_computeTexture, parentTables);
-        m_device.resources().recreateTexture(m_computeTexture, desc);
+        TextureResult result = m_device.resources().recreateTexture(m_computeTexture, desc);
+        CPY_ASSERT_FMT(result.success(), "Could not create swap chain compute texture: %s", result.message.c_str());
         for (auto t : parentTables)
             m_device.resources().recreate(t);
     }
@@ -115,8 +120,9 @@ void Dx12Display::acquireTextures()
     {
         SmartPtr<ID3D12Resource> resource;
         DX_OK(m_swapChain->GetBuffer(i, DX_RET(resource)));
-        Texture t = m_device.resources().createTexture(m_surfaceDesc, resource, ResourceSpecialFlag_NoDeferDelete);
-        m_textures.push_back(t);
+        TextureResult texResult = m_device.resources().createTexture(m_surfaceDesc, resource, ResourceSpecialFlag_NoDeferDelete);
+        CPY_ASSERT_FMT(texResult.success(), "Could not create swap chain texture, error: %s", texResult.message.c_str());
+        m_textures.push_back(texResult.texture);
     }
     createComputeTexture();
 }

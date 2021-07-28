@@ -24,8 +24,8 @@ public:
     Dx12ResourceCollection(Dx12Device& device, WorkBundleDb& workDb);
     ~Dx12ResourceCollection();
 
-    Texture createTexture(const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr, ResourceSpecialFlags flags = ResourceSpecialFlag_None);
-    Buffer  createBuffer (const BufferDesc& desc, ID3D12Resource* resourceToAcquire = nullptr, ResourceSpecialFlags flags = ResourceSpecialFlag_None);
+    TextureResult createTexture(const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr, ResourceSpecialFlags flags = ResourceSpecialFlag_None);
+    BufferResult  createBuffer (const BufferDesc& desc, ID3D12Resource* resourceToAcquire = nullptr, ResourceSpecialFlags flags = ResourceSpecialFlag_None);
     InResourceTable  createInResourceTable(const ResourceTableDesc& desc);
     OutResourceTable createOutResourceTable(const ResourceTableDesc& desc);
 
@@ -37,7 +37,7 @@ public:
 
     void getParentTables(ResourceHandle resource, std::vector<ResourceTable>& outTables);
     void recreate(ResourceTable resource);
-    void recreateTexture(Texture handle, const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr);
+    TextureResult recreateTexture(Texture handle, const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr);
 
 private:
 

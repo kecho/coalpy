@@ -63,8 +63,13 @@ int Buffer::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     if (!validateEnum(moduleState, (int)buffDesc.format, (int)Format::MAX_COUNT, "format", "Format"))
         return -1;
 
-    buffer->buffer = moduleState.device().createBuffer(buffDesc);
-
+    render::BufferResult buffResult = moduleState.device().createBuffer(buffDesc);
+    if (!buffResult.success())
+    {
+        PyErr_Format(moduleState.exObj(), "Count not instantiate buffer object: %s", buffResult.message.c_str());
+        return -1;
+    }
+    buffer->buffer = buffResult.buffer;
     return 0;
 }
 
@@ -122,7 +127,13 @@ int Texture::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     if (!validateEnum(moduleState, (int)texDesc.format, (int)Format::MAX_COUNT, "format", "Format"))
         return -1;
 
-    texture->texture = moduleState.device().createTexture(texDesc);
+    render::TextureResult texResult = moduleState.device().createTexture(texDesc);
+    if (!texResult.success())
+    {
+        PyErr_Format(moduleState.exObj(), "Count not instantiate texture object: %s", texResult.message.c_str());
+        return -1;
+    }
+    texture->texture = texResult.texture;
     return 0;
 }
 

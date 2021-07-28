@@ -239,12 +239,12 @@ void Dx12Device::deferRelease(ID3D12Pageable& object)
     m_gc->deferRelease(object);
 }
 
-Texture Dx12Device::createTexture(const TextureDesc& desc)
+TextureResult Dx12Device::createTexture(const TextureDesc& desc)
 {
     return m_resources->createTexture(desc);
 }
 
-Buffer Dx12Device::createBuffer (const BufferDesc& config)
+BufferResult Dx12Device::createBuffer (const BufferDesc& config)
 {
     return m_resources->createBuffer(config);
 }

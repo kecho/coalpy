@@ -27,9 +27,17 @@ Dx12ResourceCollection::~Dx12ResourceCollection()
     m_workDb.clearAllResources();
 }
 
-Texture Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3D12Resource* resource, ResourceSpecialFlags flags)
+TextureResult Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3D12Resource* resource, ResourceSpecialFlags flags)
 {
     std::unique_lock lock(m_resourceMutex);
+
+    SmartPtr<Dx12Resource> textureObj = new Dx12Texture(m_device, desc, flags);
+    if (resource)
+        textureObj->acquireD3D12Resource(resource);
+    auto initResult = textureObj->init();
+    if (!initResult.success())
+        return TextureResult { initResult.result, Texture(), std::move(initResult.message) };
+
     ResourceHandle resHandle;
     auto& outPtr = m_resources.allocate(resHandle);
     if (outPtr == nullptr)
@@ -37,57 +45,64 @@ Texture Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3D12Res
     CPY_ASSERT(outPtr->resource == nullptr);
     
     outPtr->type = ResType::Texture;
-    outPtr->resource = new Dx12Texture(m_device, desc, flags);
-    if (resource)
-        outPtr->resource->acquireD3D12Resource(resource);
-    outPtr->resource->init();
+    outPtr->resource = textureObj;
     outPtr->handle = resHandle;
     m_workDb.registerResource(resHandle, desc.memFlags, outPtr->resource->defaultGpuState());
-    return Texture { resHandle.handleId };
+    return TextureResult { ResourceResult::Ok, Texture { resHandle.handleId } };
 }
 
-void Dx12ResourceCollection::recreateTexture(Texture handle, const TextureDesc& desc, ID3D12Resource* resourceToAcquire)
+TextureResult Dx12ResourceCollection::recreateTexture(Texture handle, const TextureDesc& desc, ID3D12Resource* resourceToAcquire)
 {
     std::unique_lock lock(m_resourceMutex);
     CPY_ASSERT(handle.valid())
     CPY_ASSERT(m_resources.contains(handle));
     if (!handle.valid() || !m_resources.contains(handle))
-        return;
+        return TextureResult { ResourceResult::InvalidHandle, Texture(), "Invalid handle on recreateTexture call." };
 
     auto& c = m_resources[handle];
     CPY_ASSERT(c->type == ResType::Texture);
     if (c->type != ResType::Texture)
-        return;
+        return TextureResult { ResourceResult::InvalidParameter, Texture(), "Used a texture handle, expected buffer handle." };
 
     CPY_ASSERT(c->handle == handle);
     if (c->handle != handle)
-        return;
+        return TextureResult { ResourceResult::InternalApiFailure, Texture(), "Handles don't match, internal error on recreation." };
 
     auto oldFlags = c->resource->specialFlags();
-    c->resource = nullptr; 
-    c->resource = new Dx12Texture(m_device, desc, oldFlags);
+    SmartPtr<Dx12Resource> textureObj = new Dx12Texture(m_device, desc, oldFlags);
     if (resourceToAcquire)
-        c->resource->acquireD3D12Resource(resourceToAcquire);
-    c->resource->init();
+        textureObj->acquireD3D12Resource(resourceToAcquire);
+    auto initResult = textureObj->init();
+    if (!initResult.success())
+        return TextureResult { initResult.result, Texture(), std::move(initResult.message) };
+
+    c->resource = textureObj; 
+    return TextureResult { ResourceResult::Ok, handle };
 }
 
-Buffer Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12Resource* resource, ResourceSpecialFlags flags)
+BufferResult Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12Resource* resource, ResourceSpecialFlags flags)
 {
     std::unique_lock lock(m_resourceMutex);
     ResourceHandle resHandle;
+
+    SmartPtr<Dx12Resource> bufferObj = new Dx12Buffer(m_device, desc, flags);
+    if (resource)
+        bufferObj->acquireD3D12Resource(resource);
+
+    auto initResult = bufferObj->init();
+    if (!initResult.success())
+        return BufferResult { initResult.result, Buffer(), std::move(initResult.message) };
+
     auto& outPtr = m_resources.allocate(resHandle);
     if (outPtr == nullptr)
         outPtr = new ResourceContainer();
     CPY_ASSERT(outPtr->resource == nullptr);
     
     outPtr->type = ResType::Buffer;
-    outPtr->resource = new Dx12Buffer(m_device, desc, flags);
-    if (resource)
-        outPtr->resource->acquireD3D12Resource(resource);
-    outPtr->resource->init();
+    outPtr->resource = bufferObj;
     outPtr->handle = resHandle;
     m_workDb.registerResource(resHandle, desc.memFlags, outPtr->resource->defaultGpuState());
-    return Buffer { resHandle.handleId };
+    return BufferResult { ResourceResult::Ok, Buffer { resHandle.handleId } };
 }
 
 bool Dx12ResourceCollection::convertTableDescToResourceList(

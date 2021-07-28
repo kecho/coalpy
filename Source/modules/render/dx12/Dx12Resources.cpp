@@ -77,7 +77,7 @@ Dx12Resource::Dx12Resource(Dx12Device& device, const ResourceDesc& config, Resou
     m_data.gpuVirtualAddress = {};
 }
 
-bool Dx12Resource::init()
+Dx12ResourceInitResult Dx12Resource::init()
 {
     if (m_data.resource == nullptr)
     {
@@ -86,7 +86,7 @@ bool Dx12Resource::init()
 	    	defaultD3d12State(), nullptr, DX_RET(m_data.resource));
         CPY_ASSERT_MSG(r == S_OK, "CreateCommittedResource has failed");
         if (r != S_OK)
-            return false;
+            return Dx12ResourceInitResult {  ResourceResult::InvalidParameter, "Failed to call CreateCommittedResource." };
         
         if (isBuffer())
             m_data.gpuVirtualAddress = m_data.resource->GetGPUVirtualAddress();
@@ -100,7 +100,10 @@ bool Dx12Resource::init()
     
     if (m_data.heapProps.Type == D3D12_HEAP_TYPE_READBACK || m_data.heapProps.Type == D3D12_HEAP_TYPE_UPLOAD)
     {
-        DX_OK(m_data.resource->Map(0u, nullptr, &m_data.mappedMemory));
+        auto mapResult = m_data.resource->Map(0u, nullptr, &m_data.mappedMemory);
+        DX_OK(mapResult);
+        if (mapResult != S_OK)
+            return Dx12ResourceInitResult {  ResourceResult::Ok, ""  };
     }
 
 #if ENABLE_RENDER_RESOURCE_NAMES
@@ -110,7 +113,7 @@ bool Dx12Resource::init()
     }
 #endif
 
-    return true;
+    return Dx12ResourceInitResult {  ResourceResult::Ok, ""  };
 }
 
 void Dx12Resource::acquireD3D12Resource(ID3D12Resource* resource)
@@ -295,10 +298,11 @@ Dx12Texture::~Dx12Texture()
 {
 }
 
-bool Dx12Texture::init()
+Dx12ResourceInitResult Dx12Texture::init()
 {
-    if (!Dx12Resource::init())
-        return false;
+    auto parentResult = Dx12Resource::init();
+    if (!parentResult.success())
+        return parentResult;
     
     if ((m_config.memFlags & MemFlag_GpuWrite) != 0)
     {
@@ -328,7 +332,7 @@ bool Dx12Texture::init()
         }
     }
 
-    return true;
+    return Dx12ResourceInitResult { ResourceResult::Ok };
 }
 
 Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpecialFlags specialFlags)
@@ -378,10 +382,11 @@ Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpeci
     m_data.resDesc.SampleDesc.Quality = 0u;
 }
 
-bool Dx12Buffer::init()
+Dx12ResourceInitResult Dx12Buffer::init()
 {
-    if (!Dx12Resource::init())
-        return false;
+    auto parentResult = Dx12Resource::init();
+    if (!parentResult.success())
+        return parentResult;
 
     if ((m_config.memFlags & MemFlag_GpuWrite) != 0)
     {
@@ -405,7 +410,7 @@ bool Dx12Buffer::init()
             &cbvDesc, m_cbv.handle);
     }
 
-    return true;
+    return Dx12ResourceInitResult { ResourceResult::Ok };
 }
 
 Dx12Buffer::~Dx12Buffer()

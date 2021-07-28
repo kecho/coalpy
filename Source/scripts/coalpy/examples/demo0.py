@@ -7,7 +7,7 @@ print ("<<coalpy demo0>>")
 print ("graphics devices:")
 [print("{}: {}".format(idx, nm)) for (idx, nm) in gpu.get_adapters()]
 
-gpu.set_current_adapter(1)
+gpu.set_current_adapter(0)
 info = gpu.get_current_adapter_info()
 print("Current device: {}".format(info[1]))
 

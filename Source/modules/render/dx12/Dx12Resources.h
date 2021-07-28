@@ -23,6 +23,14 @@ enum ResourceSpecialFlags : int
     ResourceSpecialFlag_TrackTables = 1 << 2,
 };
 
+struct Dx12ResourceInitResult
+{
+    bool success() { return result == ResourceResult::Ok; }
+    ResourceResult result;
+    std::string message;
+};
+
+
 class Dx12Device;
 
 inline ResourceGpuState getGpuState(D3D12_RESOURCE_STATES state)
@@ -88,7 +96,7 @@ public:
     void acquireD3D12Resource(ID3D12Resource* resource);
     ID3D12Resource& d3dResource() const { return *m_data.resource; }
     ID3D12Resource& d3dResource() { return *m_data.resource; }
-    virtual bool init();
+    virtual Dx12ResourceInitResult init();
 
     const ResourceDesc& config() const { return m_config; }
     
@@ -135,7 +143,7 @@ class Dx12Texture : public Dx12Resource
 {
 public:
     Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSpecialFlags specialFlag);
-    virtual bool init() override;
+    virtual Dx12ResourceInitResult init() override;
     virtual ~Dx12Texture();
 
     const TextureDesc& texDesc() const { return m_texDesc; }
@@ -151,7 +159,7 @@ public:
     virtual ~Dx12Buffer();
 
     const BufferDesc& bufferDesc() const { return m_buffDesc; }
-    virtual bool init() override;
+    virtual Dx12ResourceInitResult init() override;
 
     const Dx12Descriptor& cbv() const { return m_cbv; }
 protected:

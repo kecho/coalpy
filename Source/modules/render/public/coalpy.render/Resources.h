@@ -78,6 +78,60 @@ struct ResourceTableDesc
     int resourcesCount = 0;
 };
 
+enum class ResourceResult
+{
+    Ok,
+    InvalidParameter,
+    InvalidHandle,
+    InternalApiFailure
+};
+
+struct TextureResult
+{
+    bool success() const { return result == ResourceResult::Ok; }
+
+    ResourceResult result = ResourceResult::Ok;
+    Texture texture;
+    std::string message;
+
+    operator Texture() const
+    {
+        return texture;
+    }
+};
+
+struct BufferResult
+{
+    bool success() const { return result == ResourceResult::Ok; }
+
+    ResourceResult result = ResourceResult::Ok;
+    Buffer buffer;
+    std::string message;
+
+    operator Buffer() const
+    {
+        return buffer;
+    }
+};
+
+struct InTableResult
+{
+    bool success() const { return result == ResourceResult::Ok; }
+
+    ResourceResult result = ResourceResult::Ok;
+    InResourceTable inTable;
+    std::string message;
+};
+
+struct OutTableResult
+{
+    bool success() const { return result == ResourceResult::Ok; }
+
+    ResourceResult result = ResourceResult::Ok;
+    OutResourceTable outTable;
+    std::string message;
+};
+
 }
 
 }
