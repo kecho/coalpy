@@ -3,6 +3,7 @@
 #if ENABLE_DX12
 
 #include <string>
+#include <stringstream>
 #include <coalpy.core/Assert.h>
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/IFileWatcher.h>
