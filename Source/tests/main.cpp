@@ -11,7 +11,7 @@
 
 //hack bring definition of assert into this unit for release builds
 #ifndef _DEBUG
-#include "../core/Assert.cpp"
+#include "../modules/core/Assert.cpp"
 #endif
 
 using namespace coalpy;
