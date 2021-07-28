@@ -4,7 +4,6 @@
 #include "Dx12ResourceCollection.h"
 #include "Dx12ShaderDb.h"
 #include "Dx12Utils.h"
-#include <iostream>
 
 namespace coalpy
 {
@@ -122,6 +121,13 @@ void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompute
     CPY_ASSERT(pso != nullptr);
     if (pso == nullptr)
         return;
+
+    //Activate this if there are synchronization issues.
+    #if 0
+    D3D12_RESOURCE_BARRIER uavBarrier = {};
+    uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+    outList.ResourceBarrier(1, &uavBarrier);
+    #endif
 
     //TODO: set this once per cmd list
     outList.SetComputeRootSignature(&m_device.defaultComputeRootSignature());

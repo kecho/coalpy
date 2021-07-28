@@ -869,8 +869,8 @@ namespace coalpy
             { "renderMemoryDownload",  testRenderMemoryDownload },
             { "simpleComputePingPong",  testSimpleComputePingPong },
             { "cachedConstantBuffer",  testCachedConstantBuffer },
-            { "inlineConstantBuffer",  testInlineConstantBuffer }
-            //{ "uavBarrier",  testUavBarrier } DISABLING: unstable
+            { "inlineConstantBuffer",  testInlineConstantBuffer },
+            { "uavBarrier",  testUavBarrier },
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

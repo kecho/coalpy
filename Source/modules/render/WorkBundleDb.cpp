@@ -64,20 +64,21 @@ bool transitionResource(
 
     if (currState != nullptr && canSplitBarrier)
     {
-        if (currState->state != newState)
-        {
-            auto& srcList = context.processedList[currState->listIndex];
-            CPY_ASSERT(srcList.listIndex == currState->listIndex);
-            auto& dstList = context.processedList[context.listIndex];
-            CPY_ASSERT(dstList.listIndex == context.listIndex);
-            CommandInfo& srcCmd = srcList.commandSchedule[currState->commandIndex];
-            CommandInfo& dstCmd = dstList.commandSchedule[context.currentCommandIndex];
+        auto& srcList = context.processedList[currState->listIndex];
+        CPY_ASSERT(srcList.listIndex == currState->listIndex);
+        auto& dstList = context.processedList[context.listIndex];
+        CPY_ASSERT(dstList.listIndex == context.listIndex);
+        CommandInfo& srcCmd = srcList.commandSchedule[currState->commandIndex];
+        CommandInfo& dstCmd = dstList.commandSchedule[context.currentCommandIndex];
 
+        auto prevState = currState->state;
+        if (prevState != newState)
+        {
             {
                 srcCmd.postBarrier.emplace_back();
                 auto& beginBarrier = srcCmd.postBarrier.back();
                 beginBarrier.resource = resource;
-                beginBarrier.prevState = currState->state;
+                beginBarrier.prevState = prevState;
                 beginBarrier.postState = newState;
                 beginBarrier.type = BarrierType::Begin;
             }
@@ -86,33 +87,33 @@ bool transitionResource(
                 dstCmd.preBarrier.emplace_back();
                 auto& endBarrier = dstCmd.preBarrier.back();
                 endBarrier.resource = resource;
-                endBarrier.prevState = currState->state;
+                endBarrier.prevState = prevState;
                 endBarrier.postState = newState;
                 endBarrier.type = BarrierType::End;
             }
 
-            if (currState->state == ResourceGpuState::Uav && newState == ResourceGpuState::Uav)
-            {
-                {
-                    srcCmd.postBarrier.emplace_back();
-                    auto& beginBarrier = srcCmd.postBarrier.back();
-                    beginBarrier.resource = resource;
-                    beginBarrier.isUav = true;
-                    beginBarrier.type = BarrierType::Begin;
-                }
-
-                {
-                    dstCmd.preBarrier.emplace_back();
-                    auto& endBarrier = dstCmd.preBarrier.back();
-                    endBarrier.resource = resource;
-                    endBarrier.isUav = true;
-                    endBarrier.type = BarrierType::End;
-                }
-            }
-
             currState->state = newState;
         }
-        
+
+        if (prevState == ResourceGpuState::Uav && newState == ResourceGpuState::Uav)
+        {
+            {
+                srcCmd.postBarrier.emplace_back();
+                auto& beginBarrier = srcCmd.postBarrier.back();
+                beginBarrier.resource = resource;
+                beginBarrier.isUav = true;
+                beginBarrier.type = BarrierType::Begin;
+            }
+
+            {
+                dstCmd.preBarrier.emplace_back();
+                auto& endBarrier = dstCmd.preBarrier.back();
+                endBarrier.resource = resource;
+                endBarrier.isUav = true;
+                endBarrier.type = BarrierType::End;
+            }
+        }
+
         currState->listIndex = context.listIndex;
         currState->commandIndex = context.currentCommandIndex;
     }
@@ -144,7 +145,8 @@ bool transitionResource(
             newStateRecord.listIndex = context.listIndex;
             newStateRecord.commandIndex = context.currentCommandIndex;
             newStateRecord.state = newState;
-            context.states[resource] = newStateRecord;
+            auto it = context.states.insert(std::pair<ResourceHandle, WorkResourceState>(resource, newStateRecord));
+            currState = &it.first->second;
         }
 
         if (prevState != newState)
@@ -169,6 +171,8 @@ bool transitionResource(
                 .commandSchedule[context.currentCommandIndex]
                 .preBarrier.push_back(newBarrier);
         }
+
+        currState->commandIndex = context.currentCommandIndex;
     }
 
     return true;
