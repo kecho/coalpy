@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d12.h>
+#include "Dx12Utils.h"
 #include <coalpy.core/SmartPtr.h>
 #include <vector>
 
@@ -25,7 +26,7 @@ enum class WorkType
 struct Dx12List
 {
     WorkType workType = WorkType::Graphics;
-    SmartPtr<ID3D12GraphicsCommandList6> list;
+    SmartPtr<ID3D12GraphicsCommandListX> list;
     SmartPtr<ID3D12CommandAllocator> allocator;
 };
 
@@ -79,7 +80,7 @@ private:
         ID3D12CommandQueue* queue = nullptr;
         Dx12Fence* fence = nullptr;
         std::vector<AllocatorRecord> allocatorPool;
-        std::vector<SmartPtr<ID3D12GraphicsCommandList6>> listPool;
+        std::vector<SmartPtr<ID3D12GraphicsCommandListX>> listPool;
         Dx12MemoryPools memPools;
     };
 

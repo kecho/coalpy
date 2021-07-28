@@ -1,4 +1,6 @@
 #pragma once
+#include <d3d12.h>
+
 namespace coalpy
 {
 namespace render
@@ -12,3 +14,5 @@ T alignByte(T offset, T alignment)
 
 }
 }
+
+typedef ID3D12GraphicsCommandList5 ID3D12GraphicsCommandListX;

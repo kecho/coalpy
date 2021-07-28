@@ -4,6 +4,7 @@
 #include "Dx12ResourceCollection.h"
 #include "Dx12ShaderDb.h"
 #include "Dx12Utils.h"
+#include <iostream>
 
 namespace coalpy
 {
@@ -62,7 +63,7 @@ void Dx12WorkBundle::uploadAllTables()
     }
 }
 
-void Dx12WorkBundle::applyBarriers(const std::vector<ResourceBarrier>& barriers, ID3D12GraphicsCommandList6& outList)
+void Dx12WorkBundle::applyBarriers(const std::vector<ResourceBarrier>& barriers, ID3D12GraphicsCommandListX& outList)
 {
     if (barriers.empty())
         return;
@@ -111,7 +112,7 @@ void Dx12WorkBundle::applyBarriers(const std::vector<ResourceBarrier>& barriers,
     outList.ResourceBarrier((UINT)resultBarriers.size(), resultBarriers.data());
 }
 
-void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiComputeCmd* computeCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandList6& outList)
+void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiComputeCmd* computeCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandListX& outList)
 {
     Dx12ShaderDb& db = m_device.shaderDb();
 
@@ -186,7 +187,7 @@ void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompute
     outList.Dispatch(computeCmd->x, computeCmd->y, computeCmd->z);
 }
 
-void Dx12WorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd* copyCmd, ID3D12GraphicsCommandList6& outList)
+void Dx12WorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd* copyCmd, ID3D12GraphicsCommandListX& outList)
 {
     Dx12ResourceCollection& resources = m_device.resources();
     Dx12Resource& src = resources.unsafeGetResource(copyCmd->source);
@@ -197,7 +198,7 @@ void Dx12WorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd* c
 void Dx12WorkBundle::buildDownloadCmd(
     const unsigned char* data, const AbiDownloadCmd* downloadCmd,
     const CommandInfo& cmdInfo, WorkType workType,
-    ID3D12GraphicsCommandList6& outList)
+    ID3D12GraphicsCommandListX& outList)
 {
     Dx12ResourceCollection& resources = m_device.resources();
     CPY_ASSERT(cmdInfo.commandDownloadIndex >= 0 && cmdInfo.commandDownloadIndex < (int)m_downloadStates.size());
@@ -211,7 +212,7 @@ void Dx12WorkBundle::buildDownloadCmd(
     CPY_ASSERT(downloadState.mappedMemory != nullptr);
 }
 
-void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCmd* uploadCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandList6& outList)
+void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCmd* uploadCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandListX& outList)
 {
     //TODO: this can be jobified.
     {
@@ -238,7 +239,7 @@ void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCm
 
 }
 
-void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, ID3D12GraphicsCommandList6& outList)
+void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, ID3D12GraphicsCommandListX& outList)
 {
     CPY_ASSERT(cmdList->isFinalized());
     const unsigned char* listData = cmdList->data();

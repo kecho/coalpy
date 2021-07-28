@@ -101,7 +101,7 @@ void Dx12Queues::allocate(WorkType type, Dx12List& outList)
         DX_OK(newAllocator->Reset());
     }
 
-    SmartPtr<ID3D12GraphicsCommandList6> newList;
+    SmartPtr<ID3D12GraphicsCommandListX> newList;
     if (!container.listPool.empty())
     {
         newList = container.listPool.back();

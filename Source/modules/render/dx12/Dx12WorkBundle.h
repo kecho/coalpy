@@ -2,6 +2,7 @@
 
 #include <coalpy.render/Resources.h>
 #include "WorkBundleDb.h"
+#include "Dx12Utils.h"
 #include "Dx12GpuMemPools.h"
 #include "Dx12Queues.h"
 #include <d3d12.h>
@@ -39,12 +40,12 @@ public:
 
 private:
     void uploadAllTables();
-    void applyBarriers(const std::vector<ResourceBarrier>& barriers, ID3D12GraphicsCommandList6& outList);
-    void buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, ID3D12GraphicsCommandList6& outList);
-    void buildComputeCmd(const unsigned char* data, const AbiComputeCmd* computeCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandList6& outList);
-    void buildDownloadCmd(const unsigned char* data, const AbiDownloadCmd* downloadCmd,  const CommandInfo& cmdInfo, WorkType workType, ID3D12GraphicsCommandList6& outList);
-    void buildCopyCmd(const unsigned char* data, const AbiCopyCmd* copyCmd, ID3D12GraphicsCommandList6& outList);
-    void buildUploadCmd(const unsigned char* data, const AbiUploadCmd* uploadCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandList6& outList);
+    void applyBarriers(const std::vector<ResourceBarrier>& barriers, ID3D12GraphicsCommandListX& outList);
+    void buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, ID3D12GraphicsCommandListX& outList);
+    void buildComputeCmd(const unsigned char* data, const AbiComputeCmd* computeCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandListX& outList);
+    void buildDownloadCmd(const unsigned char* data, const AbiDownloadCmd* downloadCmd,  const CommandInfo& cmdInfo, WorkType workType, ID3D12GraphicsCommandListX& outList);
+    void buildCopyCmd(const unsigned char* data, const AbiCopyCmd* copyCmd, ID3D12GraphicsCommandListX& outList);
+    void buildUploadCmd(const unsigned char* data, const AbiUploadCmd* uploadCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandListX& outList);
 
     Dx12Device& m_device;
     WorkBundle m_workBundle;
