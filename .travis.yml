@@ -15,4 +15,4 @@ jobs:
             - PYTHON39_ROOT=/c/Python39
 script:
     - ./build.bat debug release
-    - ./t2-output/win64-msvc-debug-default/coalpy_tests.exe -s render
+    - ./t2-output/win64-msvc-debug-default/coalpy_tests.exe -s core,tasksystem
