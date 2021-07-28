@@ -3,9 +3,15 @@ os:
 language: c++
 jobs:
     include:
+        - name: "Install VS 2019"
+          os: windows
+          language: shell
+          before_install:
+             - choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+    include:
         - name: "Python 3.8.0 on Windows"
-          os: windows           # Windows 10.0.17134 N/A Build 17134
-          language: shell       # 'language: python' is an error on Travis CI Windows
+          os: windows          
+          language: shell 
           before_install:
               - choco install python --version 3.9.0
               - python -m pip install --upgrade pip
