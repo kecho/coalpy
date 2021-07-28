@@ -65,8 +65,7 @@ void cacheCardInfos(CardInfos& cardInfos)
     while (!finish)
     {
         SmartPtr<IDXGIAdapter1> adapter;
-        //auto result = cardInfos.dxgiFactory->EnumAdapters1((UINT)cardInfos.cards.size(), (IDXGIAdapter1**)&adapter);         
-        auto result = cardInfos.dxgiFactory->EnumWarpAdapter(DX_RET(adapter));
+        auto result = cardInfos.dxgiFactory->EnumAdapters1((UINT)cardInfos.cards.size(), (IDXGIAdapter1**)&adapter);
         if (result == DXGI_ERROR_NOT_FOUND)
         {
             finish = true;
@@ -76,8 +75,6 @@ void cacheCardInfos(CardInfos& cardInfos)
         SmartPtr<IDXGIAdapter4> adapter4;
         DX_OK(adapter->QueryInterface((IDXGIAdapter4**)&adapter4));
         cardInfos.cards.push_back(adapter4);
-
-        break;
     }
 }
 

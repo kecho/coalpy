@@ -220,7 +220,7 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
     static const wchar_t* s_targets[ShaderType::Count] = {
         L"vs_6_5", //Vertex
         L"ps_6_5", //Pixel
-        L"cs_6_2"  //Compute
+        L"cs_6_5"  //Compute
     };
 
     DxcCompilerScope scope;
