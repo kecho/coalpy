@@ -1,20 +1,60 @@
 # coalpy
-
 compute abstraction layer for python
+
+Coalpy is a low friction python 3.9 native module for windows. Coalpy's main goal is to make DX12 GPU compute pipelines easy to write and deploy.
 
 [![Build Status](https://travis-ci.com/kecho/coalpy.svg?branch=master)](https://travis-ci.com/kecho/coalpy)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
  
 
-## Overview
+## Documentation
 
-Coalpy is a low friction python 3.9 native module for windows. Coalpy's main goal is to make DX12 GPU compute pipelines easy to write and deploy.
-This library is still in its first iteration, so expect a lot of work in progress.
+Get started with API documentation here:
+[coalpy.gpu documentation](https://kecho.github.io/coalpy/Docs/coalpy.gpu.html)
 
 ## Contributing
 
-- TODO
+Use this guide if you plan to build coalpy python module from source.
 
-## Python Documentation
+Building requirements:
+* Install Python 3.9x
+* Set the environment variable PYTHON39_ROOT to the root installation of your python library.
+* Ensure you have a version of visual studio with support for VC 
+* Ensure you are on the latest and greatest version of windows 10
 
-- TODO
+
+### Compiling in Windows
+
+To build run the script
+
+```
+build.bat debug
+```
+for release mode
+```
+build.bat release
+```
+
+Generate a solution for visual studio using
+
+```
+gensln.bat
+```
+
+Run the tests by running:
+
+```
+t2-output\win64-msvc-debug-default\coalpy_tests.exe
+```
+
+### Creating python package
+
+cd into the t2-output\win64-msvc-[debug|release]-default director. Inside there will be a coalpy_pip directory.
+In here run the command 
+
+```
+python -m build
+```
+
+Ensure you have the latest version of the build module. To configure metadata of the pip package modify things inside the Source/pipfiles folder.
+
