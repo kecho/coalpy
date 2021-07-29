@@ -1,6 +1,10 @@
-# coalpy - (co)mpute (a)bstraction (l)ayer for python
+# coalpy
+
+compute abstraction layer for python
 
 [![Build Status](https://travis-ci.com/kecho/coalpy.svg?branch=master)](https://travis-ci.com/kecho/coalpy)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+ 
 
 ## Overview
 
