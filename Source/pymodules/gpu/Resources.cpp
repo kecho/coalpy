@@ -239,7 +239,14 @@ int InResourceTable::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     tableDesc.name = name;
     tableDesc.resources = resources.data();
     tableDesc.resourcesCount = (int)resources.size();
-    newTable->table = moduleState.device().createInResourceTable(tableDesc);
+    render::InResourceTableResult tableResult = moduleState.device().createInResourceTable(tableDesc);
+    if (!tableResult.success())
+    {
+        PyErr_Format(moduleState.exObj(), "Error creating resource table %s with error: %s", name, tableResult.message.c_str());
+        return -1;
+    }
+
+    newTable->table = tableResult.inTable;
 
     if (!newTable->table.valid())
     {
@@ -296,7 +303,14 @@ int OutResourceTable::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     tableDesc.name = name;
     tableDesc.resources = resources.data();
     tableDesc.resourcesCount = (int)resources.size();
-    newTable->table = moduleState.device().createOutResourceTable(tableDesc);
+    render::OutResourceTableResult tableResult = moduleState.device().createOutResourceTable(tableDesc);
+    if (!tableResult.success())
+    {
+        PyErr_Format(moduleState.exObj(), "Error creating resource table %s with error: %s", name, tableResult.message.c_str());
+        return -1;
+    }
+
+    newTable->table = tableResult.outTable;
 
     if (!newTable->table.valid())
     {

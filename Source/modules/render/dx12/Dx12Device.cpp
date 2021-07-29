@@ -249,12 +249,12 @@ BufferResult Dx12Device::createBuffer (const BufferDesc& config)
     return m_resources->createBuffer(config);
 }
 
-InResourceTable Dx12Device::createInResourceTable(const ResourceTableDesc& config)
+InResourceTableResult Dx12Device::createInResourceTable(const ResourceTableDesc& config)
 {
     return m_resources->createInResourceTable(config);;
 }
 
-OutResourceTable Dx12Device::createOutResourceTable (const ResourceTableDesc& config)
+OutResourceTableResult Dx12Device::createOutResourceTable (const ResourceTableDesc& config)
 {
     return m_resources->createOutResourceTable(config);
 }

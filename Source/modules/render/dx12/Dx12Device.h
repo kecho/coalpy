@@ -46,8 +46,8 @@ public:
 
     virtual TextureResult createTexture(const TextureDesc& desc) override;
     virtual BufferResult  createBuffer (const BufferDesc& config) override;
-    virtual InResourceTable   createInResourceTable  (const ResourceTableDesc& config) override;
-    virtual OutResourceTable  createOutResourceTable (const ResourceTableDesc& config) override;
+    virtual InResourceTableResult createInResourceTable  (const ResourceTableDesc& config) override;
+    virtual OutResourceTableResult createOutResourceTable (const ResourceTableDesc& config) override;
 
     void internalReleaseWorkHandle(WorkHandle handle);
     virtual WaitStatus waitOnCpu(WorkHandle handle, int milliseconds = 0) override;

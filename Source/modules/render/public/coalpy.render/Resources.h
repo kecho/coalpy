@@ -114,22 +114,32 @@ struct BufferResult
     }
 };
 
-struct InTableResult
+struct InResourceTableResult
 {
     bool success() const { return result == ResourceResult::Ok; }
 
     ResourceResult result = ResourceResult::Ok;
     InResourceTable inTable;
     std::string message;
+
+    operator InResourceTable() const
+    {
+        return inTable;
+    }
 };
 
-struct OutTableResult
+struct OutResourceTableResult
 {
     bool success() const { return result == ResourceResult::Ok; }
 
     ResourceResult result = ResourceResult::Ok;
     OutResourceTable outTable;
     std::string message;
+    
+    operator OutResourceTable() const
+    {
+        return outTable;
+    }
 };
 
 }

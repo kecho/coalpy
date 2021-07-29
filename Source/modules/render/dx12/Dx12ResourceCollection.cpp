@@ -9,6 +9,7 @@
 #include "WorkBundleDb.h"
 #include <coalpy.core/Assert.h>
 #include <vector>
+#include <sstream>
 
 namespace coalpy
 {
@@ -107,8 +108,10 @@ BufferResult Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12
 
 bool Dx12ResourceCollection::convertTableDescToResourceList(
     const ResourceTableDesc& desc,
+    bool isUav,
     std::vector<Dx12Resource*>& resources,
-    std::set<ResourceContainer*>& trackedContainers, bool isUav)
+    std::set<ResourceContainer*>& trackedContainers,
+    Dx12ResourceTableResult& outResult)
 {
     for (int i = 0; i < desc.resourcesCount; ++i)
     {
@@ -127,9 +130,9 @@ bool Dx12ResourceCollection::convertTableDescToResourceList(
         if (((config.memFlags & MemFlag_GpuRead) == 0 && !isUav)
          || ((config.memFlags & MemFlag_GpuWrite) == 0 && isUav))
         {
-            CPY_ASSERT_FMT(false, "Tried to create resource table %s but memflags are incorrect:%d",
-                (desc.name.empty() ? "<no-name>" : desc.name.c_str()),
-                config.memFlags);
+            std::stringstream ss;
+            ss << "Tried to create resource table " << desc.name << " but memflags are incorrect." << (isUav ? "Resource must contain GpuWrite flag." : "Resource must contain GpuRead flag." );
+            outResult = Dx12ResourceTableResult { ResourceResult::InvalidParameter, ResourceTable(), ss.str() };
             return false;
         }
 
@@ -142,13 +145,14 @@ bool Dx12ResourceCollection::convertTableDescToResourceList(
     return true;
 }
 
-ResourceTable Dx12ResourceCollection::createResourceTable(const ResourceTableDesc& desc, bool isUav)
+Dx12ResourceTableResult Dx12ResourceCollection::createResourceTable(const ResourceTableDesc& desc, bool isUav)
 {
     std::unique_lock lock(m_resourceMutex);
     std::vector<Dx12Resource*> gatheredResources;
     std::set<ResourceContainer*> containersToTrack;
-    if (!convertTableDescToResourceList(desc, gatheredResources, containersToTrack, isUav))
-        return ResourceTable();
+    Dx12ResourceTableResult result = { ResourceResult::Ok, ResourceTable() };
+    if (!convertTableDescToResourceList(desc, isUav,  gatheredResources, containersToTrack, result))
+        return result;
 
     ResourceTable handle;
     auto& outPtr = m_resourceTables.allocate(handle);
@@ -164,36 +168,42 @@ ResourceTable Dx12ResourceCollection::createResourceTable(const ResourceTableDes
         }
     }
 
-    return handle;
+    return Dx12ResourceTableResult { ResourceResult::Ok, handle };
 }
 
-InResourceTable Dx12ResourceCollection::createInResourceTable(const ResourceTableDesc& desc)
+InResourceTableResult Dx12ResourceCollection::createInResourceTable(const ResourceTableDesc& desc)
 {
-    ResourceTable handle = createResourceTable(desc, false);
-    m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, false);
-    return InResourceTable { handle.handleId };
+    Dx12ResourceTableResult result = createResourceTable(desc, false);
+    if (!result.success())
+        return InResourceTableResult { result.result, InResourceTable(), std::move(result.message) };
+
+    m_workDb.registerTable(result.tableHandle, desc.name.c_str(), desc.resources, desc.resourcesCount, false);
+    return InResourceTableResult { ResourceResult::Ok, InResourceTable { result.tableHandle.handleId } };
 }
 
-OutResourceTable Dx12ResourceCollection::createOutResourceTable(const ResourceTableDesc& desc)
+OutResourceTableResult Dx12ResourceCollection::createOutResourceTable(const ResourceTableDesc& desc)
 {
-    ResourceTable handle = createResourceTable(desc, true);
-    m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, true);
-    return OutResourceTable { handle.handleId };
+    Dx12ResourceTableResult result = createResourceTable(desc, true);
+    if (!result.success())
+        return OutResourceTableResult { result.result, OutResourceTable(), std::move(result.message) };
+
+    m_workDb.registerTable(result.tableHandle, desc.name.c_str(), desc.resources, desc.resourcesCount, true);
+    return OutResourceTableResult { ResourceResult::Ok, OutResourceTable { result.tableHandle.handleId } };
 }
 
-void Dx12ResourceCollection::recreate(ResourceTable handle)
+bool Dx12ResourceCollection::recreate(ResourceTable handle)
 {
     std::unique_lock lock(m_resourceMutex);
     bool isValid = handle.valid() && m_resourceTables.contains(handle);
     CPY_ASSERT(isValid);
     if (!isValid)
-        return;
+        return false;
 
     SmartPtr<Dx12ResourceTable>& tableSlot = m_resourceTables[handle];
     auto it = m_workDb.tableInfos().find(handle);
     CPY_ASSERT(it != m_workDb.tableInfos().end());
     if (it == m_workDb.tableInfos().end())
-        return;
+        return false;
 
     const WorkTableInfo& info = it->second;
     ResourceTableDesc desc;
@@ -203,13 +213,16 @@ void Dx12ResourceCollection::recreate(ResourceTable handle)
     
     std::vector<Dx12Resource*> gatheredResources;
     std::set<ResourceContainer*> containersToTrack;
-    bool result = convertTableDescToResourceList(desc, gatheredResources, containersToTrack, info.isUav);
+    Dx12ResourceTableResult tableResult;
+    bool result = convertTableDescToResourceList(desc, info.isUav, gatheredResources, containersToTrack, tableResult);
     CPY_ASSERT(result);
     if (!result)
-        return;
+        return false;
 
     tableSlot = nullptr;
     tableSlot = new Dx12ResourceTable(m_device, gatheredResources.data(), (int)gatheredResources.size(), info.isUav);
+
+    return true;
 }
 
 void Dx12ResourceCollection::release(ResourceHandle handle)

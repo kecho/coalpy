@@ -49,8 +49,8 @@ public:
 
     virtual TextureResult createTexture(const TextureDesc& config) = 0;
     virtual BufferResult  createBuffer (const BufferDesc& config) = 0;
-    virtual InResourceTable   createInResourceTable  (const ResourceTableDesc& config) = 0;
-    virtual OutResourceTable  createOutResourceTable (const ResourceTableDesc& config) = 0;
+    virtual InResourceTableResult createInResourceTable  (const ResourceTableDesc& config) = 0;
+    virtual OutResourceTableResult  createOutResourceTable (const ResourceTableDesc& config) = 0;
 
     virtual void release(ResourceHandle resource) = 0;
     virtual void release(ResourceTable table) = 0;

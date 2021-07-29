@@ -7,6 +7,7 @@
 #include <vector>
 #include <set>
 #include <unordered_map>
+#include <string>
 
 struct ID3D12Resource;
 
@@ -18,6 +19,14 @@ namespace render
 class WorkBundleDb;
 class Dx12Device;
 
+struct Dx12ResourceTableResult
+{
+    bool success() const { return result == ResourceResult::Ok; }
+    ResourceResult result;
+    ResourceTable tableHandle;
+    std::string message;
+};
+
 class Dx12ResourceCollection
 {
 public:
@@ -26,8 +35,8 @@ public:
 
     TextureResult createTexture(const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr, ResourceSpecialFlags flags = ResourceSpecialFlag_None);
     BufferResult  createBuffer (const BufferDesc& desc, ID3D12Resource* resourceToAcquire = nullptr, ResourceSpecialFlags flags = ResourceSpecialFlag_None);
-    InResourceTable  createInResourceTable(const ResourceTableDesc& desc);
-    OutResourceTable createOutResourceTable(const ResourceTableDesc& desc);
+    InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
+    OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);
 
     void release(ResourceHandle resource);
     void release(ResourceTable resource);
@@ -36,13 +45,11 @@ public:
     Dx12Resource& unsafeGetResource(ResourceHandle handle) { return *(m_resources[handle]->resource); }
 
     void getParentTables(ResourceHandle resource, std::vector<ResourceTable>& outTables);
-    void recreate(ResourceTable resource);
+    bool recreate(ResourceTable resource);
     TextureResult recreateTexture(Texture handle, const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr);
 
 private:
-
-
-    ResourceTable createResourceTable(const ResourceTableDesc& desc, bool isUav);
+    Dx12ResourceTableResult createResourceTable(const ResourceTableDesc& desc, bool isUav);
     enum class ResType { Texture, Buffer };
     class ResourceContainer : public RefCounted
     {
@@ -55,9 +62,10 @@ private:
 
     bool convertTableDescToResourceList(
         const ResourceTableDesc& desc,
+        bool isUav,
         std::vector<Dx12Resource*>& resources,
         std::set<ResourceContainer*>& trackedContainers,
-        bool isUav);
+        Dx12ResourceTableResult& outResult);
 
     std::unordered_map<ResourceTable, std::set<ResourceHandle>> m_trackedTableToResources;
 
