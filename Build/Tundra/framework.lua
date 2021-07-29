@@ -5,7 +5,7 @@ local native = require "tundra.native"
 local path  = require "tundra.path"
 local npath = require 'tundra.native.path'
 
-local function GenRootIdeHints(rootFolder)
+function _G.GenRootIdeHints(rootFolder)
    return {
         Msvc = {
             SolutionFolder = rootFolder
@@ -66,22 +66,23 @@ function _G.BuildModules(sourceDir, moduleMap, extraIncludes)
                 }
             },
 
-            IdeGenerationHints = GenRootIdeHints("Modules");
+            IdeGenerationHints = _G.GenRootIdeHints("Modules");
         }
         Default(moduleLib)
     end
 end
 
-function _G.BuildPyLib(libName, libFolder, sourceDir, includeList, moduleList, otherDeps)
+function _G.BuildPyLib(libName, libFolder, sourceDir, includeList, moduleList, otherLibs, otherDeps)
     local pythonLib = SharedLibrary {
         Name = libName,
         Pass = "BuildCode",
         Includes = { _G.GetModuleIncludes(sourceDir, moduleList), includeList },
         Depends = { 
-            _G.GetModuleDeps(moduleList)
+            _G.GetModuleDeps(moduleList),
+            otherDeps
         },
         Libs = {
-            otherDeps
+            otherLibs,
         },
         Sources = {
             Glob {
@@ -90,13 +91,13 @@ function _G.BuildPyLib(libName, libFolder, sourceDir, includeList, moduleList, o
                 Recursive =  true
             },
         },
-        IdeGenerationHints = GenRootIdeHints("PyModules");
+        IdeGenerationHints = _G.GenRootIdeHints("PyModules");
     }
 
     Default(pythonLib)
 end
 
-function _G.BuildProgram(programName, programSource, defines, sourceDir, includeList, moduleList, otherDeps)
+function _G.BuildProgram(programName, programSource, defines, sourceDir, includeList, moduleList, otherLibs)
     local prog = Program {
         Name = programName,
         Pass = "BuildCode",
@@ -108,7 +109,7 @@ function _G.BuildProgram(programName, programSource, defines, sourceDir, include
             _G.GetModuleDeps(moduleList)
         },
         Libs = {
-            otherDeps
+           otherLibs 
         },
         Sources = {
             Glob {
@@ -117,7 +118,7 @@ function _G.BuildProgram(programName, programSource, defines, sourceDir, include
                 Recursive =  true
             },
         },
-        IdeGenerationHints = GenRootIdeHints("Apps");
+        IdeGenerationHints = _G.GenRootIdeHints("Apps");
     }
 
     Default(prog)
