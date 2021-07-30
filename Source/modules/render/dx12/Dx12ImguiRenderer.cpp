@@ -109,7 +109,6 @@ void Dx12imguiRenderer::setupSwapChain()
 
 void Dx12imguiRenderer::render()
 {
-
     setupSwapChain();
     activate();
 
@@ -122,16 +121,17 @@ void Dx12imguiRenderer::render()
 
     {
         Texture targetTexture = m_display.texture();
-        auto stateBefore = getDx12GpuState(workDb.resourceInfos()[targetTexture].gpuState);
+        WorkResourceInfo& textureResourceInfo = workDb.resourceInfos()[targetTexture];
+        auto stateBefore = getDx12GpuState(textureResourceInfo.gpuState);
         if (stateBefore != D3D12_RESOURCE_STATE_RENDER_TARGET)
         {
             D3D12_RESOURCE_BARRIER b = {};
             b.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
             b.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
             b.Transition.pResource = &m_device.resources().unsafeGetResource(targetTexture).d3dResource();
-            b.Transition.StateBefore = getDx12GpuState(workDb.resourceInfos()[targetTexture].gpuState);
+            b.Transition.StateBefore = getDx12GpuState(textureResourceInfo.gpuState);
             b.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-            workDb.resourceInfos()[targetTexture].gpuState = getGpuState(D3D12_RESOURCE_STATE_RENDER_TARGET);
+            textureResourceInfo.gpuState = getGpuState(D3D12_RESOURCE_STATE_RENDER_TARGET);
             dx12List.list->ResourceBarrier(1, &b);
         }
     }
