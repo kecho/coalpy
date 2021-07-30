@@ -74,6 +74,11 @@ public:
         return allocInternal(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     }
 
+    inline Dx12Descriptor allocateRtv()
+    {
+        return allocInternal(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    }
+
     Dx12DescriptorTable allocateTable(
         Dx12DescriptorTableType type,
         const Dx12Descriptor* cpuHandles, UINT cpuHandleCounts);

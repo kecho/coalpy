@@ -4,18 +4,10 @@
 #include <coalpy.core/Assert.h>
 #include <unordered_map>
 
-#if ENABLE_WIN32_WINDOW
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <windowsx.h>
-#endif
-
 namespace coalpy
 {
 
 #if ENABLE_WIN32_WINDOW
-
-LRESULT CALLBACK win32WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 namespace
 {
@@ -45,7 +37,7 @@ void registerWindowClass(ModuleOsHandle handle)
     // Set up our window class
     windowClass.cbSize = sizeof(WNDCLASSEX);
     windowClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-    windowClass.lpfnWndProc = win32WinProc;
+    windowClass.lpfnWndProc = Win32Window::win32WinProc;
     windowClass.cbClsExtra = 0;
     windowClass.cbWndExtra = 0;
     windowClass.hInstance = (HINSTANCE)handle;
@@ -85,7 +77,7 @@ struct Win32State
 std::set<Win32Window*> Win32Window::s_allWindows;
 
 Win32Window::Win32Window(const WindowDesc& desc)
-: m_desc(desc), m_state(*(new Win32State))
+: m_desc(desc), m_state(*(new Win32State)), m_nextHookId(0)
 {
     CPY_ASSERT_MSG(desc.osHandle != nullptr, "No os handle set, window wont be able to register its class.");
     registerWindowClass(desc.osHandle);
@@ -99,6 +91,21 @@ Win32Window::~Win32Window()
     destroyWindow();
     unregisterWindowClass(m_desc.osHandle);
     delete &m_state;
+}
+
+int Win32Window::addHook(WindowHookFn hookFn)
+{
+    int hookId = m_nextHookId++;
+    m_hooks[hookId] = hookFn;
+    return hookId;
+}
+
+void Win32Window::removeHook(int hookId)
+{
+    auto it = m_hooks.find(hookId);
+    CPY_ASSERT(it != m_hooks.end());
+    if (it != m_hooks.end())
+        m_hooks.erase(it);
 }
 
 void Win32Window::createWindow()
@@ -192,7 +199,7 @@ Win32Window::HandleMessageRet Win32Window::handleMessage(
     return ret;
 }
 
-LRESULT CALLBACK win32WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Win32Window::win32WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     if (message == WM_CREATE)
     {
@@ -202,8 +209,16 @@ LRESULT CALLBACK win32WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
     }
 
     auto self = (Win32Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
     if (self)
     {
+        for (auto it : self->m_hooks)
+        {
+            LRESULT res = it.second(hwnd, message, wParam, lParam);
+            if (res != 0)
+                return res;
+        }
+
         auto ret = self->handleMessage(message, (unsigned int*)wParam, (unsigned long*)lParam);
         if (ret.handled)
             return (LRESULT)ret.retCode;

@@ -32,6 +32,8 @@ public:
     // Gets the config of this display
     const DisplayConfig& config() const { return m_config; }
 
+    void setupSwapChain();
+
 protected:
     IDisplay(const DisplayConfig& config)
     : m_config(config) {}

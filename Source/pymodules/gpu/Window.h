@@ -3,6 +3,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <coalpy.render/IDisplay.h>
+#include <coalpy.render/IimguiRenderer.h>
 #include <coalpy.window/WindowDefs.h>
 #include <coalpy.core/SmartPtr.h>
 #include "TypeIds.h"
@@ -31,6 +32,7 @@ struct Window
     IWindow*  object;
     PyObject* userData;
     SmartPtr<render::IDisplay> display;
+    SmartPtr<render::IimguiRenderer> uiRenderer;
     Texture* displayTexture;
 
     //Functions
@@ -40,7 +42,6 @@ struct Window
     static void close(PyObject* self);
     static void destroy(PyObject* self);
     static IWindowListener* createWindowListener(ModuleState& moduleState);
-
 };
 
 

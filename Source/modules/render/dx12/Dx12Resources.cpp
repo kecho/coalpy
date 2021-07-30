@@ -166,6 +166,9 @@ Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSp
 : Dx12Resource(device, desc, specialFlags)
 , m_texDesc(desc)
 {
+    if (desc.isRtv)
+        m_data.resDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
     D3D12_RESOURCE_DIMENSION dim = D3D12_RESOURCE_DIMENSION_UNKNOWN;
     if (desc.type == TextureType::k1d)
         dim = D3D12_RESOURCE_DIMENSION_TEXTURE1D;

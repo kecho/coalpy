@@ -3,6 +3,14 @@
 #include <coalpy.window/IWindow.h>
 #include <set>
 #include "Config.h"
+#include <map>
+#include <functional>
+
+#if ENABLE_WIN32_WINDOW
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <windowsx.h>
+#endif
 
 #if ENABLE_WIN32_WINDOW
 
@@ -10,6 +18,8 @@ namespace coalpy
 {
 
 struct Win32State;
+using WindowHookFn = std::function<LRESULT(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)>;
+
 class Win32Window : public IWindow
 {
 public:
@@ -33,12 +43,20 @@ public:
     HandleMessageRet handleMessage(
         unsigned message, unsigned int* wparam, unsigned long* lparam);
 
+    int addHook(WindowHookFn hookFn);
+    void removeHook(int hookId);
+
+    static LRESULT CALLBACK win32WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
 private:
     void createWindow();
     void destroyWindow();
     WindowDesc m_desc;
     Win32State& m_state;
     IWindowListener* m_listener = nullptr;
+
+    int m_nextHookId;
+    std::map<int, WindowHookFn> m_hooks;
 };
 
 }

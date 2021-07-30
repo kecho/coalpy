@@ -30,20 +30,6 @@ local Binaries = {
     DxcBinaryIl
 }
 
--- C++ module table-> module name with its dependencies
-local CoalPyModuleTable = {
-    core    = {},
-    tasks   = { "core" },
-    files   = { "core", "tasks" },
-    render  = { "core", "tasks", "files" },
-    window  = { "core" }
-}
-
--- C++ module external includes
-local CoalPyModuleIncludes = {
-    render = { DxcIncludes, "Source/render/" }
-}
-
 -- Build imgui
 local imguiLib = StaticLibrary {
     Name = "imgui",
@@ -61,10 +47,29 @@ local imguiLib = StaticLibrary {
 
 Default(imguiLib)
 
+
+-- C++ module table-> module name with its dependencies
+local CoalPyModuleTable = {
+    core    = {},
+    tasks   = { "core" },
+    files   = { "core", "tasks" },
+    render  = { "core", "tasks", "files", "window" },
+    window  = { "core" }
+}
+
+-- C++ module external includes
+local CoalPyModuleIncludes = {
+    render = { DxcIncludes, ImguiDir, "Source/modules/window/" }
+}
+
+local CoalPyModuleDeps = {
+    render = { imguiLib }
+}
+
 -- Module list for the core coalpy module
 local CoalPyModules = { "core", "tasks", "render", "files", "window"  }
 
-_G.BuildModules(SourceDir, CoalPyModuleTable, CoalPyModuleIncludes)
+_G.BuildModules(SourceDir, CoalPyModuleTable, CoalPyModuleIncludes, CoalPyModuleDeps)
 _G.BuildPyLib("gpu", "pymodules/gpu", SourceDir, LibIncludes, CoalPyModules, Libraries, imguiLib)
 _G.BuildProgram("coalpy_tests", "tests", { "CPY_ASSERT_ENABLED=1" }, SourceDir, LibIncludes, CoalPyModules, Libraries)
 _G.DeployPyPackage("coalpy", "gpu", Binaries, ScriptsDir)

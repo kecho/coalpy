@@ -86,6 +86,7 @@ void Dx12Display::createComputeTexture()
     TextureDesc desc = m_surfaceDesc;
     desc.name = "computeBackbuffer";
     desc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
+    desc.isRtv = true;
     if (!m_computeTexture.valid())
     {
         TextureResult result = m_device.resources().createTexture(desc, nullptr, ResourceSpecialFlag_TrackTables);
@@ -130,8 +131,8 @@ void Dx12Display::acquireTextures()
 void Dx12Display::waitForGpu()
 {
     Dx12Fence& f = m_device.queues().getFence(WorkType::Graphics);
-    for (auto& fenceVal : m_fenceVals)
-        f.waitOnCpu(fenceVal);
+    auto s = m_device.queues().signalFence(WorkType::Graphics);
+    f.waitOnCpu(s);
 }
 
 void Dx12Display::resize(unsigned int width, unsigned int height)
@@ -145,6 +146,8 @@ void Dx12Display::resize(unsigned int width, unsigned int height)
 
     DX_OK(m_swapChain->ResizeBuffers(m_config.buffering, width, height, getDxFormat(m_config.format), 0));
 
+    m_config.width = width;
+    m_config.height = height;
     m_surfaceDesc.width  = width;
     m_surfaceDesc.height = height;
     acquireTextures();
@@ -246,13 +249,19 @@ void Dx12Display::doRetardedDXGIDx12Hack(int bufferIndex)
     workDb.unlock();
 }
 
+int Dx12Display::currentBuffer() const
+{
+    return (int)m_swapChain->GetCurrentBackBufferIndex();
+}
+
 void Dx12Display::present(Dx12Fence& fence)
 {
-    auto bufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+    auto bufferIndex = currentBuffer();
 
     doRetardedDXGIDx12Hack(bufferIndex);
+    auto res = m_swapChain->Present(1u, 0u);
+    CPY_ASSERT(res == S_OK || res == DXGI_STATUS_OCCLUDED);
 
-    DX_OK(m_swapChain->Present(1u, 0u));
     UINT64 nextBufferIndex = (bufferIndex + 1) % m_buffering;
     if (!fence.isComplete(m_fenceVals[nextBufferIndex]))
         fence.waitOnCpu(m_fenceVals[nextBufferIndex]);

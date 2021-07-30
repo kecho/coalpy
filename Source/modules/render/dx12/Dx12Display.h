@@ -26,13 +26,17 @@ public:
     virtual void present() override;
     void acquireTextures();
 
+    int buffering() const { return m_buffering; }
+    Texture getTexture(int index) { return m_textures[index]; }
+    int currentBuffer() const;
+
     UINT64 fenceVal() const;
 
+    void waitForGpu();
     void present(Dx12Fence& fence);
 
 private:
     void doRetardedDXGIDx12Hack(int bufferIndex);
-    void waitForGpu();
     void createComputeTexture();
     TextureDesc m_surfaceDesc;
     int m_buffering = 0;

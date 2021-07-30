@@ -45,13 +45,14 @@ function _G.GetModuleDeps(moduleList)
     return depList
 end
 
-function _G.BuildModules(sourceDir, moduleMap, extraIncludes)
+function _G.BuildModules(sourceDir, moduleMap, extraIncludes, extraDeps)
     for k,v in pairs(moduleMap) do
         local externalIncludes = extraIncludes[k]
+        local extraModDeps = extraDeps[k]
         local moduleLib = StaticLibrary {
             Name = k,
             Pass = "BuildCode",
-            Depends = { _G.GetModuleDeps(v) },
+            Depends = { _G.GetModuleDeps(v), extraModDeps },
             Includes = {
                 _G.GetModuleDir(sourceDir, k),
                 _G.GetModuleIncludes(sourceDir, v),

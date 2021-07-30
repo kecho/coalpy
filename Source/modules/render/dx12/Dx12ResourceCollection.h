@@ -41,8 +41,10 @@ public:
     void release(ResourceHandle resource);
     void release(ResourceTable resource);
 
+    void lock() { m_resourceMutex.lock(); }
     Dx12ResourceTable& unsafeGetTable(ResourceTable handle) { return *(m_resourceTables[handle]); }
     Dx12Resource& unsafeGetResource(ResourceHandle handle) { return *(m_resources[handle]->resource); }
+    void unlock() { m_resourceMutex.unlock(); }
 
     void getParentTables(ResourceHandle resource, std::vector<ResourceTable>& outTables);
     bool recreate(ResourceTable resource);

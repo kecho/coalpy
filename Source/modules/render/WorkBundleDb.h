@@ -24,6 +24,7 @@ enum class ResourceGpuState
     Srv,
     Uav,
     Cbv,
+    Rtv,
     CopySrc,
     CopyDst,
     Present

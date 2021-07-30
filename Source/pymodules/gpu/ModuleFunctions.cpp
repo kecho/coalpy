@@ -10,10 +10,12 @@
 #include <coalpy.window/IWindow.h>
 #include <coalpy.render/IShaderDb.h>
 #include <coalpy.render/IDevice.h>
+#include <coalpy.render/IimguiRenderer.h>
 #include <coalpy.core/Stopwatch.h>
 #include <coalpy.core/String.h>
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/Utils.h>
+#include <imgui.h>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -241,6 +243,8 @@ PyObject* addShaderPath(PyObject* self, PyObject* args, PyObject* kwds)
 
 }
 
+static bool s_testImgui = true;
+
 PyObject* run(PyObject* self, PyObject* args)
 {
     ModuleState& state = getState(self);
@@ -283,6 +287,17 @@ PyObject* run(PyObject* self, PyObject* args)
             if (w->object->isClosed())
                 continue;
 
+            if (w->uiRenderer != nullptr)
+            {
+                w->uiRenderer->newFrame();
+            }
+
+            if (s_testImgui)
+            {
+                //test dear imgui
+                ImGui::ShowDemoWindow();
+            }
+
             renderArgs->window = w;
             Py_INCREF(w);
             renderArgs->userData = w->userData;
@@ -305,6 +320,9 @@ PyObject* run(PyObject* self, PyObject* args)
                 }
                 Py_DECREF(retObj);
             }
+
+            if (w->uiRenderer != nullptr)
+                w->uiRenderer->render();
 
             w->display->present();
             Py_DECREF(renderArgs->window);

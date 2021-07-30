@@ -35,7 +35,7 @@ enum MemFlags : int
     MemFlag_CpuRead  = 1 << 0,
     MemFlag_CpuWrite = 1 << 1,
     MemFlag_GpuRead  = 1 << 2,
-    MemFlag_GpuWrite = 1 << 3
+    MemFlag_GpuWrite = 1 << 3,
 };
 
 enum class BufferType
@@ -60,6 +60,7 @@ struct TextureDesc : public ResourceDesc
     unsigned int height = 1u;
     unsigned int depth  = 1u;
     unsigned int mipLevels = 1u;
+    bool isRtv = false;
 };
 
 struct BufferDesc : public ResourceDesc

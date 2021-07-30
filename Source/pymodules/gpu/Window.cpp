@@ -5,6 +5,7 @@
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/IWindow.h>
 #include <coalpy.render/IDisplay.h>
+#include <coalpy.render/IimguiRenderer.h>
 #include <coalpy.render/IDevice.h>
 #include "CoalpyTypeObject.h"
 
@@ -42,11 +43,11 @@ void Window::constructType(PyTypeObject& t)
 int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 {
     auto& window = *(Window*)self;
+    new (&window) Window;
     window.userData = Py_None;
     Py_INCREF(window.userData);
     window.object = nullptr;
     window.onRenderCallback = nullptr;
-    new (&window.display) SmartPtr<render::IDevice>();
 
     ModuleState& moduleState = parentModule(self);
     if (!moduleState.checkValidDevice())
@@ -95,6 +96,15 @@ int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         window.displayTexture = moduleState.alloc<Texture>();
         window.displayTexture->owned = false;
         window.displayTexture->texture = window.display->texture();
+
+    }
+
+    {
+        render::IimguiRendererDesc desc;
+        desc.device = &moduleState.device();
+        desc.display = window.display;
+        desc.window = window.object;
+        window.uiRenderer = render::IimguiRenderer::create(desc);
     }
     
     return 0;
@@ -142,6 +152,7 @@ public:
         if (!pyWindow || !pyWindow->display)
             return;
 
+        pyWindow->uiRenderer = nullptr;
         pyWindow->display = nullptr; //refcount decrease
     }
 
