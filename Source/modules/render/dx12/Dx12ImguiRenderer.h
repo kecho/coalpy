@@ -29,6 +29,7 @@ public:
 
 private:
 
+    void setCoalpyStyle();
     void setupSwapChain();
 
     Dx12Device& m_device;
