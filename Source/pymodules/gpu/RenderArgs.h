@@ -19,6 +19,7 @@ struct RenderArgs
     double renderTime;
     double deltaTime;
     Window* window;
+    PyObject* imguiBuilder;
     PyObject* userData;
     int width;
     int height;

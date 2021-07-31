@@ -7,6 +7,7 @@
 #include "RenderEnum.h"
 #include "CommandList.h"
 #include "CoalpyTypeObject.h"
+#include "ImguiBuilder.h"
 #include <coalpy.core/Formats.h>
 #include <coalpy.core/Assert.h>
 
@@ -57,6 +58,7 @@ void constructTypes(TypeList& outTypes)
     RegisterType(Texture,            outTypes);
     RegisterType(InResourceTable,    outTypes);
     RegisterType(OutResourceTable,   outTypes);
+    RegisterType(ImguiBuilder,       outTypes);
     
     //** Register Enums **//
     {

@@ -32,7 +32,8 @@ void Window::constructType(PyTypeObject& t)
                  "title  : String title for the window.\n"
                  "width  : initial width of window and swap chain texture.\n"
                  "height : initial height of window and swap chain texture.\n"
-                 "on_render : Rendering function. The function has 1 argument of type RenderArgs and no return. See RenderArgs for more info.\n";
+                 "on_render : Rendering function. The function has 1 argument of type RenderArgs and no return. See RenderArgs for more info.\n"
+                 "use_imgui: (True by default), set to true, and during onRender the renderArgs object will contain an imgui object. Use this object to render imgui into the window.\n";
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
     t.tp_init = Window::init;
@@ -60,10 +61,12 @@ int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     desc.height = 400;
     window.onRenderCallback = nullptr;
 
-    static char* keywords[] = { "title", "width", "height", "on_render", nullptr };
+    int useImgui = 1;
+
+    static char* keywords[] = { "title", "width", "height", "on_render", "use_imgui", nullptr };
     if (!PyArg_ParseTupleAndKeywords(
-            vargs, kwds, "|siiO:Window", keywords,
-            &windowTitle, &desc.width, &desc.height, &window.onRenderCallback))
+            vargs, kwds, "|siiOb:Window", keywords,
+            &windowTitle, &desc.width, &desc.height, &window.onRenderCallback, &useImgui))
     {
         return -1;
     }
@@ -99,6 +102,7 @@ int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 
     }
 
+    if (useImgui)
     {
         render::IimguiRendererDesc desc;
         desc.device = &moduleState.device();
@@ -132,6 +136,8 @@ void Window::destroy(PyObject* self)
     Window::close(self);
     auto w = (Window*)self;
     w->displayTexture->texture = render::Texture(); //invalidate texture
+    w->uiRenderer = nullptr;
+    w->display = nullptr;
     Py_DECREF(w->displayTexture);
     Py_DECREF(w->userData);
     w->~Window();

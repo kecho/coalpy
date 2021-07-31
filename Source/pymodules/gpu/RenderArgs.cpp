@@ -15,6 +15,7 @@ static PyMemberDef g_renderArgMemembers[] = {
     { "user_data", T_OBJECT, offsetof(RenderArgs, userData), READONLY, "" },
     { "width",  T_INT, offsetof(RenderArgs, width), READONLY, "" },
     { "height", T_INT, offsetof(RenderArgs, height), READONLY, "" },
+    { "imgui", T_OBJECT, offsetof(RenderArgs, imguiBuilder), READONLY, "" },
     { nullptr }
 };
 

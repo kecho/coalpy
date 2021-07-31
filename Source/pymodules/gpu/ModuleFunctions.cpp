@@ -6,6 +6,7 @@
 #include "Window.h"
 #include "Shader.h"
 #include "RenderArgs.h"
+#include "ImguiBuilder.h"
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/IWindow.h>
 #include <coalpy.render/IShaderDb.h>
@@ -15,7 +16,6 @@
 #include <coalpy.core/String.h>
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/Utils.h>
-#include <imgui.h>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -243,8 +243,6 @@ PyObject* addShaderPath(PyObject* self, PyObject* args, PyObject* kwds)
 
 }
 
-static bool s_testImgui = true;
-
 PyObject* run(PyObject* self, PyObject* args)
 {
     ModuleState& state = getState(self);
@@ -256,19 +254,24 @@ PyObject* run(PyObject* self, PyObject* args)
 
     //prepare arguments for this run call.
     RenderArgs* renderArgs = state.alloc<RenderArgs>();
+    ImguiBuilder* imguiBuilder = state.alloc<ImguiBuilder>();
+    new (imguiBuilder) ImguiBuilder;
+
     renderArgs->window = nullptr;
     renderArgs->userData = nullptr;
     renderArgs->renderTime = 0.0;
     renderArgs->deltaTime = 0.0;
     renderArgs->width = 0;
     renderArgs->height = 0;
+    renderArgs->imguiBuilder = Py_None;
+    Py_INCREF(Py_None);
     
     WindowRunArgs runArgs = {};
     bool raiseException = false;
 
     Stopwatch stopwatch;
 
-    runArgs.onRender = [&state, &raiseException, renderArgs, &stopwatch]()
+    runArgs.onRender = [&state, &raiseException, renderArgs, &stopwatch, imguiBuilder]()
     {
         unsigned long long mst = stopwatch.timeMicroSecondsLong();
         double newRenderTime = (double)mst / 1000.0;
@@ -289,13 +292,9 @@ PyObject* run(PyObject* self, PyObject* args)
 
             if (w->uiRenderer != nullptr)
             {
+                renderArgs->imguiBuilder = (PyObject*)imguiBuilder;
+                imguiBuilder->enabled = true;
                 w->uiRenderer->newFrame();
-            }
-
-            if (s_testImgui)
-            {
-                //test dear imgui
-                ImGui::ShowDemoWindow();
             }
 
             renderArgs->window = w;
@@ -329,6 +328,8 @@ PyObject* run(PyObject* self, PyObject* args)
             renderArgs->window = nullptr;
             Py_DECREF(renderArgs->userData);
             renderArgs->userData = nullptr;
+            renderArgs->imguiBuilder = Py_None;
+            imguiBuilder->enabled = false;
         }
 
         return openedWindows != 0;
@@ -341,13 +342,13 @@ PyObject* run(PyObject* self, PyObject* args)
     IWindow::run(runArgs); //block
     state.setRenderLoop(false);
 
-    if (raiseException)
-    {
-        Py_DECREF(renderArgs);
-        return nullptr; //means we propagate an exception.
-    }
-
+    Py_DECREF(imguiBuilder);
     Py_DECREF(renderArgs);
+    Py_DECREF(Py_None);
+
+    if (raiseException)
+        return nullptr;
+
     Py_RETURN_NONE;
 }
 
