@@ -24,7 +24,7 @@ def buildUi(imgui):
 
     imgui.begin_main_menu_bar()
     if imgui.begin_menu("File"):
-        if (imgui.menu_item("Exit", "CTRL+X")):
+        if (imgui.menu_item("Exit")):
             exit()
         imgui.end_menu()
     

@@ -120,6 +120,9 @@ void Window::close(PyObject* self)
     if (!window.object)
         return;
 
+    window.uiRenderer = nullptr;
+    window.display = nullptr;
+
     Py_XDECREF(window.onRenderCallback);
     window.onRenderCallback = nullptr;
     delete window.object;
@@ -136,8 +139,6 @@ void Window::destroy(PyObject* self)
     Window::close(self);
     auto w = (Window*)self;
     w->displayTexture->texture = render::Texture(); //invalidate texture
-    w->uiRenderer = nullptr;
-    w->display = nullptr;
     Py_DECREF(w->displayTexture);
     Py_DECREF(w->userData);
     w->~Window();
