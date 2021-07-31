@@ -73,6 +73,12 @@ int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 
     desc.title = windowTitle;
 
+    if (desc.width < 0 || desc.height < 0)
+    {
+        PyErr_SetString(moduleState.exObj(), "Invalid window dimensions: width and height must be greater than 0.");
+        return -1;
+    }
+
     Py_XINCREF(window.onRenderCallback);
     if (window.onRenderCallback != nullptr && !PyCallable_Check(window.onRenderCallback))
     {
@@ -138,9 +144,10 @@ void Window::destroy(PyObject* self)
 {
     Window::close(self);
     auto w = (Window*)self;
-    w->displayTexture->texture = render::Texture(); //invalidate texture
-    Py_DECREF(w->displayTexture);
-    Py_DECREF(w->userData);
+    if (w->displayTexture)
+        w->displayTexture->texture = render::Texture(); //invalidate texture
+    Py_XDECREF(w->displayTexture);
+    Py_XDECREF(w->userData);
     w->~Window();
     Py_TYPE(self)->tp_free(self);
 }

@@ -1,7 +1,5 @@
-import sys
-import math
 import coalpy.gpu as gpu
-import array
+import math
 
 print ("<<coalpy demo0>>")
 print ("graphics devices:")
@@ -66,7 +64,7 @@ def main():
     
         return 0   
     
-    w = gpu.Window("coalpy demo 0", 1920, 1080, on_render)
+    w = gpu.Window("coalpy demo 0", -1, 1080, on_render)
     output_table = gpu.OutResourceTable("SwapTable", [w.display_texture])
     gpu.run()
 if __name__ == "__main__":
