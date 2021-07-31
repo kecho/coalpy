@@ -18,29 +18,33 @@ s1 = gpu.Shader(file="examples/testShader.hlsl", name="testShader")
 f = 0.5;
 f2 = 0.5;
 t = "hello"
+b = False
 h1 = False
 def buildUi(imgui):
-    global f, f2, t
+    global f, f2, t, b
 
     imgui.begin_main_menu_bar()
     if imgui.begin_menu("File"):
         if (imgui.menu_item("Exit")):
             exit()
         imgui.end_menu()
-    
+
     imgui.end_main_menu_bar()
 
-    imgui.begin("Test window")
+    imgui.begin("Menu Window")
 
-    imgui.push_id("Test Section")
-    f = imgui.slider_float("test slider", f, -1.0, 1.0);
-    f2 = imgui.input_float("test float2", f2);
-    t = imgui.input_text("input text box", t);
-    imgui.text("some standard text");
-    imgui.pop_id()
-
+    imgui.push_id("Menu Window")
     if imgui.collapsing_header("testHeader"):
         imgui.text("testing header contents")
+        imgui.button("some button")
+        imgui.button("some button2")
+        f = imgui.slider_float("test slider", f, -1.0, 1.0);
+        f2 = imgui.input_float("test float2", f2);
+        t = imgui.input_text("input text box", t);
+        imgui.text("some standard text");
+        b = imgui.checkbox("checkbox test", b)
+    imgui.pop_id()
+
 
     imgui.end();
 

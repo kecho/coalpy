@@ -252,6 +252,38 @@ PyObject* endMenu(PyObject* self, PyObject* vargs, PyObject* kwds)
     Py_RETURN_NONE;
 }
 
+PyObject* button(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    char* label;
+    static char* argnames[] = { "label", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s", argnames, &label))
+        return nullptr;
+
+    bool ret = ImGui::Button(label);
+    if (ret)
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* checkbox(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    char* label;
+    int vint;
+    static char* argnames[] = { "label", "v", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "sp", argnames, &label, &vint))
+        return nullptr;
+
+    bool v = (bool)vint;
+    bool ret = ImGui::Checkbox(label, &v);
+    if (v)
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
 }
 
 }
