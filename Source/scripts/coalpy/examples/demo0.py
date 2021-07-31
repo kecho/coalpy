@@ -20,33 +20,32 @@ f2 = 0.5;
 t = "hello"
 b = False
 h1 = False
+w = True
 def buildUi(imgui):
-    global f, f2, t, b
+    global f, f2, t, b, w
 
     imgui.begin_main_menu_bar()
-    if imgui.begin_menu("File"):
-        if (imgui.menu_item("Exit")):
-            exit()
+    if imgui.begin_menu("Tools"):
+        if imgui.menu_item("Enable Window"):
+            w = True
         imgui.end_menu()
 
     imgui.end_main_menu_bar()
 
-    imgui.begin("Menu Window")
-
-    imgui.push_id("Menu Window")
-    if imgui.collapsing_header("testHeader"):
-        imgui.text("testing header contents")
-        imgui.button("some button")
-        imgui.button("some button2")
-        f = imgui.slider_float("test slider", f, -1.0, 1.0);
-        f2 = imgui.input_float("test float2", f2);
-        t = imgui.input_text("input text box", t);
-        imgui.text("some standard text");
-        b = imgui.checkbox("checkbox test", b)
-    imgui.pop_id()
-
-
-    imgui.end();
+    if w:
+        w = imgui.begin("Menu Window", w)
+        imgui.push_id("Menu Window")
+        if imgui.collapsing_header("testHeader"):
+            imgui.text("testing header contents")
+            imgui.button("some button")
+            imgui.button("some button2")
+            f = imgui.slider_float("test slider", f, -1.0, 1.0);
+            f2 = imgui.input_float("test float2", f2);
+            t = imgui.input_text("input text box", t);
+            imgui.text("some standard text");
+            b = imgui.checkbox("checkbox test", b)
+        imgui.pop_id()
+        imgui.end();
 
 def main():
 
