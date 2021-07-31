@@ -1,11 +1,10 @@
 # coalpy
 compute abstraction layer for python
 
-Coalpy is a low friction python 3.9 native module for windows. Coalpy's main goal is to make DX12 GPU compute pipelines easy to write and deploy.
+Coalpy is a free low friction python 3.9 native module for windows. Coalpy's main goal is to make DX12 GPU compute pipelines easy to write and deploy.
 
 [![Build Status](https://travis-ci.com/kecho/coalpy.svg?branch=master)](https://travis-ci.com/kecho/coalpy)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
- 
 
 ## Documentation
 
@@ -58,3 +57,11 @@ python -m build
 
 Ensure you have the latest version of the build module. To configure metadata of the pip package modify things inside the Source/pipfiles folder.
 
+### Credits
+
+coalpy utilizes a few external libraries. Thank you for the authors of these marvelous open source libraries, ensure to check them out / donate and contribute if you can.
+and all the people that provided feedback / encouragement and support.
+
+* [libjpeg - JPEG library by @LuaDist](https://github.com/LuaDist/libjpeg/)
+* [imgui - User interface library by @ocornut](https://github.com/ocornut/imgui)
+* My amazing wife Katie: I love you.
