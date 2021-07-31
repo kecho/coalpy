@@ -11,7 +11,7 @@ Coalpy is a free low friction python 3.9 native module for windows. Coalpy's mai
 Get started with API documentation here:
 [coalpy.gpu documentation](https://kecho.github.io/coalpy/Docs/coalpy.gpu.html)
 
-## Contributing
+## About Contributing
 
 Use this guide if you plan to build coalpy python module from source.
 
@@ -22,7 +22,7 @@ Building requirements:
 * Ensure you are on the latest and greatest version of windows 10
 
 
-### Compiling in Windows
+## Compiling in Windows
 
 To build run the script
 
@@ -46,7 +46,7 @@ Run the tests by running:
 t2-output\win64-msvc-debug-default\coalpy_tests.exe
 ```
 
-### Creating python package
+## Creating python package
 
 cd into the t2-output\win64-msvc-[debug|release]-default director. Inside there will be a coalpy_pip directory.
 In here run the command 
@@ -57,7 +57,7 @@ python -m build
 
 Ensure you have the latest version of the build module. To configure metadata of the pip package modify things inside the Source/pipfiles folder.
 
-### Credits
+## Credits
 
 coalpy utilizes a few external libraries. Thank you for the authors of these marvelous open source libraries, ensure to check them out / donate and contribute if you can.
 and all the people that provided feedback / encouragement and support.
