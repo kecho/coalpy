@@ -17,7 +17,6 @@ Use this guide if you plan to build coalpy python module from source.
 
 ### Building requirements
 * Install Python 3.9x
-* Set the environment variable PYTHON39_ROOT to the root installation of your python library.
 * Ensure you have a version of visual studio with support for VC 
 * Ensure you are on the latest and greatest version of windows 10
 

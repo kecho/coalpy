@@ -12,7 +12,7 @@ local PythonDir = "External/Python39-win64/"
 
 
 local LibIncludes = {
-    _G.GetPythonPath() .. "/include",
+    PythonDir .. "Include",
     ImguiDir,
     LibJpgDir,
     LibPngDir

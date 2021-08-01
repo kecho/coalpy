@@ -13,14 +13,6 @@ function _G.GenRootIdeHints(rootFolder)
     }
 end
 
-function _G.GetPythonPath()
-    local pyroot = native.getenv("PYTHON39_ROOT", nil);   
-    if pyroot == nil then
-        error("Ensure that the environment variable PYTHON39_ROOT is set, and points to the root python folder containing lib and include.")
-    end
-    return pyroot
-end
-
 function _G.GetModuleDir(sourceDir, moduleName)
     return sourceDir.."\\modules\\"..moduleName.."\\"
 end
