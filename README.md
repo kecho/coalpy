@@ -63,5 +63,6 @@ coalpy utilizes a few external libraries. Thank you for the authors of these mar
 and all the people that provided feedback / encouragement and support.
 
 * [libjpeg - JPEG library by @LuaDist](https://github.com/LuaDist/libjpeg/)
+* [libpng - PNG library by @glennrp](https://github.com/glennrp/libpng)
 * [imgui - User interface library by @ocornut](https://github.com/ocornut/imgui)
 * My amazing wife Katie: I love you.
