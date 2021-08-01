@@ -3,6 +3,7 @@ local ScriptsDir = "Source/scripts/coalpy";
 local ImguiDir = "Source/imgui";
 local LibJpgDir = "Source/libjpeg";
 local LibPngDir = "Source/libpng";
+local ZlibDir = "Source/zlib";
 local DxcDir = "External/dxc_2021_04-20/"
 local DxcIncludes = DxcDir
 local DxcBinaryCompiler = DxcDir.."dxc/bin/x64/dxcompiler.dll"
@@ -26,7 +27,6 @@ local Libraries = {
         PythonDir.."python39.lib",
         Config = { "win64-msvc-release", "win64-msvc-production"  }
     },
-    "External/Zlib/lib/zlibstatic.lib",
     "User32.lib"
 }
 
@@ -34,6 +34,23 @@ local Binaries = {
     DxcBinaryCompiler,
     DxcBinaryIl
 }
+
+-- Build zlib
+local zlibLib = StaticLibrary {
+    Name = "zlib",
+    Pass = "BuildCode",
+    Includes = { ZlibDir },
+    Sources = {
+        Glob {
+            Dir = ZlibDir,
+            Extensions = { ".c", ".h" },
+            Recursive =  true
+        }
+    },
+    IdeGenerationHints = _G.GenRootIdeHints("zlib");
+}
+
+Default(zlibLib)
 
 -- Build imgui
 local imguiLib = StaticLibrary {
@@ -73,7 +90,8 @@ Default (libjpegLib)
 local libpngLib = StaticLibrary {
     Name = "libpng",
     Pass = "BuildCode",
-    Includes = { LibPngDir, "External/Zlib/include" },
+    Includes = { LibPngDir, ZlibDir },
+    Depends = { zlibLib },
     Sources = {
         Glob {
             Dir = LibPngDir,
@@ -101,7 +119,7 @@ local CoalPyModuleIncludes = {
 }
 
 local CoalPyModuleDeps = {
-    render = { imguiLib, libjpegLib, libpngLib }
+    render = { imguiLib, libjpegLib, libpngLib, zlibLib }
 }
 
 -- Module list for the core coalpy module
