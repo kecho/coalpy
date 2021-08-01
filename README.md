@@ -6,7 +6,7 @@ Coalpy is a free low friction python 3.9 native module for windows. Coalpy's mai
 [![Build Status](https://travis-ci.com/kecho/coalpy.svg?branch=master)](https://travis-ci.com/kecho/coalpy)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Documentation
+## Python module documentation
 
 Get started with API documentation here:
 [coalpy.gpu documentation](https://kecho.github.io/coalpy/coalpy.gpu.html)
@@ -20,6 +20,13 @@ Building requirements:
 * Set the environment variable PYTHON39_ROOT to the root installation of your python library.
 * Ensure you have a version of visual studio with support for VC 
 * Ensure you are on the latest and greatest version of windows 10
+
+Directories:
+* Source - everything inside here gets compiled by the build system.
+** modules - internal c++ implementation of coalpy.
+** scripts - python scripts that get packaged with the coalpy module.
+** [libpng|libjpeg|zlib|imgui] - external libraries, which are compiled in source.
+** tests - internal graphics and system test suites for coalpy, does not test the python layer, only the internal layer
 
 
 ## Compiling in Windows
@@ -66,4 +73,5 @@ and all the people that provided feedback / encouragement and support.
 * [libpng - PNG library by @glennrp](https://github.com/glennrp/libpng)
 * [zlib - compression library by @madler](https://github.com/madler/zlib)
 * [imgui - User interface library by @ocornut](https://github.com/ocornut/imgui)
+* [DirectXShaderCompiler - hlsl compiler by @microsoft](https://github.com/microsoft/DirectXShaderCompiler)
 * My amazing wife Katie: I love you.
