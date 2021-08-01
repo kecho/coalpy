@@ -23,10 +23,14 @@ Building requirements:
 
 Directories:
 * Source - everything inside here gets compiled by the build system.
-** modules - internal c++ implementation of coalpy.
-** scripts - python scripts that get packaged with the coalpy module.
-** [libpng|libjpeg|zlib|imgui] - external libraries, which are compiled in source.
-** tests - internal graphics and system test suites for coalpy, does not test the python layer, only the internal layer
+    * modules - internal c++ implementation of coalpy.
+    * scripts - python scripts that get packaged with the coalpy module.
+    * [libpng|libjpeg|zlib|imgui] - external libraries, which are compiled in source.
+    * tests - internal graphics and system test suites for coalpy, does not test the python layer, only the internal layer
+* Build - build scripts for the tundra build system.
+* External - external precompiled libraries used.
+* Tools - executables / tools used to assist in building. In this case the tundra build system is contained here.
+* docs - Documentation. This documentation utilizes github pages, which can be seen [here](https://kecho.github.io/coalpy/coalpy.gpu.html)
 
 
 ## Compiling in Windows
