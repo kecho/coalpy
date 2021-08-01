@@ -25,14 +25,17 @@ void Buffer::constructType(PyTypeObject& t)
 {
     t.tp_name = "gpu.Buffer";
     t.tp_basicsize = sizeof(Buffer);
-    t.tp_doc   = "Class that represents a Buffer GPU resource.\n"
-                 "Constructor Arguments (all of them optional):\n"
-                 "name: string to identify the resource with.\n"
-                 "mem_flags: see coalpy.gpu.MemFlags. Default is Gpu_Read and Gpu_Write\n"
-                 "type: see coalpy.gpu.BufferType. Default is Standard\n"
-                 "format: format of buffer. See coalpy.gpu.Format for available formats. This argument is ignored if buffer is Structured or Raw. Default format is RGBA_32_SINT\n"
-                 "element_count: number of elements this buffer will have\n"
-                 "stride: stride count in case of Structured type\n";
+    t.tp_doc   = R"(
+    Class that represents a Buffer GPU resource.
+
+    Constructor:
+        name (str): string to identify the resource with.
+        mem_flags (int): See coalpy.gpu.MemFlags. Default is Gpu_Read and Gpu_Write.
+        type (int): See coalpy.gpu.BufferType. Default is Standard.
+        format (int): Format of buffer. See coalpy.gpu.Format for available formats. This argument is ignored if buffer is Structured or Raw. Default format is RGBA_32_SINT
+        element_count (int): number of elements this buffer will have
+        stride (int): stride count in case of Structured type
+    )";
 
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
@@ -90,15 +93,18 @@ void Texture::constructType(PyTypeObject& t)
 {
     t.tp_name = "gpu.Texture";
     t.tp_basicsize = sizeof(Texture);
-    t.tp_doc   = "Class that represents a Texture GPU resource.\n"
-                 "Constructor Arguments (all of them optional):\n"
-                 "name: string to identify the resource with.\n"
-                 "mem_flags: see coalpy.gpu.MemFlags. Default is Gpu_Read and Gpu_Write\n"
-                 "type: dimensionality of texture, see coalpy.gpu.TextureType. Default is k2d\n"
-                 "width: the width of the texture in texels. Default is 1\n"
-                 "height: the height of the texture in texels. Default is 1\n"
-                 "depth: the depth of the texture if k2dArray or k3d. Default is 1.\n"
-                 "mip_levels: number of mips supported on this texture.\n";
+    t.tp_doc   = R"(
+    Class that represents a Texture GPU resource.
+
+    Constructor:
+        name (str): string to identify the resource with.
+        mem_flags (int): see coalpy.gpu.MemFlags. Default is Gpu_Read and Gpu_Write
+        type (int): dimensionality of texture, see coalpy.gpu.TextureType. Default is k2d
+        width (int): the width of the texture in texels. Default is 1
+        height (int): the height of the texture in texels. Default is 1
+        depth (int): the depth of the texture if k2dArray or k3d. Default is 1.
+        mip_levels (int): number of mips supported on this texture.
+    )";
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
     t.tp_init = Texture::init;
@@ -153,7 +159,13 @@ void InResourceTable::constructType(PyTypeObject& t)
 {
     t.tp_name = "gpu.InResourceTable";
     t.tp_basicsize = sizeof(InResourceTable);
-    t.tp_doc   = "";
+    t.tp_doc   = R"(
+    Input resource table. Use this to specify the inputs of a dispatch call in CommandList.
+
+    Constructor:
+        name (str): name / identifier of this resource table.
+        resource_list: array of Texture or Buffer to be specified. Each position in the table correspods to a s# register in hlsl.
+    )";
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
     t.tp_init = InResourceTable::init;
@@ -273,7 +285,13 @@ void OutResourceTable::constructType(PyTypeObject& t)
 {
     t.tp_name = "gpu.OutResourceTable";
     t.tp_basicsize = sizeof(OutResourceTable);
-    t.tp_doc   = "";
+    t.tp_doc   = R"(
+    Output resource table. Use this to specify a table of unordered access views (outputs) of a dispatch call in CommandList.
+
+    Constructor:
+        name (str): name / identifier of this resource table.
+        resource_list: array of Texture or Buffer to be specified. Each position in the table correspods to a u# register in hlsl.
+    )";
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
     t.tp_init = OutResourceTable::init;

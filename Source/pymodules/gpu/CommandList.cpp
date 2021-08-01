@@ -23,35 +23,41 @@ namespace methods
 }
 
 static PyMethodDef g_cmdListMethods[] = {
-    KW_FN(dispatch, cmdDispatch,
-        "dispatch method. Arguments:\n"
-        "x: the number of groups on the x axis.\n"
-        "y: the number of groups on the y axis.\n"
-        "z: the number of groups on the z axis.\n"
-        "shader: object of type Shader. This will be the compute shader launched on the GPU.\n"
-        "name (optional): Debug name of this dispatch to see in render doc / profiling captures.\n"
-        "constants (optional): Constant can be, an array of ints and floats, an array.array\n"
-        "                      or any object compatible with the object protocol, or a list of Buffer objects.\n"
-        "                      If a list of Buffer objects, these can be indexed via register(b#) in the shader used,\n"
-        "                      Every other type will always be bound to a constant buffer on register(b0).\n"
-        "input_tables (optional): a single InResourceTable object, or an array of InResourceTable objects. If a single\n"
-        "                       object is used, the table will be automatically bound to register space 0, and each resource accessed either\n"
-        "                       by bindless dynamic indexing, or a hard register(t#). If an array of InResourceTable is passed, each resource\n"
-        "                       table will be bound using a register space index corresponding to the table index in the array, and the rules\n"
-        "                       to reference each resource within the table stay the same.\n"
-        "output_tables (optional): a single OutResourceTable object, or an array of OutResourceTable objects. Same rules as input_tables apply,\n"
-        "                         but we use registers u# to address the UAVs\n"
-    ),
-    KW_FN(copy_resource, cmdCopyResource,
-        "copy_resource method, copies one resource to another. Arguments:\n"
-        "source: an object of type Texture or Buffer. This will be the source resource to copy from.\n"
-        "destination: an object of type Texture or Buffer. This will be the destination resource to copy to.\n"
-    ),
-    KW_FN(upload_resource, cmdUploadResource,
-        "upload_resource method. Uploads an python array [], an array.array or any buffer protocol compatible object to a gpu resource. Arguments:\n"
-        "source: an array of ints and floats, or an array.array object or any object compatible with the buffer protocol.\n"
-        "destination: a destination object of type Texture or Buffer.\n"
-    ),
+    KW_FN(dispatch, cmdDispatch,R"(
+        Dispatch method, which executes a compute shader with resources bound.
+        
+        Parameters:
+            x (int): the number of groups on the x axis.
+            y (int): the number of groups on the y axis.
+            z (int):  the number of groups on the z axis.
+            shader (Shader): object of type Shader. This will be the compute shader launched on the GPU.
+            name (str)(optional): Debug name of this dispatch to see in render doc / profiling captures.
+            constants (optional): Constant can be, an array of ints and floats, an array.array
+                                  or any object compatible with the object protocol, or a list of Buffer objects.
+                                  If a list of Buffer objects, these can be indexed via register(b#) in the shader used,
+                                  Every other type will always be bound to a constant buffer on register(b0).
+            input_tables (optional): a single InResourceTable object, or an array of InResourceTable objects. If a single
+                                   object is used, the table will be automatically bound to register space 0, and each resource accessed either
+                                   by bindless dynamic indexing, or a hard register(t#). If an array of InResourceTable is passed, each resource
+                                   table will be bound using a register space index corresponding to the table index in the array, and the rules
+                                   to reference each resource within the table stay the same.
+            output_tables (optional): a single OutResourceTable object, or an array of OutResourceTable objects. Same rules as input_tables apply,
+                                     but we use registers u# to address the UAVs
+    )"),
+    KW_FN(copy_resource, cmdCopyResource, R"(
+        copy_resource method, copies one resource to another.
+
+        Parameters:
+            source (Texture or Buffer): an object of type Texture or Buffer. This will be the source resource to copy from.
+            destination (Texture or Buffer): an object of type Texture or Buffer. This will be the destination resource to copy to.
+    )"),
+    KW_FN(upload_resource, cmdUploadResource, R"(
+        upload_resource method. Uploads an python array [], an array.array or any buffer protocol compatible object to a gpu resource.
+        
+        Parameters:
+            source: an array of ints and floats, or an array.array object or any object compatible with the buffer protocol.
+            destination (Texture or Buffer): a destination object of type Texture or Buffer.
+    )"),
     /*KW_FN(download_resource, cmdDownloadResource, ""),*/
     FN_END
 };

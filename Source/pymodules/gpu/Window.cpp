@@ -18,8 +18,8 @@ namespace gpu
 
 
 static PyMemberDef g_windowMembers[] = {
-    { "display_texture", T_OBJECT, offsetof(Window, displayTexture), READONLY, "" },
-    { "user_data", T_OBJECT, offsetof(Window, userData), 0, "" },
+    { "display_texture", T_OBJECT, offsetof(Window, displayTexture), READONLY, "Display Texture. Use this as the output texture in CommmandList dispatch command to write directly to the window." },
+    { "user_data", T_OBJECT, offsetof(Window, userData), 0, "Set this user data so its accessible during on_render callback. You can put here the custom state of your window." },
     { nullptr }
 };
 
@@ -27,13 +27,16 @@ void Window::constructType(PyTypeObject& t)
 {
     t.tp_name = "gpu.Window";
     t.tp_basicsize = sizeof(Window);
-    t.tp_doc   = "Class that represnts a window.\n"
-                 "Constructor Arguments:\n"
-                 "title  : String title for the window.\n"
-                 "width  : initial width of window and swap chain texture.\n"
-                 "height : initial height of window and swap chain texture.\n"
-                 "on_render : Rendering function. The function has 1 argument of type RenderArgs and no return. See RenderArgs for more info.\n"
-                 "use_imgui: (True by default), set to true, and during onRender the renderArgs object will contain an imgui object. Use this object to render imgui into the window.\n";
+    t.tp_doc   = R"(
+    Class that represnts a window.
+
+    Constructor:
+        title (str): String title for the window.
+        width (int)(optional): initial width of window and swap chain texture.
+        height (int)(optional): initial height of window and swap chain texture.
+        on_render (function): Rendering function. The function has 1 argument of type RenderArgs and no return. See RenderArgs for more info.
+        use_imgui (Boolean): (True by default), set to True, and during on_render the render_args object will contain an imgui object. Use this object to render imgui into the window.
+                )";
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
     t.tp_init = Window::init;

@@ -26,12 +26,16 @@ void Shader::constructType(PyTypeObject& t)
 {
     t.tp_name = "gpu.Shader";
     t.tp_basicsize = sizeof(Shader);
-    t.tp_doc   = "Class that represents a shader.\n"
-                 "Constructor Arguments:\n"
-                 "file: text file with shader code.\n"
-                 "name (optional): identifier of the shader to use. Default will be the file name.\n"
-                 "main_function (optional): entry point of shader. Default is 'main'.\n"
-                 "NOTE: to create an inline shader, use the function gpu.inline_shader(...)";
+    t.tp_doc   = R"(
+    Class that represents a shader.
+
+    Constructor:
+        file (str): text file with shader code.
+        name (str)(optional): identifier of the shader to use. Default will be the file name.
+        main_function (str)(optional): entry point of shader. Default is 'main'.
+
+    Note: to create an inline shader, use the function gpu.inline_shader(...)
+    )";
     
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;

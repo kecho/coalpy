@@ -28,50 +28,76 @@ PyMethodDef g_defs[] = {
     KW_FN(
         inline_shader,
         inlineShader,
-        "Create an inline shader. Arguments:\n"
-        "name: Name of shader. It is mandatory for inline shaders.\n"
-        "source: Source code of shader. Use HLSL.\n"
-        "mainFunction (optional): entry point of shader. Default is 'main'.\n"
-        "Returns: Shader object created.\n"
+        R"(
+        Create an inline Shader object.
+        
+        Parameters:
+            name (str): Name of shader. It is mandatory for inline shaders.
+            source (str): Source code of shader. Use HLSL.
+            mainFunction (str)(optional): entry point of shader. Default is 'main'.
+    
+        Returns:
+            shader (Shader): object created.
+        )"
     ),
 
     KW_FN(
         get_adapters,
         getAdapters,
-        "Lists all gpu graphics cards found in the system.\n"
-        "Returns: List of device adapters. Each element in the list is a tuple of type (i : index, name : string)\n"
+        R"(
+        Lists all gpu graphics cards found in the system.
+
+        Returns:
+            adapters (Array of tuple): Each element in the list is a tuple of type (i : int, name : Str)
+        )"
     ),
 
     KW_FN(
         get_current_adapter_info,
         getCurrentAdapterInfo,
-        "Gets the currently active GPU adapter, as a tuple of (i : index, name : string).\n"
-        "Returns: Element as tuple of type (i : index, name : string)\n"
+        R"(
+        Gets the currently active GPU adapter, as a tuple of (i : int, name : Str).
+
+        Returns:
+            adapter (tuple): Element as tuple of type (i : int, name : str)
+        )"
     ),
 
     KW_FN(
         set_current_adapter,
         setCurrentAdapter,
-        "Selects an active GPU adapter. For a list of GPU adapters see coalpy.gpu.get_adapters.\n"
-        "Argumnets:\n"
-        "index: the desired device index. See coalpy.gpu.get_adapters for a full list.\n"
+        R"(
+        Selects an active GPU adapter. For a list of GPU adapters see coalpy.gpu.get_adapters.
+
+        Parameters:
+            index (int): the desired device index. See get_adapters for a full list.
+        )"
     ),
 
     KW_FN(
         add_shader_path,
         addShaderPath,
-        ""
+        R"(
+        Adds a path to load shader files / shader includes from.
+        
+        Parameters:
+            path (str or Module):  If str it will be a shader path to be used. If a module, it will find the source folder of the module's __init__.py file, and use this source as the path.
+                                   path priorities are based on the order of how they were added.
+        )"
     ),
 
     KW_FN(
         schedule,
         schedule,
-        "Submits an array of CommandList objects to the GPU to run shader work on.\n"
-        "Arguments:\n"
-        "command_lists: an array of CommandList objects to run in the GPU."
+        R"(
+        Submits an array of CommandList objects to the GPU to run shader work on.
+
+        Parameters:
+            command_lists (array of CommandList): an array of CommandList objects to run in the GPU. CommandList can be resubmitted through more calls of schedule.
+        )"
     ),
 
-    VA_FN(run, run, "Runs window rendering callbacks. This function blocks until all the existing windows are closed."),
+    VA_FN(run, run, "Runs window rendering callbacks. This function blocks until all the existing windows are closed. Window objects must be created and referenced prior. Use the Window object to configure / specify callbacks and this function to run all the event loops for windows."),
 
     FN_END
 };

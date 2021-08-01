@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="coalpy.html"><font color="#ffffff">coalpy</font></a>.gpu</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccoalpy%5Ct2-output%5Cwin64-msvc-release-default%5Ccoalpy%5Cgpu.pyd">c:\dev\coalpy\t2-output\win64-msvc-release-default\coalpy\gpu.pyd</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccoalpy%5Ct2-output%5Cwin64-msvc-debug-default%5Ccoalpy%5Cgpu.pyd">c:\dev\coalpy\t2-output\win64-msvc-debug-default\coalpy\gpu.pyd</a></font></td></tr></table>
     <p><tt>&lt;&lt;&nbsp;coalpy&nbsp;&gt;&gt;&nbsp;Compute&nbsp;Abstraction&nbsp;Layer&nbsp;for&nbsp;Python&nbsp;<br>
 &nbsp;by&nbsp;Kleber&nbsp;A&nbsp;Garcia&nbsp;2021&nbsp;(c).&nbsp;<br>
 coalpy&nbsp;is&nbsp;a&nbsp;compute&nbsp;abstraction&nbsp;layer&nbsp;for&nbsp;python.&nbsp;It&nbsp;brings<br>
@@ -57,13 +57,14 @@ and&nbsp;start&nbsp;using&nbsp;your&nbsp;GPU!</tt></p>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
 <td colspan=2><tt>Class&nbsp;that&nbsp;represents&nbsp;a&nbsp;<a href="#Buffer">Buffer</a>&nbsp;GPU&nbsp;resource.<br>
-Constructor&nbsp;Arguments&nbsp;(all&nbsp;of&nbsp;them&nbsp;optional):<br>
-name:&nbsp;string&nbsp;to&nbsp;identify&nbsp;the&nbsp;resource&nbsp;with.<br>
-mem_flags:&nbsp;see&nbsp;coalpy.gpu.MemFlags.&nbsp;Default&nbsp;is&nbsp;Gpu_Read&nbsp;and&nbsp;Gpu_Write<br>
-type:&nbsp;see&nbsp;coalpy.gpu.BufferType.&nbsp;Default&nbsp;is&nbsp;Standard<br>
-format:&nbsp;format&nbsp;of&nbsp;buffer.&nbsp;See&nbsp;coalpy.gpu.Format&nbsp;for&nbsp;available&nbsp;formats.&nbsp;This&nbsp;argument&nbsp;is&nbsp;ignored&nbsp;if&nbsp;buffer&nbsp;is&nbsp;Structured&nbsp;or&nbsp;Raw.&nbsp;Default&nbsp;format&nbsp;is&nbsp;RGBA_32_SINT<br>
-element_count:&nbsp;number&nbsp;of&nbsp;elements&nbsp;this&nbsp;buffer&nbsp;will&nbsp;have<br>
-stride:&nbsp;stride&nbsp;count&nbsp;in&nbsp;case&nbsp;of&nbsp;Structured&nbsp;type<br>&nbsp;</tt></td></tr>
+&nbsp;<br>
+Constructor:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str):&nbsp;string&nbsp;to&nbsp;identify&nbsp;the&nbsp;resource&nbsp;with.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mem_flags&nbsp;(int):&nbsp;See&nbsp;coalpy.gpu.MemFlags.&nbsp;Default&nbsp;is&nbsp;Gpu_Read&nbsp;and&nbsp;Gpu_Write.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;type&nbsp;(int):&nbsp;See&nbsp;coalpy.gpu.BufferType.&nbsp;Default&nbsp;is&nbsp;Standard.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;format&nbsp;(int):&nbsp;Format&nbsp;of&nbsp;buffer.&nbsp;See&nbsp;coalpy.gpu.Format&nbsp;for&nbsp;available&nbsp;formats.&nbsp;This&nbsp;argument&nbsp;is&nbsp;ignored&nbsp;if&nbsp;buffer&nbsp;is&nbsp;Structured&nbsp;or&nbsp;Raw.&nbsp;Default&nbsp;format&nbsp;is&nbsp;RGBA_32_SINT<br>
+&nbsp;&nbsp;&nbsp;&nbsp;element_count&nbsp;(int):&nbsp;number&nbsp;of&nbsp;elements&nbsp;this&nbsp;buffer&nbsp;will&nbsp;have<br>
+&nbsp;&nbsp;&nbsp;&nbsp;stride&nbsp;(int):&nbsp;stride&nbsp;count&nbsp;in&nbsp;case&nbsp;of&nbsp;Structured&nbsp;type<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="Buffer-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
@@ -86,31 +87,37 @@ and&nbsp;can&nbsp;be&nbsp;reused&nbsp;to&nbsp;avoid&nbsp;cost.<br>&nbsp;</tt></t
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="CommandList-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
 
-<dl><dt><a name="CommandList-copy_resource"><strong>copy_resource</strong></a>(...)</dt><dd><tt>copy_resource&nbsp;method,&nbsp;copies&nbsp;one&nbsp;resource&nbsp;to&nbsp;another.&nbsp;Arguments:<br>
-source:&nbsp;an&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>.&nbsp;This&nbsp;will&nbsp;be&nbsp;the&nbsp;source&nbsp;resource&nbsp;to&nbsp;copy&nbsp;from.<br>
-destination:&nbsp;an&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>.&nbsp;This&nbsp;will&nbsp;be&nbsp;the&nbsp;destination&nbsp;resource&nbsp;to&nbsp;copy&nbsp;to.</tt></dd></dl>
+<dl><dt><a name="CommandList-copy_resource"><strong>copy_resource</strong></a>(...)</dt><dd><tt>copy_resource&nbsp;method,&nbsp;copies&nbsp;one&nbsp;resource&nbsp;to&nbsp;another.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;source&nbsp;(<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>):&nbsp;an&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>.&nbsp;This&nbsp;will&nbsp;be&nbsp;the&nbsp;source&nbsp;resource&nbsp;to&nbsp;copy&nbsp;from.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;destination&nbsp;(<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>):&nbsp;an&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>.&nbsp;This&nbsp;will&nbsp;be&nbsp;the&nbsp;destination&nbsp;resource&nbsp;to&nbsp;copy&nbsp;to.</tt></dd></dl>
 
-<dl><dt><a name="CommandList-dispatch"><strong>dispatch</strong></a>(...)</dt><dd><tt>dispatch&nbsp;method.&nbsp;Arguments:<br>
-x:&nbsp;the&nbsp;number&nbsp;of&nbsp;groups&nbsp;on&nbsp;the&nbsp;x&nbsp;axis.<br>
-y:&nbsp;the&nbsp;number&nbsp;of&nbsp;groups&nbsp;on&nbsp;the&nbsp;y&nbsp;axis.<br>
-z:&nbsp;the&nbsp;number&nbsp;of&nbsp;groups&nbsp;on&nbsp;the&nbsp;z&nbsp;axis.<br>
-shader:&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Shader">Shader</a>.&nbsp;This&nbsp;will&nbsp;be&nbsp;the&nbsp;compute&nbsp;shader&nbsp;launched&nbsp;on&nbsp;the&nbsp;GPU.<br>
-name&nbsp;(optional):&nbsp;Debug&nbsp;name&nbsp;of&nbsp;this&nbsp;dispatch&nbsp;to&nbsp;see&nbsp;in&nbsp;render&nbsp;doc&nbsp;/&nbsp;profiling&nbsp;captures.<br>
-constants&nbsp;(optional):&nbsp;Constant&nbsp;can&nbsp;be,&nbsp;an&nbsp;array&nbsp;of&nbsp;ints&nbsp;and&nbsp;floats,&nbsp;an&nbsp;array.array<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;or&nbsp;any&nbsp;<a href="builtins.html#object">object</a>&nbsp;compatible&nbsp;with&nbsp;the&nbsp;<a href="builtins.html#object">object</a>&nbsp;protocol,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;<a href="#Buffer">Buffer</a>&nbsp;objects.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;a&nbsp;list&nbsp;of&nbsp;<a href="#Buffer">Buffer</a>&nbsp;objects,&nbsp;these&nbsp;can&nbsp;be&nbsp;indexed&nbsp;via&nbsp;register(b#)&nbsp;in&nbsp;the&nbsp;shader&nbsp;used,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Every&nbsp;other&nbsp;type&nbsp;will&nbsp;always&nbsp;be&nbsp;bound&nbsp;to&nbsp;a&nbsp;constant&nbsp;buffer&nbsp;on&nbsp;register(b0).<br>
-input_tables&nbsp;(optional):&nbsp;a&nbsp;single&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;objects.&nbsp;If&nbsp;a&nbsp;single<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="builtins.html#object">object</a>&nbsp;is&nbsp;used,&nbsp;the&nbsp;table&nbsp;will&nbsp;be&nbsp;automatically&nbsp;bound&nbsp;to&nbsp;register&nbsp;space&nbsp;0,&nbsp;and&nbsp;each&nbsp;resource&nbsp;accessed&nbsp;either<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;by&nbsp;bindless&nbsp;dynamic&nbsp;indexing,&nbsp;or&nbsp;a&nbsp;hard&nbsp;register(t#).&nbsp;If&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;is&nbsp;passed,&nbsp;each&nbsp;resource<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;table&nbsp;will&nbsp;be&nbsp;bound&nbsp;using&nbsp;a&nbsp;register&nbsp;space&nbsp;index&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;table&nbsp;index&nbsp;in&nbsp;the&nbsp;array,&nbsp;and&nbsp;the&nbsp;rules<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to&nbsp;reference&nbsp;each&nbsp;resource&nbsp;within&nbsp;the&nbsp;table&nbsp;stay&nbsp;the&nbsp;same.<br>
-output_tables&nbsp;(optional):&nbsp;a&nbsp;single&nbsp;<a href="#OutResourceTable">OutResourceTable</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#OutResourceTable">OutResourceTable</a>&nbsp;objects.&nbsp;Same&nbsp;rules&nbsp;as&nbsp;input_tables&nbsp;apply,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;but&nbsp;we&nbsp;use&nbsp;registers&nbsp;u#&nbsp;to&nbsp;address&nbsp;the&nbsp;UAVs</tt></dd></dl>
+<dl><dt><a name="CommandList-dispatch"><strong>dispatch</strong></a>(...)</dt><dd><tt>Dispatch&nbsp;method,&nbsp;which&nbsp;executes&nbsp;a&nbsp;compute&nbsp;shader&nbsp;with&nbsp;resources&nbsp;bound.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;(int):&nbsp;the&nbsp;number&nbsp;of&nbsp;groups&nbsp;on&nbsp;the&nbsp;x&nbsp;axis.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;y&nbsp;(int):&nbsp;the&nbsp;number&nbsp;of&nbsp;groups&nbsp;on&nbsp;the&nbsp;y&nbsp;axis.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;z&nbsp;(int):&nbsp;&nbsp;the&nbsp;number&nbsp;of&nbsp;groups&nbsp;on&nbsp;the&nbsp;z&nbsp;axis.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;shader&nbsp;(<a href="#Shader">Shader</a>):&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Shader">Shader</a>.&nbsp;This&nbsp;will&nbsp;be&nbsp;the&nbsp;compute&nbsp;shader&nbsp;launched&nbsp;on&nbsp;the&nbsp;GPU.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str)(optional):&nbsp;Debug&nbsp;name&nbsp;of&nbsp;this&nbsp;dispatch&nbsp;to&nbsp;see&nbsp;in&nbsp;render&nbsp;doc&nbsp;/&nbsp;profiling&nbsp;captures.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;constants&nbsp;(optional):&nbsp;Constant&nbsp;can&nbsp;be,&nbsp;an&nbsp;array&nbsp;of&nbsp;ints&nbsp;and&nbsp;floats,&nbsp;an&nbsp;array.array<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;or&nbsp;any&nbsp;<a href="builtins.html#object">object</a>&nbsp;compatible&nbsp;with&nbsp;the&nbsp;<a href="builtins.html#object">object</a>&nbsp;protocol,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;<a href="#Buffer">Buffer</a>&nbsp;objects.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;a&nbsp;list&nbsp;of&nbsp;<a href="#Buffer">Buffer</a>&nbsp;objects,&nbsp;these&nbsp;can&nbsp;be&nbsp;indexed&nbsp;via&nbsp;register(b#)&nbsp;in&nbsp;the&nbsp;shader&nbsp;used,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Every&nbsp;other&nbsp;type&nbsp;will&nbsp;always&nbsp;be&nbsp;bound&nbsp;to&nbsp;a&nbsp;constant&nbsp;buffer&nbsp;on&nbsp;register(b0).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;input_tables&nbsp;(optional):&nbsp;a&nbsp;single&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;objects.&nbsp;If&nbsp;a&nbsp;single<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="builtins.html#object">object</a>&nbsp;is&nbsp;used,&nbsp;the&nbsp;table&nbsp;will&nbsp;be&nbsp;automatically&nbsp;bound&nbsp;to&nbsp;register&nbsp;space&nbsp;0,&nbsp;and&nbsp;each&nbsp;resource&nbsp;accessed&nbsp;either<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;by&nbsp;bindless&nbsp;dynamic&nbsp;indexing,&nbsp;or&nbsp;a&nbsp;hard&nbsp;register(t#).&nbsp;If&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;is&nbsp;passed,&nbsp;each&nbsp;resource<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;table&nbsp;will&nbsp;be&nbsp;bound&nbsp;using&nbsp;a&nbsp;register&nbsp;space&nbsp;index&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;table&nbsp;index&nbsp;in&nbsp;the&nbsp;array,&nbsp;and&nbsp;the&nbsp;rules<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to&nbsp;reference&nbsp;each&nbsp;resource&nbsp;within&nbsp;the&nbsp;table&nbsp;stay&nbsp;the&nbsp;same.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;output_tables&nbsp;(optional):&nbsp;a&nbsp;single&nbsp;<a href="#OutResourceTable">OutResourceTable</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#OutResourceTable">OutResourceTable</a>&nbsp;objects.&nbsp;Same&nbsp;rules&nbsp;as&nbsp;input_tables&nbsp;apply,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;but&nbsp;we&nbsp;use&nbsp;registers&nbsp;u#&nbsp;to&nbsp;address&nbsp;the&nbsp;UAVs</tt></dd></dl>
 
-<dl><dt><a name="CommandList-upload_resource"><strong>upload_resource</strong></a>(...)</dt><dd><tt>upload_resource&nbsp;method.&nbsp;Uploads&nbsp;an&nbsp;python&nbsp;array&nbsp;[],&nbsp;an&nbsp;array.array&nbsp;or&nbsp;any&nbsp;buffer&nbsp;protocol&nbsp;compatible&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;a&nbsp;gpu&nbsp;resource.&nbsp;Arguments:<br>
-source:&nbsp;an&nbsp;array&nbsp;of&nbsp;ints&nbsp;and&nbsp;floats,&nbsp;or&nbsp;an&nbsp;array.array&nbsp;<a href="builtins.html#object">object</a>&nbsp;or&nbsp;any&nbsp;<a href="builtins.html#object">object</a>&nbsp;compatible&nbsp;with&nbsp;the&nbsp;buffer&nbsp;protocol.<br>
-destination:&nbsp;a&nbsp;destination&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>.</tt></dd></dl>
+<dl><dt><a name="CommandList-upload_resource"><strong>upload_resource</strong></a>(...)</dt><dd><tt>upload_resource&nbsp;method.&nbsp;Uploads&nbsp;an&nbsp;python&nbsp;array&nbsp;[],&nbsp;an&nbsp;array.array&nbsp;or&nbsp;any&nbsp;buffer&nbsp;protocol&nbsp;compatible&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;a&nbsp;gpu&nbsp;resource.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;source:&nbsp;an&nbsp;array&nbsp;of&nbsp;ints&nbsp;and&nbsp;floats,&nbsp;or&nbsp;an&nbsp;array.array&nbsp;<a href="builtins.html#object">object</a>&nbsp;or&nbsp;any&nbsp;<a href="builtins.html#object">object</a>&nbsp;compatible&nbsp;with&nbsp;the&nbsp;buffer&nbsp;protocol.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;destination&nbsp;(<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>):&nbsp;a&nbsp;destination&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>.</tt></dd></dl>
 
 <hr>
 Static methods defined here:<br>
@@ -359,7 +366,13 @@ Static methods defined here:<br>
 <td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="InResourceTable">class <strong>InResourceTable</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
-<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Input&nbsp;resource&nbsp;table.&nbsp;Use&nbsp;this&nbsp;to&nbsp;specify&nbsp;the&nbsp;inputs&nbsp;of&nbsp;a&nbsp;dispatch&nbsp;call&nbsp;in&nbsp;<a href="#CommandList">CommandList</a>.<br>
+&nbsp;<br>
+Constructor:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str):&nbsp;name&nbsp;/&nbsp;identifier&nbsp;of&nbsp;this&nbsp;resource&nbsp;table.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;resource_list:&nbsp;array&nbsp;of&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>&nbsp;to&nbsp;be&nbsp;specified.&nbsp;Each&nbsp;position&nbsp;in&nbsp;the&nbsp;table&nbsp;correspods&nbsp;to&nbsp;a&nbsp;s#&nbsp;register&nbsp;in&nbsp;hlsl.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="InResourceTable-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
 
@@ -373,7 +386,13 @@ Static methods defined here:<br>
 <td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="OutResourceTable">class <strong>OutResourceTable</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
-<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Output&nbsp;resource&nbsp;table.&nbsp;Use&nbsp;this&nbsp;to&nbsp;specify&nbsp;a&nbsp;table&nbsp;of&nbsp;unordered&nbsp;access&nbsp;views&nbsp;(outputs)&nbsp;of&nbsp;a&nbsp;dispatch&nbsp;call&nbsp;in&nbsp;<a href="#CommandList">CommandList</a>.<br>
+&nbsp;<br>
+Constructor:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str):&nbsp;name&nbsp;/&nbsp;identifier&nbsp;of&nbsp;this&nbsp;resource&nbsp;table.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;resource_list:&nbsp;array&nbsp;of&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>&nbsp;to&nbsp;be&nbsp;specified.&nbsp;Each&nbsp;position&nbsp;in&nbsp;the&nbsp;table&nbsp;correspods&nbsp;to&nbsp;a&nbsp;u#&nbsp;register&nbsp;in&nbsp;hlsl.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="OutResourceTable-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
 
@@ -417,11 +436,13 @@ Data descriptors defined here:<br>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
 <td colspan=2><tt>Class&nbsp;that&nbsp;represents&nbsp;a&nbsp;shader.<br>
-Constructor&nbsp;Arguments:<br>
-file:&nbsp;text&nbsp;file&nbsp;with&nbsp;shader&nbsp;code.<br>
-name&nbsp;(optional):&nbsp;identifier&nbsp;of&nbsp;the&nbsp;shader&nbsp;to&nbsp;use.&nbsp;Default&nbsp;will&nbsp;be&nbsp;the&nbsp;file&nbsp;name.<br>
-main_function&nbsp;(optional):&nbsp;entry&nbsp;point&nbsp;of&nbsp;shader.&nbsp;Default&nbsp;is&nbsp;'main'.<br>
-NOTE:&nbsp;to&nbsp;create&nbsp;an&nbsp;inline&nbsp;shader,&nbsp;use&nbsp;the&nbsp;function&nbsp;gpu.<a href="#-inline_shader">inline_shader</a>(...)<br>&nbsp;</tt></td></tr>
+&nbsp;<br>
+Constructor:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;file&nbsp;(str):&nbsp;text&nbsp;file&nbsp;with&nbsp;shader&nbsp;code.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str)(optional):&nbsp;identifier&nbsp;of&nbsp;the&nbsp;shader&nbsp;to&nbsp;use.&nbsp;Default&nbsp;will&nbsp;be&nbsp;the&nbsp;file&nbsp;name.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;main_function&nbsp;(str)(optional):&nbsp;entry&nbsp;point&nbsp;of&nbsp;shader.&nbsp;Default&nbsp;is&nbsp;'main'.<br>
+&nbsp;<br>
+Note:&nbsp;to&nbsp;create&nbsp;an&nbsp;inline&nbsp;shader,&nbsp;use&nbsp;the&nbsp;function&nbsp;gpu.<a href="#-inline_shader">inline_shader</a>(...)<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="Shader-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
@@ -440,14 +461,15 @@ Static methods defined here:<br>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
 <td colspan=2><tt>Class&nbsp;that&nbsp;represents&nbsp;a&nbsp;<a href="#Texture">Texture</a>&nbsp;GPU&nbsp;resource.<br>
-Constructor&nbsp;Arguments&nbsp;(all&nbsp;of&nbsp;them&nbsp;optional):<br>
-name:&nbsp;string&nbsp;to&nbsp;identify&nbsp;the&nbsp;resource&nbsp;with.<br>
-mem_flags:&nbsp;see&nbsp;coalpy.gpu.MemFlags.&nbsp;Default&nbsp;is&nbsp;Gpu_Read&nbsp;and&nbsp;Gpu_Write<br>
-type:&nbsp;dimensionality&nbsp;of&nbsp;texture,&nbsp;see&nbsp;coalpy.gpu.TextureType.&nbsp;Default&nbsp;is&nbsp;k2d<br>
-width:&nbsp;the&nbsp;width&nbsp;of&nbsp;the&nbsp;texture&nbsp;in&nbsp;texels.&nbsp;Default&nbsp;is&nbsp;1<br>
-height:&nbsp;the&nbsp;height&nbsp;of&nbsp;the&nbsp;texture&nbsp;in&nbsp;texels.&nbsp;Default&nbsp;is&nbsp;1<br>
-depth:&nbsp;the&nbsp;depth&nbsp;of&nbsp;the&nbsp;texture&nbsp;if&nbsp;k2dArray&nbsp;or&nbsp;k3d.&nbsp;Default&nbsp;is&nbsp;1.<br>
-mip_levels:&nbsp;number&nbsp;of&nbsp;mips&nbsp;supported&nbsp;on&nbsp;this&nbsp;texture.<br>&nbsp;</tt></td></tr>
+&nbsp;<br>
+Constructor:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str):&nbsp;string&nbsp;to&nbsp;identify&nbsp;the&nbsp;resource&nbsp;with.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mem_flags&nbsp;(int):&nbsp;see&nbsp;coalpy.gpu.MemFlags.&nbsp;Default&nbsp;is&nbsp;Gpu_Read&nbsp;and&nbsp;Gpu_Write<br>
+&nbsp;&nbsp;&nbsp;&nbsp;type&nbsp;(int):&nbsp;dimensionality&nbsp;of&nbsp;texture,&nbsp;see&nbsp;coalpy.gpu.TextureType.&nbsp;Default&nbsp;is&nbsp;k2d<br>
+&nbsp;&nbsp;&nbsp;&nbsp;width&nbsp;(int):&nbsp;the&nbsp;width&nbsp;of&nbsp;the&nbsp;texture&nbsp;in&nbsp;texels.&nbsp;Default&nbsp;is&nbsp;1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;height&nbsp;(int):&nbsp;the&nbsp;height&nbsp;of&nbsp;the&nbsp;texture&nbsp;in&nbsp;texels.&nbsp;Default&nbsp;is&nbsp;1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;depth&nbsp;(int):&nbsp;the&nbsp;depth&nbsp;of&nbsp;the&nbsp;texture&nbsp;if&nbsp;k2dArray&nbsp;or&nbsp;k3d.&nbsp;Default&nbsp;is&nbsp;1.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mip_levels&nbsp;(int):&nbsp;number&nbsp;of&nbsp;mips&nbsp;supported&nbsp;on&nbsp;this&nbsp;texture.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="Texture-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
@@ -464,12 +486,13 @@ Static methods defined here:<br>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
 <td colspan=2><tt>Class&nbsp;that&nbsp;represnts&nbsp;a&nbsp;window.<br>
-Constructor&nbsp;Arguments:<br>
-title&nbsp;&nbsp;:&nbsp;String&nbsp;title&nbsp;for&nbsp;the&nbsp;window.<br>
-width&nbsp;&nbsp;:&nbsp;initial&nbsp;width&nbsp;of&nbsp;window&nbsp;and&nbsp;swap&nbsp;chain&nbsp;texture.<br>
-height&nbsp;:&nbsp;initial&nbsp;height&nbsp;of&nbsp;window&nbsp;and&nbsp;swap&nbsp;chain&nbsp;texture.<br>
-on_render&nbsp;:&nbsp;Rendering&nbsp;function.&nbsp;The&nbsp;function&nbsp;has&nbsp;1&nbsp;argument&nbsp;of&nbsp;type&nbsp;<a href="#RenderArgs">RenderArgs</a>&nbsp;and&nbsp;no&nbsp;return.&nbsp;See&nbsp;<a href="#RenderArgs">RenderArgs</a>&nbsp;for&nbsp;more&nbsp;info.<br>
-use_imgui:&nbsp;(True&nbsp;by&nbsp;default),&nbsp;set&nbsp;to&nbsp;true,&nbsp;and&nbsp;during&nbsp;onRender&nbsp;the&nbsp;renderArgs&nbsp;<a href="builtins.html#object">object</a>&nbsp;will&nbsp;contain&nbsp;an&nbsp;imgui&nbsp;<a href="builtins.html#object">object</a>.&nbsp;Use&nbsp;this&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;render&nbsp;imgui&nbsp;into&nbsp;the&nbsp;window.<br>&nbsp;</tt></td></tr>
+&nbsp;<br>
+Constructor:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;title&nbsp;(str):&nbsp;String&nbsp;title&nbsp;for&nbsp;the&nbsp;window.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;width&nbsp;(int)(optional):&nbsp;initial&nbsp;width&nbsp;of&nbsp;window&nbsp;and&nbsp;swap&nbsp;chain&nbsp;texture.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;height&nbsp;(int)(optional):&nbsp;initial&nbsp;height&nbsp;of&nbsp;window&nbsp;and&nbsp;swap&nbsp;chain&nbsp;texture.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;on_render&nbsp;(function):&nbsp;Rendering&nbsp;function.&nbsp;The&nbsp;function&nbsp;has&nbsp;1&nbsp;argument&nbsp;of&nbsp;type&nbsp;<a href="#RenderArgs">RenderArgs</a>&nbsp;and&nbsp;no&nbsp;return.&nbsp;See&nbsp;<a href="#RenderArgs">RenderArgs</a>&nbsp;for&nbsp;more&nbsp;info.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;use_imgui&nbsp;(Boolean):&nbsp;(True&nbsp;by&nbsp;default),&nbsp;set&nbsp;to&nbsp;True,&nbsp;and&nbsp;during&nbsp;on_render&nbsp;the&nbsp;render_args&nbsp;<a href="builtins.html#object">object</a>&nbsp;will&nbsp;contain&nbsp;an&nbsp;imgui&nbsp;<a href="builtins.html#object">object</a>.&nbsp;Use&nbsp;this&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;render&nbsp;imgui&nbsp;into&nbsp;the&nbsp;window.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="Window-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
@@ -481,8 +504,10 @@ Static methods defined here:<br>
 <hr>
 Data descriptors defined here:<br>
 <dl><dt><strong>display_texture</strong></dt>
+<dd><tt>Display&nbsp;Texture.&nbsp;Use&nbsp;this&nbsp;as&nbsp;the&nbsp;output&nbsp;texture&nbsp;in&nbsp;CommmandList&nbsp;dispatch&nbsp;command&nbsp;to&nbsp;write&nbsp;directly&nbsp;to&nbsp;the&nbsp;window.</tt></dd>
 </dl>
 <dl><dt><strong>user_data</strong></dt>
+<dd><tt>Set&nbsp;this&nbsp;user&nbsp;data&nbsp;so&nbsp;its&nbsp;accessible&nbsp;during&nbsp;on_render&nbsp;callback.&nbsp;You&nbsp;can&nbsp;put&nbsp;here&nbsp;the&nbsp;custom&nbsp;state&nbsp;of&nbsp;your&nbsp;window.</tt></dd>
 </dl>
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -552,23 +577,37 @@ Data descriptors inherited from <a href="builtins.html#BaseException">builtins.B
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-add_shader_path"><strong>add_shader_path</strong></a>(...)</dt></dl>
+<td width="100%"><dl><dt><a name="-add_shader_path"><strong>add_shader_path</strong></a>(...)</dt><dd><tt>Adds&nbsp;a&nbsp;path&nbsp;to&nbsp;load&nbsp;shader&nbsp;files&nbsp;/&nbsp;shader&nbsp;includes&nbsp;from.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;path&nbsp;(str&nbsp;or&nbsp;Module):&nbsp;&nbsp;If&nbsp;str&nbsp;it&nbsp;will&nbsp;be&nbsp;a&nbsp;shader&nbsp;path&nbsp;to&nbsp;be&nbsp;used.&nbsp;If&nbsp;a&nbsp;module,&nbsp;it&nbsp;will&nbsp;find&nbsp;the&nbsp;source&nbsp;folder&nbsp;of&nbsp;the&nbsp;module's&nbsp;__init__.py&nbsp;file,&nbsp;and&nbsp;use&nbsp;this&nbsp;source&nbsp;as&nbsp;the&nbsp;path.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;path&nbsp;priorities&nbsp;are&nbsp;based&nbsp;on&nbsp;the&nbsp;order&nbsp;of&nbsp;how&nbsp;they&nbsp;were&nbsp;added.</tt></dd></dl>
  <dl><dt><a name="-get_adapters"><strong>get_adapters</strong></a>(...)</dt><dd><tt>Lists&nbsp;all&nbsp;gpu&nbsp;graphics&nbsp;cards&nbsp;found&nbsp;in&nbsp;the&nbsp;system.<br>
-Returns:&nbsp;List&nbsp;of&nbsp;device&nbsp;adapters.&nbsp;Each&nbsp;element&nbsp;in&nbsp;the&nbsp;list&nbsp;is&nbsp;a&nbsp;tuple&nbsp;of&nbsp;type&nbsp;(i&nbsp;:&nbsp;index,&nbsp;name&nbsp;:&nbsp;string)</tt></dd></dl>
- <dl><dt><a name="-get_current_adapter_info"><strong>get_current_adapter_info</strong></a>(...)</dt><dd><tt>Gets&nbsp;the&nbsp;currently&nbsp;active&nbsp;GPU&nbsp;adapter,&nbsp;as&nbsp;a&nbsp;tuple&nbsp;of&nbsp;(i&nbsp;:&nbsp;index,&nbsp;name&nbsp;:&nbsp;string).<br>
-Returns:&nbsp;Element&nbsp;as&nbsp;tuple&nbsp;of&nbsp;type&nbsp;(i&nbsp;:&nbsp;index,&nbsp;name&nbsp;:&nbsp;string)</tt></dd></dl>
- <dl><dt><a name="-inline_shader"><strong>inline_shader</strong></a>(...)</dt><dd><tt>Create&nbsp;an&nbsp;inline&nbsp;shader.&nbsp;Arguments:<br>
-name:&nbsp;Name&nbsp;of&nbsp;shader.&nbsp;It&nbsp;is&nbsp;mandatory&nbsp;for&nbsp;inline&nbsp;shaders.<br>
-source:&nbsp;Source&nbsp;code&nbsp;of&nbsp;shader.&nbsp;Use&nbsp;HLSL.<br>
-mainFunction&nbsp;(optional):&nbsp;entry&nbsp;point&nbsp;of&nbsp;shader.&nbsp;Default&nbsp;is&nbsp;'main'.<br>
-Returns:&nbsp;<a href="#Shader">Shader</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;created.</tt></dd></dl>
- <dl><dt><a name="-run"><strong>run</strong></a>(...)</dt><dd><tt>Runs&nbsp;window&nbsp;rendering&nbsp;callbacks.&nbsp;This&nbsp;function&nbsp;blocks&nbsp;until&nbsp;all&nbsp;the&nbsp;existing&nbsp;windows&nbsp;are&nbsp;closed.</tt></dd></dl>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;adapters&nbsp;(Array&nbsp;of&nbsp;tuple):&nbsp;Each&nbsp;element&nbsp;in&nbsp;the&nbsp;list&nbsp;is&nbsp;a&nbsp;tuple&nbsp;of&nbsp;type&nbsp;(i&nbsp;:&nbsp;int,&nbsp;name&nbsp;:&nbsp;Str)</tt></dd></dl>
+ <dl><dt><a name="-get_current_adapter_info"><strong>get_current_adapter_info</strong></a>(...)</dt><dd><tt>Gets&nbsp;the&nbsp;currently&nbsp;active&nbsp;GPU&nbsp;adapter,&nbsp;as&nbsp;a&nbsp;tuple&nbsp;of&nbsp;(i&nbsp;:&nbsp;int,&nbsp;name&nbsp;:&nbsp;Str).<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;adapter&nbsp;(tuple):&nbsp;Element&nbsp;as&nbsp;tuple&nbsp;of&nbsp;type&nbsp;(i&nbsp;:&nbsp;int,&nbsp;name&nbsp;:&nbsp;str)</tt></dd></dl>
+ <dl><dt><a name="-inline_shader"><strong>inline_shader</strong></a>(...)</dt><dd><tt>Create&nbsp;an&nbsp;inline&nbsp;<a href="#Shader">Shader</a>&nbsp;<a href="builtins.html#object">object</a>.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str):&nbsp;Name&nbsp;of&nbsp;shader.&nbsp;It&nbsp;is&nbsp;mandatory&nbsp;for&nbsp;inline&nbsp;shaders.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;source&nbsp;(str):&nbsp;Source&nbsp;code&nbsp;of&nbsp;shader.&nbsp;Use&nbsp;HLSL.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mainFunction&nbsp;(str)(optional):&nbsp;entry&nbsp;point&nbsp;of&nbsp;shader.&nbsp;Default&nbsp;is&nbsp;'main'.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;shader&nbsp;(<a href="#Shader">Shader</a>):&nbsp;<a href="builtins.html#object">object</a>&nbsp;created.</tt></dd></dl>
+ <dl><dt><a name="-run"><strong>run</strong></a>(...)</dt><dd><tt>Runs&nbsp;window&nbsp;rendering&nbsp;callbacks.&nbsp;This&nbsp;function&nbsp;blocks&nbsp;until&nbsp;all&nbsp;the&nbsp;existing&nbsp;windows&nbsp;are&nbsp;closed.&nbsp;<a href="#Window">Window</a>&nbsp;objects&nbsp;must&nbsp;be&nbsp;created&nbsp;and&nbsp;referenced&nbsp;prior.&nbsp;Use&nbsp;the&nbsp;<a href="#Window">Window</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;configure&nbsp;/&nbsp;specify&nbsp;callbacks&nbsp;and&nbsp;this&nbsp;function&nbsp;to&nbsp;run&nbsp;all&nbsp;the&nbsp;event&nbsp;loops&nbsp;for&nbsp;windows.</tt></dd></dl>
  <dl><dt><a name="-schedule"><strong>schedule</strong></a>(...)</dt><dd><tt>Submits&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>&nbsp;objects&nbsp;to&nbsp;the&nbsp;GPU&nbsp;to&nbsp;run&nbsp;shader&nbsp;work&nbsp;on.<br>
-Arguments:<br>
-command_lists:&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>&nbsp;objects&nbsp;to&nbsp;run&nbsp;in&nbsp;the&nbsp;GPU.</tt></dd></dl>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;command_lists&nbsp;(array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>):&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>&nbsp;objects&nbsp;to&nbsp;run&nbsp;in&nbsp;the&nbsp;GPU.&nbsp;<a href="#CommandList">CommandList</a>&nbsp;can&nbsp;be&nbsp;resubmitted&nbsp;through&nbsp;more&nbsp;calls&nbsp;of&nbsp;schedule.</tt></dd></dl>
  <dl><dt><a name="-set_current_adapter"><strong>set_current_adapter</strong></a>(...)</dt><dd><tt>Selects&nbsp;an&nbsp;active&nbsp;GPU&nbsp;adapter.&nbsp;For&nbsp;a&nbsp;list&nbsp;of&nbsp;GPU&nbsp;adapters&nbsp;see&nbsp;coalpy.gpu.get_adapters.<br>
-Argumnets:<br>
-index:&nbsp;the&nbsp;desired&nbsp;device&nbsp;index.&nbsp;See&nbsp;coalpy.gpu.get_adapters&nbsp;for&nbsp;a&nbsp;full&nbsp;list.</tt></dd></dl>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;index&nbsp;(int):&nbsp;the&nbsp;desired&nbsp;device&nbsp;index.&nbsp;See&nbsp;get_adapters&nbsp;for&nbsp;a&nbsp;full&nbsp;list.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">
