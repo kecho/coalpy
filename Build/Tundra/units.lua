@@ -2,6 +2,7 @@ local SourceDir = "Source";
 local ScriptsDir = "Source/scripts/coalpy";
 local ImguiDir = "Source/imgui";
 local LibJpgDir = "Source/libjpeg";
+local LibPngDir = "Source/libpng";
 local DxcDir = "External/dxc_2021_04-20/"
 local DxcIncludes = DxcDir
 local DxcBinaryCompiler = DxcDir.."dxc/bin/x64/dxcompiler.dll"
@@ -12,7 +13,8 @@ local PythonDir = "External/Python39-win64/"
 local LibIncludes = {
     _G.GetPythonPath() .. "/include",
     ImguiDir,
-    LibJpgDir
+    LibJpgDir,
+    LibPngDir
 }
 
 local Libraries = {
@@ -24,6 +26,7 @@ local Libraries = {
         PythonDir.."python39.lib",
         Config = { "win64-msvc-release", "win64-msvc-production"  }
     },
+    "External/Zlib/lib/zlibstatic.lib",
     "User32.lib"
 }
 
@@ -66,6 +69,23 @@ local libjpegLib = StaticLibrary {
 
 Default (libjpegLib)
 
+-- Build libpng
+local libpngLib = StaticLibrary {
+    Name = "libpng",
+    Pass = "BuildCode",
+    Includes = { LibPngDir, "External/Zlib/include" },
+    Sources = {
+        Glob {
+            Dir = LibPngDir,
+            Extensions = { ".c", ".h" },
+            Recursive =  true
+        }
+    },
+    IdeGenerationHints = _G.GenRootIdeHints("libpng");
+}
+
+Default (libpngLib)
+
 -- C++ module table-> module name with its dependencies
 local CoalPyModuleTable = {
     core    = {},
@@ -81,7 +101,7 @@ local CoalPyModuleIncludes = {
 }
 
 local CoalPyModuleDeps = {
-    render = { imguiLib, libjpegLib }
+    render = { imguiLib, libjpegLib, libpngLib }
 }
 
 -- Module list for the core coalpy module
