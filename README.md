@@ -9,7 +9,7 @@ Coalpy is a free low friction python 3.9 native module for windows. Coalpy's mai
 ## Documentation
 
 Get started with API documentation here:
-[coalpy.gpu documentation](https://kecho.github.io/coalpy/Docs/coalpy.gpu.html)
+[coalpy.gpu documentation](https://kecho.github.io/coalpy/coalpy.gpu.html)
 
 ## About Contributing
 
