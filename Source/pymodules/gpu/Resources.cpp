@@ -164,7 +164,7 @@ void InResourceTable::constructType(PyTypeObject& t)
 
     Constructor:
         name (str): name / identifier of this resource table.
-        resource_list: array of Texture or Buffer to be specified. Each position in the table correspods to a s# register in hlsl.
+        resource_list: array of Texture or Buffer to be specified. Each position in the table correspods to a t# register in hlsl.
     )";
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
