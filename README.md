@@ -57,6 +57,8 @@ Run the tests by running:
 t2-output\win64-msvc-debug-default\coalpy_tests.exe
 ```
 
+for information about the test suites commands, such as filters / repeating tests etc use the -h flag.
+
 ## Creating python package
 
 cd into the t2-output\win64-msvc-[debug|release]-default director. Inside there will be a coalpy_pip directory.
