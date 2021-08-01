@@ -15,15 +15,16 @@ Get started with API documentation here:
 
 Use this guide if you plan to build coalpy python module from source.
 
-Building requirements:
+### Building requirements
 * Install Python 3.9x
 * Set the environment variable PYTHON39_ROOT to the root installation of your python library.
 * Ensure you have a version of visual studio with support for VC 
 * Ensure you are on the latest and greatest version of windows 10
 
-Directories:
+### Directories
 * Source - everything inside here gets compiled by the build system.
     * modules - internal c++ implementation of coalpy.
+    * pymodules/gpu - the python glue code, which translates the c++ coalpy module into public functions and types ready to be used in python.
     * scripts - python scripts that get packaged with the coalpy module.
     * [libpng|libjpeg|zlib|imgui] - external libraries, which are compiled in source.
     * tests - internal graphics and system test suites for coalpy, does not test the python layer, only the internal layer
@@ -31,7 +32,6 @@ Directories:
 * External - external precompiled libraries used.
 * Tools - executables / tools used to assist in building. In this case the tundra build system is contained here.
 * docs - Documentation. This documentation utilizes github pages, which can be seen [here](https://kecho.github.io/coalpy/coalpy.gpu.html)
-
 
 ## Compiling in Windows
 
@@ -67,6 +67,17 @@ python -m build
 ```
 
 Ensure you have the latest version of the build module. To configure metadata of the pip package modify things inside the Source/pipfiles folder.
+
+## Updating documentation
+
+All documentation of the coalpy python api is self contained inside the Source/pymodules/gpu folder. Inside we fill doc strings inside types and functions exported to python.
+To generate the documentation, cd into the t2-output/win64-msvc-[release|debug|production]-default folder, and run the commands:
+```
+python -m pydoc coalpy
+python -m pydoc coalpy.gpu
+```
+
+This will generate coalpy.html and coalpy.gpu.html which can be copied into the docs directory.
 
 ## Credits
 
