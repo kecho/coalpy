@@ -4,6 +4,7 @@
 #include "Dx12ResourceCollection.h"
 #include "Dx12ShaderDb.h"
 #include "Dx12Utils.h"
+#include "Dx12Formats.h"
 
 namespace coalpy
 {
@@ -240,7 +241,30 @@ void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCm
     }
     else
     {
-        CPY_ASSERT_MSG(false, "upload command not ready for non buffer resources.");
+        D3D12_TEXTURE_COPY_LOCATION destTexLoc;
+        destTexLoc.pResource = &destinationResource.d3dResource();
+        destTexLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        destTexLoc.SubresourceIndex = 0;
+
+        Format format = ((Dx12Texture&)destinationResource).texDesc().format;
+        auto& destDesc = destinationResource.d3dResDesc();
+        D3D12_TEXTURE_COPY_LOCATION srcTexLoc;
+        srcTexLoc.pResource = m_uploadMemBlock.buffer;
+        srcTexLoc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+        srcTexLoc.PlacedFootprint.Offset = m_uploadMemBlock.offset + cmdInfo.uploadBufferOffset;
+        srcTexLoc.PlacedFootprint.Footprint.Format = destDesc.Format;
+        srcTexLoc.PlacedFootprint.Footprint.Width = destDesc.Width;
+        srcTexLoc.PlacedFootprint.Footprint.Height = destDesc.Height;
+        srcTexLoc.PlacedFootprint.Footprint.Depth = destDesc.DepthOrArraySize;
+        srcTexLoc.PlacedFootprint.Footprint.RowPitch = alignByte(
+            (UINT)(destDesc.Width * getDxFormatStride(format)),
+            (UINT)D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+
+        outList.CopyTextureRegion(
+            &destTexLoc,
+            0u, 0u, 0u,
+            &srcTexLoc,
+            nullptr);
     }
 
 }

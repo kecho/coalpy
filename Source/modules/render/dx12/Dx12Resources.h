@@ -98,6 +98,7 @@ public:
     D3D12_RESOURCE_STATES defaultD3d12State() const { return m_defaultState; }
     ResourceGpuState defaultGpuState() const { return getGpuState(defaultD3d12State()); }
     void acquireD3D12Resource(ID3D12Resource* resource);
+    const D3D12_RESOURCE_DESC& d3dResDesc() const { return m_data.resDesc; }
     ID3D12Resource& d3dResource() const { return *m_data.resource; }
     ID3D12Resource& d3dResource() { return *m_data.resource; }
     virtual Dx12ResourceInitResult init();

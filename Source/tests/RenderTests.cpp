@@ -857,6 +857,42 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testUpload2dTexture(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+
+        const int texDimX = 64;
+        const int texDimY = 4;
+        TextureDesc texDesc;
+        texDesc.format = Format::R32_SINT;
+        texDesc.width = texDimX;
+        texDesc.height = texDimY;
+
+        Texture destTex = device.createTexture(texDesc);
+
+        int data[texDimX * texDimY];
+        for (int i = 0; i < texDimX * texDimY; ++i)
+            data[i] = i - 10;
+
+        CommandList cmdList;
+        
+        {
+            UploadCommand cmd;
+            cmd.setData((const char*)data, sizeof(int)*texDimX*texDimY, destTex);
+            cmdList.writeCommand(cmd);
+        }
+
+        cmdList.finalize();
+        CommandList* lists[] = { &cmdList };
+        auto result = device.schedule(lists, 1);
+        CPY_ASSERT(result.success());
+
+        device.release(destTex);
+        renderTestCtx.end();
+    }
+
     //registration of tests
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
@@ -871,6 +907,7 @@ namespace coalpy
             { "cachedConstantBuffer",  testCachedConstantBuffer },
             { "inlineConstantBuffer",  testInlineConstantBuffer },
             { "uavBarrier",  testUavBarrier },
+            { "upload2dTexture",  testUpload2dTexture },
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
