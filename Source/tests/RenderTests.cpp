@@ -6,6 +6,10 @@
 #include <coalpy.render/IDevice.h>
 #include <coalpy.render/CommandList.h>
 #include <coalpy.core/Stopwatch.h>
+#include <coalpy.render/../../Dx12/Dx12BufferPool.h>
+#define INCLUDED_T_DEVICE_H 
+#include <coalpy.render/../../TDevice.h>
+#include <coalpy.render/../../Dx12/Dx12Device.h>
 #include <iostream>
 
 using namespace coalpy::render;
@@ -110,6 +114,18 @@ namespace coalpy
     }
 
     // Begin unit tests
+
+    void dx12BufferPool(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+        Dx12Device& dx12Device = (Dx12Device&)device;
+        Dx12BufferPool& bufferPool = dx12Device.readbackPool();
+        Dx12CpuMemBlock block1 = bufferPool.allocate(256);
+        bufferPool.free(block1);
+        renderTestCtx.end();
+    }
 
     void testCreateBuffer(TestContext& ctx)
     {
@@ -898,6 +914,7 @@ namespace coalpy
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
     {
         static TestCase sCases[] = {
+            { "dx12BufferPool",  dx12BufferPool },
             { "createBuffer",  testCreateBuffer },
             { "createTexture", testCreateTexture },
             { "createTables",  testCreateTables },

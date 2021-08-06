@@ -24,6 +24,7 @@
 #include "Dx12ResourceCollection.h"
 #include "Dx12DescriptorPool.h"
 #include "Dx12WorkBundle.h"
+#include "Dx12BufferPool.h"
 #include "Dx12Fence.h"
 #include "Dx12Gc.h"
 
@@ -155,6 +156,7 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
 , m_debugLayer(nullptr)
 , m_device(nullptr)
 , m_shaderDb(nullptr)
+, m_readbackPool(nullptr)
 , m_gc(nullptr)
 {
     m_info = {};
@@ -196,6 +198,8 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
 
     m_resources = new Dx12ResourceCollection(*this, m_workDb);
 
+    m_readbackPool = new Dx12BufferPool(*this, true);
+
     m_computeRootSignature = createComputeRootSignature(*m_device);
 
     if (config.shaderDb)
@@ -206,12 +210,14 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
     }
 
     m_gc->start();
+
 }
 
 Dx12Device::~Dx12Device()
 {
     m_gc->stop();
 
+    delete m_readbackPool;
     delete m_resources;
     delete m_gc;
     delete m_queues;

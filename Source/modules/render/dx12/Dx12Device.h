@@ -1,6 +1,9 @@
 #pragma once
 
+#ifndef INCLUDED_T_DEVICE_H
 #include <TDevice.h>
+#endif
+
 #include <coalpy.render/Resources.h>
 #include <unordered_map>
 
@@ -21,6 +24,7 @@ namespace render
 class Dx12Queues;
 class Dx12DescriptorPool;
 class Dx12ResourceCollection;
+class Dx12BufferPool;
 class Dx12Gc;
 struct Dx12WorkInformationMap;
 
@@ -60,6 +64,7 @@ public:
     Dx12ResourceCollection& resources() { return *m_resources; }
     Dx12DescriptorPool& descriptors() { return *m_descriptors; }
     Dx12ShaderDb& shaderDb() { return *m_shaderDb; }
+    Dx12BufferPool& readbackPool() { return *m_readbackPool; }
     WorkBundleDb& workDb() { return m_workDb; } 
 
     virtual const DeviceInfo& info() const override { return m_info; }
@@ -84,6 +89,7 @@ private:
     Dx12ResourceCollection* m_resources;
     Dx12DescriptorPool* m_descriptors;
     Dx12Queues* m_queues;
+    Dx12BufferPool* m_readbackPool;
     Dx12ShaderDb* m_shaderDb;
     Dx12Gc* m_gc;
     DeviceInfo m_info;
