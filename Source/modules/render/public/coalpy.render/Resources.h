@@ -32,10 +32,8 @@ enum class TextureType
 
 enum MemFlags : int
 {
-    MemFlag_CpuRead  = 1 << 0,
-    MemFlag_CpuWrite = 1 << 1,
-    MemFlag_GpuRead  = 1 << 2,
-    MemFlag_GpuWrite = 1 << 3,
+    MemFlag_GpuRead  = 1 << 0,
+    MemFlag_GpuWrite = 1 << 1,
 };
 
 enum class BufferType

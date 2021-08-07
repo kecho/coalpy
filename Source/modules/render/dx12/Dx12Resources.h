@@ -21,6 +21,8 @@ enum ResourceSpecialFlags : int
     ResourceSpecialFlag_NoDeferDelete = 1 << 0,
     ResourceSpecialFlag_CanDenyShaderResources = 1 << 1,
     ResourceSpecialFlag_TrackTables = 1 << 2,
+    ResourceSpecialFlag_CpuReadback = 1 << 3,
+    ResourceSpecialFlag_CpuUpload = 1 << 4,
 };
 
 struct Dx12ResourceInitResult

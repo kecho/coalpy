@@ -86,8 +86,6 @@ void constructTypes(TypeList& outTypes)
 
     {
         static EnumEntry s_MemFlags[] = {
-            { "CpuRead",  render::MemFlag_CpuRead, "Specify flag in order to read a resource from the CPU" },
-            { "CpuWrite", render::MemFlag_CpuWrite, "Specify flag to write into a resource directly from the CPU" },
             { "GpuRead",  render::MemFlag_GpuRead, "Specify flag for resource read access from InResourceTable / SRVs" },
             { "GpuWrite", render::MemFlag_GpuWrite, "Specify flag for resource write access from an OutResourceTable / UAV" },
             { nullptr, 0, nullptr }

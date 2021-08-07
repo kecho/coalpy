@@ -32,8 +32,9 @@ bool Dx12BufferPool::createNewHeap(size_t size)
     bufferDesc.type = BufferType::Standard;
     bufferDesc.format = Format::RGBA_8_UINT;
     bufferDesc.elementCount = size;
-    bufferDesc.memFlags = m_isReadback ? MemFlag_CpuRead : (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
-    heap.buffer = new Dx12Buffer(m_device, bufferDesc, (ResourceSpecialFlags)(ResourceSpecialFlag_NoDeferDelete | ResourceSpecialFlag_CanDenyShaderResources));
+    bufferDesc.memFlags = (MemFlags)0;
+    ResourceSpecialFlags readbackFlags = m_isReadback ? ResourceSpecialFlag_CpuReadback : ResourceSpecialFlag_CpuUpload;
+    heap.buffer = new Dx12Buffer(m_device, bufferDesc, (ResourceSpecialFlags)(ResourceSpecialFlag_NoDeferDelete | ResourceSpecialFlag_CanDenyShaderResources | readbackFlags));
     Dx12ResourceInitResult initResult = heap.buffer->init();
     if (!initResult.success())
     {
