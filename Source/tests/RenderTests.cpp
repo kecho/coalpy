@@ -362,9 +362,6 @@ namespace coalpy
         buffDesc.format = Format::R32_SINT;
         buffDesc.elementCount = totalElements;
         Buffer buff = device.createBuffer(buffDesc);
-
-        buffDesc.memFlags = MemFlag_CpuRead;
-        Buffer readbackBuff = device.createBuffer(buffDesc);
         
         ResourceTableDesc tableDesc;
         tableDesc.resources = &buff;
@@ -381,14 +378,8 @@ namespace coalpy
         }
 
         {
-            CopyCommand cmd;
-            cmd.setResources(buff, readbackBuff);
-            commandList.writeCommand(cmd);
-        }
-
-        {
             DownloadCommand downloadCmd;
-            downloadCmd.setData(readbackBuff);
+            downloadCmd.setData(buff);
             commandList.writeCommand(downloadCmd);
         }
 
@@ -400,11 +391,11 @@ namespace coalpy
         auto waitStatus = device.waitOnCpu(result.workHandle, -1);
         CPY_ASSERT(waitStatus.success());
 
-        auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff);
+        auto downloadStatus = device.getDownloadStatus(result.workHandle, buff);
         CPY_ASSERT(downloadStatus.success());
         CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
-        CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(unsigned int) * totalElements);
-        if (downloadStatus.downloadPtr != nullptr /*TODO: do the size && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements*/)
+        CPY_ASSERT(downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements);
+        if (downloadStatus.downloadPtr != nullptr && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements)
         {
             auto* ptr = (unsigned int*)downloadStatus.downloadPtr;
             for (int i = 0; i < totalElements; ++i)
@@ -415,7 +406,6 @@ namespace coalpy
         
         device.release(outTable);
         device.release(buff);
-        device.release(readbackBuff);
         renderTestCtx.end();
     }
     
@@ -477,10 +467,6 @@ namespace coalpy
         Buffer pongBuffs[2];
         pongBuffs[0] = device.createBuffer(buffDesc);
         pongBuffs[1] = device.createBuffer(buffDesc);
-
-        buffDesc.memFlags = MemFlag_CpuRead;
-        Buffer readbackBuff0 = device.createBuffer(buffDesc);
-        Buffer readbackBuff1 = device.createBuffer(buffDesc);
         
         ResourceTableDesc tableDesc;
 
@@ -515,25 +501,14 @@ namespace coalpy
         }
 
         {
-            CopyCommand cmd;
-            cmd.setResources(pongBuffs[0], readbackBuff0);
-            commandList.writeCommand(cmd);
-        }
-
-        {
-            CopyCommand cmd;
-            cmd.setResources(pongBuffs[1], readbackBuff1);
-            commandList.writeCommand(cmd);
-        }
-
-        {
             DownloadCommand downloadCmd;
-            downloadCmd.setData(readbackBuff0);
+            downloadCmd.setData(pongBuffs[0]);
             commandList.writeCommand(downloadCmd);
         }
+
         {
             DownloadCommand downloadCmd;
-            downloadCmd.setData(readbackBuff1);
+            downloadCmd.setData(pongBuffs[1]);
             commandList.writeCommand(downloadCmd);
         }
 
@@ -546,11 +521,11 @@ namespace coalpy
         CPY_ASSERT(waitStatus.success());
 
         {
-            auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff0);
+            auto downloadStatus = device.getDownloadStatus(result.workHandle, pongBuffs[0]);
             CPY_ASSERT(downloadStatus.success());
             CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
-            CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(unsigned int) * totalElements);
-            if (downloadStatus.downloadPtr != nullptr /*TODO: do the size && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements*/)
+            CPY_ASSERT(downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements);
+            if (downloadStatus.downloadPtr != nullptr && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements)
             {
                 auto* ptr = (unsigned int*)downloadStatus.downloadPtr;
                 for (int i = 0; i < totalElements; ++i)
@@ -559,11 +534,11 @@ namespace coalpy
         }
 
         {
-            auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff1);
+            auto downloadStatus = device.getDownloadStatus(result.workHandle, pongBuffs[1]);
             CPY_ASSERT(downloadStatus.success());
             CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
-            CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(unsigned int) * totalElements);
-            if (downloadStatus.downloadPtr != nullptr /*TODO: do the size && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements*/)
+            CPY_ASSERT(downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements);
+            if (downloadStatus.downloadPtr != nullptr && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements)
             {
                 auto* ptr = (unsigned int*)downloadStatus.downloadPtr;
                 for (int i = 0; i < totalElements; ++i)
@@ -577,8 +552,6 @@ namespace coalpy
         device.release(pingBuffs[1]);
         device.release(pongBuffs[0]);
         device.release(pongBuffs[1]);
-        device.release(readbackBuff0);
-        device.release(readbackBuff1);
         device.release(pingOutTable);
         device.release(pongInTable);
         device.release(pongOutTable);
@@ -627,9 +600,6 @@ namespace coalpy
         buffDesc.isConstantBuffer = false;
         Buffer resultBuffer = device.createBuffer(buffDesc);
 
-        buffDesc.memFlags = MemFlag_CpuRead;
-        Buffer readbackBuff = device.createBuffer(buffDesc);
-        
         ResourceTableDesc tableDesc;
 
         tableDesc.resources = &resultBuffer;
@@ -658,14 +628,8 @@ namespace coalpy
         }
 
         {
-            CopyCommand cmd;
-            cmd.setResources(resultBuffer, readbackBuff);
-            commandList.writeCommand(cmd);
-        }
-
-        {
             DownloadCommand downloadCmd;
-            downloadCmd.setData(readbackBuff);
+            downloadCmd.setData(resultBuffer);
             commandList.writeCommand(downloadCmd);
         }
 
@@ -678,11 +642,11 @@ namespace coalpy
         CPY_ASSERT(waitStatus.success());
 
         {
-            auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff);
+            auto downloadStatus = device.getDownloadStatus(result.workHandle, resultBuffer);
             CPY_ASSERT(downloadStatus.success());
             CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
-            CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(unsigned int) * totalElements);
-            if (downloadStatus.downloadPtr != nullptr /*TODO: do the size && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements*/)
+            CPY_ASSERT(downloadStatus.downloadByteSize == 4 * sizeof(unsigned int) * totalElements);
+            if (downloadStatus.downloadPtr != nullptr && downloadStatus.downloadByteSize == 4 * sizeof(unsigned int) * totalElements)
             {
                 auto* ptr = (int*)downloadStatus.downloadPtr;
                 for (int i = 0; i < totalElements; ++i)
@@ -693,7 +657,6 @@ namespace coalpy
         device.release(result.workHandle);
         device.release(constantBuffer);
         device.release(resultBuffer);
-        device.release(readbackBuff);
         device.release(outTable);
         renderTestCtx.end();
     }
@@ -735,9 +698,6 @@ namespace coalpy
         buffDesc.elementCount = totalElements;
         buffDesc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
         Buffer resultBuffer = device.createBuffer(buffDesc);
-
-        buffDesc.memFlags = MemFlag_CpuRead;
-        Buffer readbackBuff = device.createBuffer(buffDesc);
         
         ResourceTableDesc tableDesc;
 
@@ -761,14 +721,8 @@ namespace coalpy
         }
 
         {
-            CopyCommand cmd;
-            cmd.setResources(resultBuffer, readbackBuff);
-            commandList.writeCommand(cmd);
-        }
-
-        {
             DownloadCommand downloadCmd;
-            downloadCmd.setData(readbackBuff);
+            downloadCmd.setData(resultBuffer);
             commandList.writeCommand(downloadCmd);
         }
 
@@ -781,11 +735,11 @@ namespace coalpy
         CPY_ASSERT(waitStatus.success());
 
         {
-            auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff);
+            auto downloadStatus = device.getDownloadStatus(result.workHandle, resultBuffer);
             CPY_ASSERT(downloadStatus.success());
             CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
-            CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(unsigned int) * totalElements);
-            if (downloadStatus.downloadPtr != nullptr /*TODO: do the size && downloadStatus.downloadByteSize == sizeof(unsigned int) * totalElements*/)
+            CPY_ASSERT(downloadStatus.downloadByteSize == 4 * sizeof(unsigned int) * totalElements);
+            if (downloadStatus.downloadPtr != nullptr && downloadStatus.downloadByteSize == 4 * sizeof(unsigned int) * totalElements)
             {
                 auto* ptr = (int*)downloadStatus.downloadPtr;
                 for (int i = 0; i < totalElements; ++i)
@@ -795,7 +749,6 @@ namespace coalpy
 
         device.release(result.workHandle);
         device.release(resultBuffer);
-        device.release(readbackBuff);
         device.release(outTable);
         renderTestCtx.end();
     }
@@ -833,9 +786,6 @@ namespace coalpy
         buffDesc.elementCount = 1;
         buffDesc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
         Buffer numBuffer = device.createBuffer(buffDesc);
-
-        buffDesc.memFlags = MemFlag_CpuRead;
-        Buffer readbackBuff = device.createBuffer(buffDesc);
         
         ResourceTableDesc tableDesc;
         tableDesc.resources = &numBuffer;
@@ -860,14 +810,8 @@ namespace coalpy
         }
 
         {
-            CopyCommand cmd;
-            cmd.setResources(numBuffer, readbackBuff);
-            commandList.writeCommand(cmd);
-        }
-
-        {
             DownloadCommand downloadCmd;
-            downloadCmd.setData(readbackBuff);
+            downloadCmd.setData(numBuffer);
             commandList.writeCommand(downloadCmd);
         }
 
@@ -880,10 +824,10 @@ namespace coalpy
         CPY_ASSERT(waitStatus.success());
 
         {
-            auto downloadStatus = device.getDownloadStatus(result.workHandle, readbackBuff);
+            auto downloadStatus = device.getDownloadStatus(result.workHandle, numBuffer);
             CPY_ASSERT(downloadStatus.success());
             CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
-            CPY_ASSERT(downloadStatus.downloadByteSize != sizeof(int));
+            CPY_ASSERT(downloadStatus.downloadByteSize == 4 * sizeof(int));
             if (downloadStatus.downloadPtr != nullptr)
             {
                 auto* ptr = (int*)downloadStatus.downloadPtr;
@@ -893,7 +837,6 @@ namespace coalpy
 
         device.release(result.workHandle);
         device.release(numBuffer);
-        device.release(readbackBuff);
         device.release(outTable);
         renderTestCtx.end();
     }

@@ -114,6 +114,8 @@ public:
     bool isBuffer() const { return m_data.resDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER; };
     ResourceSpecialFlags specialFlags() const { return m_specialFlags; }
 
+    virtual size_t byteSize() const = 0;
+
 protected:
     Dx12Descriptor m_srv = {};
     std::vector<Dx12Descriptor> m_uavs;
@@ -152,6 +154,8 @@ public:
     virtual ~Dx12Texture();
 
     const TextureDesc& texDesc() const { return m_texDesc; }
+    virtual size_t byteSize() const;
+
 protected:
     int m_slices;
     TextureDesc m_texDesc;
@@ -167,6 +171,8 @@ public:
     virtual Dx12ResourceInitResult init() override;
 
     const Dx12Descriptor& cbv() const { return m_cbv; }
+    virtual size_t byteSize() const;
+
 protected:
     Dx12Descriptor m_cbv = {};
     BufferDesc m_buffDesc;

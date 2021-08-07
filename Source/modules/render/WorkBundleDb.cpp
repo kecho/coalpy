@@ -329,15 +329,6 @@ bool processDownload(const AbiDownloadCmd* cmd, const unsigned char* data, WorkB
         return false;
     }
 
-    if (resourceInfoIt->second.memFlags != MemFlag_CpuRead)
-    {
-        std::stringstream ss;
-        ss << "Read CPU flag not found on resource requesting a download, resource ID: " << cmd->source.handleId;
-        context.errorType = ScheduleErrorType::ReadCpuFlagNotFound;
-        context.errorMsg = ss.str();
-        return false;
-    }
-
     auto it = context.resourcesToDownload.insert(cmd->source);
     if (!it.second)
     {
@@ -345,6 +336,9 @@ bool processDownload(const AbiDownloadCmd* cmd, const unsigned char* data, WorkB
         context.errorMsg = "Multiple downloads on the same resource during the same schedule call. You are only allowed to download a resource once per scheduling bundle.";
         return false;
     }
+
+    if (!transitionResource(cmd->source, ResourceGpuState::CopySrc, context))
+        return false;
 
     context.currentCommandInfo().commandDownloadIndex = context.currentListInfo().downloadCommandsCount;
     ++context.currentListInfo().downloadCommandsCount;

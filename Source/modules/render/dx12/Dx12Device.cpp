@@ -217,6 +217,10 @@ Dx12Device::~Dx12Device()
 {
     m_gc->stop();
 
+    for (auto p : m_dx12WorkInfos->workMap)
+        for (auto dl : p.second.downloadMap)
+            readbackPool().free(dl.second.memoryBlock);
+
     delete m_readbackPool;
     delete m_resources;
     delete m_gc;
@@ -306,7 +310,7 @@ DownloadStatus Dx12Device::getDownloadStatus(WorkHandle bundle, ResourceHandle h
     Dx12Fence& fence = queues().getFence(downloadState.queueType);
     if (fence.isComplete(downloadState.fenceValue))
     {
-        return DownloadStatus { DownloadResult::Ok, downloadState.mappedMemory, 0u };
+        return DownloadStatus { DownloadResult::Ok, downloadState.memoryBlock.mappedMemory, downloadState.memoryBlock.size };
     }
     return DownloadStatus { DownloadResult::NotReady, nullptr, 0u };
 }
@@ -374,7 +378,15 @@ ScheduleStatus Dx12Device::internalSchedule(CommandList** commandLists, int list
 
 void Dx12Device::internalReleaseWorkHandle(WorkHandle handle)
 {
-    m_dx12WorkInfos->workMap.erase(handle.handleId);
+    auto workInfoIt = m_dx12WorkInfos->workMap.find(handle.handleId);
+    CPY_ASSERT(workInfoIt != m_dx12WorkInfos->workMap.end());
+    if (workInfoIt == m_dx12WorkInfos->workMap.end())
+        return;
+
+    for (auto downloadStatePair : workInfoIt->second.downloadMap)
+        readbackPool().free(downloadStatePair.second.memoryBlock);
+
+    m_dx12WorkInfos->workMap.erase(workInfoIt);
 }
 
 SmartPtr<IDisplay> Dx12Device::createDisplay(const DisplayConfig& config)

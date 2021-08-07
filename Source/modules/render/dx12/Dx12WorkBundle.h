@@ -5,6 +5,7 @@
 #include "Dx12Utils.h"
 #include "Dx12GpuMemPools.h"
 #include "Dx12Queues.h"
+#include "Dx12BufferPool.h"
 #include <d3d12.h>
 #include <unordered_map>
 #include <vector>
@@ -22,7 +23,7 @@ struct Dx12ResourceDownloadState
 {
     WorkType queueType = WorkType::Graphics;
     UINT64 fenceValue = {};
-    void* mappedMemory = {};
+    Dx12CpuMemBlock memoryBlock;
     ResourceHandle resource;
 };
 

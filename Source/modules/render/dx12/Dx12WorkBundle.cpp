@@ -211,12 +211,19 @@ void Dx12WorkBundle::buildDownloadCmd(
     CPY_ASSERT(cmdInfo.commandDownloadIndex >= 0 && cmdInfo.commandDownloadIndex < (int)m_downloadStates.size());
     CPY_ASSERT(downloadCmd->source.valid());
     auto& downloadState = m_downloadStates[cmdInfo.commandDownloadIndex];
+    Dx12Resource& dx12Resource = resources.unsafeGetResource(downloadCmd->source);
+    if (dx12Resource.isBuffer())
+    {
+        downloadState.memoryBlock = m_device.readbackPool().allocate(dx12Resource.byteSize());
+        outList.CopyBufferRegion(downloadState.memoryBlock.buffer, downloadState.memoryBlock.offset, &dx12Resource.d3dResource(), 0u, dx12Resource.byteSize());
+    }
+    else
+    {
+        //TODO: fix memory mapping of textures.
+    }
     downloadState.queueType = workType;
     downloadState.fenceValue = m_currentFenceValue + 1;
     downloadState.resource = downloadCmd->source;
-    Dx12Resource& dx12Resource = resources.unsafeGetResource(downloadCmd->source);
-    downloadState.mappedMemory = dx12Resource.mappedMemory();
-    CPY_ASSERT(downloadState.mappedMemory != nullptr);
 }
 
 void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCmd* uploadCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandListX& outList)

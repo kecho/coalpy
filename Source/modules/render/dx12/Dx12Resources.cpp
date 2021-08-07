@@ -301,6 +301,12 @@ Dx12Texture::~Dx12Texture()
 {
 }
 
+size_t Dx12Texture::byteSize() const
+{
+    CPY_ASSERT_MSG(false, "Unimplemented");
+    return 0ull;
+}
+
 Dx12ResourceInitResult Dx12Texture::init()
 {
     auto parentResult = Dx12Resource::init();
@@ -445,6 +451,10 @@ Dx12ResourceTable::~Dx12ResourceTable()
     m_device.descriptors().release(m_cpuTable);
 }
 
+size_t Dx12Buffer::byteSize() const
+{
+    return m_data.resDesc.Width;
+}
 
 }
 }
