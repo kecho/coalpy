@@ -172,6 +172,10 @@ void Dx12BufferPool::free(const Dx12CpuMemBlock& block)
         afterBlockToMerge.mappedMemory = (char*)afterBlockToMerge.mappedMemory - block.size;
         newHeapSize = newHeapSize > afterBlockToMerge.size ? newHeapSize : afterBlockToMerge.size;
     }
+    else
+    {
+        freeBlocks.push_back(block);
+    }
     state.largestSize = state.largestSize > newHeapSize ? state.largestSize : newHeapSize;
 }
 

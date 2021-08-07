@@ -124,6 +124,31 @@ namespace coalpy
         Dx12BufferPool& bufferPool = dx12Device.readbackPool();
         Dx12CpuMemBlock block1 = bufferPool.allocate(256);
         bufferPool.free(block1);
+
+        {
+            Dx12CpuMemBlock block2 = bufferPool.allocate(1024 * 1024 * 10);
+            Dx12CpuMemBlock block3 = bufferPool.allocate(215);
+            Dx12CpuMemBlock block4 = bufferPool.allocate(33);
+            Dx12CpuMemBlock block5 = bufferPool.allocate(15);
+
+            bufferPool.free(block5);
+            bufferPool.free(block2);
+            bufferPool.free(block3);
+            bufferPool.free(block4);
+        }
+
+        {
+            Dx12CpuMemBlock block4 = bufferPool.allocate(3323);
+            Dx12CpuMemBlock block2 = bufferPool.allocate(1024 * 1024 * 10);
+            Dx12CpuMemBlock block3 = bufferPool.allocate(4123);
+            Dx12CpuMemBlock block5 = bufferPool.allocate(1500);
+
+            bufferPool.free(block5);
+            bufferPool.free(block2);
+            bufferPool.free(block3);
+            bufferPool.free(block4);
+        }
+
         renderTestCtx.end();
     }
 
