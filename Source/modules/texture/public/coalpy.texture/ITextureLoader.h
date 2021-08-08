@@ -19,6 +19,7 @@ enum TextureStatus
     InvalidArguments,
     JpegCodecError,
     JpegFormatNotSupported,
+    PngDecompressError,
     CorruptedFile,
     Ok
 };

@@ -117,7 +117,7 @@ local CoalPyModuleTable = {
 -- C++ module external includes
 local CoalPyModuleIncludes = {
     render = { DxcIncludes, ImguiDir, "Source/modules/window/" },
-    texture = { LibJpgDir, LibPngDir }
+    texture = { LibJpgDir, LibPngDir, ZlibDir }
 }
 
 local CoalPyModuleDeps = {
