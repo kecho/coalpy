@@ -303,8 +303,24 @@ Dx12Texture::~Dx12Texture()
 
 size_t Dx12Texture::byteSize() const
 {
-    CPY_ASSERT_MSG(false, "Unimplemented");
-    return 0ull;
+    return getDxFormatStride(m_texDesc.format) * m_data.resDesc.Width * m_data.resDesc.Height * m_data.resDesc.DepthOrArraySize;
+}
+
+void Dx12Texture::getCpuTextureSizes(int mipId, size_t& outRowPitch, int& outWidth, int& outHeight, int& outDepth) const
+{
+    CPY_ASSERT(mipId >=0 && mipId < m_data.resDesc.MipLevels);
+
+    outWidth = (int)m_data.resDesc.Width >> mipId;
+    outHeight = (int)m_data.resDesc.Height >> mipId;
+    outDepth = (int)m_data.resDesc.DepthOrArraySize;
+
+    if (m_data.resDesc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D)
+        outDepth = outDepth >> mipId;
+
+    outWidth = outWidth >= 1 ? outWidth : 1;
+    outHeight = outHeight >= 1 ? outHeight : 1;
+    outDepth = outDepth >= 1 ? outDepth : 1;
+    outRowPitch = (size_t)alignByte(getDxFormatStride(m_texDesc.format) * outWidth, (int)D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 }
 
 Dx12ResourceInitResult Dx12Texture::init()

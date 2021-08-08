@@ -65,6 +65,10 @@ struct DownloadStatus
     DownloadResult result = DownloadResult::Ok;
     void* downloadPtr = nullptr;
     size_t downloadByteSize = 0;
+    size_t rowPitch = 0;
+    int width  = 0;
+    int height = 0;
+    int depth  = 0;
 };
 
 

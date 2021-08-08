@@ -158,6 +158,8 @@ public:
     const TextureDesc& texDesc() const { return m_texDesc; }
     virtual size_t byteSize() const;
 
+    void getCpuTextureSizes(int mipId, size_t& outRowPitch, int& width, int& outHeight, int& depth) const;
+
 protected:
     int m_slices;
     TextureDesc m_texDesc;

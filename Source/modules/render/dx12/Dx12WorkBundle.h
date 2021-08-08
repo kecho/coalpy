@@ -25,6 +25,10 @@ struct Dx12ResourceDownloadState
     UINT64 fenceValue = {};
     Dx12CpuMemBlock memoryBlock;
     ResourceHandle resource;
+    size_t rowPitch = 0;
+    int width  = 0;
+    int height = 0;
+    int depth  = 0;
 };
 
 using Dx12DownloadResourceMap = std::unordered_map<ResourceHandle, Dx12ResourceDownloadState>;

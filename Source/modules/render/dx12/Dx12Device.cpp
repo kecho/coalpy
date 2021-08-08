@@ -310,7 +310,15 @@ DownloadStatus Dx12Device::getDownloadStatus(WorkHandle bundle, ResourceHandle h
     Dx12Fence& fence = queues().getFence(downloadState.queueType);
     if (fence.isComplete(downloadState.fenceValue))
     {
-        return DownloadStatus { DownloadResult::Ok, downloadState.memoryBlock.mappedMemory, downloadState.memoryBlock.size };
+        return DownloadStatus {
+            DownloadResult::Ok,
+            downloadState.memoryBlock.mappedMemory,
+            downloadState.memoryBlock.size,
+            downloadState.rowPitch,
+            downloadState.width,
+            downloadState.height,
+            downloadState.depth,
+        };
     }
     return DownloadStatus { DownloadResult::NotReady, nullptr, 0u };
 }

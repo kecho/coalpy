@@ -219,7 +219,28 @@ void Dx12WorkBundle::buildDownloadCmd(
     }
     else
     {
-        //TODO: fix memory mapping of textures.
+        auto& dx12Texture = (Dx12Texture&)dx12Resource;
+        dx12Texture.getCpuTextureSizes(0u, downloadState.rowPitch, downloadState.width, downloadState.height, downloadState.depth);
+        downloadState.memoryBlock = m_device.readbackPool().allocate(downloadState.rowPitch * downloadState.height * downloadState.depth);
+
+        D3D12_TEXTURE_COPY_LOCATION srcLoc;
+        srcLoc.pResource = &dx12Texture.d3dResource();
+        srcLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        srcLoc.SubresourceIndex = 0u;
+
+        D3D12_TEXTURE_COPY_LOCATION dstLoc;
+        dstLoc.pResource = downloadState.memoryBlock.buffer;
+        dstLoc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+        dstLoc.PlacedFootprint.Offset = (UINT)downloadState.memoryBlock.offset;
+        dstLoc.PlacedFootprint.Footprint.Format = dx12Resource.d3dResDesc().Format;
+        dstLoc.PlacedFootprint.Footprint.Width = (UINT)downloadState.width;
+        dstLoc.PlacedFootprint.Footprint.Height = (UINT)downloadState.height;
+        dstLoc.PlacedFootprint.Footprint.Depth = (UINT)downloadState.depth;
+        dstLoc.PlacedFootprint.Footprint.RowPitch = (UINT)downloadState.rowPitch;
+
+        outList.CopyTextureRegion(
+            &dstLoc, 0u, 0u, 0u,
+            &srcLoc, nullptr);
     }
     downloadState.queueType = workType;
     downloadState.fenceValue = m_currentFenceValue + 1;

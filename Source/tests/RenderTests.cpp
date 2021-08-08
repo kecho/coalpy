@@ -868,11 +868,34 @@ namespace coalpy
             cmdList.writeCommand(cmd);
         }
 
+        {
+            DownloadCommand downloadCmd;
+            downloadCmd.setData(destTex);
+            cmdList.writeCommand(downloadCmd);
+        }
+
         cmdList.finalize();
         CommandList* lists[] = { &cmdList };
-        auto result = device.schedule(lists, 1);
+        auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle);
         CPY_ASSERT(result.success());
 
+        WaitStatus waitStatus = device.waitOnCpu(result.workHandle, -1);
+        CPY_ASSERT(waitStatus.success());
+
+        DownloadStatus downloadStatus = device.getDownloadStatus(result.workHandle, destTex);
+        CPY_ASSERT(downloadStatus.success());
+
+        for (int y = 0; y < texDimY; ++y)
+        {
+            for (int x = 0; x < texDimX; ++x)
+            {
+                int* row = (int*)((char*)downloadStatus.downloadPtr + downloadStatus.rowPitch * y);
+                int i = texDimX * y + x;
+                CPY_ASSERT(row[x] == i - 10);
+            }
+        }
+
+        device.release(result.workHandle);
         device.release(destTex);
         renderTestCtx.end();
     }
