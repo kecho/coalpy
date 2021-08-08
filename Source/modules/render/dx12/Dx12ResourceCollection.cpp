@@ -225,6 +225,31 @@ bool Dx12ResourceCollection::recreate(ResourceTable handle)
     return true;
 }
 
+void Dx12ResourceCollection::getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo)
+{
+    std::unique_lock lock(m_resourceMutex);
+    bool isValid = handle.valid() && m_resources.contains(handle);
+    CPY_ASSERT(isValid);
+    if (!isValid)
+        return;
+
+    SmartPtr<ResourceContainer>& container = m_resources[handle];
+    memInfo.isBuffer = container->type == ResType::Buffer;
+    if (memInfo.isBuffer)
+    {
+        auto& buffer = (Dx12Buffer&)(*container->resource);
+        memInfo.byteSize = buffer.byteSize();
+        memInfo.rowPitch = memInfo.byteSize;
+        memInfo.width = memInfo.height = memInfo.depth = 0;
+    }
+    else
+    {
+        auto& texture = (Dx12Texture&)(*container->resource);
+        memInfo.byteSize = texture.byteSize();
+        texture.getCpuTextureSizes(0u, memInfo.rowPitch, memInfo.width, memInfo.height, memInfo.depth);
+    }
+}
+
 void Dx12ResourceCollection::release(ResourceHandle handle)
 {
     std::unique_lock lock(m_resourceMutex);

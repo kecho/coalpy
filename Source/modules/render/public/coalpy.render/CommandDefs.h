@@ -13,6 +13,7 @@ enum class ScheduleErrorType
 {
     Ok,
     NullListFound,
+    OutOfBounds,
     ListNotFinalized,
     BadTableInfo,
     ReadCpuFlagNotFound,
@@ -69,6 +70,16 @@ struct DownloadStatus
     int width  = 0;
     int height = 0;
     int depth  = 0;
+};
+
+struct ResourceMemoryInfo
+{
+    bool isBuffer = false;
+    size_t byteSize = 0u;
+    int width = 0u;
+    int height = 0u;
+    int depth  = 0u;
+    size_t rowPitch = 0u;
 };
 
 

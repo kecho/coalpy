@@ -1,5 +1,6 @@
 #include "WorkBundleDb.h"
 #include <coalpy.core/Assert.h>
+#include <coalpy.render/IDevice.h>
 #include <sstream>
 
 namespace coalpy
@@ -11,9 +12,14 @@ namespace render
 namespace 
 {
 
+enum 
+{
+    ConstantBufferAlignment = 256,
+};
 
 struct WorkBuildContext
 {
+    IDevice* device = nullptr;
     //current context info (which list and command we are at)
     int listIndex = -1;
     int currentCommandIndex = -1;
@@ -268,7 +274,7 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         if (cmd->inlineConstantBufferSize > 0)
         {
             //TODO: hack, dx12 requires aligned buffers to be 256.
-            int alignedBufferSize = ((cmd->inlineConstantBufferSize + 255)/256) * 256;
+            int alignedBufferSize = ((cmd->inlineConstantBufferSize + (ConstantBufferAlignment - 1))/ConstantBufferAlignment) * ConstantBufferAlignment;
             cmdInfo.uploadBufferOffset = context.totalUploadBufferSize;
             context.totalUploadBufferSize += alignedBufferSize;
 
@@ -310,9 +316,24 @@ bool processUpload(const AbiUploadCmd* cmd, const unsigned char* data, WorkBuild
     if (!transitionResource(cmd->destination, ResourceGpuState::CopyDst, context))
         return false;
 
+    IDevice& device = *context.device;
+
     CommandInfo& info = context.currentCommandInfo();
+    device.getResourceMemoryInfo(cmd->destination, info.uploadDestinationMemoryInfo);
+    if (cmd->sourceSize > info.uploadDestinationMemoryInfo.byteSize)
+    {
+        std::stringstream ss;
+        ss << "Upload command request exceeded resource capacity. Tried to upload "
+            << cmd->sourceSize << " bytes with a resource of "
+            << info.uploadDestinationMemoryInfo.byteSize << "bytes.";
+
+        context.errorMsg = ss.str();
+        context.errorType = ScheduleErrorType::OutOfBounds;
+        return false;
+    }
+    
     info.uploadBufferOffset = context.totalUploadBufferSize;
-    context.totalUploadBufferSize += cmd->sourceSize;
+    context.totalUploadBufferSize += info.uploadDestinationMemoryInfo.byteSize;
     return true;
 }
 
@@ -432,6 +453,7 @@ ScheduleStatus WorkBundleDb::build(CommandList** lists, int listCount)
         std::unique_lock lock(m_workMutex);
         //todo error handling
         WorkBuildContext ctx;
+        ctx.device = &m_device;
         ctx.resourceInfos = &m_resources;
         ctx.tableInfos = &m_tables;
         for (int l = 0; l < listCount; ++l)

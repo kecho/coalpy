@@ -60,6 +60,7 @@ public:
     virtual ScheduleStatus schedule(CommandList** commandLists, int listCounts, ScheduleFlags flags = ScheduleFlags_None) = 0;
     virtual WaitStatus waitOnCpu(WorkHandle bundle, int milliseconds = 0) = 0;
     virtual DownloadStatus getDownloadStatus(WorkHandle workHandle, ResourceHandle handle) = 0;
+    virtual void getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo) = 0;
 };
 
 

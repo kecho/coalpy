@@ -847,8 +847,8 @@ namespace coalpy
         renderTestCtx.begin();
         IDevice& device = *renderTestCtx.device;
 
-        const int texDimX = 64;
-        const int texDimY = 4;
+        const int texDimX = 73;
+        const int texDimY = 21;
         TextureDesc texDesc;
         texDesc.format = Format::R32_SINT;
         texDesc.width = texDimX;

@@ -32,7 +32,7 @@ protected:
 
 template<class PlatDevice>
 TDevice<PlatDevice>::TDevice(const DeviceConfig& config)
-: m_config(config), m_db(*config.shaderDb)
+: m_config(config), m_db(*config.shaderDb), m_workDb(*this)
 {
 }
 

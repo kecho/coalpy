@@ -17,6 +17,8 @@ namespace coalpy
 namespace render
 {
 
+class IDevice;
+
 enum class ResourceGpuState
 {
     Default,
@@ -53,6 +55,7 @@ struct CommandInfo
     int commandDownloadIndex = -1;
     int constantBufferTableOffset = -1;
     int constantBufferCount = 0;
+    ResourceMemoryInfo uploadDestinationMemoryInfo;
     std::vector<ResourceBarrier> preBarrier;
     std::vector<ResourceBarrier> postBarrier;
 };
@@ -114,7 +117,7 @@ using WorkResourceInfos = std::unordered_map<ResourceHandle, WorkResourceInfo>;
 class WorkBundleDb
 {
 public:
-    WorkBundleDb() {}
+    WorkBundleDb(IDevice& device) : m_device(device) {}
     ~WorkBundleDb() {}
 
     ScheduleStatus build(CommandList** lists, int listCount);
@@ -138,6 +141,8 @@ public:
 
 private:
     std::mutex m_workMutex;
+
+    IDevice& m_device;
     HandleContainer<WorkHandle, WorkBundle> m_works;
 
     WorkTableInfos m_tables;

@@ -269,6 +269,11 @@ OutResourceTableResult Dx12Device::createOutResourceTable (const ResourceTableDe
     return m_resources->createOutResourceTable(config);
 }
 
+void Dx12Device::getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo)
+{
+    m_resources->getResourceMemoryInfo(handle, memInfo);
+}
+
 void Dx12Device::release(ResourceHandle resource)
 {
     m_resources->release(resource);

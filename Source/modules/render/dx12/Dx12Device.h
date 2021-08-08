@@ -52,12 +52,15 @@ public:
     virtual BufferResult  createBuffer (const BufferDesc& config) override;
     virtual InResourceTableResult createInResourceTable  (const ResourceTableDesc& config) override;
     virtual OutResourceTableResult createOutResourceTable (const ResourceTableDesc& config) override;
-
-    void internalReleaseWorkHandle(WorkHandle handle);
+    virtual void getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo) override;
     virtual WaitStatus waitOnCpu(WorkHandle handle, int milliseconds = 0) override;
     virtual DownloadStatus getDownloadStatus(WorkHandle bundle, ResourceHandle handle) override;
     virtual void release(ResourceHandle resource) override;
     virtual void release(ResourceTable table) override;
+    virtual const DeviceInfo& info() const override { return m_info; }
+    virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) override;
+
+    void internalReleaseWorkHandle(WorkHandle handle);
 
     ID3D12Device2& device() { return *m_device; }
     Dx12Queues& queues() { return *m_queues; }
@@ -67,8 +70,6 @@ public:
     Dx12BufferPool& readbackPool() { return *m_readbackPool; }
     WorkBundleDb& workDb() { return m_workDb; } 
 
-    virtual const DeviceInfo& info() const override { return m_info; }
-    virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) override;
 
     ID3D12RootSignature& defaultComputeRootSignature() const { return *m_computeRootSignature; }
 

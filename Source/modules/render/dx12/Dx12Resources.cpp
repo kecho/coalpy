@@ -303,7 +303,10 @@ Dx12Texture::~Dx12Texture()
 
 size_t Dx12Texture::byteSize() const
 {
-    return getDxFormatStride(m_texDesc.format) * m_data.resDesc.Width * m_data.resDesc.Height * m_data.resDesc.DepthOrArraySize;
+    int width, height, depth;
+    size_t rowPitch;
+    getCpuTextureSizes(0u, rowPitch, width, height, depth);
+    return rowPitch * height * depth;
 }
 
 void Dx12Texture::getCpuTextureSizes(int mipId, size_t& outRowPitch, int& outWidth, int& outHeight, int& outDepth) const

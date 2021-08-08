@@ -38,6 +38,8 @@ public:
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
     OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);
 
+    void getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo);
+
     void release(ResourceHandle resource);
     void release(ResourceTable resource);
 
