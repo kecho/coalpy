@@ -109,17 +109,20 @@ local CoalPyModuleTable = {
     core    = {},
     tasks   = { "core" },
     files   = { "core", "tasks" },
+    texture = { "core", "tasks", "files", "render" },
     render  = { "core", "tasks", "files", "window" },
     window  = { "core" }
 }
 
 -- C++ module external includes
 local CoalPyModuleIncludes = {
-    render = { DxcIncludes, ImguiDir, "Source/modules/window/" }
+    render = { DxcIncludes, ImguiDir, "Source/modules/window/" },
+    texture = { LibJpgDir, LibPngDir }
 }
 
 local CoalPyModuleDeps = {
-    render = { imguiLib, libjpegLib, libpngLib, zlibLib }
+    render = { imguiLib },
+    texture = { zlibLib, libpngLib, libjpegLib }
 }
 
 -- Module list for the core coalpy module

@@ -17,14 +17,16 @@ enum TextureStatus
 {
     FileNotFound,
     InvalidArguments,
+    JpegCodecError,
+    JpegFormatNotSupported,
     CorruptedFile,
     Ok
 };
 
 struct TextureResult
 {
-    TextureStatus result = TextureResult::Ok;
-    bool success() const { return result == TextureResult::Ok; }
+    TextureStatus result = TextureStatus::Ok;
+    bool success() const { return result == TextureStatus::Ok; }
     render::Texture texture;
 };
 
@@ -42,6 +44,7 @@ public:
 
     virtual ~ITextureLoader(){}
     virtual TextureResult loadTexture(const char* fileName) = 0;
+    virtual void processTextures() = 0;
 };
 
 }
