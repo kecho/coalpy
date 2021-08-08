@@ -274,11 +274,12 @@ void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCm
 
         D3D12_TEXTURE_COPY_LOCATION destTexLoc;
         destTexLoc.pResource = &destinationResource.d3dResource();
-        destTexLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        destTexLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX; 
         destTexLoc.SubresourceIndex = 0;
 
         int segments = cmdInfo.uploadDestinationMemoryInfo.depth * cmdInfo.uploadDestinationMemoryInfo.height;
         int sourceRowPitch = (uploadCmd->sourceSize / (segments));
+        CPY_ASSERT(cmdInfo.uploadDestinationMemoryInfo.width * formatStride == sourceRowPitch);
         if ((sourceRowPitch % D3D12_TEXTURE_DATA_PITCH_ALIGNMENT) == 0) //is aligned!
         {
             memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + cmdInfo.uploadBufferOffset, uploadCmd->sources.data(data), uploadCmd->sourceSize);
@@ -289,9 +290,9 @@ void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCm
             int srcOffset = 0;
             for (int s = 0; s < segments; ++s)
             {
-                memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + dstOffset, uploadCmd->sources.data(data) + srcOffset, uploadCmd->sourceSize);
+                memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + dstOffset, uploadCmd->sources.data(data) + srcOffset, sourceRowPitch);
                 dstOffset += cmdInfo.uploadDestinationMemoryInfo.rowPitch;
-                srcOffset += cmdInfo.uploadDestinationMemoryInfo.width * formatStride;
+                srcOffset += sourceRowPitch;
             }
         }
 

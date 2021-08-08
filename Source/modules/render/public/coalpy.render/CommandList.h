@@ -130,6 +130,9 @@ public:
     void writeCommand(const CopyCommand& cmd);
     void writeCommand(const UploadCommand& cmd);
     void writeCommand(const DownloadCommand& cmd);
+
+    unsigned char* uploadInlineResource(ResourceHandle destination, int sourceSize);
+
     void reset();
     void finalize();
 

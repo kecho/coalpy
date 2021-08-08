@@ -863,9 +863,12 @@ namespace coalpy
         CommandList cmdList;
         
         {
-            UploadCommand cmd;
-            cmd.setData((const char*)data, sizeof(int)*texDimX*texDimY, destTex);
-            cmdList.writeCommand(cmd);
+            //UploadCommand cmd;
+            //cmd.setData((const char*)data, sizeof(int)*texDimX*texDimY, destTex);
+            //cmdList.writeCommand(cmd);
+            auto sz = sizeof(int)*texDimX*texDimY;
+            int* texData = (int*)cmdList.uploadInlineResource(destTex, sz);
+            memcpy(texData, data, sz);
         }
 
         {

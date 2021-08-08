@@ -178,5 +178,22 @@ void CommandList::writeCommand(const DownloadCommand& cmd)
     finalizeCommand(abiCmd);
 }
 
+unsigned char* CommandList::uploadInlineResource(ResourceHandle destination, int sourceSize)
+{
+    MemOffset cmdOffset = m_internal.buffer.size();
+    allocate<AbiUploadCmd>();
+
+    MemOffset dataOffset = m_internal.buffer.size();
+    m_internal.buffer.appendEmpty(sourceSize);
+
+    AbiUploadCmd& uploadCmd = *(AbiUploadCmd*)(m_internal.buffer.data() + cmdOffset);
+    uploadCmd.cmdSize = m_internal.buffer.size() - cmdOffset;
+    uploadCmd.destination = destination;
+    uploadCmd.sources.offset = dataOffset;
+    uploadCmd.sourceSize = sourceSize;
+    return (unsigned char*)(m_internal.buffer.data() + dataOffset);
+}
+
+
 }
 }
