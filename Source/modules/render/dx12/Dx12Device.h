@@ -60,6 +60,8 @@ public:
     virtual const DeviceInfo& info() const override { return m_info; }
     virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) override;
 
+    virtual IShaderDb* db() override { return (IShaderDb*)m_shaderDb; }
+
     void internalReleaseWorkHandle(WorkHandle handle);
 
     ID3D12Device2& device() { return *m_device; }

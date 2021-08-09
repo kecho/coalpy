@@ -16,6 +16,7 @@ class IFileSystem;
 class IWindowListener;
 class ITaskSystem;
 class IFileWatcher;
+class ITextureLoader;
 
 namespace render
 {
@@ -41,6 +42,7 @@ public:
     IShaderDb&      db() const { return *m_db; }
     IFileSystem&    fs() const { return *m_fs; }
     ITaskSystem&    ts() const { return *m_ts; }
+    ITextureLoader& tl() const { return *m_tl; }
     IWindowListener& windowListener() const { return *m_windowListener; }
     render::IDevice& device() const { return *m_device; }
 
@@ -80,6 +82,7 @@ private:
     IFileSystem*    m_fs;
     IShaderDb*      m_db;
     IFileWatcher*   m_fw;
+    ITextureLoader* m_tl;
     render::IDevice* m_device;
     IWindowListener* m_windowListener;
     PyObject* m_exObj;

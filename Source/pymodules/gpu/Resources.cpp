@@ -2,6 +2,7 @@
 #include "ModuleState.h"
 #include "CoalpyTypeObject.h"
 #include <coalpy.render/IDevice.h>
+#include <coalpy.texture/ITextureLoader.h>
 
 namespace coalpy
 {
@@ -104,6 +105,7 @@ void Texture::constructType(PyTypeObject& t)
         height (int): the height of the texture in texels. Default is 1
         depth (int): the depth of the texture if k2dArray or k3d. Default is 1.
         mip_levels (int): number of mips supported on this texture.
+        file (str): Load a texture file name (jpeg or png). All other parameters will be ignored when the file name set.
     )";
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
@@ -121,11 +123,26 @@ int Texture::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     if (!moduleState.checkValidDevice())
         return -1;
 
-    static char* arguments[] = { "name", "mem_flags", "type", "format", "width", "height", "depth", "mip_levels", nullptr };
+    static char* arguments[] = { "name", "mem_flags", "type", "format", "width", "height", "depth", "mip_levels", "file", nullptr };
     const char* name = "<unknown>";
+    const char* filename = nullptr;
     render::TextureDesc texDesc;
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|siiiiiii", arguments, &name, &texDesc.memFlags, &texDesc.type, &texDesc.format, &texDesc.width, &texDesc.height, &texDesc.depth, &texDesc.mipLevels))
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|siiiiiiis", arguments, &name, &texDesc.memFlags, &texDesc.type, &texDesc.format, &texDesc.width, &texDesc.height, &texDesc.depth, &texDesc.mipLevels, &filename))
         return -1;
+
+    if (filename != nullptr)
+    {
+        ITextureLoader& tl = moduleState.tl();
+        TextureLoadResult result = tl.loadTexture(filename);
+        if (!result.success())
+        {
+            PyErr_Format(moduleState.exObj(), "Failed loading texture %s, reason: %s", filename, result.message.c_str());
+            return -1;
+        }
+
+        texture->texture = result.texture;
+        return 0;
+    }
 
     //validate
     if (!validateEnum(moduleState, (int)texDesc.type, (int)render::TextureType::Count, "type", "TextureType"))

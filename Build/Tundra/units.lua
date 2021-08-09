@@ -126,7 +126,7 @@ local CoalPyModuleDeps = {
 }
 
 -- Module list for the core coalpy module
-local CoalPyModules = { "core", "tasks", "render", "files", "window"  }
+local CoalPyModules = { "core", "tasks", "render", "files", "window", "texture", "libjpeg", "libpng", "zlib"  }
 
 _G.BuildModules(SourceDir, CoalPyModuleTable, CoalPyModuleIncludes, CoalPyModuleDeps)
 _G.BuildPyLib("gpu", "pymodules/gpu", SourceDir, LibIncludes, CoalPyModules, Libraries, CoalPyModuleDeps.render)

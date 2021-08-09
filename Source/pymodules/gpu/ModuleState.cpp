@@ -7,6 +7,7 @@
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.render/IDevice.h>
 #include <coalpy.render/CommandList.h>
+#include <coalpy.texture/ITextureLoader.h>
 #include "CoalpyTypeObject.h"
 #include "Window.h"
 #include <iostream>
@@ -71,6 +72,14 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
     }
 
     {
+        TextureLoaderDesc desc;
+        desc.device = m_device;
+        desc.ts = m_ts;
+        desc.fs = m_fs;
+        m_tl = ITextureLoader::create(desc);
+    }
+
+    {
         m_windowListener = Window::createWindowListener(*this);
     }
 
@@ -126,6 +135,7 @@ ModuleState::~ModuleState()
     m_commandListPool.clear();
 
     delete m_windowListener;
+    delete m_tl;
     delete m_device;
     delete m_db;
     delete m_fs;
@@ -136,6 +146,7 @@ ModuleState::~ModuleState()
 void ModuleState::startServices()
 {
     m_ts->start();
+    m_tl->start();
 }
 
 void ModuleState::stopServices()

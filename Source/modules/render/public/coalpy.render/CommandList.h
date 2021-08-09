@@ -131,13 +131,14 @@ public:
     void writeCommand(const UploadCommand& cmd);
     void writeCommand(const DownloadCommand& cmd);
 
-    unsigned char* uploadInlineResource(ResourceHandle destination, int sourceSize);
+    MemOffset uploadInlineResource(ResourceHandle destination, int sourceSize);
 
     void reset();
     void finalize();
 
     bool isFinalized() const;
     const unsigned char* data() const;
+    unsigned char* data();
     size_t size() const;
 
 private:

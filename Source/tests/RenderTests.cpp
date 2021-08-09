@@ -862,14 +862,8 @@ namespace coalpy
 
         CommandList cmdList;
         
-        {
-            //UploadCommand cmd;
-            //cmd.setData((const char*)data, sizeof(int)*texDimX*texDimY, destTex);
-            //cmdList.writeCommand(cmd);
-            auto sz = sizeof(int)*texDimX*texDimY;
-            int* texData = (int*)cmdList.uploadInlineResource(destTex, sz);
-            memcpy(texData, data, sz);
-        }
+        size_t sz = sizeof(int)*texDimX*texDimY;
+        render::MemOffset offsetForUpload = cmdList.uploadInlineResource(destTex, sz); 
 
         {
             DownloadCommand downloadCmd;
@@ -878,6 +872,12 @@ namespace coalpy
         }
 
         cmdList.finalize();
+
+        {
+            int* texData = (int*)(cmdList.data() + offsetForUpload);
+            memcpy(texData, data, sz);
+        }
+
         CommandList* lists[] = { &cmdList };
         auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle);
         CPY_ASSERT(result.success());

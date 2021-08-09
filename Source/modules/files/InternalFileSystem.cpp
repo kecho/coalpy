@@ -372,6 +372,32 @@ namespace FileUtils
         InternalFileSystem::getFileName(path, outName);
     }
 
+    void getFileExt(const std::string& path, std::string& outExt)
+    {
+        std::string outName;
+        InternalFileSystem::getFileName(path, outName);
+
+        int extIndex = -1;
+        for (int i = 0; i < (int)outName.size(); ++i)
+        {
+            int index = outName.size() - 1 - i;
+            if (outName[index] == '.')
+            {
+                extIndex = index;
+                break;
+            }
+        }
+
+        if (extIndex == -1)
+        {
+            outExt = "";
+        }
+        else
+        {
+            outExt = outName.c_str() + extIndex + 1;
+        }
+    }
+
     void getDirName(const std::string& path, std::string& outName)
     {
         std::string cpy = path;

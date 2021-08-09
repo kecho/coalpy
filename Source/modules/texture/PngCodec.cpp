@@ -22,10 +22,17 @@ ImgCodecResult PngCodec::decompress(
         return ImgCodecResult { TextureStatus::PngDecompressError, ss.str() };
     }
 
-    image.format = PNG_FORMAT_RGB;
+    image.format = PNG_FORMAT_RGBA;
     size_t sz = PNG_IMAGE_SIZE(image);
-    CPY_ASSERT(sz == image.width * image.height * 24);
-    unsigned char* imageData = outData.allocate(ImgColorFmt::sRgb, image.width, image.height, sz);
+    CPY_ASSERT(sz == image.width * image.height * 4);
+    unsigned char* imageData = outData.allocate(ImgColorFmt::sRgba, image.width, image.height, sz);
+    if (!imageData)
+    { 
+        std::stringstream ss;
+        ss << "Error allocating memory for image.";
+        return ImgCodecResult { TextureStatus::CorruptedFile, ss.str() };
+    }
+
     if (!png_image_finish_read(&image, nullptr, (void*)imageData, 0, nullptr))
     {
         std::stringstream ss;
@@ -33,7 +40,7 @@ ImgCodecResult PngCodec::decompress(
         return ImgCodecResult { TextureStatus::CorruptedFile, ss.str() };
     }
 
-    return ImgCodecResult { TextureStatus::CorruptedFile };
+    return ImgCodecResult { TextureStatus::Ok };
 }
 
 }

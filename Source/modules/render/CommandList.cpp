@@ -59,6 +59,12 @@ const u8* CommandList::data() const
     return m_internal.buffer.data();
 }
 
+u8* CommandList::data()
+{
+    CPY_ASSERT_MSG(m_internal.closed, "Command list has not been finalized. Data should not be accessed.");
+    return m_internal.buffer.data();
+}
+
 size_t CommandList::size() const
 {
     return m_internal.buffer.size();
@@ -178,7 +184,7 @@ void CommandList::writeCommand(const DownloadCommand& cmd)
     finalizeCommand(abiCmd);
 }
 
-unsigned char* CommandList::uploadInlineResource(ResourceHandle destination, int sourceSize)
+MemOffset CommandList::uploadInlineResource(ResourceHandle destination, int sourceSize)
 {
     MemOffset cmdOffset = m_internal.buffer.size();
     allocate<AbiUploadCmd>();
@@ -191,7 +197,7 @@ unsigned char* CommandList::uploadInlineResource(ResourceHandle destination, int
     uploadCmd.destination = destination;
     uploadCmd.sources.offset = dataOffset;
     uploadCmd.sourceSize = sourceSize;
-    return (unsigned char*)(m_internal.buffer.data() + dataOffset);
+    return dataOffset;
 }
 
 

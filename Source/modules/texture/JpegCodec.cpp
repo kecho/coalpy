@@ -72,57 +72,45 @@ ImgCodecResult JpegCodec::decompress(
 
     jpeg_create_decompress(&cinfo);
     jpeg_mem_src(&cinfo, const_cast<unsigned char*>(buffer), bufferSize);
+    jpeg_read_header(&cinfo, true);
+    cinfo.out_color_space = JCS_RGB;    
 
-    ImgColorFmt fmt = ImgColorFmt::R;
-    switch (cinfo.jpeg_color_space)
-    {
-    case JCS_RGB:
-        switch (cinfo.output_components)
-        {
-        case 3:
-            fmt = ImgColorFmt::sRgb;
-        default:
-            {
-                std::stringstream ss;
-                ss << "Only supporting RGB components for sRGB in jpeg decompressoin. Components used: " << cinfo.output_components;
-                jpeg_destroy_decompress(&cinfo);
-                context.result.status = TextureStatus::JpegFormatNotSupported;
-                context.result.message = ss.str();
-                return context.result;
-            }
-        }
-        break;
-    case JCS_GRAYSCALE:
-        switch (cinfo.output_components)
-        {
-        case 1:
-            fmt = ImgColorFmt::R;
-        case 2:
-            fmt = ImgColorFmt::Rg;
-        case 3:
-            fmt = ImgColorFmt::Rgb;
-        case 4:
-            fmt = ImgColorFmt::Rgba;
-        }
-        break;
+    jpeg_start_decompress(&cinfo);
+
+    ImgColorFmt fmt = ImgColorFmt::sRgb;
+    switch (cinfo.out_color_components)
+    {    
+    case 3:
+        fmt = ImgColorFmt::sRgb; break;
+    case 4:
+        fmt = ImgColorFmt::sRgba; break;
     default:
         {
             jpeg_destroy_decompress(&cinfo);
             std::stringstream ss;
-            ss << "Jpeg decompression format not supported: " << jpegFormatToStr(cinfo.jpeg_color_space);
+            ss << "Jpeg decompression format not supported: " << jpegFormatToStr(cinfo.jpeg_color_space) << " components: " << cinfo.out_color_components;
             context.result.status = TextureStatus::JpegFormatNotSupported;
             context.result.message = ss.str();
             return context.result;
         }
     }
 
-    jpeg_read_header(&cinfo, true);
-    
-    jpeg_start_decompress(&cinfo);
-
-    int bytes = cinfo.output_components * cinfo.output_width * cinfo.output_height;
+    int stride = cinfo.output_components * cinfo.output_width;
+    int bytes = stride * cinfo.output_height;
     unsigned char* imgData = outData.allocate(fmt, cinfo.output_width, cinfo.output_height, bytes);
-    jpeg_read_scanlines(&cinfo, (JSAMPARRAY)imgData, cinfo.output_height);
+    if (!imgData)
+    {
+        jpeg_destroy_decompress(&cinfo);
+        std::stringstream ss;
+        ss << "Error allocating memory for image.";
+        return ImgCodecResult { TextureStatus::CorruptedFile, ss.str() };
+    }
+
+    for (int i = 0; i < cinfo.output_height; ++i)
+    {
+        unsigned char* scanLine = imgData + stride * i;
+        jpeg_read_scanlines(&cinfo, (JSAMPARRAY)&scanLine, 1);
+    }
 
     jpeg_finish_decompress(&cinfo);
     jpeg_destroy_decompress(&cinfo);

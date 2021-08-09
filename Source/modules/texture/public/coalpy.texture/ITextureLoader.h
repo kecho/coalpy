@@ -1,6 +1,7 @@
 #pragma once
 
 #include <coalpy.render/Resources.h>
+#include <string>
 
 namespace coalpy
 {
@@ -16,6 +17,7 @@ class IFileSystem;
 enum TextureStatus
 {
     FileNotFound,
+    InvalidExtension,
     InvalidArguments,
     JpegCodecError,
     JpegFormatNotSupported,
@@ -24,11 +26,12 @@ enum TextureStatus
     Ok
 };
 
-struct TextureResult
+struct TextureLoadResult
 {
     TextureStatus result = TextureStatus::Ok;
     bool success() const { return result == TextureStatus::Ok; }
     render::Texture texture;
+    std::string message;
 };
 
 struct TextureLoaderDesc
@@ -41,10 +44,11 @@ struct TextureLoaderDesc
 class ITextureLoader
 {
 public:
-    ITextureLoader* create(const TextureLoaderDesc& desc);
+    static ITextureLoader* create(const TextureLoaderDesc& desc);
 
     virtual ~ITextureLoader(){}
-    virtual TextureResult loadTexture(const char* fileName) = 0;
+    virtual void start() = 0;
+    virtual TextureLoadResult loadTexture(const char* fileName) = 0;
     virtual void processTextures() = 0;
 };
 

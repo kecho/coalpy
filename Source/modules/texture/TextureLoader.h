@@ -1,6 +1,7 @@
 #pragma once
 
 #include <coalpy.texture/ITextureLoader.h>
+#include <coalpy.render/ShaderDefs.h>
 #include <string>
 
 namespace coalpy
@@ -8,19 +9,19 @@ namespace coalpy
 
 enum class ImgFmt
 {
-    Jpeg, Png
+    Jpeg, Png, Count
 };
 
 enum class ImgColorFmt
 {
-    R, Rg, Rgb, Rgba, sRgb
+    R, Rgba, sRgb, sRgba
 };
 
 class IImgData
 {
 public:
     virtual unsigned char* allocate(ImgColorFmt fmt, int width, int height, int bytes) = 0;
-    virtual void reset() = 0;
+    virtual void clean() = 0;
     virtual ~IImgData() {}
 };
 
@@ -46,7 +47,9 @@ class TextureLoader : public ITextureLoader
 public:
     TextureLoader(const TextureLoaderDesc& desc);
     virtual ~TextureLoader();
-    virtual TextureResult loadTexture(const char* fileName) override;
+
+    virtual void start() override;
+    virtual TextureLoadResult loadTexture(const char* fileName) override;
     virtual void processTextures() override;
 
 private:
@@ -54,6 +57,10 @@ private:
     ITaskSystem* m_ts = nullptr;
     IFileSystem* m_fs = nullptr;
     render::IDevice* m_device = nullptr;
+    
+    IImgCodec* m_codecs[(int)ImgFmt::Count];
+
+    ShaderHandle m_srgbToSrgba;
 };
 
 
