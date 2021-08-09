@@ -87,9 +87,10 @@ void Dx12Display::createComputeTexture()
     desc.name = "computeBackbuffer";
     desc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
     desc.isRtv = true;
+    desc.recreatable = true;
     if (!m_computeTexture.valid())
     {
-        TextureResult result = m_device.resources().createTexture(desc, nullptr, ResourceSpecialFlag_TrackTables);
+        TextureResult result = m_device.resources().createTexture(desc, nullptr);
         CPY_ASSERT_FMT(result.success(), "Could not create swap chain compute texture: %s", result.message.c_str());
         m_computeTexture = result.texture;
     }

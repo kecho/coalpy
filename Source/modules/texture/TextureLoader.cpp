@@ -40,7 +40,8 @@ public:
     CmdListImageUploader(render::IDevice& device, ShaderHandle srgbToSrgbaShader)
     : m_device(device), m_srgbToSrgbaShader(srgbToSrgbaShader) {}
 
-    render::Texture texture() { return m_texture; }
+    const render::TextureDesc& textureDesc() const { return m_texDesc; }
+    render::Texture& texture() { return m_texture; }
     render::CommandList& cmdList() { return m_cmdList; }
 
     virtual void clean() override
@@ -67,7 +68,7 @@ public:
 
     virtual unsigned char* allocate(ImgColorFmt fmt, int width, int height, int bytes) override
     {
-        render::TextureDesc texDesc;
+        render::TextureDesc& texDesc = m_texDesc;
         texDesc.memFlags = render::MemFlag_GpuRead;
         texDesc.type = render::TextureType::k2d;
         texDesc.width = width; 
@@ -96,12 +97,6 @@ public:
                 tableConfig.resources = &m_supportBuffer;
                 tableConfig.resourcesCount = 1;
                 m_supportInTable = m_device.createInResourceTable(tableConfig);
-            }
-
-            {
-                texDesc.format = Format::RGBA_8_UNORM;
-                texDesc.memFlags = (render::MemFlags)((int)texDesc.memFlags | render::MemFlag_GpuWrite);
-                m_texture = m_device.createTexture(texDesc);
             }
 
             {
@@ -144,7 +139,6 @@ public:
                 break;
             }
 
-            m_texture = m_device.createTexture(texDesc);
             CPY_ASSERT(m_texture.valid());
             if (!m_texture.valid())
                 return nullptr;
@@ -159,6 +153,7 @@ public:
 private:
     render::IDevice& m_device;
     render::Texture m_texture;
+    render::TextureDesc m_texDesc;
     render::Buffer m_supportBuffer;
     render::InResourceTable m_supportInTable;
     render::OutResourceTable m_supportOutTable;
@@ -206,51 +201,90 @@ TextureLoadResult TextureLoader::loadTexture(const char* fileName)
         return TextureLoadResult { TextureStatus::InvalidExtension, render::Texture(), ss.str() };
     }
 
-    ByteBuffer bb;
-    bool success = false;
-    FileReadRequest request(fileName, [&bb, &success](FileReadResponse& response)
+    LoadingState& loadState = *allocateLoadState();
+    loadState.codec = codec;
+
+    CmdListImageUploader* imageLoader = nullptr;
+    if (loadState.imageData == nullptr)
+    {
+        imageLoader = new CmdListImageUploader(*m_device, m_srgbToSrgba);
+        loadState.imageData = imageLoader;
+    }
+    else
+    {
+        imageLoader = (CmdListImageUploader*)loadState.imageData;
+    }
+
+    {
+        render::TextureDesc texDesc;
+        texDesc.width = 1;
+        texDesc.height = 1;
+        texDesc.memFlags = render::MemFlag_GpuRead;
+        texDesc.recreatable = true;
+        loadState.texture = m_device->createTexture(texDesc);
+        imageLoader->texture() = loadState.texture;
+    }
+    
+    FileReadRequest request(fileName, [this, &loadState](FileReadResponse& response)
     {
         if (response.status == FileStatus::Reading)
         {
-            bb.append((const u8*)response.buffer, response.size);
+            loadState.fileBuffer.append((const u8*)response.buffer, response.size);
         }
         else if (response.status == FileStatus::Success)
         {
-            success = true;
+            ImgCodecResult codecResult = loadState.codec->decompress(loadState.fileBuffer.data(), loadState.fileBuffer.size(), *loadState.imageData);
+            if (codecResult.success())
+            {
+                loadState.loadResult = TextureLoadResult { TextureStatus::Ok, render::Texture() };
+                std::lock_guard lock(m_completeStatesMutex);
+                m_completeStates.push(&loadState);
+            }
+            else
+            {
+                loadState.loadResult = TextureLoadResult { codecResult.status, render::Texture(), std::move(codecResult.message) };
+                std::lock_guard lock(m_completeStatesMutex);
+                m_completeStates.push(&loadState);
+            }
+        }
+        else if (response.status == FileStatus::Fail)
+        {
+            std::stringstream ss;
+            ss << "Could not find texture file: " << response.filePath;
+            loadState.loadResult = TextureLoadResult { TextureStatus::FileNotFound, render::Texture(), ss.str() };
+            std::lock_guard lock(m_completeStatesMutex);
+            m_completeStates.push(&loadState);
         }
     });
 
-    request.additionalRoots = m_additionalPaths;
-
-    AsyncFileHandle readHandle = m_fs->read(request);
-    m_fs->execute(readHandle);
-    m_fs->wait(readHandle);
-    m_fs->closeHandle(readHandle);
-    
-    if (!success)
-        return TextureLoadResult { TextureStatus::FileNotFound, render::Texture(), "File not found" };
-
-    CmdListImageUploader image(*m_device, m_srgbToSrgba);
-
-    ImgCodecResult result = codec->decompress(bb.data(), bb.size(), image);
-    if (!result.success())
-        return TextureLoadResult { result.status, render::Texture(), result.message };
-
-    render::CommandList* listPtr = &image.cmdList();
-    render::ScheduleStatus status = m_device->schedule(&listPtr, 1);
-    image.clean();
-    if (!status.success())
-    {
-        m_device->release(image.texture());
-        std::stringstream ss;
-        ss << "Gpu error while loading texture. Reason: " << status.message;
-        return TextureLoadResult{ TextureStatus::InvalidArguments, render::Texture(), ss.str() };
-    }
-    return TextureLoadResult { TextureStatus::Ok, image.texture() };
+    return TextureLoadResult { TextureStatus::Ok, loadState.texture };
 }
 
 void TextureLoader::processTextures()
 {
+    std::vector<LoadingState*> acquiredStates;
+    {
+        int loadBudget = 8;
+        std::lock_guard lock(m_completeStatesMutex);
+        while (!m_completeStates.empty() && loadBudget-- > 0)
+        {
+            acquiredStates.push_back(m_completeStates.front());
+            m_completeStates.pop();
+        }
+    }
+
+    for (auto* state : acquiredStates)
+    {
+        if (state->loadResult.success())
+        {
+            auto* imageLoader = (CmdListImageUploader*)state->imageData;
+            auto texResult = m_device->recreateTexture(state->texture, imageLoader->textureDesc());
+            CPY_ASSERT(texResult.success()); //TODO: handle this failure
+        }
+
+        state->clear();
+        freeLoadState(state);
+    }
 }
 
 IImgCodec* TextureLoader::findCodec(const std::string& fileName)
@@ -268,6 +302,25 @@ IImgCodec* TextureLoader::findCodec(const std::string& fileName)
     }
 
     return nullptr;
+}
+
+TextureLoader::LoadingState* TextureLoader::allocateLoadState()
+{
+    if (m_freeLoaderStates.empty())
+    {
+        return new TextureLoader::LoadingState;
+    }
+    else
+    {
+        auto obj = m_freeLoaderStates.back();
+        m_freeLoaderStates.pop_back();
+        return obj;
+    }
+}
+
+void TextureLoader::freeLoadState(TextureLoader::LoadingState* state)
+{
+    m_freeLoaderStates.push_back(state);
 }
 
 ITextureLoader* ITextureLoader::create(const TextureLoaderDesc& desc)

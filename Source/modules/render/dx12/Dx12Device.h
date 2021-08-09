@@ -49,6 +49,7 @@ public:
     static void enumerate(std::vector<DeviceInfo>& outputList);
 
     virtual TextureResult createTexture(const TextureDesc& desc) override;
+    virtual TextureResult recreateTexture(Texture texture, const TextureDesc& desc) override;
     virtual BufferResult  createBuffer (const BufferDesc& config) override;
     virtual InResourceTableResult createInResourceTable  (const ResourceTableDesc& config) override;
     virtual OutResourceTableResult createOutResourceTable (const ResourceTableDesc& config) override;

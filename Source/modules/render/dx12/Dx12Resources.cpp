@@ -17,7 +17,7 @@ Dx12Resource::Dx12Resource(Dx12Device& device, const ResourceDesc& config, Resou
 : m_device(device)
 {
     m_config = config;
-    m_specialFlags = specialFlags;
+    m_specialFlags = (ResourceSpecialFlags)(specialFlags | (int)(config.recreatable ? ResourceSpecialFlag_TrackTables : ResourceSpecialFlag_None));
     m_data = {};
     const bool canDenyShaderResources = (specialFlags & ResourceSpecialFlag_CanDenyShaderResources) != 0;
     {

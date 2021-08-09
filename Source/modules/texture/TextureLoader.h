@@ -2,7 +2,13 @@
 
 #include <coalpy.texture/ITextureLoader.h>
 #include <coalpy.render/ShaderDefs.h>
+#include <coalpy.render/Resources.h>
+#include <coalpy.files/IFileSystem.h>
+#include <coalpy.core/ByteBuffer.h>
+#include <vector>
 #include <string>
+#include <queue>
+#include <mutex>
 
 namespace coalpy
 {
@@ -54,6 +60,7 @@ public:
     virtual void processTextures() override;
 
 private:
+
     IImgCodec* findCodec(const std::string& fileName);
     ITaskSystem* m_ts = nullptr;
     IFileSystem* m_fs = nullptr;
@@ -63,8 +70,36 @@ private:
     IImgCodec* m_codecs[(int)ImgFmt::Count];
 
     ShaderHandle m_srgbToSrgba;
-};
 
+    struct LoadingState
+    {
+        bool loadSuccess = false;
+        ByteBuffer fileBuffer;
+        TextureLoadResult loadResult;
+        AsyncFileHandle fileHandle;
+        render::Texture texture;
+        IImgData* imageData = nullptr;
+        IImgCodec* codec = nullptr;
+
+        void clear()
+        {
+            fileBuffer.resize(0u);
+            loadResult = TextureLoadResult();
+            fileHandle = AsyncFileHandle();
+            codec = nullptr;
+            texture = render::Texture();
+            imageData->clean();
+        }
+    };
+
+    LoadingState* allocateLoadState();
+    void freeLoadState(LoadingState* loadState);
+
+    std::vector<LoadingState*> m_freeLoaderStates;
+
+    std::mutex m_completeStatesMutex;
+    std::queue<LoadingState*>  m_completeStates;
+};
 
 }
 

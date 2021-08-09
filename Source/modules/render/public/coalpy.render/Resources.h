@@ -48,6 +48,7 @@ struct ResourceDesc
 {
     ResourceName name;
     MemFlags memFlags = (MemFlags)(MemFlag_GpuWrite | MemFlag_GpuRead);
+    bool recreatable = false;
 };
 
 struct TextureDesc : public ResourceDesc

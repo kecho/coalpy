@@ -57,6 +57,10 @@ TextureResult Dx12ResourceCollection::recreateTexture(Texture handle, const Text
     std::unique_lock lock(m_resourceMutex);
     CPY_ASSERT(handle.valid())
     CPY_ASSERT(m_resources.contains(handle));
+
+    if (!desc.recreatable)
+        return TextureResult { ResourceResult::InvalidHandle, Texture(), "Texture is not tagged as recreatable." };
+
     if (!handle.valid() || !m_resources.contains(handle))
         return TextureResult { ResourceResult::InvalidHandle, Texture(), "Invalid handle on recreateTexture call." };
 

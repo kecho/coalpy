@@ -254,6 +254,11 @@ TextureResult Dx12Device::createTexture(const TextureDesc& desc)
     return m_resources->createTexture(desc);
 }
 
+TextureResult Dx12Device::recreateTexture(Texture texture, const TextureDesc& desc)
+{
+    return m_resources->recreateTexture(texture, desc);
+}
+
 BufferResult Dx12Device::createBuffer (const BufferDesc& config)
 {
     return m_resources->createBuffer(config);
