@@ -27,7 +27,7 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
 : m_fs(nullptr), m_ts(nullptr)
 {
     {
-        FileWatchDesc desc { 1000 /*ms*/};
+        FileWatchDesc desc { 120 /*ms*/};
         m_fw = IFileWatcher::create(desc);
         m_fw->start();
     }
@@ -120,6 +120,26 @@ void ModuleState::stopServices()
     m_ts->join();
 }
 
+void ModuleState::addDataPath(const char* dataPath)
+{
+    std::string p = dataPath;
+    auto it = m_dataPathPool.insert(p);
+    if (!it.second)
+        return;
+
+    m_additionalDataPaths.push_back(p);
+    internalAddPath(p);
+}
+
+void ModuleState::internalAddPath(const std::string& p)
+{
+    if (m_db != nullptr)
+        m_db->addPath(p.c_str());
+
+    if (m_tl != nullptr)
+        m_tl->addPath(p.c_str());
+}
+
 bool ModuleState::createDevice(int index)
 {
     {
@@ -163,6 +183,10 @@ bool ModuleState::createDevice(int index)
         m_tl = ITextureLoader::create(desc);
     }
 
+    for (const auto& p : m_additionalDataPaths)
+        internalAddPath(p);
+
+    return true;
 }
 
 void ModuleState::destroyDevice()
@@ -184,6 +208,7 @@ bool ModuleState::selectAdapter(int index)
     }
 
     destroyDevice();
+
     if (!createDevice(index))
         return false;
 

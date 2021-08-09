@@ -9,8 +9,6 @@ gpu.set_current_adapter(0)
 info = gpu.get_current_adapter_info()
 print("Current device: {}".format(info[1]))
 
-gpu.add_shader_path(gpu) #this adds the main module in the paths.
-
 s1 = gpu.Shader(file="examples/testShader.hlsl", name="testShader")
 
 f = 0.5;
@@ -20,8 +18,8 @@ b = False
 h1 = False
 w = True
 
-#test_image = gpu.Texture(file="test.jpg")
-#input_table = gpu.InResourceTable("testjpg_table", [test_image])
+test_image = gpu.Texture(file="examples/data/test.jpg")
+input_table = gpu.InResourceTable("testjpg_table", [test_image])
 
 def buildUi(imgui):
     global f, f2, t, b, w
@@ -62,7 +60,7 @@ def main():
             x = xv, y = yv, z = 1,
             constants = [float(render_args.render_time), dims[0], dims[1], 0],
             shader = s1,
-            #input_tables = input_table,
+            input_tables = input_table,
             output_tables = output_table
         )
         gpu.schedule([cmdList])

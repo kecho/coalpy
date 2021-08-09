@@ -142,7 +142,7 @@ function _G.DeployPyPackage(packageName, pythonLibName, binaries, scriptsDir)
 
     local scripts = Glob {
         Dir = scriptsDir,
-        Extensions = { ".py", ".hlsl", "READNME" },
+        Extensions = { ".py", ".hlsl", "READNME", ".jpg", ".png" },
         Recursive = true
     }
 

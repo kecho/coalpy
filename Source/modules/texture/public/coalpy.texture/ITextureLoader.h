@@ -48,6 +48,7 @@ public:
 
     virtual ~ITextureLoader(){}
     virtual void start() = 0;
+    virtual void addPath(const char* path) = 0;
     virtual TextureLoadResult loadTexture(const char* fileName) = 0;
     virtual void processTextures() = 0;
 };

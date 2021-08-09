@@ -27,5 +27,5 @@ void main(int3 dti : SV_DispatchThreadID)
     output[dti.xy] = c.xxxx;
     //output[dti.xy] = float4(uv.y < 0.5 ? uv.xxx : (uv.x < 0.5 ? float3(1,0,0) : float3(0,0,1)), 1.0);//float4(rgb2sRgb(input[dti.xy].rgb), 1.0);//c.xxxx;
     //output[dti.xy] = float4(input[dti.xy].x, 0.001);
-    //output[dti.xy] = float4(abs(input[dti.xy].x - 0.5).xxx, 1.0);
+    output[dti.xy] = float4(input[dti.xy].xxx, 1.0);
 }

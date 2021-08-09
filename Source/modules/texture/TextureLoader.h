@@ -49,6 +49,7 @@ public:
     virtual ~TextureLoader();
 
     virtual void start() override;
+    virtual void addPath(const char* path) override;
     virtual TextureLoadResult loadTexture(const char* fileName) override;
     virtual void processTextures() override;
 
@@ -57,6 +58,7 @@ private:
     ITaskSystem* m_ts = nullptr;
     IFileSystem* m_fs = nullptr;
     render::IDevice* m_device = nullptr;
+    std::vector<std::string> m_additionalPaths;
     
     IImgCodec* m_codecs[(int)ImgFmt::Count];
 

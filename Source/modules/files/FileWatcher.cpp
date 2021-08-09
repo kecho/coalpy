@@ -227,7 +227,6 @@ void FileWatcher::addDirectory(const char* directory)
     m_state->waitResults.push_back(false);
     m_state->events.push_back(CreateEvent(NULL, TRUE, TRUE, NULL));
 #endif
-
 }
 
 void FileWatcher::addListener(IFileWatchListener* listener)

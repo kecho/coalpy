@@ -220,6 +220,8 @@ TextureLoadResult TextureLoader::loadTexture(const char* fileName)
         }
     });
 
+    request.additionalRoots = m_additionalPaths;
+
     AsyncFileHandle readHandle = m_fs->read(request);
     m_fs->execute(readHandle);
     m_fs->wait(readHandle);
@@ -271,6 +273,11 @@ IImgCodec* TextureLoader::findCodec(const std::string& fileName)
 ITextureLoader* ITextureLoader::create(const TextureLoaderDesc& desc)
 {
     return new TextureLoader(desc);
+}
+
+void TextureLoader::addPath(const char* path)
+{
+    m_additionalPaths.push_back(path);
 }
 
 }

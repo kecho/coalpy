@@ -75,13 +75,13 @@ PyMethodDef g_defs[] = {
     ),
 
     KW_FN(
-        add_shader_path,
-        addShaderPath,
+        add_data_path,
+        addDataPath,
         R"(
-        Adds a path to load shader files / shader includes from.
+        Adds a path to load shader / texture files / shader includes from.
         
         Parameters:
-            path (str or Module):  If str it will be a shader path to be used. If a module, it will find the source folder of the module's __init__.py file, and use this source as the path.
+            path (str or Module):  If str it will be a path to be used. If a module, it will find the source folder of the module's __init__.py file, and use this source as the path.
                                    path priorities are based on the order of how they were added.
         )"
     ),
@@ -200,12 +200,41 @@ PyObject* setCurrentAdapter(PyObject* self, PyObject* args, PyObject* kwds)
     Py_RETURN_NONE;
 }
 
-PyObject* addShaderPath(PyObject* self, PyObject* args, PyObject* kwds)
+bool getModulePath(ModuleState& moduleState, PyObject* moduleObject, std::string& path)
+{
+    const bool isModule = PyModule_Check(moduleObject);
+    CPY_ASSERT(isModule);
+    if (!isModule)
+        return false;
+
+    {
+        PyObject* filenameObj = PyModule_GetFilenameObject(moduleObject);
+        if (filenameObj == nullptr)
+        {
+            PyErr_SetString(moduleState.exObj(), "Module passed does not contain an __init__.py file or a core location that can be used to extract a path.");
+            return false;
+        }
+
+        if (PyUnicode_Check(filenameObj))
+        {
+            std::wstring wstr = (const wchar_t*)PyUnicode_AS_DATA(filenameObj);
+            std::string coreModulePath = ws2s(wstr);
+            FileUtils::getDirName(coreModulePath, path);
+        }
+
+        Py_DECREF(filenameObj);
+    }
+
+    return true;
+
+}
+
+PyObject* addDataPath(PyObject* self, PyObject* args, PyObject* kwds)
 {
     ModuleState& moduleState = getState(self);
     if (!moduleState.checkValidDevice())
     {
-        PyErr_SetString(moduleState.exObj(), "Cant add a shader path, current device is invalid.");
+        PyErr_SetString(moduleState.exObj(), "Can't add a data path, current device is invalid.");
         return nullptr;
     }
 
@@ -220,23 +249,9 @@ PyObject* addShaderPath(PyObject* self, PyObject* args, PyObject* kwds)
         std::wstring wstr = (const wchar_t*)PyUnicode_AS_DATA(object);
         path = ws2s(wstr);
     }
-    else if (PyModule_Check(object))
+    else if (!getModulePath(moduleState, self, path))
     {
-        PyObject* filenameObj = PyModule_GetFilenameObject(object);
-        if (filenameObj == nullptr)
-        {
-            PyErr_SetString(moduleState.exObj(), "Module passed does not contain an __init__.py file or a core location that can be used to extract a path.");
-            return nullptr;
-        }
-
-        if (PyUnicode_Check(filenameObj))
-        {
-            std::wstring wstr = (const wchar_t*)PyUnicode_AS_DATA(filenameObj);
-            std::string coreModulePath = ws2s(wstr);
-            FileUtils::getDirName(coreModulePath, path);
-        }
-
-        Py_DECREF(filenameObj);
+        return nullptr;
     }
 
     bool exists = false;
@@ -263,7 +278,7 @@ PyObject* addShaderPath(PyObject* self, PyObject* args, PyObject* kwds)
         return nullptr;
     }
 
-    moduleState.db().addPath(path.c_str());
+    moduleState.addDataPath(path.c_str());
 
     Py_RETURN_NONE;
 

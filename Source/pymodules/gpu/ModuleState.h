@@ -6,6 +6,7 @@
 #include <set>
 #include <coalpy.render/ShaderDefs.h>
 #include <vector>
+#include <string>
 #include <mutex>
 
 namespace coalpy
@@ -38,6 +39,8 @@ public:
 
     void startServices();
     void stopServices();
+
+    void addDataPath(const char* dataPath);
 
     IShaderDb&      db() const { return *m_db; }
     IFileSystem&    fs() const { return *m_fs; }
@@ -79,6 +82,8 @@ public:
 private:
     void onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString);
     void registerTypes(CoalpyTypeObject** types, int typesCount);
+    void internalAddPath(const std::string& path);
+    void updateDataPaths();
 
     bool m_runningRenderLoop = false;
 
@@ -98,6 +103,9 @@ private:
     std::mutex m_shaderErrorMutex;
 
     static std::set<ModuleState*> s_allModules;
+
+    std::set<std::string> m_dataPathPool;
+    std::vector<std::string> m_additionalDataPaths;
 };
 
 }

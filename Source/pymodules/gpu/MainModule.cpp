@@ -9,6 +9,7 @@
 #include <windows.h>
 #endif
 #include <coalpy.core/Assert.h>
+#include <coalpy.files/Utils.h> 
 #include <coalpy.window/WindowDefs.h>
 #include "CoalpyTypeObject.h"
 
@@ -118,6 +119,13 @@ PyMODINIT_FUNC PyInit_gpu(void)
         Py_CLEAR(exceptionObject);
         Py_DECREF(moduleObj);
         return NULL;
+    }
+
+    {
+        std::string modulePath;
+        std::string moduleFilePath = g_ModuleFilePath;
+        coalpy::FileUtils::getDirName(moduleFilePath, modulePath);
+        state->addDataPath(modulePath.c_str());
     }
 
     return moduleObj;

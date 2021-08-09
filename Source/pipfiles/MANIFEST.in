@@ -1,2 +1,2 @@
-recursive-include src/coalpy *.pyd *.dll *.hlsl
+recursive-include src/coalpy *.pyd *.dll *.hlsl *.jpg *.png
 

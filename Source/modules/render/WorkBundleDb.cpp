@@ -274,9 +274,12 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         if (cmd->inlineConstantBufferSize > 0)
         {
             //TODO: hack, dx12 requires aligned buffers to be 256.
-            int alignedBufferSize = ((cmd->inlineConstantBufferSize + (ConstantBufferAlignment - 1))/ConstantBufferAlignment) * ConstantBufferAlignment;
             cmdInfo.uploadBufferOffset = context.totalUploadBufferSize;
-            context.totalUploadBufferSize += alignedBufferSize;
+            int alignedBufferOffset = ((cmdInfo.uploadBufferOffset + (ConstantBufferAlignment - 1)) / ConstantBufferAlignment) * ConstantBufferAlignment;
+            int alignedBufferSize = ((cmd->inlineConstantBufferSize + (ConstantBufferAlignment - 1))/ConstantBufferAlignment) * ConstantBufferAlignment;
+            int padding = alignedBufferOffset - context.totalUploadBufferSize;
+            cmdInfo.uploadBufferOffset += padding;
+            context.totalUploadBufferSize += alignedBufferSize + padding;
 
             cmdInfo.constantBufferTableOffset = context.totalConstantBuffers;
             ++context.totalConstantBuffers;

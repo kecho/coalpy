@@ -85,6 +85,7 @@ void Dx12ShaderDb::addPath(const char* path)
     std::unique_lock lock(m_shadersMutex);
     std::string strpath(path);
     m_additionalPaths.emplace_back(std::move(strpath));
+    
     if (m_desc.enableLiveEditing && m_liveEditWatcher)
         m_liveEditWatcher->addDirectory(path);
 }
