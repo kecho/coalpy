@@ -28,7 +28,7 @@ void csMain(int2 dti : SV_DispatchThreadID)
     if (any(dti.xy >= texSizes.xy))
         return;
 
-    int bufferOffset = 3 * (dti.y * texSizes.x + dti.y);
+    int bufferOffset = 3 * (dti.y * texSizes.x + dti.x);
     g_outputTexture[dti.xy] = float4(g_inputBuffer[bufferOffset], g_inputBuffer[bufferOffset + 1], g_inputBuffer[bufferOffset + 2], 1.0); 
 }
 )";

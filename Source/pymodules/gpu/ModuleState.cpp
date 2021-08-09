@@ -44,40 +44,7 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
         m_fs = IFileSystem::create(desc);
     }
 
-    {
-        std::string dllname = g_ModuleFilePath;
-        std::string modulePath;
-        FileUtils::getDirName(dllname, modulePath);
-        modulePath += "/resources/";
-
-        ShaderDbDesc desc;
-        desc.compilerDllPath = modulePath.c_str();
-        desc.resolveOnDestruction = true; //this is so there is a nice clean destruction
-        desc.fs = m_fs;
-        desc.ts = m_ts;
-        desc.fw = m_fw;
-        desc.enableLiveEditing = true;
-        desc.onErrorFn = [this](ShaderHandle handle, const char* shaderName, const char* shaderErrorStr)
-        {
-            onShaderCompileError(handle, shaderName, shaderErrorStr);
-        };
-        m_db = IShaderDb::create(desc);
-    }
-
-    {
-        render::DeviceConfig devConfig;
-        devConfig.moduleHandle = g_ModuleInstance;
-        devConfig.shaderDb = m_db;
-        m_device = render::IDevice::create(devConfig);
-    }
-
-    {
-        TextureLoaderDesc desc;
-        desc.device = m_device;
-        desc.ts = m_ts;
-        desc.fs = m_fs;
-        m_tl = ITextureLoader::create(desc);
-    }
+    createDevice(0);
 
     {
         m_windowListener = Window::createWindowListener(*this);
@@ -135,9 +102,7 @@ ModuleState::~ModuleState()
     m_commandListPool.clear();
 
     delete m_windowListener;
-    delete m_tl;
-    delete m_device;
-    delete m_db;
+    destroyDevice();
     delete m_fs;
     delete m_ts;
     delete m_fw;
@@ -155,6 +120,58 @@ void ModuleState::stopServices()
     m_ts->join();
 }
 
+bool ModuleState::createDevice(int index)
+{
+    {
+        std::string dllname = g_ModuleFilePath;
+        std::string modulePath;
+        FileUtils::getDirName(dllname, modulePath);
+        modulePath += "/resources/";
+
+        ShaderDbDesc desc;
+        desc.compilerDllPath = modulePath.c_str();
+        desc.resolveOnDestruction = true; //this is so there is a nice clean destruction
+        desc.fs = m_fs;
+        desc.ts = m_ts;
+        desc.fw = m_fw;
+        desc.enableLiveEditing = true;
+        desc.onErrorFn = [this](ShaderHandle handle, const char* shaderName, const char* shaderErrorStr)
+        {
+            onShaderCompileError(handle, shaderName, shaderErrorStr);
+        };
+        m_db = IShaderDb::create(desc);
+    }
+
+    {
+        render::DeviceConfig devConfig;
+        devConfig.moduleHandle = g_ModuleInstance;
+        devConfig.shaderDb = m_db;
+        devConfig.index = index;
+        m_device = render::IDevice::create(devConfig);
+        if (!m_device || !m_device->info().valid)
+        {
+            PyErr_SetString(exObj(), "Invalid adapter index selected, current gpu device is not valid.");
+            return false;
+        }
+    }
+
+    {
+        TextureLoaderDesc desc;
+        desc.device = m_device;
+        desc.ts = m_ts;
+        desc.fs = m_fs;
+        m_tl = ITextureLoader::create(desc);
+    }
+
+}
+
+void ModuleState::destroyDevice()
+{
+    delete m_tl;
+    delete m_device;
+    delete m_db;
+}
+
 bool ModuleState::selectAdapter(int index)
 {
     std::vector<render::DeviceInfo> allAdapters;
@@ -166,18 +183,12 @@ bool ModuleState::selectAdapter(int index)
         return false;
     }
 
-    delete m_device;
-    render::DeviceConfig devConfig;
-    devConfig.moduleHandle = g_ModuleInstance;
-    devConfig.shaderDb = m_db;
-    devConfig.index = index;
-    m_device = render::IDevice::create(devConfig);
-    if (!m_device || !m_device->info().valid)
-    {
-        PyErr_SetString(exObj(), "Invalid adapter index selected, current gpu device is not valid.");
+    destroyDevice();
+    if (!createDevice(index))
         return false;
-    }
 
+    
+    m_tl->start(); //restart the texture loader
     return true;
 }
 

@@ -268,7 +268,7 @@ void Dx12ResourceCollection::release(ResourceHandle handle)
         it->second.erase(handle);
     }
 
-    *container = {};
+    container->clear();
     m_resources.free(handle, false);
     m_workDb.unregisterResource(handle);
 }

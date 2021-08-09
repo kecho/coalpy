@@ -72,6 +72,10 @@ public:
 
     void setRenderLoop(bool rl) { m_runningRenderLoop = rl; }
     bool isInRenderLoop() const { return m_runningRenderLoop; }
+
+    void destroyDevice();
+    bool createDevice(int index);
+
 private:
     void onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString);
     void registerTypes(CoalpyTypeObject** types, int typesCount);

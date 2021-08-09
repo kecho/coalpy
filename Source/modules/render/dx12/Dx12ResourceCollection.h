@@ -62,6 +62,13 @@ private:
         ResourceHandle handle;
         SmartPtr<Dx12Resource> resource;
         std::set<ResourceTable> parentTables;
+
+        void clear()
+        {
+            handle = ResourceHandle();
+            resource = nullptr;
+            parentTables.clear();
+        }
     };
 
     bool convertTableDescToResourceList(
