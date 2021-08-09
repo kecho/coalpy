@@ -99,7 +99,7 @@ public:
             }
 
             {
-                texDesc.format = Format::RGBA_8_UNORM_SRGB;
+                texDesc.format = Format::RGBA_8_UNORM;
                 texDesc.memFlags = (render::MemFlags)((int)texDesc.memFlags | render::MemFlag_GpuWrite);
                 m_texture = m_device.createTexture(texDesc);
             }
@@ -133,7 +133,7 @@ public:
             switch (fmt)
             {
             case ImgColorFmt::sRgba:
-                texDesc.format = Format::RGBA_8_UNORM_SRGB;
+                texDesc.format = Format::RGBA_8_UNORM;
                 break;          
             case ImgColorFmt::R:
                 texDesc.format = Format::R8_UNORM;
