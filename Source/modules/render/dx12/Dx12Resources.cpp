@@ -339,6 +339,9 @@ Dx12ResourceInitResult Dx12Texture::init()
         {
             auto uav = descriptorPool.allocateSrvOrUavOrCbv();
             auto mipUavDesc = m_data.uavDesc;
+            if (mipUavDesc.Format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB)
+                mipUavDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
             switch (m_data.uavDesc.ViewDimension)
             {
             case D3D12_UAV_DIMENSION_TEXTURE1D:

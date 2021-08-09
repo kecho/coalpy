@@ -99,6 +99,7 @@ public:
             }
 
             {
+                texDesc.format = Format::RGBA_8_UNORM_SRGB;
                 texDesc.memFlags = (render::MemFlags)((int)texDesc.memFlags | render::MemFlag_GpuWrite);
                 m_texture = m_device.createTexture(texDesc);
             }
@@ -126,7 +127,6 @@ public:
             }
 
             m_cmdList.finalize();
-            texDesc.format = Format::RGBA_8_UNORM_SRGB;
         }
         else
         {
