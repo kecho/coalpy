@@ -16,6 +16,7 @@
 #include <coalpy.core/String.h>
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/Utils.h>
+#include <coalpy.texture/ITextureLoader.h>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -314,6 +315,8 @@ PyObject* run(PyObject* self, PyObject* args)
 
     runArgs.onRender = [&state, &raiseException, renderArgs, &stopwatch, imguiBuilder]()
     {
+        state.tl().processTextures();
+
         unsigned long long mst = stopwatch.timeMicroSecondsLong();
         double newRenderTime = (double)mst / 1000.0;
         renderArgs->deltaTime = newRenderTime - renderArgs->renderTime;

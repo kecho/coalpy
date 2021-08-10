@@ -74,6 +74,7 @@ private:
     struct LoadingState
     {
         bool loadSuccess = false;
+        std::string fileName;
         ByteBuffer fileBuffer;
         TextureLoadResult loadResult;
         AsyncFileHandle fileHandle;
@@ -83,6 +84,7 @@ private:
 
         void clear()
         {
+            fileName.clear();
             fileBuffer.resize(0u);
             loadResult = TextureLoadResult();
             fileHandle = AsyncFileHandle();

@@ -58,13 +58,16 @@ TextureResult Dx12ResourceCollection::recreateTexture(Texture handle, const Text
     CPY_ASSERT(handle.valid())
     CPY_ASSERT(m_resources.contains(handle));
 
-    if (!desc.recreatable)
-        return TextureResult { ResourceResult::InvalidHandle, Texture(), "Texture is not tagged as recreatable." };
-
     if (!handle.valid() || !m_resources.contains(handle))
         return TextureResult { ResourceResult::InvalidHandle, Texture(), "Invalid handle on recreateTexture call." };
 
     auto& c = m_resources[handle];
+    if (!c->resource->config().recreatable)
+        return TextureResult { ResourceResult::InvalidHandle, Texture(), "Texture is not tagged as recreatable." };
+
+    std::vector<ResourceTable> parentTables;
+    getParentTablesUnsafe(handle, parentTables);
+
     CPY_ASSERT(c->type == ResType::Texture);
     if (c->type != ResType::Texture)
         return TextureResult { ResourceResult::InvalidParameter, Texture(), "Used a texture handle, expected buffer handle." };
@@ -82,6 +85,10 @@ TextureResult Dx12ResourceCollection::recreateTexture(Texture handle, const Text
         return TextureResult { initResult.result, Texture(), std::move(initResult.message) };
 
     c->resource = textureObj; 
+
+    for (auto t : parentTables)
+        recreateUnsafe(t);
+
     return TextureResult { ResourceResult::Ok, handle };
 }
 
@@ -195,9 +202,8 @@ OutResourceTableResult Dx12ResourceCollection::createOutResourceTable(const Reso
     return OutResourceTableResult { ResourceResult::Ok, OutResourceTable { result.tableHandle.handleId } };
 }
 
-bool Dx12ResourceCollection::recreate(ResourceTable handle)
+bool Dx12ResourceCollection::recreateUnsafe(ResourceTable handle)
 {
-    std::unique_lock lock(m_resourceMutex);
     bool isValid = handle.valid() && m_resourceTables.contains(handle);
     CPY_ASSERT(isValid);
     if (!isValid)
@@ -297,9 +303,8 @@ void Dx12ResourceCollection::release(ResourceTable handle)
     m_workDb.unregisterTable(handle);
 }
 
-void Dx12ResourceCollection::getParentTables(ResourceHandle resource, std::vector<ResourceTable>& outTables)
+void Dx12ResourceCollection::getParentTablesUnsafe(ResourceHandle resource, std::vector<ResourceTable>& outTables)
 {
-    std::unique_lock lock(m_resourceMutex);
     bool isValid = resource.valid() && m_resources.contains(resource);
     CPY_ASSERT(isValid);
     if (!isValid)

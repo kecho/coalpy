@@ -96,12 +96,8 @@ void Dx12Display::createComputeTexture()
     }
     else
     {
-        std::vector<ResourceTable> parentTables;
-        m_device.resources().getParentTables(m_computeTexture, parentTables);
         TextureResult result = m_device.resources().recreateTexture(m_computeTexture, desc);
         CPY_ASSERT_FMT(result.success(), "Could not create swap chain compute texture: %s", result.message.c_str());
-        for (auto t : parentTables)
-            m_device.resources().recreate(t);
     }
 
     m_copyCmdLists.resize(m_buffering);

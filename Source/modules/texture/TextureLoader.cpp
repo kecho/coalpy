@@ -69,10 +69,11 @@ public:
     virtual unsigned char* allocate(ImgColorFmt fmt, int width, int height, int bytes) override
     {
         render::TextureDesc& texDesc = m_texDesc;
-        texDesc.memFlags = render::MemFlag_GpuRead;
+        //texDesc.memFlags = render::MemFlag_GpuRead;
         texDesc.type = render::TextureType::k2d;
         texDesc.width = width; 
-        texDesc.height = height; 
+        texDesc.height = height;
+        texDesc.format = Format::RGBA_8_UNORM;
 
         render::MemOffset offset = {};
 
@@ -80,7 +81,6 @@ public:
         {
             if (!m_srgbToSrgbaShader.valid())
                 return nullptr;
-
             {
                 render::BufferDesc bufferDesc;
                 bufferDesc.format = Format::R8_UNORM;
@@ -217,13 +217,14 @@ TextureLoadResult TextureLoader::loadTexture(const char* fileName)
 
     {
         render::TextureDesc texDesc;
-        texDesc.width = 1;
-        texDesc.height = 1;
-        texDesc.memFlags = render::MemFlag_GpuRead;
+        texDesc.width = 400;
+        texDesc.height = 400;
         texDesc.recreatable = true;
         loadState.texture = m_device->createTexture(texDesc);
         imageLoader->texture() = loadState.texture;
     }
+
+    loadState.fileName = fileName;
     
     FileReadRequest request(fileName, [this, &loadState](FileReadResponse& response)
     {
@@ -250,12 +251,17 @@ TextureLoadResult TextureLoader::loadTexture(const char* fileName)
         else if (response.status == FileStatus::Fail)
         {
             std::stringstream ss;
-            ss << "Could not find texture file: " << response.filePath;
+            ss << "Could not find texture file: " << loadState.fileName;
             loadState.loadResult = TextureLoadResult { TextureStatus::FileNotFound, render::Texture(), ss.str() };
             std::lock_guard lock(m_completeStatesMutex);
             m_completeStates.push(&loadState);
         }
     });
+
+    request.additionalRoots = m_additionalPaths;
+
+    loadState.fileHandle = m_fs->read(request);
+    m_fs->execute(loadState.fileHandle);
 
     return TextureLoadResult { TextureStatus::Ok, loadState.texture };
 }
@@ -273,15 +279,32 @@ void TextureLoader::processTextures()
         }
     }
 
+    std::vector<render::CommandList*> lists;
     for (auto* state : acquiredStates)
     {
         if (state->loadResult.success())
         {
             auto* imageLoader = (CmdListImageUploader*)state->imageData;
             auto texResult = m_device->recreateTexture(state->texture, imageLoader->textureDesc());
-            CPY_ASSERT(texResult.success()); //TODO: handle this failure
+            CPY_ASSERT_MSG(texResult.success(), texResult.message.c_str()); //TODO: handle this failure
+            if (texResult.success())
+                lists.push_back(&imageLoader->cmdList());
         }
+        else
+        {
+            CPY_ASSERT_MSG(false, state->loadResult.message.c_str()); //TODO handle this failure
+        }
+    }
+        
+    render::ScheduleStatus result = m_device->schedule(lists.data(), lists.size());
+    if (!result.success())
+    {
+        CPY_ASSERT_FMT(false, "Error scheduling texture loading: %s", result.message.c_str());
+    }
 
+    for (auto* state : acquiredStates)
+    {
+        m_fs->closeHandle(state->fileHandle);
         state->clear();
         freeLoadState(state);
     }

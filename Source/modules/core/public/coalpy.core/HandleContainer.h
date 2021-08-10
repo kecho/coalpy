@@ -1,20 +1,33 @@
 #pragma once
+#include <coalpy.core/Assert.h>
 #include <vector>
 #include <functional>
 
 namespace coalpy
 {
 
-template<typename HandleType, typename DataType>
+template<typename HandleType, typename DataType, int fixedContainerSize = -1>
 class HandleContainer
 {
 public:
     using OnElementFn = std::function<void(HandleType handle, DataType& data)>;
 
+    HandleContainer()
+    {
+        if(fixedContainerSize != -1)
+            m_data.reserve(fixedContainerSize);
+    }
+
     DataType& allocate(HandleType& outHandle)
     {
         if (m_freeHandles.empty())
         {
+            if (fixedContainerSize != -1 && m_data.size() == fixedContainerSize)
+            {
+                CPY_ASSERT_MSG(false, "Fixed sized container exceeded capacity.");
+                return m_data.back().data;
+            }
+
             outHandle.handleId = (HandleType::BaseType)m_data.size();
             m_data.emplace_back();
         }

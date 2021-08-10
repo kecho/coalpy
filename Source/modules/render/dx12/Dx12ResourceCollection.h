@@ -48,9 +48,10 @@ public:
     Dx12Resource& unsafeGetResource(ResourceHandle handle) { return *(m_resources[handle]->resource); }
     void unlock() { m_resourceMutex.unlock(); }
 
-    void getParentTables(ResourceHandle resource, std::vector<ResourceTable>& outTables);
-    bool recreate(ResourceTable resource);
+    bool recreateUnsafe(ResourceTable resource);
     TextureResult recreateTexture(Texture handle, const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr);
+
+    void getParentTablesUnsafe(ResourceHandle resource, std::vector<ResourceTable>& outTables);
 
 private:
     Dx12ResourceTableResult createResourceTable(const ResourceTableDesc& desc, bool isUav);
@@ -83,8 +84,8 @@ private:
     Dx12Device& m_device;
     WorkBundleDb& m_workDb;
     std::mutex m_resourceMutex;
-    HandleContainer<ResourceHandle, SmartPtr<ResourceContainer>> m_resources;
-    HandleContainer<ResourceTable , SmartPtr<Dx12ResourceTable>> m_resourceTables;
+    HandleContainer<ResourceHandle, SmartPtr<ResourceContainer>, 256> m_resources;
+    HandleContainer<ResourceTable , SmartPtr<Dx12ResourceTable>, 256> m_resourceTables;
 };
 
 }
