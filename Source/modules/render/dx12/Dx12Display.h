@@ -35,10 +35,12 @@ public:
     void waitForGpu();
     void present(Dx12Fence& fence);
 
+    int version() { return m_version; }
 private:
     void doRetardedDXGIDx12Hack(int bufferIndex);
     void createComputeTexture();
     TextureDesc m_surfaceDesc;
+    int m_version = 0;
     int m_buffering = 0;
     Texture m_computeTexture;
     std::vector<Texture> m_textures;

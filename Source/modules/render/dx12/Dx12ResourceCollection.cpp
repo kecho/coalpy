@@ -85,6 +85,7 @@ TextureResult Dx12ResourceCollection::recreateTexture(Texture handle, const Text
         return TextureResult { initResult.result, Texture(), std::move(initResult.message) };
 
     c->resource = textureObj; 
+    m_workDb.registerResource(handle, desc.memFlags, c->resource->defaultGpuState());
 
     for (auto t : parentTables)
         recreateUnsafe(t);

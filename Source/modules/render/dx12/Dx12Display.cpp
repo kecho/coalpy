@@ -123,6 +123,7 @@ void Dx12Display::acquireTextures()
         m_textures.push_back(texResult.texture);
     }
     createComputeTexture();
+    ++m_version;
 }
 
 void Dx12Display::waitForGpu()

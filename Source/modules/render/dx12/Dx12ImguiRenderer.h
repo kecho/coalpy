@@ -38,6 +38,7 @@ private:
     int m_windowHookId;
     int m_cachedWidth;
     int m_cachedHeight;
+    int m_cachedSwapVersion;
 
     Dx12Descriptor m_rtv;
     SmartPtr<ID3D12DescriptorHeap> m_srvHeap;

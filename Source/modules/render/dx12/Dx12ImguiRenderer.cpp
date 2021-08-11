@@ -34,6 +34,7 @@ Dx12imguiRenderer::Dx12imguiRenderer(const IimguiRendererDesc& desc)
 , m_window(*(Win32Window*)desc.window)
 , m_cachedWidth(-1)
 , m_cachedHeight(-1)
+, m_cachedSwapVersion(-1)
 {
     m_context = ImGui::CreateContext();
 
@@ -158,7 +159,7 @@ void Dx12imguiRenderer::setCoalpyStyle()
 void Dx12imguiRenderer::setupSwapChain()
 {
     auto config = m_display.config();
-    if (m_cachedHeight == config.height && m_cachedWidth == config.width)
+    if (m_cachedHeight == config.height && m_cachedWidth == config.width && m_cachedSwapVersion == m_display.version())
         return;
 
     m_device.resources().lock();
@@ -169,6 +170,7 @@ void Dx12imguiRenderer::setupSwapChain()
 
     m_cachedWidth = config.width;
     m_cachedHeight = config.height;
+    m_cachedSwapVersion = m_display.version();
 }
 
 void Dx12imguiRenderer::render()
