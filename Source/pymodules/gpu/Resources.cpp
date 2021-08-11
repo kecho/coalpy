@@ -118,6 +118,7 @@ int Texture::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     auto* texture = (Texture*)self;
     texture->texture = render::Texture();
     texture->owned = true;
+    texture->isFile = false;
 
     ModuleState& moduleState = parentModule(self);
     if (!moduleState.checkValidDevice())
@@ -141,6 +142,7 @@ int Texture::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         }
 
         texture->texture = result.texture;
+        texture->isFile = true;
         return 0;
     }
 
@@ -167,7 +169,10 @@ void Texture::destroy(PyObject* self)
         return;
 
     ModuleState& moduleState = parentModule(self);
-    moduleState.device().release(texture->texture);
+    if (texture->isFile)
+        moduleState.tl().unloadTexture(texture->texture);
+    else
+        moduleState.device().release(texture->texture);
     texture->~Texture();
     Py_TYPE(self)->tp_free(self);
 }

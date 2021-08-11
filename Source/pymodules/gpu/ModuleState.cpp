@@ -180,6 +180,7 @@ bool ModuleState::createDevice(int index)
         desc.device = m_device;
         desc.ts = m_ts;
         desc.fs = m_fs;
+        desc.fw = m_fw;
         m_tl = ITextureLoader::create(desc);
     }
 

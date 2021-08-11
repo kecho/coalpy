@@ -159,6 +159,24 @@ struct hash<coalpy::render::ResourceHandle>
 };
 
 template<>
+struct hash<coalpy::render::Texture>
+{
+    size_t operator()(const coalpy::render::Texture& h) const
+    {
+        return (std::size_t)h.handleId;
+    }
+};
+
+template<>
+struct hash<coalpy::render::Buffer>
+{
+    size_t operator()(const coalpy::render::Buffer& h) const
+    {
+        return (std::size_t)h.handleId;
+    }
+};
+
+template<>
 struct hash<coalpy::render::ResourceTable>
 {
     size_t operator()(const coalpy::render::ResourceTable h) const

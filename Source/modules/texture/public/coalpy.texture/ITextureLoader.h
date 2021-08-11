@@ -13,6 +13,7 @@ class IDevice;
 
 class ITaskSystem;
 class IFileSystem;
+class IFileWatcher;
 
 enum TextureStatus
 {
@@ -37,8 +38,9 @@ struct TextureLoadResult
 struct TextureLoaderDesc
 {
     render::IDevice* device = nullptr;
-    ITaskSystem* ts = nullptr;
-    IFileSystem* fs = nullptr;
+    ITaskSystem*  ts = nullptr;
+    IFileSystem*  fs = nullptr;
+    IFileWatcher* fw = nullptr;
 };
 
 class ITextureLoader
@@ -50,6 +52,7 @@ public:
     virtual void start() = 0;
     virtual void addPath(const char* path) = 0;
     virtual TextureLoadResult loadTexture(const char* fileName) = 0;
+    virtual void unloadTexture(render::Texture texture) = 0;
     virtual void processTextures() = 0;
 };
 

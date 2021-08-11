@@ -7,6 +7,7 @@
 #include <coalpy.render/IShaderDb.h>
 #include "JpegCodec.h"
 #include "PngCodec.h"
+#include <iostream>
 #include <sstream>
 
 namespace coalpy
@@ -15,7 +16,7 @@ namespace coalpy
 static const char* s_srgb2SrgbaCode = R"(
 
 Buffer<unorm float> g_inputBuffer : register(t0);
-RWTexture2D<unorm float4> g_outputTexture : register(u0);
+RWTexture2D<float4> g_outputTexture : register(u0);
 
 cbuffer Constants : register(b0)
 {
@@ -74,6 +75,7 @@ public:
         texDesc.width = width; 
         texDesc.height = height;
         texDesc.format = Format::RGBA_8_UNORM;
+        texDesc.recreatable = true;
 
         render::MemOffset offset = {};
 
@@ -164,10 +166,12 @@ private:
 TextureLoader::TextureLoader(const TextureLoaderDesc& desc)
 : m_ts(desc.ts)
 , m_fs(desc.fs)
+, m_fw(desc.fw)
 , m_device(desc.device)
 {
     m_codecs[(int)ImgFmt::Jpeg] = new JpegCodec;
     m_codecs[(int)ImgFmt::Png] = new PngCodec;
+    m_fw->addListener(this);
 }
 
 void TextureLoader::start()
@@ -186,11 +190,27 @@ void TextureLoader::start()
 
 TextureLoader::~TextureLoader()
 {
+    m_fw->removeListener(this);
     for (auto* c : m_codecs)
         delete c;
+
+    
+    for (auto l : m_loadingStates)
+    {
+        cleanState(*l.second, true);
+        freeLoadState(l.second);
+    }
+        
+    for (auto s : m_freeLoaderStates)
+        delete s;
 }
 
 TextureLoadResult TextureLoader::loadTexture(const char* fileName)
+{
+    return loadTextureInternal(fileName);
+}
+
+TextureLoadResult TextureLoader::loadTextureInternal(const char* fileName, render::Texture existingTexture)
 {
     std::string strName = fileName;
     IImgCodec* codec = findCodec(fileName);
@@ -215,14 +235,21 @@ TextureLoadResult TextureLoader::loadTexture(const char* fileName)
         imageLoader = (CmdListImageUploader*)loadState.imageData;
     }
 
+    if (!existingTexture.valid())
     {
         render::TextureDesc texDesc;
-        texDesc.width = 400;
-        texDesc.height = 400;
+        texDesc.width = 1;
+        texDesc.height = 1;
+        texDesc.format = Format::RGBA_8_UNORM;
         texDesc.recreatable = true;
         loadState.texture = m_device->createTexture(texDesc);
-        imageLoader->texture() = loadState.texture;
     }
+    else
+    {
+        loadState.texture = existingTexture;
+    }
+
+    imageLoader->texture() = loadState.texture;
 
     loadState.fileName = fileName;
     
@@ -238,6 +265,7 @@ TextureLoadResult TextureLoader::loadTexture(const char* fileName)
             if (codecResult.success())
             {
                 loadState.loadResult = TextureLoadResult { TextureStatus::Ok, render::Texture() };
+                loadState.resolvedFileName = response.filePath;
                 std::lock_guard lock(m_completeStatesMutex);
                 m_completeStates.push(&loadState);
             }
@@ -253,6 +281,7 @@ TextureLoadResult TextureLoader::loadTexture(const char* fileName)
             std::stringstream ss;
             ss << "Could not find texture file: " << loadState.fileName;
             loadState.loadResult = TextureLoadResult { TextureStatus::FileNotFound, render::Texture(), ss.str() };
+
             std::lock_guard lock(m_completeStatesMutex);
             m_completeStates.push(&loadState);
         }
@@ -261,9 +290,26 @@ TextureLoadResult TextureLoader::loadTexture(const char* fileName)
     request.additionalRoots = m_additionalPaths;
 
     loadState.fileHandle = m_fs->read(request);
-    m_fs->execute(loadState.fileHandle);
+
+    {
+        std::lock_guard lock(m_loadStateMutex);
+        m_loadingStates[loadState.texture] = &loadState;
+        m_fs->execute(loadState.fileHandle);
+    }
 
     return TextureLoadResult { TextureStatus::Ok, loadState.texture };
+}
+
+void TextureLoader::cleanState(LoadingState& state, bool sync)
+{
+    if (sync)
+        m_fs->wait(state.fileHandle);
+
+    m_fs->closeHandle(state.fileHandle);
+    state.clear();
+
+    if (!sync)
+        freeLoadState(&state);
 }
 
 void TextureLoader::processTextures()
@@ -274,8 +320,18 @@ void TextureLoader::processTextures()
         std::lock_guard lock(m_completeStatesMutex);
         while (!m_completeStates.empty() && loadBudget-- > 0)
         {
-            acquiredStates.push_back(m_completeStates.front());
+            auto* state = m_completeStates.front();
+            acquiredStates.push_back(state);
             m_completeStates.pop();
+
+            //This happens when a state was deleted.
+            if (!state->texture.valid())
+            {
+                ++loadBudget;
+                freeLoadState(state);
+            }
+
+            m_loadingStates.erase(state->texture);
         }
     }
 
@@ -304,9 +360,8 @@ void TextureLoader::processTextures()
 
     for (auto* state : acquiredStates)
     {
-        m_fs->closeHandle(state->fileHandle);
-        state->clear();
-        freeLoadState(state);
+        trackTexture(state->resolvedFileName.c_str(), state->texture);
+        cleanState(*state, false);
     }
 }
 
@@ -327,8 +382,40 @@ IImgCodec* TextureLoader::findCodec(const std::string& fileName)
     return nullptr;
 }
 
+
+void TextureLoader::unloadTexture(render::Texture texture)
+{
+    {
+        LoadingState* ls = nullptr;
+        std::lock_guard lock(m_loadStateMutex);
+        auto it = m_loadingStates.find(texture);
+        if (it != m_loadingStates.end())
+        {
+            ls = it->second;
+            m_loadingStates.erase(it);
+        }
+        if (ls != nullptr)
+            cleanState(*ls, true);
+    }
+
+    {
+        std::lock_guard lock(m_trackedFilesMutex);
+        for (auto p : m_filesToTextures)
+        {
+            if (p.second == texture)
+            {
+                m_filesToTextures.erase(p.first);
+                break;
+            }
+        }
+    }
+
+    m_device->release(texture);
+}
+
 TextureLoader::LoadingState* TextureLoader::allocateLoadState()
 {
+    std::lock_guard lock(m_loadStateMutex);
     if (m_freeLoaderStates.empty())
     {
         return new TextureLoader::LoadingState;
@@ -343,17 +430,55 @@ TextureLoader::LoadingState* TextureLoader::allocateLoadState()
 
 void TextureLoader::freeLoadState(TextureLoader::LoadingState* state)
 {
+    std::lock_guard lock(m_loadStateMutex);
     m_freeLoaderStates.push_back(state);
 }
 
-ITextureLoader* ITextureLoader::create(const TextureLoaderDesc& desc)
+void TextureLoader::trackTexture(const std::string& resolvedFile, render::Texture texture)
 {
-    return new TextureLoader(desc);
+    FileLookup lookup(resolvedFile);
+    std::lock_guard lock(m_trackedFilesMutex);
+    m_filesToTextures[lookup] = texture;
+}
+
+void TextureLoader::onFilesChanged(const std::set<std::string>& filesChanged)
+{
+    if (filesChanged.empty())
+        return;
+
+    std::lock_guard lock(m_trackedFilesMutex);
+    for (auto fileChanged : filesChanged)
+    {
+        std::string resolvedFileName;
+        FileUtils::getAbsolutePath(fileChanged, resolvedFileName);
+
+        FileLookup lookup(resolvedFileName);
+        auto it = m_filesToTextures.find(resolvedFileName);
+        if (it == m_filesToTextures.end())
+            continue;
+
+        {
+            std::lock_guard lock(m_loadStateMutex);
+            if (m_loadingStates.find(it->second) != m_loadingStates.end())
+                continue;
+        }
+
+        loadTextureInternal(resolvedFileName.c_str(), it->second);
+    }
 }
 
 void TextureLoader::addPath(const char* path)
 {
     m_additionalPaths.push_back(path);
+
+    if (m_fw)
+        m_fw->addDirectory(path);
+}
+
+
+ITextureLoader* ITextureLoader::create(const TextureLoaderDesc& desc)
+{
+    return new TextureLoader(desc);
 }
 
 }

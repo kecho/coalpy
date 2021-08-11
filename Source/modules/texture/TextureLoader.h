@@ -1,12 +1,14 @@
 #pragma once
-
 #include <coalpy.texture/ITextureLoader.h>
 #include <coalpy.render/ShaderDefs.h>
 #include <coalpy.render/Resources.h>
 #include <coalpy.files/IFileSystem.h>
+#include <coalpy.files/IFileWatcher.h>
+#include <coalpy.files/Utils.h>
 #include <coalpy.core/ByteBuffer.h>
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include <queue>
 #include <mutex>
 
@@ -48,7 +50,7 @@ public:
         IImgData& outData) = 0;
 };
 
-class TextureLoader : public ITextureLoader
+class TextureLoader : public ITextureLoader, public IFileWatchListener
 {
 public:
     TextureLoader(const TextureLoaderDesc& desc);
@@ -57,9 +59,12 @@ public:
     virtual void start() override;
     virtual void addPath(const char* path) override;
     virtual TextureLoadResult loadTexture(const char* fileName) override;
+    virtual void unloadTexture(render::Texture texture) override;
     virtual void processTextures() override;
+    virtual void onFilesChanged(const std::set<std::string>& filesChanged) override;
 
 private:
+    TextureLoadResult loadTextureInternal(const char* fileName, render::Texture existingTexture = render::Texture());
 
     IImgCodec* findCodec(const std::string& fileName);
     ITaskSystem* m_ts = nullptr;
@@ -75,6 +80,7 @@ private:
     {
         bool loadSuccess = false;
         std::string fileName;
+        std::string resolvedFileName;
         ByteBuffer fileBuffer;
         TextureLoadResult loadResult;
         AsyncFileHandle fileHandle;
@@ -85,6 +91,7 @@ private:
         void clear()
         {
             fileName.clear();
+            resolvedFileName.clear();
             fileBuffer.resize(0u);
             loadResult = TextureLoadResult();
             fileHandle = AsyncFileHandle();
@@ -94,13 +101,24 @@ private:
         }
     };
 
+    void cleanState(LoadingState& state, bool sync);
+
     LoadingState* allocateLoadState();
     void freeLoadState(LoadingState* loadState);
 
+    std::mutex m_loadStateMutex;
     std::vector<LoadingState*> m_freeLoaderStates;
+    std::unordered_map<render::Texture, LoadingState*> m_loadingStates;
 
     std::mutex m_completeStatesMutex;
     std::queue<LoadingState*>  m_completeStates;
+
+    void trackTexture(const std::string& resolvedFile, render::Texture texture);
+    using FileTextureMap = std::unordered_map<FileLookup, render::Texture>;
+    std::mutex m_trackedFilesMutex;
+    FileTextureMap m_filesToTextures;
+
+    IFileWatcher* m_fw;
 };
 
 }

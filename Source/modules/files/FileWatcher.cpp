@@ -75,6 +75,12 @@ bool findResults(
             std::string filename = ws2s(wfilename);
             caughtFiles.insert(rootDir + "/" + filename);
         }
+#if WATCH_SERVICE_DEBUG_OUTPUT
+        else
+        {
+            std::cout << "Action not captured" << std::endl;
+        }
+#endif
         curr = curr->NextEntryOffset == 0 ? nullptr : (FILE_NOTIFY_INFORMATION*)((char*)curr + curr->NextEntryOffset);
     }
     
@@ -95,7 +101,7 @@ bool waitListenForDirs(FileWatchState& state, int millisecondsToWait)
     for (int i = 0; i < (int)state.handles.size(); ++i)
     {
         #if WATCH_SERVICE_DEBUG_OUTPUT
-            std::cout << "polling filewatch: " << m_state.directories[i] << std::endl;
+            std::cout << "polling filewatch: " << state.directories[i] << std::endl;
         #endif
 
         auto dirHandle = (HANDLE)state.handles[i];
@@ -109,7 +115,7 @@ bool waitListenForDirs(FileWatchState& state, int millisecondsToWait)
             {
                 DWORD bytesReturned = 0;
                 bool result = ReadDirectoryChangesW(
-                    dirHandle, (LPVOID)&infos, sizeof(infos), TRUE, FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned,
+                    dirHandle, (LPVOID)&infos, sizeof(infos), TRUE, FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned,
                     &overlapped, NULL);
                 state.waitResults[i] = true;
                 CPY_ASSERT_FMT(result, "Failed watching directory \"%s\"", state.directories[i].c_str());

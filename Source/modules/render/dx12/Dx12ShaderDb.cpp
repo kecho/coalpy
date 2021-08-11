@@ -34,7 +34,7 @@ struct Dx12CompileState
     Dx12CompileArgs compileArgs;
     AsyncFileHandle readStep;
     Task compileStep;
-    std::set<Dx12FileLookup> files;
+    std::set<FileLookup> files;
     bool success;
 };
 
@@ -248,7 +248,7 @@ void Dx12ShaderDb::prepareIoJob(Dx12CompileState& compileState, const std::strin
 
             if (m_desc.enableLiveEditing)
             {
-                Dx12FileLookup fileLookup(response.filePath);
+                FileLookup fileLookup(response.filePath);
                 std::unique_lock lock(m_dependencyMutex);
                 m_fileToShaders[fileLookup].insert(compileState.shaderHandle);
                 m_shadersToFiles[compileState.shaderHandle].insert(fileLookup);
@@ -311,7 +311,7 @@ void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
 
         if (result && m_desc.enableLiveEditing)
         {
-            Dx12FileLookup fileLookup(path);
+            FileLookup fileLookup(path);
             compileState.files.insert(fileLookup);
         }
 
@@ -485,18 +485,18 @@ void Dx12ShaderDb::stopLiveEdit()
     m_liveEditWatcher->removeListener(this);
 }
 
-Dx12FileLookup::Dx12FileLookup()
+FileLookup::FileLookup()
 : filename(""), hash(0u)
 {
 }
 
-Dx12FileLookup::Dx12FileLookup(const char* file)
+FileLookup::FileLookup(const char* file)
 : filename(file)
 {
     hash = stringHash(filename);
 }
 
-Dx12FileLookup::Dx12FileLookup(const std::string& filename)
+FileLookup::FileLookup(const std::string& filename)
 : filename(filename)
 {
     hash = stringHash(filename);
