@@ -77,6 +77,7 @@ ImgCodecResult ExrCodec::decompress(const unsigned char* buffer, size_t bufferSi
             fb.insert("G", Imf::Slice(Imf::FLOAT, data +     pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
             fb.insert("B", Imf::Slice(Imf::FLOAT, data + 2 * pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
             fb.insert("A", Imf::Slice(Imf::FLOAT, data + 3 * pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
+            return ImgCodecResult { TextureStatus::InvalidArguments, "RGBA Exr format unimplemented" };
         }
         else if (channelCount == 3)
         {
@@ -87,6 +88,7 @@ ImgCodecResult ExrCodec::decompress(const unsigned char* buffer, size_t bufferSi
             fb.insert("R", Imf::Slice(Imf::FLOAT, data                             , sizeof(float), sizeof(float) * imageSize.x));
             fb.insert("G", Imf::Slice(Imf::FLOAT, data +     pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
             fb.insert("B", Imf::Slice(Imf::FLOAT, data + 2 * pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
+            return ImgCodecResult { TextureStatus::InvalidArguments, "RGB Exr format unimplemented" };
         }
         else if (channelCount == 1)
         {

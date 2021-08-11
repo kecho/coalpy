@@ -80,7 +80,7 @@ public:
 
         render::MemOffset offset = {};
 
-        if (fmt == ImgColorFmt::sRgb)
+        if (fmt == ImgColorFmt::sRgb || fmt == ImgColorFmt::Rgba32 || fmt == ImgColorFmt::Rgb32)
         {
             if (!m_srgbToSrgbaShader.valid())
                 return nullptr;
