@@ -7,6 +7,7 @@
 #include <coalpy.render/IShaderDb.h>
 #include "JpegCodec.h"
 #include "PngCodec.h"
+#include "ExrCodec.h"
 #include <iostream>
 #include <sstream>
 
@@ -171,6 +172,7 @@ TextureLoader::TextureLoader(const TextureLoaderDesc& desc)
 {
     m_codecs[(int)ImgFmt::Jpeg] = new JpegCodec;
     m_codecs[(int)ImgFmt::Png] = new PngCodec;
+    m_codecs[(int)ImgFmt::Exr] = new ExrCodec;
     m_fw->addListener(this);
 }
 
@@ -377,6 +379,10 @@ IImgCodec* TextureLoader::findCodec(const std::string& fileName)
     else if (ext == "jpg" || ext == "jpeg")
     {
         return m_codecs[(int)ImgFmt::Jpeg];
+    }
+    else if (ext == "exr")
+    {
+        return m_codecs[(int)ImgFmt::Exr];
     }
 
     return nullptr;

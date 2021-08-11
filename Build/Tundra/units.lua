@@ -9,6 +9,8 @@ local DxcIncludes = DxcDir
 local DxcBinaryCompiler = DxcDir.."dxc/bin/x64/dxcompiler.dll"
 local DxcBinaryIl = DxcDir.."dxc/bin/x64/dxil.dll"
 local PythonDir = "External/Python39-win64/"
+local OpenEXRDir = "External/OpenEXR/"
+local OpenEXRLibDir = "External/OpenEXR/staticlib/"
 
 
 local LibIncludes = {
@@ -21,10 +23,24 @@ local LibIncludes = {
 local Libraries = {
     {
         PythonDir.."python39_d.lib",
+        OpenEXRLibDir.."Half-2_5_d.lib",
+        OpenEXRLibDir.."Iex-2_5_d.lib",
+        OpenEXRLibDir.."IexMath-2_5_d.lib",
+        OpenEXRLibDir.."IlmImf-2_5_d.lib",
+        OpenEXRLibDir.."IlmImfUtil-2_5_d.lib",
+        OpenEXRLibDir.."IlmThread-2_5_d.lib",
+        OpenEXRLibDir.."Imath-2_5_d.lib",
         Config = { "win64-msvc-debug-*" }
     },
     {
         PythonDir.."python39.lib",
+        OpenEXRLibDir.."Half-2_5.lib",
+        OpenEXRLibDir.."Iex-2_5.lib",
+        OpenEXRLibDir.."IexMath-2_5.lib",
+        OpenEXRLibDir.."IlmImf-2_5.lib",
+        OpenEXRLibDir.."IlmImfUtil-2_5.lib",
+        OpenEXRLibDir.."IlmThread-2_5.lib",
+        OpenEXRLibDir.."Imath-2_5.lib",
         Config = { "win64-msvc-release", "win64-msvc-production"  }
     },
     "User32.lib"
@@ -117,7 +133,7 @@ local CoalPyModuleTable = {
 -- C++ module external includes
 local CoalPyModuleIncludes = {
     render = { DxcIncludes, ImguiDir, "Source/modules/window/" },
-    texture = { LibJpgDir, LibPngDir, ZlibDir }
+    texture = { LibJpgDir, LibPngDir, ZlibDir, OpenEXRDir.."include/" }
 }
 
 local CoalPyModuleDeps = {

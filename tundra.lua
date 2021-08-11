@@ -20,6 +20,7 @@ Build {
                 CPPPATH = {
                     "$(OBJECTDIR)$(SEP)Source"
                 },
+                SHLIBOPTS = "/NODEFAULTLIB:library",
                 CXXOPTS = { "/EHsc", "/std:c++17" },
                 CXXOPTS_DEBUG   = { "/Od", "/MDd",  "/D \"_DEBUG\"" },
                 CXXOPTS_RELEASE = { "/Ox", "/MD" },

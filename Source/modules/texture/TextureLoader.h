@@ -17,7 +17,7 @@ namespace coalpy
 
 enum class ImgFmt
 {
-    Jpeg, Png, Count
+    Jpeg, Png, Exr, Count
 };
 
 enum class ImgColorFmt
