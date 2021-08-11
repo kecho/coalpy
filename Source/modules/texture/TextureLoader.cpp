@@ -136,6 +136,9 @@ public:
             case ImgColorFmt::R:
                 texDesc.format = Format::R8_UNORM;
                 break;
+            case ImgColorFmt::R32:
+                texDesc.format = Format::R32_FLOAT;
+                break;
             case ImgColorFmt::Rgba:
             default:
                 texDesc.format = Format::RGBA_8_UNORM;

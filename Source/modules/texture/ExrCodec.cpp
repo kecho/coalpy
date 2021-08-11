@@ -66,38 +66,40 @@ ImgCodecResult ExrCodec::decompress(const unsigned char* buffer, size_t bufferSi
         auto imageSize = inputFile.header().dataWindow().max;
         imageSize.x += 1;
         imageSize.y += 1;
+        int pixels = imageSize.x * imageSize.y;
         int channelCount = (rChannel != nullptr ? 1 : 0) + (gChannel != nullptr ? 1 : 0) + (bChannel != nullptr ? 1 : 0) + (aChannel != nullptr ? 1 : 0);
-        ImgColorFmt fmt = ImgColorFmt::sRgba;
+
         Imf::FrameBuffer fb;
-        ByteBuffer bb;
         if (channelCount == 4)
         {
-            fmt = ImgColorFmt::sRgba;
+            char* data = (char*)outData.allocate(ImgColorFmt::Rgba32, imageSize.x, imageSize.y, sizeof(float) * 4 * pixels);
+            fb.insert("R", Imf::Slice(Imf::FLOAT, data                             , sizeof(float), sizeof(float) * imageSize.x));
+            fb.insert("G", Imf::Slice(Imf::FLOAT, data +     pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
+            fb.insert("B", Imf::Slice(Imf::FLOAT, data + 2 * pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
+            fb.insert("A", Imf::Slice(Imf::FLOAT, data + 3 * pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
         }
         else if (channelCount == 3)
         {
             if (!rChannel || !bChannel || !gChannel)
                 return ImgCodecResult{ TextureStatus::CorruptedFile, "EXR format with 3 channels must have channel R G and B" };
-            fmt = ImgColorFmt::sRgb;            
+
+            char* data = (char*)outData.allocate(ImgColorFmt::Rgb32, imageSize.x, imageSize.y, sizeof(float) * 3 * pixels);
+            fb.insert("R", Imf::Slice(Imf::FLOAT, data                             , sizeof(float), sizeof(float) * imageSize.x));
+            fb.insert("G", Imf::Slice(Imf::FLOAT, data +     pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
+            fb.insert("B", Imf::Slice(Imf::FLOAT, data + 2 * pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
         }
         else if (channelCount == 1)
         {
             if (!rChannel)
                 return ImgCodecResult{ TextureStatus::CorruptedFile, "EXR format with 1 channel must have channel R" };
-            fmt = ImgColorFmt::R;
-            bb.appendEmpty(sizeof(float) * imageSize.x * imageSize.y);
-            fb.insert("R", Imf::Slice(Imf::FLOAT, (char*)bb.data(), sizeof(float), sizeof(float) * imageSize.x));
+            char* data = (char*)outData.allocate(ImgColorFmt::R32, imageSize.x, imageSize.y, sizeof(float) * pixels);
+            fb.insert("R", Imf::Slice(Imf::FLOAT, data , sizeof(float), sizeof(float) * imageSize.x));
         }
         else
             return ImgCodecResult{ TextureStatus::CorruptedFile, "EXR format must have channels R,RGB or RGBA" };
 
         inputFile.setFrameBuffer(fb);
         inputFile.readPixels(0, imageSize.y - 1);
-
-        if (!inputFile.isComplete())
-            return ImgCodecResult{ TextureStatus::CorruptedFile, "Failed reading EXR file." };
-
-        CPY_ASSERT(inputFile.frameBuffer()[0].base != nullptr);
     }
     catch (const std::exception& exc)
     {
@@ -105,7 +107,7 @@ ImgCodecResult ExrCodec::decompress(const unsigned char* buffer, size_t bufferSi
         ss << "Exception when reading EXR " << exc.what();
         return ImgCodecResult{ TextureStatus::CorruptedFile, ss.str() };
     }
-    return ImgCodecResult{ TextureStatus::FileNotFound, "TODO: read exr" };
+    return ImgCodecResult { TextureStatus::Ok };
 }
 
 }
