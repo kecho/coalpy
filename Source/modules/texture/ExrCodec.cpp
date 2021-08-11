@@ -77,7 +77,7 @@ ImgCodecResult ExrCodec::decompress(const unsigned char* buffer, size_t bufferSi
             fb.insert("G", Imf::Slice(Imf::FLOAT, data +     pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
             fb.insert("B", Imf::Slice(Imf::FLOAT, data + 2 * pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
             fb.insert("A", Imf::Slice(Imf::FLOAT, data + 3 * pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
-            return ImgCodecResult { TextureStatus::InvalidArguments, "RGBA Exr format unimplemented" };
+            return ImgCodecResult { TextureStatus::InvalidArguments, "RGBA Exr format 4 unimplemented" };
         }
         else if (channelCount == 3)
         {
@@ -88,7 +88,16 @@ ImgCodecResult ExrCodec::decompress(const unsigned char* buffer, size_t bufferSi
             fb.insert("R", Imf::Slice(Imf::FLOAT, data                             , sizeof(float), sizeof(float) * imageSize.x));
             fb.insert("G", Imf::Slice(Imf::FLOAT, data +     pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
             fb.insert("B", Imf::Slice(Imf::FLOAT, data + 2 * pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
-            return ImgCodecResult { TextureStatus::InvalidArguments, "RGB Exr format unimplemented" };
+            return ImgCodecResult { TextureStatus::InvalidArguments, "RGB Exr format 3 unimplemented" };
+        }
+        else if (channelCount == 2)
+        {
+            if (!rChannel || !gChannel)
+                return ImgCodecResult{ TextureStatus::CorruptedFile, "EXR format with 2 channel must have channel R and G" };
+            char* data = (char*)outData.allocate(ImgColorFmt::Rg32, imageSize.x, imageSize.y, sizeof(float) * 2 * pixels);
+            fb.insert("R", Imf::Slice(Imf::FLOAT, data                             , sizeof(float), sizeof(float) * imageSize.x));
+            fb.insert("G", Imf::Slice(Imf::FLOAT, data +     pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
+            return ImgCodecResult { TextureStatus::InvalidArguments, "RGB Exr format 2 unimplemented" };
         }
         else if (channelCount == 1)
         {

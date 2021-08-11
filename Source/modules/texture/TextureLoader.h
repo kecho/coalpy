@@ -22,7 +22,7 @@ enum class ImgFmt
 
 enum class ImgColorFmt
 {
-    R, Rgba, sRgb, sRgba, R32, Rgb32, Rgba32
+    R, Rgba, sRgb, sRgba, R32, Rg32, Rgb32, Rgba32
 };
 
 class IImgData
