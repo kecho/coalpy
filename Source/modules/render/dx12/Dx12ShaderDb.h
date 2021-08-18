@@ -61,6 +61,7 @@ private:
         std::string mainFn;
         std::string path;
         std::string source;
+        std::vector<std::string> defines;
     };
 
     struct ShaderState

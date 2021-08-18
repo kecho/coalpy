@@ -27,22 +27,6 @@ namespace {
 PyMethodDef g_defs[] = {
 
     KW_FN(
-        inline_shader,
-        inlineShader,
-        R"(
-        Create an inline Shader object.
-        
-        Parameters:
-            name (str): Name of shader. It is mandatory for inline shaders.
-            source (str): Source code of shader. Use HLSL.
-            mainFunction (str)(optional): entry point of shader. Default is 'main'.
-    
-        Returns:
-            shader (Shader): object created.
-        )"
-    ),
-
-    KW_FN(
         get_adapters,
         getAdapters,
         R"(
@@ -128,34 +112,6 @@ void freeModule(void* modulePtr)
     auto state = (ModuleState*)PyModule_GetState(moduleObj);
     if (state)
         state->~ModuleState();
-}
-
-PyObject* inlineShader(PyObject* self, PyObject* vargs, PyObject* kwds)
-{
-    ModuleState& state = getState(self);
-    if (!state.checkValidDevice())
-        return nullptr;
-
-    const char* shaderName = nullptr;
-    const char* shaderSource = nullptr;
-    const char* mainFunction = "main";
-
-    static char* argnames[] = { "name", "source", "mainFunction", nullptr };
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "ss|s", argnames, &shaderName, &shaderSource, &mainFunction))
-        return nullptr;
-
-    PyObject* obj = PyType_GenericAlloc(state.getType(TypeId::Shader), 1); 
-    Shader* shaderObj = reinterpret_cast<Shader*>(obj);
-    shaderObj->handle = ShaderHandle();
-
-    ShaderInlineDesc desc;
-    desc.type = ShaderType::Compute;
-    desc.mainFn = mainFunction;
-    desc.name = shaderName;
-    desc.immCode = shaderSource;
-    shaderObj->db = &state.db();
-    shaderObj->handle = state.db().requestCompile(desc);
-    return obj;
 }
 
 PyObject* getAdapters(PyObject* self, PyObject* vargs, PyObject* kwds)

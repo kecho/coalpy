@@ -113,12 +113,10 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
     std::string filePath = desc.path;
 
     compileState->compileArgs = {};
-    compileState->compileArgs.additionalIncludes.insert(
-        compileState->compileArgs.additionalIncludes.end(),
-        m_additionalPaths.begin(),
-        m_additionalPaths.end());
-
     compileState->compileArgs.type = desc.type;
+    compileState->compileArgs.additionalIncludes = m_additionalPaths;
+    compileState->compileArgs.defines = desc.defines;
+
     compileState->shaderName = desc.name;
     compileState->mainFn = desc.mainFn;
     compileState->success = false;
@@ -153,6 +151,8 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderInlineDesc& desc)
     compileState->compileArgs.mainFn = compileState->mainFn.c_str();
     compileState->compileArgs.source = (const char*)compileState->buffer.data();
     compileState->compileArgs.sourceSize = (int)compileState->buffer.size();
+    compileState->compileArgs.additionalIncludes = m_additionalPaths;
+    compileState->compileArgs.defines = desc.defines;
     compileState->success = false;
 
     prepareCompileJobs(*compileState);
@@ -200,6 +200,8 @@ void Dx12ShaderDb::requestRecompile(ShaderHandle handle)
     compileState.compileArgs.type = recipe.type;
     compileState.compileArgs.shaderName = recipe.name.c_str();
     compileState.compileArgs.mainFn = recipe.mainFn.c_str();
+    compileState.compileArgs.additionalIncludes = m_additionalPaths;
+    compileState.compileArgs.defines = recipe.defines;
     compileState.mainFn = recipe.mainFn;
     prepareCompileJobs(compileState);
 

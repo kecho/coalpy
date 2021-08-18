@@ -33,8 +33,8 @@ void Shader::constructType(PyTypeObject& t)
         file (str): text file with shader code.
         name (str)(optional): identifier of the shader to use. Default will be the file name.
         main_function (str)(optional): entry point of shader. Default is 'main'.
-
-    Note: to create an inline shader, use the function gpu.inline_shader(...)
+        defines (array of str): an array of strings with defines for the shader. Utilize the = sign to set the definition inside the shader. I.e. ["HDR_LIGHTING=1"] will create the define HDR_LIGHTING inside the shader to a value of 1
+        source_code (str): text file with the source. If source is set, file will be ignored and the shader will be created from source.
     )";
     
     t.tp_flags = Py_TPFLAGS_DEFAULT;
@@ -56,26 +56,47 @@ int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     const char* shaderName = nullptr;
     const char* shaderFile = nullptr;
     const char* mainFunction = "main";
+    const char* sourceCode = nullptr;
+    PyObject* defineList = nullptr;
+    
 
     static char* argnames[] = { "file", "name", "main_function", nullptr };
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|ss", argnames, &shaderFile, &shaderName, &mainFunction))
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|ssssO", argnames, &shaderFile, &shaderName, &mainFunction, &sourceCode, &defineList))
         return -1;
 
     std::string sshaderName = shaderName ? shaderName : "";
-    if (sshaderName == "")
+    if (sourceCode != nullptr)
     {
-        std::string filePath = shaderFile;
-        FileUtils::getFileName(filePath, sshaderName);
+        if (shaderFile == nullptr)
+        {
+            PyErr_SetString(moduleState.exObj(), "Cant create a shader: no parameter file or source_code specified.");
+            return -1;
+        }
+            
+        if (sshaderName == "")
+        {
+            std::string filePath = shaderFile;
+            FileUtils::getFileName(filePath, sshaderName);
+        }
+
+        ShaderDesc desc;
+        desc.type = ShaderType::Compute;
+        desc.name = sshaderName.c_str();
+        desc.mainFn = mainFunction;
+        desc.path = shaderFile;
+        shader.handle = moduleState.db().requestCompile(desc);
+    }
+    else
+    {
+        ShaderInlineDesc desc;
+        desc.type = ShaderType::Compute;
+        desc.mainFn = mainFunction;
+        desc.name = shaderName;
+        desc.immCode = sourceCode;
+        shader.handle = moduleState.db().requestCompile(desc);
     }
 
-    ShaderDesc desc;
-    desc.type = ShaderType::Compute;
-    desc.name = sshaderName.c_str();
-    desc.mainFn = mainFunction;
-    desc.path = shaderFile;
-
     shader.db = &(moduleState.db());
-    shader.handle = shader.db->requestCompile(desc);
     return 0;
 }
 

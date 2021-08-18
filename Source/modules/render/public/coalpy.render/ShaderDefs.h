@@ -2,6 +2,8 @@
 
 #include <coalpy.core/GenericHandle.h>
 #include <functional>
+#include <vector>
+#include <string>
 
 namespace coalpy
 {
@@ -24,6 +26,7 @@ struct ShaderDesc
     const char* name;
     const char* mainFn;
     const char* path;
+    std::vector<std::string> defines;
 };
 
 struct ShaderInlineDesc
@@ -32,6 +35,7 @@ struct ShaderInlineDesc
     const char* name;
     const char* mainFn;
     const char* immCode;
+    std::vector<std::string> defines;
 };
 
 using ShaderHandle = GenericHandle<unsigned>;
