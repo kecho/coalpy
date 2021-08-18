@@ -4,6 +4,7 @@
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/Utils.h>
 #include <coalpy.render/IShaderDb.h>
+#include <coalpy.core/String.h>
 #include <string>
 #include <iostream>
 
@@ -44,6 +45,36 @@ void Shader::constructType(PyTypeObject& t)
     t.tp_methods = g_shaderMethods;
 }
 
+static bool parseStringList(ModuleState& state, PyObject* pyObj, std::vector<std::string>& outList)
+{
+    if (pyObj == nullptr || !PyList_Check(pyObj))
+    {
+        PyErr_SetString(state.exObj(), "Expected list of strings.");
+        return false;
+    }
+
+    Py_ssize_t listSize = (Py_ssize_t)PyList_Size(pyObj);
+    auto& listObject = *((PyListObject*)pyObj);
+
+    for (int i = 0; i < listSize; ++i)
+    {
+        PyObject* element = listObject.ob_item[i];
+        if (element == nullptr)
+            continue;
+    
+        if (!PyUnicode_Check(element))
+        {
+            PyErr_SetString(state.exObj(), "Expected a string for element inside list.");
+            return false;
+        }
+
+        std::wstring wstr = (wchar_t*)PyUnicode_AS_DATA(element);
+        outList.push_back(ws2s(wstr));
+    }
+
+    return true;
+}
+
 int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 {
     auto& shader = *(Shader*)self;
@@ -60,12 +91,19 @@ int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     PyObject* defineList = nullptr;
     
 
-    static char* argnames[] = { "file", "name", "main_function", nullptr };
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|ssssO", argnames, &shaderFile, &shaderName, &mainFunction, &sourceCode, &defineList))
+    static char* argnames[] = { "file", "name", "main_function", "defines", "source_code", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|sssOs", argnames, &shaderFile, &shaderName, &mainFunction, &defineList, &sourceCode))
         return -1;
 
     std::string sshaderName = shaderName ? shaderName : "";
-    if (sourceCode != nullptr)
+    std::vector<std::string> defineStrList;
+    if (defineList != nullptr)
+    {
+        if (!parseStringList(moduleState, defineList, defineStrList))
+            return -1;
+    }
+
+    if (sourceCode == nullptr)
     {
         if (shaderFile == nullptr)
         {
@@ -84,6 +122,7 @@ int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         desc.name = sshaderName.c_str();
         desc.mainFn = mainFunction;
         desc.path = shaderFile;
+        desc.defines = std::move(defineStrList);
         shader.handle = moduleState.db().requestCompile(desc);
     }
     else
@@ -93,6 +132,7 @@ int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         desc.mainFn = mainFunction;
         desc.name = shaderName;
         desc.immCode = sourceCode;
+        desc.defines = std::move(defineStrList);
         shader.handle = moduleState.db().requestCompile(desc);
     }
 
