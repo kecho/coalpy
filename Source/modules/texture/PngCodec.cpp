@@ -10,7 +10,7 @@ namespace coalpy
 ImgCodecResult PngCodec::decompress(
     const unsigned char* buffer,
     size_t bufferSize,
-    IImgData& outData)
+    IImgImporter& outData)
 {
     png_image image = {};
     image.version = PNG_IMAGE_VERSION;

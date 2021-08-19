@@ -57,7 +57,7 @@ METHODDEF(void) jpeglibOutputMsgCb(j_common_ptr cinfo)
 ImgCodecResult JpegCodec::decompress(
     const unsigned char* buffer,
     size_t bufferSize,
-    IImgData& outData)
+    IImgImporter& outData)
 {
     JpegCodecContext context;
     auto& cinfo = context.cinfo;

@@ -12,7 +12,7 @@ public:
     virtual ImgCodecResult decompress(
         const unsigned char* buffer,
         size_t bufferSize,
-        IImgData& outData) override;
+        IImgImporter& outData) override;
 };
 
 }

@@ -5,6 +5,7 @@
 #include <coalpy.render/CommandList.h>
 #include <coalpy.render/IDevice.h>
 #include <coalpy.render/IShaderDb.h>
+#include "GpuImageImporter.h"
 #include "JpegCodec.h"
 #include "PngCodec.h"
 #include "ExrCodec.h"
@@ -14,164 +15,12 @@
 namespace coalpy
 {
 
-static const char* s_srgb2SrgbaCode = R"(
-
-Buffer<unorm float> g_inputBuffer : register(t0);
-RWTexture2D<float4> g_outputTexture : register(u0);
-
-cbuffer Constants : register(b0)
-{
-    int4 texSizes;
-}
-
-[numthreads(8,8,1)]
-void csMain(int2 dti : SV_DispatchThreadID)
-{
-    if (any(dti.xy >= texSizes.xy))
-        return;
-
-    int bufferOffset = 3 * (dti.y * texSizes.x + dti.x);
-    g_outputTexture[dti.xy] = float4(g_inputBuffer[bufferOffset], g_inputBuffer[bufferOffset + 1], g_inputBuffer[bufferOffset + 2], 1.0); 
-}
-)";
-
-class CmdListImageUploader : public IImgData
-{
-public:
-
-    CmdListImageUploader(render::IDevice& device, ShaderHandle srgbToSrgbaShader)
-    : m_device(device), m_srgbToSrgbaShader(srgbToSrgbaShader) {}
-
-    const render::TextureDesc& textureDesc() const { return m_texDesc; }
-    render::Texture& texture() { return m_texture; }
-    render::CommandList& cmdList() { return m_cmdList; }
-
-    virtual void clean() override
-    {
-        m_cmdList.reset();
-        if (m_supportBuffer.valid())
-        {
-            m_device.release(m_supportBuffer);
-            m_supportBuffer = render::Buffer();
-        }
-
-        if (m_supportInTable.valid())
-        {
-            m_device.release(m_supportInTable);
-            m_supportInTable = render::InResourceTable();
-        }
-
-        if (m_supportOutTable.valid())
-        {
-            m_device.release(m_supportOutTable);
-            m_supportOutTable = render::OutResourceTable();
-        }
-    }
-
-    virtual unsigned char* allocate(ImgColorFmt fmt, int width, int height, int bytes) override
-    {
-        render::TextureDesc& texDesc = m_texDesc;
-        //texDesc.memFlags = render::MemFlag_GpuRead;
-        texDesc.type = render::TextureType::k2d;
-        texDesc.width = width; 
-        texDesc.height = height;
-        texDesc.format = Format::RGBA_8_UNORM;
-        texDesc.recreatable = true;
-
-        render::MemOffset offset = {};
-
-        if (fmt == ImgColorFmt::sRgb || fmt == ImgColorFmt::Rgba32 || fmt == ImgColorFmt::Rgb32)
-        {
-            if (!m_srgbToSrgbaShader.valid())
-                return nullptr;
-            {
-                render::BufferDesc bufferDesc;
-                bufferDesc.format = Format::R8_UNORM;
-                bufferDesc.elementCount = width * height * 3;
-                bufferDesc.memFlags = render::MemFlag_GpuRead;
-                CPY_ASSERT(bytes == bufferDesc.elementCount);
-                if (bytes != bufferDesc.elementCount)
-                    return nullptr;
-                m_supportBuffer = m_device.createBuffer(bufferDesc);
-            }
-
-            {
-                render::ResourceTableDesc tableConfig;
-                tableConfig.resources = &m_supportBuffer;
-                tableConfig.resourcesCount = 1;
-                m_supportInTable = m_device.createInResourceTable(tableConfig);
-            }
-
-            {
-                render::ResourceTableDesc tableConfig;
-                tableConfig.resources = &m_texture;
-                tableConfig.resourcesCount = 1;
-                m_supportOutTable = m_device.createOutResourceTable(tableConfig);
-            }
-
-            {
-                offset = m_cmdList.uploadInlineResource(m_supportBuffer, bytes);
-            }
-
-            int constData[4] = { width, height, 0, 0 };
-            {
-                render::ComputeCommand cmd;
-                cmd.setShader(m_srgbToSrgbaShader);
-                cmd.setInlineConstant((const char*)&constData, sizeof(constData));
-                cmd.setInResources(&m_supportInTable, 1);
-                cmd.setOutResources(&m_supportOutTable, 1);
-                cmd.setDispatch("srgb to srgba copy", (width + 7)/8, (height + 7)/8, 1);
-                m_cmdList.writeCommand(cmd);
-            }
-
-            m_cmdList.finalize();
-        }
-        else
-        {
-            switch (fmt)
-            {
-            case ImgColorFmt::sRgba:
-                texDesc.format = Format::RGBA_8_UNORM;
-                break;          
-            case ImgColorFmt::R:
-                texDesc.format = Format::R8_UNORM;
-                break;
-            case ImgColorFmt::R32:
-                texDesc.format = Format::R32_FLOAT;
-                break;
-            case ImgColorFmt::Rgba:
-            default:
-                texDesc.format = Format::RGBA_8_UNORM;
-                break;
-            }
-
-            CPY_ASSERT(m_texture.valid());
-            if (!m_texture.valid())
-                return nullptr;
-
-            offset = m_cmdList.uploadInlineResource(m_texture, bytes);
-            m_cmdList.finalize();
-        }
-
-        return m_cmdList.data() + offset;
-    }
-
-private:
-    render::IDevice& m_device;
-    render::Texture m_texture;
-    render::TextureDesc m_texDesc;
-    render::Buffer m_supportBuffer;
-    render::InResourceTable m_supportInTable;
-    render::OutResourceTable m_supportOutTable;
-    render::CommandList m_cmdList;
-    ShaderHandle m_srgbToSrgbaShader;
-};
-
 TextureLoader::TextureLoader(const TextureLoaderDesc& desc)
 : m_ts(desc.ts)
 , m_fs(desc.fs)
 , m_fw(desc.fw)
 , m_device(desc.device)
+, m_imageImporterShaders(nullptr)
 {
     m_codecs[(int)ImgFmt::Jpeg] = new JpegCodec;
     m_codecs[(int)ImgFmt::Png] = new PngCodec;
@@ -179,18 +28,30 @@ TextureLoader::TextureLoader(const TextureLoaderDesc& desc)
     m_fw->addListener(this);
 }
 
+IImgCodec* TextureLoader::findCodec(const std::string& fileName)
+{
+    std::string ext;
+    FileUtils::getFileExt(fileName, ext);    
+
+    if (ext == "png")
+    {
+        return m_codecs[(int)ImgFmt::Png];
+    }
+    else if (ext == "jpg" || ext == "jpeg")
+    {
+        return m_codecs[(int)ImgFmt::Jpeg];
+    }
+    else if (ext == "exr")
+    {
+        return m_codecs[(int)ImgFmt::Exr];
+    }
+
+    return nullptr;
+}
+
 void TextureLoader::start()
 {
-    if (m_device->db() == nullptr)
-        return;
-
-    {
-        IShaderDb& db = *m_device->db();
-        ShaderInlineDesc desc = { ShaderType::Compute, "srgbToSrgba", "csMain", s_srgb2SrgbaCode };
-        m_srgbToSrgba = db.requestCompile(desc);
-        db.resolve(m_srgbToSrgba);
-        CPY_ASSERT(db.isValid(m_srgbToSrgba));
-    }
+    m_imageImporterShaders = new GpuImageImporterShaders(*m_device);
 }
 
 TextureLoader::~TextureLoader()
@@ -199,7 +60,6 @@ TextureLoader::~TextureLoader()
     for (auto* c : m_codecs)
         delete c;
 
-    
     for (auto l : m_loadingStates)
     {
         cleanState(*l.second, true);
@@ -208,6 +68,8 @@ TextureLoader::~TextureLoader()
         
     for (auto s : m_freeLoaderStates)
         delete s;
+
+    delete m_imageImporterShaders;
 }
 
 TextureLoadResult TextureLoader::loadTexture(const char* fileName)
@@ -217,6 +79,9 @@ TextureLoadResult TextureLoader::loadTexture(const char* fileName)
 
 TextureLoadResult TextureLoader::loadTextureInternal(const char* fileName, render::Texture existingTexture)
 {
+    if (m_imageImporterShaders == nullptr)
+        return TextureLoadResult { TextureStatus::InvalidArguments, render::Texture(), "Texture loader not initialized" };
+
     std::string strName = fileName;
     IImgCodec* codec = findCodec(fileName);
     if (codec == nullptr)
@@ -229,15 +94,15 @@ TextureLoadResult TextureLoader::loadTextureInternal(const char* fileName, rende
     LoadingState& loadState = *allocateLoadState();
     loadState.codec = codec;
 
-    CmdListImageUploader* imageLoader = nullptr;
-    if (loadState.imageData == nullptr)
+    GpuImageImporter* imageLoader = nullptr;
+    if (loadState.imageImporter == nullptr)
     {
-        imageLoader = new CmdListImageUploader(*m_device, m_srgbToSrgba);
-        loadState.imageData = imageLoader;
+        imageLoader = new GpuImageImporter(*m_device, *m_imageImporterShaders);
+        loadState.imageImporter = imageLoader;
     }
     else
     {
-        imageLoader = (CmdListImageUploader*)loadState.imageData;
+        imageLoader = (GpuImageImporter*)loadState.imageImporter;
     }
 
     if (!existingTexture.valid())
@@ -266,7 +131,7 @@ TextureLoadResult TextureLoader::loadTextureInternal(const char* fileName, rende
         }
         else if (response.status == FileStatus::Success)
         {
-            ImgCodecResult codecResult = loadState.codec->decompress(loadState.fileBuffer.data(), loadState.fileBuffer.size(), *loadState.imageData);
+            ImgCodecResult codecResult = loadState.codec->decompress(loadState.fileBuffer.data(), loadState.fileBuffer.size(), *loadState.imageImporter);
             if (codecResult.success())
             {
                 loadState.loadResult = TextureLoadResult { TextureStatus::Ok, render::Texture() };
@@ -345,7 +210,7 @@ void TextureLoader::processTextures()
     {
         if (state->loadResult.success())
         {
-            auto* imageLoader = (CmdListImageUploader*)state->imageData;
+            auto* imageLoader = (GpuImageImporter*)state->imageImporter;
             auto texResult = m_device->recreateTexture(state->texture, imageLoader->textureDesc());
             CPY_ASSERT_MSG(texResult.success(), texResult.message.c_str()); //TODO: handle this failure
             if (texResult.success())
@@ -369,28 +234,6 @@ void TextureLoader::processTextures()
         cleanState(*state, false);
     }
 }
-
-IImgCodec* TextureLoader::findCodec(const std::string& fileName)
-{
-    std::string ext;
-    FileUtils::getFileExt(fileName, ext);    
-
-    if (ext == "png")
-    {
-        return m_codecs[(int)ImgFmt::Png];
-    }
-    else if (ext == "jpg" || ext == "jpeg")
-    {
-        return m_codecs[(int)ImgFmt::Jpeg];
-    }
-    else if (ext == "exr")
-    {
-        return m_codecs[(int)ImgFmt::Exr];
-    }
-
-    return nullptr;
-}
-
 
 void TextureLoader::unloadTexture(render::Texture texture)
 {

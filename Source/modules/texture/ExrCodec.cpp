@@ -52,7 +52,7 @@ private:
     Imf::Int64 m_i = 0;
 };
 
-ImgCodecResult ExrCodec::decompress(const unsigned char* buffer, size_t bufferSize, IImgData& outData)
+ImgCodecResult ExrCodec::decompress(const unsigned char* buffer, size_t bufferSize, IImgImporter& outData)
 {
     try
     {

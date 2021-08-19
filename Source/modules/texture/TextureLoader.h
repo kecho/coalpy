@@ -15,6 +15,8 @@
 namespace coalpy
 {
 
+class GpuImageImporterShaders;
+
 enum class ImgFmt
 {
     Jpeg, Png, Exr, Count
@@ -25,12 +27,12 @@ enum class ImgColorFmt
     R, Rgba, sRgb, sRgba, R32, Rg32, Rgb32, Rgba32
 };
 
-class IImgData
+class IImgImporter
 {
 public:
     virtual unsigned char* allocate(ImgColorFmt fmt, int width, int height, int bytes) = 0;
     virtual void clean() = 0;
-    virtual ~IImgData() {}
+    virtual ~IImgImporter() {}
 };
 
 struct ImgCodecResult
@@ -47,7 +49,7 @@ public:
     virtual ImgCodecResult decompress(
         const unsigned char* buffer,
         size_t bufferSize,
-        IImgData& outData) = 0;
+        IImgImporter& outData) = 0;
 };
 
 class TextureLoader : public ITextureLoader, public IFileWatchListener
@@ -85,7 +87,7 @@ private:
         TextureLoadResult loadResult;
         AsyncFileHandle fileHandle;
         render::Texture texture;
-        IImgData* imageData = nullptr;
+        IImgImporter* imageImporter = nullptr;
         IImgCodec* codec = nullptr;
 
         void clear()
@@ -97,7 +99,7 @@ private:
             fileHandle = AsyncFileHandle();
             codec = nullptr;
             texture = render::Texture();
-            imageData->clean();
+            imageImporter->clean();
         }
     };
 
@@ -119,6 +121,7 @@ private:
     FileTextureMap m_filesToTextures;
 
     IFileWatcher* m_fw;
+    GpuImageImporterShaders* m_imageImporterShaders = nullptr;
 };
 
 }
