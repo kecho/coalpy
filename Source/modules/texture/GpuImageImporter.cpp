@@ -56,6 +56,53 @@ GpuImageImporter::GpuImageImporter(render::IDevice& device, const GpuImageImport
 {
 }
 
+struct SrcFormatInfo
+{
+    bool isDirectCopy = false;
+    int componentCount = 1;
+    size_t componentByteSize = 1;
+    Format outputTextureFormat = Format::R8_UNORM;
+    GpuImgImportShaders importShader = GpuImgImportShaders::RgbToRgba;
+};
+
+static void GetSrcFormatInfo(ImgColorFmt fmt, SrcFormatInfo& info)
+{
+    switch (fmt)
+    {
+    case ImgColorFmt::R:
+        info = { true, 1, sizeof(char), Format::R8_UNORM };
+        break;
+    case ImgColorFmt::Rg:
+        info = { false, 2, sizeof(char), Format::RGBA_8_UNORM };
+        break;
+    case ImgColorFmt::Rgb:
+        info = { false, 3, sizeof(char), Format::RGBA_8_UNORM };
+        break;
+    case ImgColorFmt::Rgba:
+        info = { true, 4, sizeof(char), Format::RGBA_8_UNORM };
+        break;
+    case ImgColorFmt::sRgb:
+        info = { false, 3, sizeof(char), Format::RGBA_8_UNORM_SRGB };
+        break;
+    case ImgColorFmt::sRgba:
+        info = { true, 4, sizeof(char), Format::RGBA_8_UNORM_SRGB };
+        break;
+    case ImgColorFmt::R32:
+        info = { true, 1, sizeof(float), Format::R32_FLOAT };
+        break;
+    case ImgColorFmt::Rg32:
+        info = { false, 2, sizeof(float), Format::RG_32_FLOAT };
+        break;
+    case ImgColorFmt::Rgb32:
+        info = { false, 3, sizeof(float), Format::RGB_32_FLOAT };
+        break;
+    default:
+    case ImgColorFmt::Rgba32:
+        info = { false, 4, sizeof(float), Format::RGBA_32_FLOAT };
+        break;
+    }
+}
+
 unsigned char* GpuImageImporter::allocate(ImgColorFmt fmt, int width, int height, int bytes)
 {
     render::TextureDesc& texDesc = m_texDesc;
@@ -63,17 +110,21 @@ unsigned char* GpuImageImporter::allocate(ImgColorFmt fmt, int width, int height
     texDesc.type = render::TextureType::k2d;
     texDesc.width = width; 
     texDesc.height = height;
-    texDesc.format = Format::RGBA_8_UNORM;
     texDesc.recreatable = true;
     
     render::MemOffset offset = {};
+
+    SrcFormatInfo formatInfo;
+    GetSrcFormatInfo(fmt, formatInfo);
     
-    if (fmt == ImgColorFmt::sRgb || fmt == ImgColorFmt::Rgba32 || fmt == ImgColorFmt::Rgb32)
+    texDesc.format = formatInfo.outputTextureFormat;
+
+    if (!formatInfo.isDirectCopy)
     {
         {
             render::BufferDesc bufferDesc;
-            bufferDesc.format = Format::R8_UNORM;
-            bufferDesc.elementCount = width * height * 3;
+            bufferDesc.format = formatInfo.componentByteSize == 1 ? Format::R8_UNORM : Format::R32_FLOAT;
+            bufferDesc.elementCount = width * height * formatInfo.componentCount;
             bufferDesc.memFlags = render::MemFlag_GpuRead;
             CPY_ASSERT(bytes == bufferDesc.elementCount);
             if (bytes != bufferDesc.elementCount)
@@ -114,23 +165,6 @@ unsigned char* GpuImageImporter::allocate(ImgColorFmt fmt, int width, int height
     }
     else
     {
-        switch (fmt)
-        {
-        case ImgColorFmt::sRgba:
-            texDesc.format = Format::RGBA_8_UNORM;
-            break;          
-        case ImgColorFmt::R:
-            texDesc.format = Format::R8_UNORM;
-            break;
-        case ImgColorFmt::R32:
-            texDesc.format = Format::R32_FLOAT;
-            break;
-        case ImgColorFmt::Rgba:
-        default:
-            texDesc.format = Format::RGBA_8_UNORM;
-            break;
-        }
-    
         CPY_ASSERT(m_texture.valid());
         if (!m_texture.valid())
             return nullptr;

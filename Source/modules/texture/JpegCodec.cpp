@@ -77,13 +77,13 @@ ImgCodecResult JpegCodec::decompress(
 
     jpeg_start_decompress(&cinfo);
 
-    ImgColorFmt fmt = ImgColorFmt::sRgb;
+    ImgColorFmt fmt = ImgColorFmt::Rgb;
     switch (cinfo.out_color_components)
     {    
     case 3:
-        fmt = ImgColorFmt::sRgb; break;
+        fmt = ImgColorFmt::Rgb; break;
     case 4:
-        fmt = ImgColorFmt::sRgba; break;
+        fmt = ImgColorFmt::Rgba; break;
     default:
         {
             jpeg_destroy_decompress(&cinfo);

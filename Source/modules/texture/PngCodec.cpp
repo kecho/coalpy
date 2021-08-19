@@ -25,7 +25,7 @@ ImgCodecResult PngCodec::decompress(
     image.format = PNG_FORMAT_RGBA;
     size_t sz = PNG_IMAGE_SIZE(image);
     CPY_ASSERT(sz == image.width * image.height * 4);
-    unsigned char* imageData = outData.allocate(ImgColorFmt::sRgba, image.width, image.height, sz);
+    unsigned char* imageData = outData.allocate(ImgColorFmt::Rgba, image.width, image.height, sz);
     if (!imageData)
     { 
         std::stringstream ss;
