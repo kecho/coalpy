@@ -7,6 +7,10 @@ namespace coalpy
 
 static const char* s_rgbToRgbaSourceCode = R"(
 
+#ifndef CHANNELS_USED
+#define CHANNELS_USED 3
+#endif
+
 Buffer<unorm float> g_inputBuffer : register(t0);
 RWTexture2D<float4> g_outputTexture : register(u0);
 
@@ -21,8 +25,14 @@ void csMain(int2 dti : SV_DispatchThreadID)
     if (any(dti.xy >= texSizes.xy))
         return;
 
-    int bufferOffset = 3 * (dti.y * texSizes.x + dti.x);
-    g_outputTexture[dti.xy] = float4(g_inputBuffer[bufferOffset], g_inputBuffer[bufferOffset + 1], g_inputBuffer[bufferOffset + 2], 1.0); 
+    int bufferOffset = CHANNELS_USED * (dti.y * texSizes.x + dti.x);
+    #if CHANNELS_USED == 2
+        g_outputTexture[dti.xy] = float4(g_inputBuffer[bufferOffset], g_inputBuffer[bufferOffset + 1], 1.0, 1.0); 
+    #elif CHANNELS_USED == 3
+        g_outputTexture[dti.xy] = float4(g_inputBuffer[bufferOffset], g_inputBuffer[bufferOffset + 1], g_inputBuffer[bufferOffset + 2], 1.0); 
+    #elif CHANNELS_USED == 4
+        g_outputTexture[dti.xy] = float4(g_inputBuffer[bufferOffset], g_inputBuffer[bufferOffset + 1], g_inputBuffer[bufferOffset + 2], g_inputBuffer[bufferOffset + 3]); 
+    #endif
 }
 
 )";
@@ -35,8 +45,14 @@ GpuImageImporterShaders::GpuImageImporterShaders(render::IDevice& device)
 
     {
         IShaderDb& db = *device.db();
-        ShaderInlineDesc desc = { ShaderType::Compute, "rgbToRgba", "csMain", s_rgbToRgbaSourceCode };
-        m_shaders[(int)GpuImgImportShaders::RgbToRgba] = db.requestCompile(desc);
+        {
+            ShaderInlineDesc desc = { ShaderType::Compute, "rgToRgba", "csMain", s_rgbToRgbaSourceCode, { "CHANNELS_USED=2" } };
+            m_shaders[(int)GpuImgImportShaders::RgToRgba] = db.requestCompile(desc);
+        }
+        {
+            ShaderInlineDesc desc = { ShaderType::Compute, "rgbToRgba", "csMain", s_rgbToRgbaSourceCode, { "CHANNELS_USED=3" } };
+            m_shaders[(int)GpuImgImportShaders::RgbToRgba] = db.requestCompile(desc);
+        }
 
         for (auto s : m_shaders)
         {
@@ -73,16 +89,16 @@ static void GetSrcFormatInfo(ImgColorFmt fmt, SrcFormatInfo& info)
         info = { true, 1, sizeof(char), Format::R8_UNORM };
         break;
     case ImgColorFmt::Rg:
-        info = { false, 2, sizeof(char), Format::RGBA_8_UNORM };
+        info = { false, 2, sizeof(char), Format::RGBA_8_UNORM, GpuImgImportShaders::RgToRgba };
         break;
     case ImgColorFmt::Rgb:
-        info = { false, 3, sizeof(char), Format::RGBA_8_UNORM };
+        info = { false, 3, sizeof(char), Format::RGBA_8_UNORM, GpuImgImportShaders::RgbToRgba };
         break;
     case ImgColorFmt::Rgba:
         info = { true, 4, sizeof(char), Format::RGBA_8_UNORM };
         break;
     case ImgColorFmt::sRgb:
-        info = { false, 3, sizeof(char), Format::RGBA_8_UNORM_SRGB };
+        info = { false, 3, sizeof(char), Format::RGBA_8_UNORM_SRGB, GpuImgImportShaders::RgbToRgba };
         break;
     case ImgColorFmt::sRgba:
         info = { true, 4, sizeof(char), Format::RGBA_8_UNORM_SRGB };
@@ -91,14 +107,14 @@ static void GetSrcFormatInfo(ImgColorFmt fmt, SrcFormatInfo& info)
         info = { true, 1, sizeof(float), Format::R32_FLOAT };
         break;
     case ImgColorFmt::Rg32:
-        info = { false, 2, sizeof(float), Format::RG_32_FLOAT };
+        info = { true, 2, sizeof(float), Format::RG_32_FLOAT };
         break;
     case ImgColorFmt::Rgb32:
-        info = { false, 3, sizeof(float), Format::RGB_32_FLOAT };
+        info = { true, 3, sizeof(float), Format::RGB_32_FLOAT };
         break;
     default:
     case ImgColorFmt::Rgba32:
-        info = { false, 4, sizeof(float), Format::RGBA_32_FLOAT };
+        info = { true, 4, sizeof(float), Format::RGBA_32_FLOAT };
         break;
     }
 }
@@ -106,7 +122,6 @@ static void GetSrcFormatInfo(ImgColorFmt fmt, SrcFormatInfo& info)
 unsigned char* GpuImageImporter::allocate(ImgColorFmt fmt, int width, int height, int bytes)
 {
     render::TextureDesc& texDesc = m_texDesc;
-    //texDesc.memFlags = render::MemFlag_GpuRead;
     texDesc.type = render::TextureType::k2d;
     texDesc.width = width; 
     texDesc.height = height;
@@ -116,7 +131,7 @@ unsigned char* GpuImageImporter::allocate(ImgColorFmt fmt, int width, int height
 
     SrcFormatInfo formatInfo;
     GetSrcFormatInfo(fmt, formatInfo);
-    
+
     texDesc.format = formatInfo.outputTextureFormat;
 
     if (!formatInfo.isDirectCopy)
@@ -126,8 +141,8 @@ unsigned char* GpuImageImporter::allocate(ImgColorFmt fmt, int width, int height
             bufferDesc.format = formatInfo.componentByteSize == 1 ? Format::R8_UNORM : Format::R32_FLOAT;
             bufferDesc.elementCount = width * height * formatInfo.componentCount;
             bufferDesc.memFlags = render::MemFlag_GpuRead;
-            CPY_ASSERT(bytes == bufferDesc.elementCount);
-            if (bytes != bufferDesc.elementCount)
+            CPY_ASSERT(bytes == bufferDesc.elementCount * formatInfo.componentByteSize);
+            if (bytes != bufferDesc.elementCount * formatInfo.componentByteSize)
                 return nullptr;
             m_supportBuffer = m_device.createBuffer(bufferDesc);
         }
@@ -150,10 +165,10 @@ unsigned char* GpuImageImporter::allocate(ImgColorFmt fmt, int width, int height
             offset = m_cmdList.uploadInlineResource(m_supportBuffer, bytes);
         }
     
-        int constData[4] = { width, height, 0, 0 };
+        int constData[4] = { width, height, width * height, 0 };
         {
             render::ComputeCommand cmd;
-            cmd.setShader(m_shaders.get(GpuImgImportShaders::RgbToRgba));
+            cmd.setShader(m_shaders.get(formatInfo.importShader));
             cmd.setInlineConstant((const char*)&constData, sizeof(constData));
             cmd.setInResources(&m_supportInTable, 1);
             cmd.setOutResources(&m_supportOutTable, 1);
@@ -165,6 +180,7 @@ unsigned char* GpuImageImporter::allocate(ImgColorFmt fmt, int width, int height
     }
     else
     {
+        texDesc.memFlags = render::MemFlag_GpuRead;
         CPY_ASSERT(m_texture.valid());
         if (!m_texture.valid())
             return nullptr;

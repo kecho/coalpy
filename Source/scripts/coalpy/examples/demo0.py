@@ -9,7 +9,7 @@ gpu.set_current_adapter(0)
 info = gpu.get_current_adapter_info()
 print("Current device: {}".format(info[1]))
 
-s1 = gpu.Shader(file="examples/testShader.hlsl", name="testShader")
+s1 = gpu.Shader(file="examples/testShader.hlsl", name="testShader") 
 
 f = 0.5;
 f2 = 0.5;
@@ -18,7 +18,7 @@ b = False
 h1 = False
 w = True
 
-test_image = gpu.Texture(file="examples/data/test.jpg")
+test_image = gpu.Texture(file="examples/data/test.png")
 input_table = gpu.InResourceTable("testjpg_table", [test_image])
 
 def buildUi(imgui):

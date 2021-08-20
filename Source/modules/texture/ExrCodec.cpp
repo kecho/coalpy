@@ -73,11 +73,10 @@ ImgCodecResult ExrCodec::decompress(const unsigned char* buffer, size_t bufferSi
         if (channelCount == 4)
         {
             char* data = (char*)outData.allocate(ImgColorFmt::Rgba32, imageSize.x, imageSize.y, sizeof(float) * 4 * pixels);
-            fb.insert("R", Imf::Slice(Imf::FLOAT, data                             , sizeof(float), sizeof(float) * imageSize.x));
-            fb.insert("G", Imf::Slice(Imf::FLOAT, data +     pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
-            fb.insert("B", Imf::Slice(Imf::FLOAT, data + 2 * pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
-            fb.insert("A", Imf::Slice(Imf::FLOAT, data + 3 * pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
-            return ImgCodecResult { TextureStatus::InvalidArguments, "RGBA Exr format 4 unimplemented" };
+            fb.insert("R", Imf::Slice(Imf::FLOAT, data                    , 4 * sizeof(float), 4 * sizeof(float) * imageSize.x));
+            fb.insert("G", Imf::Slice(Imf::FLOAT, data + 1 * sizeof(float), 4 * sizeof(float), 4 * sizeof(float) * imageSize.x));
+            fb.insert("B", Imf::Slice(Imf::FLOAT, data + 2 * sizeof(float), 4 * sizeof(float), 4 * sizeof(float) * imageSize.x));
+            fb.insert("A", Imf::Slice(Imf::FLOAT, data + 3 * sizeof(float), 4 * sizeof(float), 4 * sizeof(float) * imageSize.x));
         }
         else if (channelCount == 3)
         {
@@ -85,19 +84,17 @@ ImgCodecResult ExrCodec::decompress(const unsigned char* buffer, size_t bufferSi
                 return ImgCodecResult{ TextureStatus::CorruptedFile, "EXR format with 3 channels must have channel R G and B" };
 
             char* data = (char*)outData.allocate(ImgColorFmt::Rgb32, imageSize.x, imageSize.y, sizeof(float) * 3 * pixels);
-            fb.insert("R", Imf::Slice(Imf::FLOAT, data                             , sizeof(float), sizeof(float) * imageSize.x));
-            fb.insert("G", Imf::Slice(Imf::FLOAT, data +     pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
-            fb.insert("B", Imf::Slice(Imf::FLOAT, data + 2 * pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
-            return ImgCodecResult { TextureStatus::InvalidArguments, "RGB Exr format 3 unimplemented" };
+            fb.insert("R", Imf::Slice(Imf::FLOAT, data                    , 3 * sizeof(float), 3 * sizeof(float) * imageSize.x));
+            fb.insert("G", Imf::Slice(Imf::FLOAT, data + 1 * sizeof(float), 3 * sizeof(float), 3 * sizeof(float) * imageSize.x));
+            fb.insert("B", Imf::Slice(Imf::FLOAT, data + 2 * sizeof(float), 3 * sizeof(float), 3 * sizeof(float) * imageSize.x));
         }
         else if (channelCount == 2)
         {
             if (!rChannel || !gChannel)
                 return ImgCodecResult{ TextureStatus::CorruptedFile, "EXR format with 2 channel must have channel R and G" };
             char* data = (char*)outData.allocate(ImgColorFmt::Rg32, imageSize.x, imageSize.y, sizeof(float) * 2 * pixels);
-            fb.insert("R", Imf::Slice(Imf::FLOAT, data                             , sizeof(float), sizeof(float) * imageSize.x));
-            fb.insert("G", Imf::Slice(Imf::FLOAT, data +     pixels * sizeof(float), sizeof(float), sizeof(float) * imageSize.x));
-            return ImgCodecResult { TextureStatus::InvalidArguments, "RGB Exr format 2 unimplemented" };
+            fb.insert("R", Imf::Slice(Imf::FLOAT, data                     , 2 * sizeof(float), 2 * sizeof(float) * imageSize.x));
+            fb.insert("G", Imf::Slice(Imf::FLOAT, data +  1 * sizeof(float), 2 * sizeof(float), 2 * sizeof(float) * imageSize.x));
         }
         else if (channelCount == 1)
         {

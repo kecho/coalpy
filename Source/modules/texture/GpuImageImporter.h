@@ -16,6 +16,7 @@ namespace render
 
 enum class GpuImgImportShaders
 {
+    RgToRgba,
     RgbToRgba,
     Count
 };
