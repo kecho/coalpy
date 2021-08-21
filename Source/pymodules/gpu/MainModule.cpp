@@ -126,6 +126,7 @@ PyMODINIT_FUNC PyInit_gpu(void)
         std::string moduleFilePath = g_ModuleFilePath;
         coalpy::FileUtils::getDirName(moduleFilePath, modulePath);
         state->addDataPath(modulePath.c_str());
+        state->addDataPath(".");
     }
 
     return moduleObj;

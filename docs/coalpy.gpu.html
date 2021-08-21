@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="coalpy.html"><font color="#ffffff">coalpy</font></a>.gpu</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccoalpy%5Ct2-output%5Cwin64-msvc-debug-default%5Ccoalpy%5Cgpu.pyd">c:\dev\coalpy\t2-output\win64-msvc-debug-default\coalpy\gpu.pyd</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccoalpy%5Ct2-output%5Cwin64-msvc-release-default%5Ccoalpy%5Cgpu.pyd">c:\dev\coalpy\t2-output\win64-msvc-release-default\coalpy\gpu.pyd</a></font></td></tr></table>
     <p><tt>&lt;&lt;&nbsp;coalpy&nbsp;&gt;&gt;&nbsp;Compute&nbsp;Abstraction&nbsp;Layer&nbsp;for&nbsp;Python&nbsp;<br>
 &nbsp;by&nbsp;Kleber&nbsp;A&nbsp;Garcia&nbsp;2021&nbsp;(c).&nbsp;<br>
 coalpy&nbsp;is&nbsp;a&nbsp;compute&nbsp;abstraction&nbsp;layer&nbsp;for&nbsp;python.&nbsp;It&nbsp;brings<br>
@@ -268,12 +268,6 @@ Data descriptors defined here:<br>
 
 <hr>
 Data descriptors defined here:<br>
-<dl><dt><strong>CpuRead</strong></dt>
-<dd><tt>Specify&nbsp;flag&nbsp;in&nbsp;order&nbsp;to&nbsp;read&nbsp;a&nbsp;resource&nbsp;from&nbsp;the&nbsp;CPU</tt></dd>
-</dl>
-<dl><dt><strong>CpuWrite</strong></dt>
-<dd><tt>Specify&nbsp;flag&nbsp;to&nbsp;write&nbsp;into&nbsp;a&nbsp;resource&nbsp;directly&nbsp;from&nbsp;the&nbsp;CPU</tt></dd>
-</dl>
 <dl><dt><strong>GpuRead</strong></dt>
 <dd><tt>Specify&nbsp;flag&nbsp;for&nbsp;resource&nbsp;read&nbsp;access&nbsp;from&nbsp;InResourceTable&nbsp;/&nbsp;SRVs</tt></dd>
 </dl>
@@ -371,7 +365,7 @@ Static methods defined here:<br>
 &nbsp;<br>
 Constructor:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str):&nbsp;name&nbsp;/&nbsp;identifier&nbsp;of&nbsp;this&nbsp;resource&nbsp;table.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;resource_list:&nbsp;array&nbsp;of&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>&nbsp;to&nbsp;be&nbsp;specified.&nbsp;Each&nbsp;position&nbsp;in&nbsp;the&nbsp;table&nbsp;correspods&nbsp;to&nbsp;a&nbsp;s#&nbsp;register&nbsp;in&nbsp;hlsl.<br>&nbsp;</tt></td></tr>
+&nbsp;&nbsp;&nbsp;&nbsp;resource_list:&nbsp;array&nbsp;of&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>&nbsp;to&nbsp;be&nbsp;specified.&nbsp;Each&nbsp;position&nbsp;in&nbsp;the&nbsp;table&nbsp;correspods&nbsp;to&nbsp;a&nbsp;t#&nbsp;register&nbsp;in&nbsp;hlsl.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="InResourceTable-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
@@ -441,8 +435,8 @@ Constructor:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;file&nbsp;(str):&nbsp;text&nbsp;file&nbsp;with&nbsp;shader&nbsp;code.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str)(optional):&nbsp;identifier&nbsp;of&nbsp;the&nbsp;shader&nbsp;to&nbsp;use.&nbsp;Default&nbsp;will&nbsp;be&nbsp;the&nbsp;file&nbsp;name.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;main_function&nbsp;(str)(optional):&nbsp;entry&nbsp;point&nbsp;of&nbsp;shader.&nbsp;Default&nbsp;is&nbsp;'main'.<br>
-&nbsp;<br>
-Note:&nbsp;to&nbsp;create&nbsp;an&nbsp;inline&nbsp;shader,&nbsp;use&nbsp;the&nbsp;function&nbsp;gpu.<a href="#-inline_shader">inline_shader</a>(...)<br>&nbsp;</tt></td></tr>
+&nbsp;&nbsp;&nbsp;&nbsp;defines&nbsp;(array&nbsp;of&nbsp;str):&nbsp;an&nbsp;array&nbsp;of&nbsp;strings&nbsp;with&nbsp;defines&nbsp;for&nbsp;the&nbsp;shader.&nbsp;Utilize&nbsp;the&nbsp;=&nbsp;sign&nbsp;to&nbsp;set&nbsp;the&nbsp;definition&nbsp;inside&nbsp;the&nbsp;shader.&nbsp;I.e.&nbsp;["HDR_LIGHTING=1"]&nbsp;will&nbsp;create&nbsp;the&nbsp;define&nbsp;HDR_LIGHTING&nbsp;inside&nbsp;the&nbsp;shader&nbsp;to&nbsp;a&nbsp;value&nbsp;of&nbsp;1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;source_code&nbsp;(str):&nbsp;text&nbsp;file&nbsp;with&nbsp;the&nbsp;source.&nbsp;If&nbsp;source&nbsp;is&nbsp;set,&nbsp;file&nbsp;will&nbsp;be&nbsp;ignored&nbsp;and&nbsp;the&nbsp;shader&nbsp;will&nbsp;be&nbsp;created&nbsp;from&nbsp;source.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="Shader-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
@@ -469,7 +463,8 @@ Constructor:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;width&nbsp;(int):&nbsp;the&nbsp;width&nbsp;of&nbsp;the&nbsp;texture&nbsp;in&nbsp;texels.&nbsp;Default&nbsp;is&nbsp;1<br>
 &nbsp;&nbsp;&nbsp;&nbsp;height&nbsp;(int):&nbsp;the&nbsp;height&nbsp;of&nbsp;the&nbsp;texture&nbsp;in&nbsp;texels.&nbsp;Default&nbsp;is&nbsp;1<br>
 &nbsp;&nbsp;&nbsp;&nbsp;depth&nbsp;(int):&nbsp;the&nbsp;depth&nbsp;of&nbsp;the&nbsp;texture&nbsp;if&nbsp;k2dArray&nbsp;or&nbsp;k3d.&nbsp;Default&nbsp;is&nbsp;1.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;mip_levels&nbsp;(int):&nbsp;number&nbsp;of&nbsp;mips&nbsp;supported&nbsp;on&nbsp;this&nbsp;texture.<br>&nbsp;</tt></td></tr>
+&nbsp;&nbsp;&nbsp;&nbsp;mip_levels&nbsp;(int):&nbsp;number&nbsp;of&nbsp;mips&nbsp;supported&nbsp;on&nbsp;this&nbsp;texture.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;file&nbsp;(str):&nbsp;Load&nbsp;a&nbsp;texture&nbsp;file&nbsp;name&nbsp;(jpeg&nbsp;or&nbsp;png).&nbsp;All&nbsp;other&nbsp;parameters&nbsp;will&nbsp;be&nbsp;ignored&nbsp;when&nbsp;the&nbsp;file&nbsp;name&nbsp;set.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="Texture-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
@@ -577,10 +572,10 @@ Data descriptors inherited from <a href="builtins.html#BaseException">builtins.B
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-add_shader_path"><strong>add_shader_path</strong></a>(...)</dt><dd><tt>Adds&nbsp;a&nbsp;path&nbsp;to&nbsp;load&nbsp;shader&nbsp;files&nbsp;/&nbsp;shader&nbsp;includes&nbsp;from.<br>
+<td width="100%"><dl><dt><a name="-add_data_path"><strong>add_data_path</strong></a>(...)</dt><dd><tt>Adds&nbsp;a&nbsp;path&nbsp;to&nbsp;load&nbsp;shader&nbsp;/&nbsp;texture&nbsp;files&nbsp;/&nbsp;shader&nbsp;includes&nbsp;from.<br>
 &nbsp;<br>
 Parameters:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;path&nbsp;(str&nbsp;or&nbsp;Module):&nbsp;&nbsp;If&nbsp;str&nbsp;it&nbsp;will&nbsp;be&nbsp;a&nbsp;shader&nbsp;path&nbsp;to&nbsp;be&nbsp;used.&nbsp;If&nbsp;a&nbsp;module,&nbsp;it&nbsp;will&nbsp;find&nbsp;the&nbsp;source&nbsp;folder&nbsp;of&nbsp;the&nbsp;module's&nbsp;__init__.py&nbsp;file,&nbsp;and&nbsp;use&nbsp;this&nbsp;source&nbsp;as&nbsp;the&nbsp;path.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;path&nbsp;(str&nbsp;or&nbsp;Module):&nbsp;&nbsp;If&nbsp;str&nbsp;it&nbsp;will&nbsp;be&nbsp;a&nbsp;path&nbsp;to&nbsp;be&nbsp;used.&nbsp;If&nbsp;a&nbsp;module,&nbsp;it&nbsp;will&nbsp;find&nbsp;the&nbsp;source&nbsp;folder&nbsp;of&nbsp;the&nbsp;module's&nbsp;__init__.py&nbsp;file,&nbsp;and&nbsp;use&nbsp;this&nbsp;source&nbsp;as&nbsp;the&nbsp;path.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;path&nbsp;priorities&nbsp;are&nbsp;based&nbsp;on&nbsp;the&nbsp;order&nbsp;of&nbsp;how&nbsp;they&nbsp;were&nbsp;added.</tt></dd></dl>
  <dl><dt><a name="-get_adapters"><strong>get_adapters</strong></a>(...)</dt><dd><tt>Lists&nbsp;all&nbsp;gpu&nbsp;graphics&nbsp;cards&nbsp;found&nbsp;in&nbsp;the&nbsp;system.<br>
 &nbsp;<br>
@@ -590,15 +585,6 @@ Returns:<br>
 &nbsp;<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;adapter&nbsp;(tuple):&nbsp;Element&nbsp;as&nbsp;tuple&nbsp;of&nbsp;type&nbsp;(i&nbsp;:&nbsp;int,&nbsp;name&nbsp;:&nbsp;str)</tt></dd></dl>
- <dl><dt><a name="-inline_shader"><strong>inline_shader</strong></a>(...)</dt><dd><tt>Create&nbsp;an&nbsp;inline&nbsp;<a href="#Shader">Shader</a>&nbsp;<a href="builtins.html#object">object</a>.<br>
-&nbsp;<br>
-Parameters:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str):&nbsp;Name&nbsp;of&nbsp;shader.&nbsp;It&nbsp;is&nbsp;mandatory&nbsp;for&nbsp;inline&nbsp;shaders.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;source&nbsp;(str):&nbsp;Source&nbsp;code&nbsp;of&nbsp;shader.&nbsp;Use&nbsp;HLSL.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;mainFunction&nbsp;(str)(optional):&nbsp;entry&nbsp;point&nbsp;of&nbsp;shader.&nbsp;Default&nbsp;is&nbsp;'main'.<br>
-&nbsp;<br>
-Returns:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;shader&nbsp;(<a href="#Shader">Shader</a>):&nbsp;<a href="builtins.html#object">object</a>&nbsp;created.</tt></dd></dl>
  <dl><dt><a name="-run"><strong>run</strong></a>(...)</dt><dd><tt>Runs&nbsp;window&nbsp;rendering&nbsp;callbacks.&nbsp;This&nbsp;function&nbsp;blocks&nbsp;until&nbsp;all&nbsp;the&nbsp;existing&nbsp;windows&nbsp;are&nbsp;closed.&nbsp;<a href="#Window">Window</a>&nbsp;objects&nbsp;must&nbsp;be&nbsp;created&nbsp;and&nbsp;referenced&nbsp;prior.&nbsp;Use&nbsp;the&nbsp;<a href="#Window">Window</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;configure&nbsp;/&nbsp;specify&nbsp;callbacks&nbsp;and&nbsp;this&nbsp;function&nbsp;to&nbsp;run&nbsp;all&nbsp;the&nbsp;event&nbsp;loops&nbsp;for&nbsp;windows.</tt></dd></dl>
  <dl><dt><a name="-schedule"><strong>schedule</strong></a>(...)</dt><dd><tt>Submits&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>&nbsp;objects&nbsp;to&nbsp;the&nbsp;GPU&nbsp;to&nbsp;run&nbsp;shader&nbsp;work&nbsp;on.<br>
 &nbsp;<br>
