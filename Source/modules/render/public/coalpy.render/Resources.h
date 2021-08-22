@@ -14,10 +14,12 @@ using ResourceName = std::string;
 struct ResourceHandle : public GenericHandle<unsigned int> {};
 struct ResourceTable  : public GenericHandle<unsigned int> {};
 
-struct Texture : public ResourceHandle {};
-struct Buffer  : public ResourceHandle {};
+struct Texture  : public ResourceHandle {};
+struct Buffer   : public ResourceHandle {};
+struct Sampler  : public ResourceHandle {};
 struct InResourceTable  : public ResourceTable {};
 struct OutResourceTable : public ResourceTable {};
+struct SamplerTable : public ResourceTable {};
 
 enum class TextureType
 {
@@ -42,6 +44,27 @@ enum class BufferType
     Structured,
     Raw,
     Count
+};
+
+enum class TextureAddressMode
+{
+    Wrap, Mirror, Clamp, Border, Count
+};
+
+enum class FilterType
+{
+    Point, Linear, Min, Max, Anisotropic
+};
+
+struct SamplerDesc
+{
+    FilterType type = FilterType::Linear;
+    TextureAddressMode addressU = TextureAddressMode::Wrap;
+    TextureAddressMode addressV = TextureAddressMode::Wrap;
+    TextureAddressMode addressW = TextureAddressMode::Wrap;
+    float borderColor [4];
+    float minLod = 0.0f;
+    float maxLod = 16.0f;
 };
 
 struct ResourceDesc
@@ -112,6 +135,10 @@ struct BufferResult
     {
         return buffer;
     }
+};
+
+struct SamplerResult
+{
 };
 
 struct InResourceTableResult
