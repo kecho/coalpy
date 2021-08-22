@@ -35,8 +35,10 @@ public:
 
     TextureResult createTexture(const TextureDesc& desc, ID3D12Resource* resourceToAcquire = nullptr, ResourceSpecialFlags flags = ResourceSpecialFlag_None);
     BufferResult  createBuffer (const BufferDesc& desc, ID3D12Resource* resourceToAcquire = nullptr, ResourceSpecialFlags flags = ResourceSpecialFlag_None);
+    SamplerResult  createSampler (const SamplerDesc& desc);
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
     OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);
+    SamplerTableResult createSamplerTable(const ResourceTableDesc& desc);
 
     void getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo);
 
@@ -55,19 +57,21 @@ public:
 
 private:
     Dx12ResourceTableResult createResourceTable(const ResourceTableDesc& desc, bool isUav);
-    enum class ResType { Texture, Buffer };
+    enum class ResType { Texture, Buffer, Sampler };
     class ResourceContainer : public RefCounted
     {
     public:
         ResType type = ResType::Texture;
         ResourceHandle handle;
         SmartPtr<Dx12Resource> resource;
+        SmartPtr<Dx12Sampler> sampler;
         std::set<ResourceTable> parentTables;
 
         void clear()
         {
             handle = ResourceHandle();
             resource = nullptr;
+            sampler = nullptr;
             parentTables.clear();
         }
     };

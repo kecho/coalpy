@@ -63,8 +63,10 @@ struct SamplerDesc
     TextureAddressMode addressV = TextureAddressMode::Wrap;
     TextureAddressMode addressW = TextureAddressMode::Wrap;
     float borderColor [4];
+    float mipBias = 0.0f;
     float minLod = 0.0f;
     float maxLod = 16.0f;
+    int maxAnisoQuality = 2;
 };
 
 struct ResourceDesc
@@ -129,7 +131,7 @@ using BufferResult  = TemplateResourceResult<Buffer>;
 using SamplerResult = TemplateResourceResult<Sampler>;
 using InResourceTableResult  = TemplateResourceResult<InResourceTable>;
 using OutResourceTableResult = TemplateResourceResult<OutResourceTable>;
-using SamplerResourceResult  = TemplateResourceResult<SamplerTable>;
+using SamplerTableResult  = TemplateResourceResult<SamplerTable>;
 
 }
 

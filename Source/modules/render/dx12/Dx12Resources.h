@@ -182,16 +182,31 @@ protected:
     BufferDesc m_buffDesc;
 };
 
+class Dx12Sampler : public RefCounted
+{
+public:
+    Dx12Sampler(Dx12Device& device, const SamplerDesc& desc);
+    virtual ~Dx12Sampler();
+
+    const Dx12Descriptor& descriptor() const { return m_descriptor; }
+
+private:
+    Dx12Descriptor m_descriptor;
+    Dx12Device& m_device;
+};
+
 class Dx12ResourceTable : public RefCounted
 {
 public:
     Dx12ResourceTable(Dx12Device& device, Dx12Resource** resources, int count, bool isUav);
+    Dx12ResourceTable(Dx12Device& device, Dx12Sampler** samplers, int count);
     ~Dx12ResourceTable();
 
     const Dx12DescriptorTable& cpuTable() const { return m_cpuTable; }
 private:
     Dx12Device& m_device;
     std::vector<SmartPtr<Dx12Resource>> m_resources;
+    std::vector<SmartPtr<Dx12Sampler>>  m_samplers;
     Dx12DescriptorTable m_cpuTable;
 };
 

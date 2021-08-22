@@ -266,12 +266,12 @@ BufferResult Dx12Device::createBuffer (const BufferDesc& config)
 
 SamplerResult Dx12Device::createSampler (const SamplerDesc& config)
 {
-    return SamplerResult { ResourceResult::InternalApiFailure };
+    return m_resources->createSampler(config);
 }
 
 InResourceTableResult Dx12Device::createInResourceTable(const ResourceTableDesc& config)
 {
-    return m_resources->createInResourceTable(config);;
+    return m_resources->createInResourceTable(config);
 }
 
 OutResourceTableResult Dx12Device::createOutResourceTable (const ResourceTableDesc& config)
@@ -279,9 +279,9 @@ OutResourceTableResult Dx12Device::createOutResourceTable (const ResourceTableDe
     return m_resources->createOutResourceTable(config);
 }
 
-SamplerResourceResult Dx12Device::createSamplerTable (const ResourceTableDesc& config)
+SamplerTableResult Dx12Device::createSamplerTable (const ResourceTableDesc& config)
 {
-    return SamplerResourceResult { ResourceResult::InternalApiFailure };
+    return m_resources->createSamplerTable(config);
 }
 
 void Dx12Device::getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo)

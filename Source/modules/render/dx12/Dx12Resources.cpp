@@ -444,10 +444,80 @@ Dx12ResourceInitResult Dx12Buffer::init()
     return Dx12ResourceInitResult { ResourceResult::Ok };
 }
 
+size_t Dx12Buffer::byteSize() const
+{
+    return m_data.resDesc.Width;
+}
+
 Dx12Buffer::~Dx12Buffer()
 {
     if (m_buffDesc.isConstantBuffer)
         m_device.descriptors().release(m_cbv);
+}
+
+static void convertToDx12SamplerDesc(const SamplerDesc& desc, D3D12_SAMPLER_DESC& outDesc)
+{
+    switch (desc.type)
+    {
+    case FilterType::Point:
+        outDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT; 
+        break;
+    case FilterType::Min:
+        outDesc.Filter = D3D12_FILTER_MINIMUM_MIN_MAG_MIP_LINEAR; 
+        break;
+    case FilterType::Max:
+        outDesc.Filter = D3D12_FILTER_MAXIMUM_MIN_MAG_MIP_LINEAR; 
+        break;
+    case FilterType::Anisotropic:
+        outDesc.Filter = D3D12_FILTER_ANISOTROPIC; 
+        break;
+    case FilterType::Linear:
+    default:
+        outDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR; 
+        break;
+    }
+
+    auto translateAddress = [](TextureAddressMode mode)
+    {
+        switch (mode)
+        {
+        case TextureAddressMode::Wrap:
+            return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        case TextureAddressMode::Mirror:
+            return D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+        case TextureAddressMode::Border:
+            return D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+        case TextureAddressMode::Clamp:
+        default:
+            return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        }
+    };
+
+    outDesc.AddressU = translateAddress(desc.addressU);
+    outDesc.AddressV = translateAddress(desc.addressV);
+    outDesc.AddressW = translateAddress(desc.addressW);
+    outDesc.MipLODBias = desc.mipBias;
+    outDesc.MaxAnisotropy = desc.maxAnisoQuality;
+    outDesc.ComparisonFunc = {};
+    for (int i = 0; i < 4; ++i)
+        outDesc.BorderColor[i] = desc.borderColor[i];
+    outDesc.MinLOD = desc.minLod;
+    outDesc.MaxLOD = desc.maxLod;
+}
+
+Dx12Sampler::Dx12Sampler(Dx12Device& device, const SamplerDesc& desc)
+: m_device(device)
+{
+    m_descriptor = device.descriptors().allocateSampler();
+    D3D12_SAMPLER_DESC dx12Sampler;
+    convertToDx12SamplerDesc(desc, dx12Sampler);
+
+    device.device().CreateSampler(&dx12Sampler, m_descriptor.handle);
+}
+
+Dx12Sampler::~Dx12Sampler()
+{
+    m_device.descriptors().release(m_descriptor);
 }
 
 Dx12ResourceTable::Dx12ResourceTable(Dx12Device& device, Dx12Resource** resources, int count, bool isUav)
@@ -468,14 +538,27 @@ Dx12ResourceTable::Dx12ResourceTable(Dx12Device& device, Dx12Resource** resource
         
 }
 
+Dx12ResourceTable::Dx12ResourceTable(Dx12Device& device, Dx12Sampler** samplers, int count)
+: m_device(device)
+{
+    std::vector<Dx12Descriptor> descriptors;
+    m_samplers.insert(m_samplers.end(), samplers, samplers + count);
+    for (auto& s : m_samplers)
+    {
+        if (!s)
+            continue;
+        descriptors.push_back(s->descriptor());
+    }
+
+    m_cpuTable = m_device.descriptors().allocateTable(
+        Dx12DescriptorTableType::Sampler,
+        descriptors.data(), (int)descriptors.size());
+        
+}
+
 Dx12ResourceTable::~Dx12ResourceTable()
 {
     m_device.descriptors().release(m_cpuTable);
-}
-
-size_t Dx12Buffer::byteSize() const
-{
-    return m_data.resDesc.Width;
 }
 
 }

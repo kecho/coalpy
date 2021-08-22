@@ -118,6 +118,22 @@ BufferResult Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12
     return BufferResult { ResourceResult::Ok, Buffer { resHandle.handleId } };
 }
 
+SamplerResult Dx12ResourceCollection::createSampler(const SamplerDesc& desc)
+{
+    std::unique_lock lock(m_resourceMutex);
+    ResourceHandle resHandle;
+    SmartPtr<Dx12Sampler> samplerObj = new Dx12Sampler(m_device, desc);
+    auto& outPtr = m_resources.allocate(resHandle);
+    if (outPtr == nullptr)
+        outPtr = new ResourceContainer();
+
+    outPtr->type = ResType::Sampler;
+    outPtr->sampler = samplerObj;
+    outPtr->handle = resHandle;
+
+    return SamplerResult { ResourceResult::Ok, Sampler { resHandle.handleId} };
+}
+
 bool Dx12ResourceCollection::convertTableDescToResourceList(
     const ResourceTableDesc& desc,
     bool isUav,
@@ -201,6 +217,11 @@ OutResourceTableResult Dx12ResourceCollection::createOutResourceTable(const Reso
 
     m_workDb.registerTable(result.tableHandle, desc.name.c_str(), desc.resources, desc.resourcesCount, true);
     return OutResourceTableResult { ResourceResult::Ok, OutResourceTable { result.tableHandle.handleId } };
+}
+
+SamplerTableResult Dx12ResourceCollection::createSamplerTable(const ResourceTableDesc& desc)
+{
+    return SamplerTableResult { ResourceResult::InternalApiFailure };
 }
 
 bool Dx12ResourceCollection::recreateUnsafe(ResourceTable handle)

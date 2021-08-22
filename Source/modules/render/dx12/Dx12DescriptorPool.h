@@ -79,6 +79,11 @@ public:
         return allocInternal(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     }
 
+    inline Dx12Descriptor allocateSampler()
+    {
+        return allocInternal(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+    }
+
     Dx12DescriptorTable allocateTable(
         Dx12DescriptorTableType type,
         const Dx12Descriptor* cpuHandles, UINT cpuHandleCounts);

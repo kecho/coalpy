@@ -54,7 +54,7 @@ public:
     virtual SamplerResult createSampler (const SamplerDesc& config) override;
     virtual InResourceTableResult createInResourceTable  (const ResourceTableDesc& config) override;
     virtual OutResourceTableResult createOutResourceTable (const ResourceTableDesc& config) override;
-    virtual SamplerResourceResult  createSamplerTable (const ResourceTableDesc& config) override;
+    virtual SamplerTableResult  createSamplerTable (const ResourceTableDesc& config) override;
     virtual void getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo) override;
     virtual WaitStatus waitOnCpu(WorkHandle handle, int milliseconds = 0) override;
     virtual DownloadStatus getDownloadStatus(WorkHandle bundle, ResourceHandle handle) override;

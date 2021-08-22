@@ -52,7 +52,7 @@ public:
     virtual SamplerResult createSampler (const SamplerDesc& config) = 0;
     virtual InResourceTableResult createInResourceTable  (const ResourceTableDesc& config) = 0;
     virtual OutResourceTableResult  createOutResourceTable (const ResourceTableDesc& config) = 0;
-    virtual SamplerResourceResult   createSamplerTable (const ResourceTableDesc& config) = 0;
+    virtual SamplerTableResult      createSamplerTable (const ResourceTableDesc& config) = 0;
 
     virtual TextureResult recreateTexture(Texture handle, const TextureDesc& config) = 0;
 
