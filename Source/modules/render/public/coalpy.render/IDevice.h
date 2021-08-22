@@ -49,9 +49,10 @@ public:
 
     virtual TextureResult createTexture(const TextureDesc& config) = 0;
     virtual BufferResult  createBuffer (const BufferDesc& config) = 0;
-    //virtual SamplerResult  createSampler (const BufferDesc& config) = 0;
+    virtual SamplerResult createSampler (const SamplerDesc& config) = 0;
     virtual InResourceTableResult createInResourceTable  (const ResourceTableDesc& config) = 0;
     virtual OutResourceTableResult  createOutResourceTable (const ResourceTableDesc& config) = 0;
+    virtual SamplerResourceResult   createSamplerTable (const ResourceTableDesc& config) = 0;
 
     virtual TextureResult recreateTexture(Texture handle, const TextureDesc& config) = 0;
 

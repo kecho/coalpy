@@ -73,7 +73,7 @@ int Buffer::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         PyErr_Format(moduleState.exObj(), "Count not instantiate buffer object: %s", buffResult.message.c_str());
         return -1;
     }
-    buffer->buffer = buffResult.buffer;
+    buffer->buffer = buffResult.object;
     return 0;
 }
 
@@ -158,7 +158,7 @@ int Texture::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         PyErr_Format(moduleState.exObj(), "Count not instantiate texture object: %s", texResult.message.c_str());
         return -1;
     }
-    texture->texture = texResult.texture;
+    texture->texture = texResult.object;
     return 0;
 }
 
@@ -280,7 +280,7 @@ int InResourceTable::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         return -1;
     }
 
-    newTable->table = tableResult.inTable;
+    newTable->table = tableResult.object;
 
     if (!newTable->table.valid())
     {
@@ -350,7 +350,7 @@ int OutResourceTable::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         return -1;
     }
 
-    newTable->table = tableResult.outTable;
+    newTable->table = tableResult.object;
 
     if (!newTable->table.valid())
     {

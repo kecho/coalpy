@@ -92,7 +92,7 @@ void Dx12Display::createComputeTexture()
     {
         TextureResult result = m_device.resources().createTexture(desc, nullptr);
         CPY_ASSERT_FMT(result.success(), "Could not create swap chain compute texture: %s", result.message.c_str());
-        m_computeTexture = result.texture;
+        m_computeTexture = result.object;
     }
     else
     {
@@ -120,7 +120,7 @@ void Dx12Display::acquireTextures()
         DX_OK(m_swapChain->GetBuffer(i, DX_RET(resource)));
         TextureResult texResult = m_device.resources().createTexture(m_surfaceDesc, resource, ResourceSpecialFlag_NoDeferDelete);
         CPY_ASSERT_FMT(texResult.success(), "Could not create swap chain texture, error: %s", texResult.message.c_str());
-        m_textures.push_back(texResult.texture);
+        m_textures.push_back(texResult.object);
     }
     createComputeTexture();
     ++m_version;

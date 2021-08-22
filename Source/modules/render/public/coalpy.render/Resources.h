@@ -19,7 +19,7 @@ struct Buffer   : public ResourceHandle {};
 struct Sampler  : public ResourceHandle {};
 struct InResourceTable  : public ResourceTable {};
 struct OutResourceTable : public ResourceTable {};
-struct SamplerTable : public ResourceTable {};
+struct SamplerTable     : public ResourceTable {};
 
 enum class TextureType
 {
@@ -109,65 +109,27 @@ enum class ResourceResult
     InternalApiFailure
 };
 
-struct TextureResult
+template<typename ResourceType>
+struct TemplateResourceResult 
 {
     bool success() const { return result == ResourceResult::Ok; }
 
     ResourceResult result = ResourceResult::Ok;
-    Texture texture;
+    ResourceType object;
     std::string message;
 
-    operator Texture() const
+    operator ResourceType() const
     {
-        return texture;
+        return object;
     }
 };
 
-struct BufferResult
-{
-    bool success() const { return result == ResourceResult::Ok; }
-
-    ResourceResult result = ResourceResult::Ok;
-    Buffer buffer;
-    std::string message;
-
-    operator Buffer() const
-    {
-        return buffer;
-    }
-};
-
-struct SamplerResult
-{
-};
-
-struct InResourceTableResult
-{
-    bool success() const { return result == ResourceResult::Ok; }
-
-    ResourceResult result = ResourceResult::Ok;
-    InResourceTable inTable;
-    std::string message;
-
-    operator InResourceTable() const
-    {
-        return inTable;
-    }
-};
-
-struct OutResourceTableResult
-{
-    bool success() const { return result == ResourceResult::Ok; }
-
-    ResourceResult result = ResourceResult::Ok;
-    OutResourceTable outTable;
-    std::string message;
-    
-    operator OutResourceTable() const
-    {
-        return outTable;
-    }
-};
+using TextureResult = TemplateResourceResult<Texture>;
+using BufferResult  = TemplateResourceResult<Buffer>;
+using SamplerResult = TemplateResourceResult<Sampler>;
+using InResourceTableResult  = TemplateResourceResult<InResourceTable>;
+using OutResourceTableResult = TemplateResourceResult<OutResourceTable>;
+using SamplerResourceResult  = TemplateResourceResult<SamplerTable>;
 
 }
 
