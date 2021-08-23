@@ -143,6 +143,9 @@ void CommandList::writeCommand(const ComputeCommand& cmd)
     m_internal.deferArrayStore(abiCmd.outResourceTables, cmd.m_outTables, cmd.m_outTablesCounts);
     abiCmd.outResourceTablesCounts = cmd.m_outTablesCounts;
 
+    m_internal.deferArrayStore(abiCmd.samplerTables, cmd.m_samplerTables, cmd.m_samplerTablesCounts);
+    abiCmd.samplerTablesCounts = cmd.m_samplerTablesCounts;
+
     const char* str = cmd.m_debugName ? cmd.m_debugName : "";
     int strSz = strlen(cmd.m_debugName) + 1;
     m_internal.deferArrayStore(abiCmd.debugName, cmd.m_debugName, strSz);

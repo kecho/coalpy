@@ -44,6 +44,12 @@ public:
         m_outTablesCounts = outTablesCounts;
     }
 
+    inline void setSamplers(SamplerTable* samplerTables, int tablesCounts)
+    {
+        m_samplerTables = samplerTables;
+        m_samplerTablesCounts = tablesCounts;
+    }
+
     inline void setDispatch(const char* debugNameMarker, int x, int y, int z)
     {
         m_debugName = debugNameMarker;
@@ -63,6 +69,9 @@ private:
 
     const OutResourceTable* m_outTables;
     int m_outTablesCounts = 0;
+
+    const SamplerTable* m_samplerTables;
+    int m_samplerTablesCounts = 0;
 
     const char* m_inlineConstantBuffer = nullptr;
     int m_inlineConstantBufferSize = 0;

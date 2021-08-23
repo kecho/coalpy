@@ -83,6 +83,11 @@ private:
         std::set<ResourceContainer*>& trackedContainers,
         Dx12ResourceTableResult& outResult);
 
+    bool convertTableDescToSamplerList(
+        const ResourceTableDesc& desc,
+        std::vector<Dx12Sampler*>& samplers,
+        Dx12ResourceTableResult& outResult);
+
     std::unordered_map<ResourceTable, std::set<ResourceHandle>> m_trackedTableToResources;
 
     Dx12Device& m_device;

@@ -58,6 +58,9 @@ struct AbiComputeCmd
     AbiPtr<OutResourceTable> outResourceTables;
     int       outResourceTablesCounts = 0;
 
+    AbiPtr<SamplerTable> samplerTables;
+    int       samplerTablesCounts = 0;
+
     AbiPtr<char> debugName;
     int debugNameSize = 0;
     int x = 1;

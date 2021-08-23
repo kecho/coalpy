@@ -141,6 +141,12 @@ bool Dx12ResourceCollection::convertTableDescToResourceList(
     std::set<ResourceContainer*>& trackedContainers,
     Dx12ResourceTableResult& outResult)
 {
+    if (desc.resourcesCount == 0)
+    {
+        outResult = Dx12ResourceTableResult { ResourceResult::InvalidParameter, ResourceTable(), "Table must contain at least 1 resource." };
+        return false;
+    }
+
     for (int i = 0; i < desc.resourcesCount; ++i)
     {
         ResourceHandle h = desc.resources[i];
@@ -173,6 +179,42 @@ bool Dx12ResourceCollection::convertTableDescToResourceList(
     return true;
 }
 
+bool Dx12ResourceCollection::convertTableDescToSamplerList(
+    const ResourceTableDesc& desc,
+    std::vector<Dx12Sampler*>& samplers,
+    Dx12ResourceTableResult& outResult)
+{
+    if (desc.resourcesCount == 0)
+    {
+        outResult = Dx12ResourceTableResult { ResourceResult::InvalidParameter, ResourceTable(), "Table must contain at least 1 resource." };
+        return false;
+    }
+
+    for (int i = 0; i < desc.resourcesCount; ++i)
+    {
+        ResourceHandle h = desc.resources[i];
+        bool foundResource = m_resources.contains(h);
+        CPY_ASSERT(foundResource);
+        if (!foundResource)
+            return false;
+        
+        SmartPtr<ResourceContainer>& container = m_resources[h];
+        if (container->type != ResType::Sampler)
+        {
+            outResult = Dx12ResourceTableResult { ResourceResult::InvalidParameter, ResourceTable(), "Sampler table resource must be a sampler type." };
+            return false;
+        }
+
+        CPY_ASSERT(container->sampler != nullptr);
+        if (container->sampler == nullptr)
+            return false;
+
+        samplers.push_back(&(*container->sampler));
+    }
+    
+    return true;
+}
+
 Dx12ResourceTableResult Dx12ResourceCollection::createResourceTable(const ResourceTableDesc& desc, bool isUav)
 {
     std::unique_lock lock(m_resourceMutex);
@@ -184,7 +226,7 @@ Dx12ResourceTableResult Dx12ResourceCollection::createResourceTable(const Resour
 
     ResourceTable handle;
     auto& outPtr = m_resourceTables.allocate(handle);
-    outPtr = new Dx12ResourceTable(m_device, gatheredResources.data(), (int)gatheredResources.size(), isUav); 
+    outPtr = new Dx12ResourceTable(m_device, gatheredResources.data(), (int)gatheredResources.size(), isUav);
 
     if (!containersToTrack.empty())
     {
@@ -221,7 +263,16 @@ OutResourceTableResult Dx12ResourceCollection::createOutResourceTable(const Reso
 
 SamplerTableResult Dx12ResourceCollection::createSamplerTable(const ResourceTableDesc& desc)
 {
-    return SamplerTableResult { ResourceResult::InternalApiFailure };
+    Dx12ResourceTableResult result { ResourceResult::Ok };
+    std::vector<Dx12Sampler*> samplers;
+    if (!convertTableDescToSamplerList(desc, samplers, result))
+        return SamplerTableResult { result.result, SamplerTable(), result.message };
+
+    ResourceTable handle;
+    auto& outPtr = m_resourceTables.allocate(handle);
+    outPtr = new Dx12ResourceTable(m_device, samplers.data(), (int)samplers.size()); 
+
+    return SamplerTableResult { ResourceResult::Ok, SamplerTable { handle.handleId } };
 }
 
 bool Dx12ResourceCollection::recreateUnsafe(ResourceTable handle)

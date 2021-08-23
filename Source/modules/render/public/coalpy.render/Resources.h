@@ -79,7 +79,7 @@ struct ResourceDesc
 struct TextureDesc : public ResourceDesc
 {
     TextureType type = TextureType::k2d;
-    Format format = Format::RGBA_8_UINT;
+    Format format = Format::RGBA_8_UNORM;
     unsigned int width = 1u;
     unsigned int height = 1u;
     unsigned int depth  = 1u;

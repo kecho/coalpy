@@ -753,6 +753,136 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testTextureSampler(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+        IShaderDb& db = *renderTestCtx.db;
+
+        const char* shaderSrc = R"(
+            Texture2D<float> g_input  : register(t0);
+            RWBuffer<float>  g_output : register(u0);
+            SamplerState    g_sampler : register(s0);
+
+            [numthreads(1,1,1)]
+            void csMain()
+            {
+                g_output[0] = g_input.SampleLevel(g_sampler, float2(0.5, 0.5), 0.0);
+            }
+        )";
+
+        ShaderInlineDesc desc;
+        desc.type = ShaderType::Compute;
+        desc.name = "testShader";
+        desc.mainFn = "csMain";
+        desc.immCode = shaderSrc;
+        ShaderHandle shader = db.requestCompile(desc);
+        db.resolve(shader);
+        CPY_ASSERT(db.isValid(shader));
+    
+        Texture source;
+        {
+            TextureDesc desc;
+            desc.format = Format::R32_FLOAT;
+            desc.width  = 2;
+            desc.height = 2;
+            source = device.createTexture(desc);
+        }
+
+        InResourceTable inputTable;
+        {
+            ResourceTableDesc desc;
+            desc.resources = &source;
+            desc.resourcesCount = 1;
+            inputTable = device.createInResourceTable(desc);
+        }
+
+        Buffer dest;
+        {
+            BufferDesc desc;
+            desc.format = Format::R32_FLOAT;
+            desc.elementCount = 1;
+            dest = device.createBuffer(desc);
+        }
+
+        OutResourceTable outputTable;
+        {
+            ResourceTableDesc desc;
+            desc.resources = &dest;
+            desc.resourcesCount = 1;
+            outputTable = device.createOutResourceTable(desc);
+        }
+
+        Sampler sampler;
+        {
+            SamplerDesc desc;
+            desc.type = FilterType::Linear;
+            sampler = device.createSampler(desc);
+        }
+
+        SamplerTable samplerTable;
+        {
+            ResourceTableDesc desc;
+            desc.resources = &sampler;
+            desc.resourcesCount = 1;
+            samplerTable = device.createSamplerTable(desc);
+        }
+
+        CommandList commandList;
+    
+        const float texData[] = { 0.0f, 0.0f, 1.0f, 1.0f };
+        {
+            UploadCommand cmd;
+            cmd.setData((const char*)texData, sizeof(texData), source);
+            commandList.writeCommand(cmd);
+        }
+
+        {
+            ComputeCommand cmd;
+            cmd.setShader(shader);
+            cmd.setInResources(&inputTable, 1);
+            cmd.setOutResources(&outputTable, 1);
+            cmd.setSamplers(&samplerTable, 1);
+            cmd.setDispatch("testDispatch", 1, 1, 1);
+            commandList.writeCommand(cmd);
+        }
+
+        {
+            DownloadCommand cmd;
+            cmd.setData(dest);
+            commandList.writeCommand(cmd);
+        }
+
+        commandList.finalize();
+
+        CommandList* cmdListPtr = &commandList;
+        ScheduleStatus status = device.schedule(&cmdListPtr, 1, ScheduleFlags_GetWorkHandle); 
+        CPY_ASSERT(status.success());
+
+        WaitStatus waitStatus = device.waitOnCpu(status.workHandle, -1);
+        CPY_ASSERT(waitStatus.success());
+
+        DownloadStatus downloadStatus = device.getDownloadStatus(status.workHandle, dest);
+        CPY_ASSERT(downloadStatus.success());
+
+        CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
+        if (downloadStatus.downloadPtr)
+        {
+            float result = *((float*)downloadStatus.downloadPtr);
+            CPY_ASSERT(std::abs(result - 0.5f) < 0.001f);
+        }
+        
+        device.release(source);
+        device.release(status.workHandle);
+        device.release(inputTable);
+        device.release(dest);
+        device.release(outputTable);
+        device.release(sampler);
+        device.release(samplerTable);
+        renderTestCtx.end();
+    }
+
     void testUavBarrier(TestContext& ctx)
     {
         auto& renderTestCtx = (RenderTestContext&)ctx;
@@ -917,6 +1047,7 @@ namespace coalpy
             { "simpleComputePingPong",  testSimpleComputePingPong },
             { "cachedConstantBuffer",  testCachedConstantBuffer },
             { "inlineConstantBuffer",  testInlineConstantBuffer },
+            { "textureSamplers",  testTextureSampler },
             { "uavBarrier",  testUavBarrier },
             { "upload2dTexture",  testUpload2dTexture },
         };
