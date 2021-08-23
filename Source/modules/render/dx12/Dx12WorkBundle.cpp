@@ -35,6 +35,19 @@ void Dx12WorkBundle::uploadAllTables()
     std::vector<UINT> dstDescCounts;
     dstDescCounts.reserve(totalDescriptors);
 
+    int totalSamplers = m_workBundle.totalSamplers;
+    std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> srcSamplers;
+    srcSamplers.reserve(totalSamplers);
+
+    std::vector<UINT> srcSamplersCounts;
+    srcSamplersCounts.reserve(totalSamplers);
+
+    std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> dstSamplers;
+    dstSamplers.reserve(totalSamplers);
+
+    std::vector<UINT> dstSamplersCounts;
+    dstSamplersCounts.reserve(totalSamplers);
+
     Dx12ResourceCollection& resources = m_device.resources();
     if (m_srvUavTable.ownerHeap != nullptr && m_workBundle.totalTableSize)
     {
@@ -43,12 +56,23 @@ void Dx12WorkBundle::uploadAllTables()
             CPY_ASSERT(it.first.valid());
             Dx12ResourceTable& t = resources.unsafeGetTable(it.first);
             const Dx12DescriptorTable& cpuTable = t.cpuTable();
-            
-            srcDescBase.push_back(cpuTable.baseHandle);
-            srcDescCounts.push_back(cpuTable.count);
+                
+            if (it.second.isSampler)
+            {
+                srcSamplers.push_back(cpuTable.baseHandle);
+                srcSamplersCounts.push_back(cpuTable.count);
+        
+                dstSamplers.push_back(m_samplersTable.getCpuHandle(it.second.offset));
+                dstSamplersCounts.push_back(it.second.count);
+            }
+            else
+            {
+                srcDescBase.push_back(cpuTable.baseHandle);
+                srcDescCounts.push_back(cpuTable.count);
 
-            dstDescBase.push_back(m_srvUavTable.getCpuHandle(it.second.offset));
-            dstDescCounts.push_back(it.second.count);
+                dstDescBase.push_back(m_srvUavTable.getCpuHandle(it.second.offset));
+                dstDescCounts.push_back(it.second.count);
+            }
             CPY_ASSERT(it.second.count == cpuTable.count);
         }
     }
@@ -60,6 +84,16 @@ void Dx12WorkBundle::uploadAllTables()
             (UINT)srcDescBase.size(),
             srcDescBase.data(), srcDescCounts.data(),
             D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    }
+
+    if (!dstSamplers.empty())
+    {
+        m_device.device().CopyDescriptors(
+            (UINT)dstSamplers.size(),
+            dstSamplers.data(), dstSamplersCounts.data(),
+            (UINT)srcSamplers.size(),
+            srcSamplers.data(), srcSamplersCounts.data(),
+            D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
     }
 }
 
@@ -134,7 +168,13 @@ void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompute
     outList.SetComputeRootSignature(&m_device.defaultComputeRootSignature());
 
     //TODO: prune this.
-    outList.SetDescriptorHeaps(1, &m_srvUavTable.ownerHeap);
+    ID3D12DescriptorHeap* heaps[2] = {};
+    int listCounts = 0;
+    if (m_srvUavTable.ownerHeap)
+        heaps[listCounts++] = m_srvUavTable.ownerHeap;
+    if (m_samplersTable.ownerHeap)
+        heaps[listCounts++] = m_samplersTable.ownerHeap;
+    outList.SetDescriptorHeaps(listCounts, heaps);
 
     outList.SetPipelineState(pso);
 
@@ -189,6 +229,18 @@ void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompute
 
         D3D12_GPU_DESCRIPTOR_HANDLE descriptor = m_srvUavTable.getGpuHandle(it->second.offset);
         outList.SetComputeRootDescriptorTable(m_device.tableIndex(Dx12Device::TableTypes::Uav, outTableId) , descriptor);
+    }
+
+    const SamplerTable* samplerTables = computeCmd->samplerTables.data(data);
+    for (int samplerTableId = 0; samplerTableId < computeCmd->samplerTablesCounts; ++samplerTableId)
+    {
+        auto it = m_workBundle.tableAllocations.find((ResourceTable)samplerTables[samplerTableId]);
+        CPY_ASSERT(it != m_workBundle.tableAllocations.end());
+        if (it == m_workBundle.tableAllocations.end())
+            return;
+    
+        D3D12_GPU_DESCRIPTOR_HANDLE descriptor = m_samplersTable.getGpuHandle(it->second.offset);
+        outList.SetComputeRootDescriptorTable(m_device.tableIndex(Dx12Device::TableTypes::Sampler, samplerTableId), descriptor);
     }
 
     outList.Dispatch(computeCmd->x, computeCmd->y, computeCmd->z);
@@ -374,6 +426,7 @@ UINT64 Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount
 
     pools.uploadPool->beginUsage();
     pools.tablePool->beginUsage();
+    pools.samplerPool->beginUsage();
     m_downloadStates.resize((int)m_workBundle.resourcesToDownload.size());
 
     if (m_workBundle.totalUploadBufferSize)
@@ -386,6 +439,9 @@ UINT64 Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount
         table.advance(m_workBundle.totalTableSize);
         m_cbvTable = table;
     }
+
+    if (m_workBundle.totalSamplers > 0)
+        m_samplersTable = pools.samplerPool->allocateTable(m_workBundle.totalSamplers);
 
     uploadAllTables();
 
@@ -408,6 +464,7 @@ UINT64 Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount
     for (auto l : lists)
         queues.deallocate(l, fenceVal);
 
+    pools.samplerPool->endUsage();
     pools.tablePool->endUsage();
     pools.uploadPool->endUsage();
     return fenceVal;

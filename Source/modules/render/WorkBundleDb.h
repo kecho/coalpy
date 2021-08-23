@@ -64,6 +64,7 @@ struct TableAllocation
 {
     int offset = 0;
     int count = 0;
+    bool isSampler = false;
 };
 
 struct ProcessedList
@@ -93,6 +94,7 @@ struct WorkBundle
     int totalTableSize = 0;
     int totalConstantBuffers = 0;
     int totalUploadBufferSize = 0;
+    int totalSamplers = 0;
 
     ResourceSet resourcesToDownload;
     TableGpuAllocationMap tableAllocations;

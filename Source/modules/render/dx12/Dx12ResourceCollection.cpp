@@ -272,6 +272,7 @@ SamplerTableResult Dx12ResourceCollection::createSamplerTable(const ResourceTabl
     auto& outPtr = m_resourceTables.allocate(handle);
     outPtr = new Dx12ResourceTable(m_device, samplers.data(), (int)samplers.size()); 
 
+    m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, false);
     return SamplerTableResult { ResourceResult::Ok, SamplerTable { handle.handleId } };
 }
 

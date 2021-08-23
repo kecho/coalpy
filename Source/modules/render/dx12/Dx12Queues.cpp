@@ -51,6 +51,7 @@ Dx12Queues::Dx12Queues(Dx12Device& device)
 
         qcontainer.memPools.uploadPool = new Dx12GpuUploadPool(device, *qcontainer.queue, 4 * 1024 * 1024);
         qcontainer.memPools.tablePool = new Dx12GpuDescriptorTablePool(device, *qcontainer.queue, 512, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        qcontainer.memPools.samplerPool = new Dx12GpuDescriptorTablePool(device, *qcontainer.queue, 64, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
     }
 }
 
@@ -68,6 +69,7 @@ Dx12Queues::~Dx12Queues()
 
         delete q.memPools.uploadPool;
         delete q.memPools.tablePool;
+        delete q.memPools.samplerPool;
     }
 }
 

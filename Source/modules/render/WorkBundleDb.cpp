@@ -35,6 +35,7 @@ struct WorkBuildContext
     int totalTableSize = 0;
     int totalConstantBuffers = 0;
     int totalUploadBufferSize = 0;
+    int totalSamplers = 0;
 
     //immutable data, current state of tables and resources in gpu
     const WorkResourceInfos* resourceInfos = nullptr;
@@ -233,6 +234,23 @@ bool processTable(
     return true;
 }
 
+bool processSamplerTable(
+    ResourceTable table,
+    WorkBuildContext& context)
+{
+    const WorkTableInfos& tableInfos = *context.tableInfos;
+    const auto& tableInfoIt = tableInfos.find(table);
+    if (tableInfoIt == tableInfos.end())
+        return false;
+
+    TableAllocation& allocation = context.tableAllocations[table];
+    allocation.offset = context.totalSamplers;
+    allocation.count = tableInfoIt->second.resources.size();
+    allocation.isSampler = true;
+    context.totalSamplers += allocation.count;
+    return true;
+}
+
 bool commitResourceStates(const ResourceStateMap& input, WorkResourceInfos& resourceInfos)
 {
     for (auto& it : input)
@@ -258,12 +276,20 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         }
     }
 
-
     {
         const OutResourceTable* outTables = cmd->outResourceTables.data(data);
         for (int i = 0; i < cmd->outResourceTablesCounts; ++i)
         {
             if (!processTable(outTables[i], context))
+                return false;
+        }
+    }
+
+    {
+        const SamplerTable* samplerTables = cmd->samplerTables.data(data);
+        for (int i = 0; i < cmd->samplerTablesCounts; ++i)
+        {
+            if (!processSamplerTable(samplerTables[i], context))
                 return false;
         }
     }
@@ -498,6 +524,7 @@ ScheduleStatus WorkBundleDb::build(CommandList** lists, int listCount)
         workData.totalTableSize = ctx.totalTableSize;
         workData.totalConstantBuffers = ctx.totalConstantBuffers;
         workData.totalUploadBufferSize = ctx.totalUploadBufferSize;
+        workData.totalSamplers = ctx.totalSamplers;
     }
 
     return ScheduleStatus { handle, ScheduleErrorType::Ok, "" };

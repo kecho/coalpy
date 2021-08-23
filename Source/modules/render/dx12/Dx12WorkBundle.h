@@ -56,6 +56,7 @@ private:
     WorkBundle m_workBundle;
     Dx12GpuDescriptorTable m_srvUavTable;
     Dx12GpuDescriptorTable m_cbvTable;
+    Dx12GpuDescriptorTable m_samplersTable;
     Dx12GpuMemoryBlock m_uploadMemBlock;
     std::unordered_map<ResourceHandle, D3D12_RESOURCE_STATES> m_states;
     std::vector<Dx12ResourceDownloadState> m_downloadStates;

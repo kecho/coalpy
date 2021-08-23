@@ -50,6 +50,7 @@ struct Dx12MemoryPools
 {
     Dx12GpuUploadPool* uploadPool = nullptr;
     Dx12GpuDescriptorTablePool* tablePool = nullptr;
+    Dx12GpuDescriptorTablePool* samplerPool = nullptr;
 };
 
 class Dx12Queues
