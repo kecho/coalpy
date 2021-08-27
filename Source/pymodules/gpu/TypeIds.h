@@ -12,6 +12,7 @@ enum class TypeId : int
     RenderArgs,
     Texture,
     CommandList,
+    Sampler,
     Buffer,
     InResourceTable,
     OutResourceTable,

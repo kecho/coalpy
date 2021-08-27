@@ -53,6 +53,7 @@ void constructTypes(TypeList& outTypes)
     RegisterType(Window,             outTypes);
     RegisterType(Shader,             outTypes);
     RegisterType(RenderArgs,         outTypes);
+    RegisterType(Sampler,            outTypes);
     RegisterType(Buffer,             outTypes);
     RegisterType(CommandList,        outTypes);
     RegisterType(Texture,            outTypes);

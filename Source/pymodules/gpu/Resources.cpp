@@ -48,6 +48,7 @@ int Buffer::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 {
     auto* buffer = (Buffer*)self;
     buffer->buffer = render::Buffer();
+    new (buffer) Buffer;
 
     ModuleState& moduleState = parentModule(self);
     if (!moduleState.checkValidDevice())
@@ -116,9 +117,7 @@ void Texture::constructType(PyTypeObject& t)
 int Texture::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 {
     auto* texture = (Texture*)self;
-    texture->texture = render::Texture();
-    texture->owned = true;
-    texture->isFile = false;
+    new (texture) Texture;
 
     ModuleState& moduleState = parentModule(self);
     if (!moduleState.checkValidDevice())
@@ -174,6 +173,53 @@ void Texture::destroy(PyObject* self)
     else
         moduleState.device().release(texture->texture);
     texture->~Texture();
+    Py_TYPE(self)->tp_free(self);
+}
+
+void Sampler::constructType(PyTypeObject& t)
+{
+    t.tp_name = "gpu.Texture";
+    t.tp_basicsize = sizeof(Sampler);
+    t.tp_doc   = R"(
+    Class that represents a Sampler GPU resource.
+
+    Constructor:
+        filter_type (int): see coalpy.gpu.FilterType. Sets the type of filter to use.
+        address_u (int): see coalpy.gpu.TextureAddressMode. Sets behaviour on texture sampling when out of bounds for x axis.
+        address_v (int): see coalpy.gpu.TextureAddressMode. Sets behaviour on texture sampling when out of bounds for y axis.
+        address_w (int): see coalpy.gpu.TextureAddressMode. Sets behaviour on texture sampling when out of bounds for z axis.
+        border_color (array): Must be an array of size 4 floats. Specifies the color in rgba format on border, when address mode is border. Ranges from 0.0 to 1.0 per channel.
+        min_lod (float): Minimum texture mip.
+        max_lod (float): Maximum texture mip.
+        max_aniso (int): maximum quality for anisotropic filtering.
+    )";
+    t.tp_flags = Py_TPFLAGS_DEFAULT;
+    t.tp_new = PyType_GenericNew;
+    t.tp_init = Sampler::init;
+    t.tp_dealloc = Sampler::destroy;
+}
+
+int Sampler::init(PyObject* self, PyObject * vargs, PyObject* kwds)
+{
+    auto* sampler = (Sampler*)self;
+    new (sampler) Sampler;
+
+    ModuleState& moduleState = parentModule(self);
+    if (!moduleState.checkValidDevice())
+        return -1;
+
+    return 0;
+}
+
+void Sampler::destroy(PyObject* self)
+{
+    auto* sampler = (Sampler*)self;
+    if (!sampler->sampler.valid())
+        return;
+
+    ModuleState& moduleState = parentModule(self);
+    moduleState.device().release(sampler->sampler);
+    sampler->~Sampler();
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -253,7 +299,7 @@ static bool convertToResourceHandleList(ModuleState& moduleState, PyObject* reso
 int InResourceTable::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 {
     auto* newTable = (InResourceTable*)self;
-    newTable->table = render::InResourceTable();
+    new (newTable) InResourceTable;
 
     ModuleState& moduleState = parentModule(self);
     if (!moduleState.checkValidDevice())
@@ -323,7 +369,7 @@ void OutResourceTable::constructType(PyTypeObject& t)
 int OutResourceTable::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 {
     auto* newTable = (OutResourceTable*)self;
-    newTable->table = render::OutResourceTable();
+    new (newTable) OutResourceTable;
 
     ModuleState& moduleState = parentModule(self);
     if (!moduleState.checkValidDevice())

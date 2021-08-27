@@ -15,8 +15,8 @@ struct Texture
     //Data
     PyObject_HEAD
     render::Texture texture;
-    bool owned;
-    bool isFile;
+    bool owned = true;
+    bool isFile = false;
 
     //Functions
     static const TypeId s_typeId = TypeId::Texture;
@@ -33,6 +33,19 @@ struct Buffer
 
     //Functions
     static const TypeId s_typeId = TypeId::Buffer;
+    static void constructType(PyTypeObject& t);
+    static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
+    static void destroy(PyObject* self);
+};
+
+struct Sampler
+{
+    //Data
+    PyObject_HEAD
+    render::Sampler sampler;
+
+    //Functions
+    static const TypeId s_typeId = TypeId::Sampler;
     static void constructType(PyTypeObject& t);
     static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
     static void destroy(PyObject* self);
