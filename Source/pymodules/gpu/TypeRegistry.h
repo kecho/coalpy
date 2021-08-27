@@ -15,7 +15,7 @@ class ModuleState;
 
 using TypeList = std::vector<CoalpyTypeObject*>;
 void constructTypes(TypeList& outTypes);
-void processTypes(TypeList& typeList, PyObject& moduleObject);
+void processTypes(TypeList& typeList, ModuleState* moduleState, PyObject& moduleObject);
 
 }
 }

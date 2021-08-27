@@ -94,15 +94,41 @@ void constructTypes(TypeList& outTypes)
         outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumMemFlags", "MemFlags", s_MemFlags, "Memory access enumerations.")); 
     }
 
+    {
+        static EnumEntry s_FilterTypes[] = {
+            { "Point",        (int)render::FilterType::Point, "Point (nearest neighbor) filter type." },
+            { "Linear",       (int)render::FilterType::Linear, "Bilinear/trilinear filter type." },
+            { "Min",          (int)render::FilterType::Min, "Max value of neighborhood filter type." },
+            { "Max",          (int)render::FilterType::Max, "Min value of neighborhood filter type." },
+            { "Anisotropic",  (int)render::FilterType::Anisotropic, "High quality anisotropic filter type." },
+            { nullptr, 0, nullptr }
+        };
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumFilterType", "FilterType", s_FilterTypes, "Filter types for samplers enumeration.")); 
+    }
+
+    {
+        static EnumEntry s_TextureAddressingModes[] = {
+            { "Wrap",   (int)render::TextureAddressMode::Wrap, "Repeats samples when UV coordinates exceed range." },
+            { "Mirror", (int)render::TextureAddressMode::Mirror, "Applies UV mirroring when UV coordinates go into the next edge. " },
+            { "Clamp",  (int)render::TextureAddressMode::Clamp, "Clamps the UV coordinates at the edges. " },
+            { "Border", (int)render::TextureAddressMode::Border, "Samples a border when UVs are in the edge. Set the border color in the sampler object." },
+            { nullptr, 0, nullptr }
+        };
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.TextureAddressMode", "TextureAddressMode",  s_TextureAddressingModes, "Address behaviour of texture coordinates enumeration.")); 
+    }
+
     outTypes.push_back(registerFormats());
 }
 
-void processTypes(TypeList& types, PyObject& moduleObject)
+void processTypes(TypeList& types, ModuleState* moduleState, PyObject& moduleObject)
 {
     for (auto t : types)
     {
         if (t->typeId == TypeId::GenericEnum)
+        {
+            t->moduleState = moduleState;
             RenderEnum::registerInModule((CoalpyGenericEnumTypeObject&)(*t), moduleObject);
+        }
     }
 }
 

@@ -9,6 +9,12 @@ namespace coalpy
 namespace gpu
 {
 
+int genericEnumInit(PyObject* self, PyObject * vargs, PyObject* kwds)
+{
+    ModuleState& moduleState = parentModule(self);
+    PyErr_SetString(moduleState.exObj(), "Cannot instantiate the meta type of an enumeration. Just use an int to hold a value, and use the declared enum values in the coalpy.gpu module.");
+    return -1;
+}
 
 CoalpyGenericEnumTypeObject* RenderEnum::constructEnumType(const char* typeName, const char* objectName, const EnumEntry* enums, const char* doc)
 {
@@ -46,6 +52,7 @@ CoalpyGenericEnumTypeObject* RenderEnum::constructEnumType(const char* typeName,
     t = { PyVarObject_HEAD_INIT(NULL, 0) };
     t.tp_name = typeName;
     t.tp_basicsize = sizeof(RenderEnum) + sizeof(int) * counts;
+    t.tp_init = genericEnumInit;
     t.tp_doc   = doc;
     t.tp_members = ctp->memberDefs.data();
     t.tp_flags = Py_TPFLAGS_DEFAULT;
