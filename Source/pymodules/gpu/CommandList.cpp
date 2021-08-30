@@ -37,6 +37,11 @@ static PyMethodDef g_cmdListMethods[] = {
                                   or any object compatible with the object protocol, or a list of Buffer objects.
                                   If a list of Buffer objects, these can be indexed via register(b#) in the shader used,
                                   Every other type will always be bound to a constant buffer on register(b0).
+            sampler_tables (optional): a single SamplerTable object, or an array of SamplerTable objects. If a single
+                                   object is used, the table will be automatically bound to register space 0, and each resource accessed either
+                                   by bindless dynamic indexing, or a hard register(s#). If an array of SamplerTable is passed, each resource
+                                   table will be bound using a register space index corresponding to the table index in the array, and the rules
+                                   to reference each sampler within the table stay the same.
             input_tables (optional): a single InResourceTable object, or an array of InResourceTable objects. If a single
                                    object is used, the table will be automatically bound to register space 0, and each resource accessed either
                                    by bindless dynamic indexing, or a hard register(t#). If an array of InResourceTable is passed, each resource
@@ -222,16 +227,17 @@ namespace methods
     PyObject* cmdDispatch(PyObject* self, PyObject* vargs, PyObject* kwds)
     {
         ModuleState& moduleState = parentModule(self);
-        static char* arguments[] = { "x", "y", "z", "shader", "name", "constants", "input_tables", "output_tables", nullptr };
+        static char* arguments[] = { "x", "y", "z", "shader", "name", "constants", "sampler_tables", "input_tables", "output_tables", nullptr };
         int x = 1;
         int y = 1;
         int z = 1;
         const char* name = nullptr;
         PyObject* shader = nullptr;
         PyObject* constants = nullptr;
+        PyObject* sampler_tables = nullptr;
         PyObject* input_tables = nullptr;
         PyObject* output_tables = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "iiiO|sOOO", arguments, &x, &y, &z, &shader, &name, &constants, &input_tables, &output_tables))
+        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "iiiO|sOOOO", arguments, &x, &y, &z, &shader, &name, &constants, &sampler_tables, &input_tables, &output_tables))
             return nullptr;
         
         if (x <= 0 || y <= 0 || z <= 0)
@@ -251,6 +257,7 @@ namespace methods
         std::vector<render::Buffer> bufferList;
         std::vector<render::InResourceTable> inTables;
         std::vector<render::OutResourceTable> outTables;
+        std::vector<render::SamplerTable> samplerTables;
         std::vector<PyObject*> references;
 
         PyTypeObject* shaderType = moduleState.getType(Shader::s_typeId);
@@ -293,6 +300,20 @@ namespace methods
                 }
 
                 cmd.setInlineConstant((const char*)rawNums.data(), (int)rawNums.size() * (int)sizeof(int));
+            }
+        }
+
+        if (sampler_tables)
+        {
+            if (!getListOfTables<SamplerTable, render::SamplerTable>(moduleState, sampler_tables, samplerTables, references))
+            {
+                PyErr_SetString(moduleState.exObj(), "sampler_table argument must be a list of SamplerTable");
+                return nullptr;
+            }
+
+            if (!samplerTables.empty())
+            {
+                cmd.setSamplers(samplerTables.data(), (int)samplerTables.size());
             }
         }
 
