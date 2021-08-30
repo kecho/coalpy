@@ -77,6 +77,19 @@ struct OutResourceTable
     static void destroy(PyObject* self);
 };
 
+struct SamplerTable
+{
+    //Data
+    PyObject_HEAD
+    render::SamplerTable table;
+
+    //Functions
+    static const TypeId s_typeId = TypeId::SamplerTable;
+    static void constructType(PyTypeObject& t);
+    static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
+    static void destroy(PyObject* self);
+};
+
 }
 }
 

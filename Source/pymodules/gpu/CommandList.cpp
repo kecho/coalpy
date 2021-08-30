@@ -5,6 +5,7 @@
 #include "HelperMacros.h"
 #include "Resources.h"
 #include "TypeIds.h"
+#include "PyUtils.h"
 #include <coalpy.render/IDevice.h>
 #include <coalpy.render/Resources.h>
 #include <coalpy.render/CommandList.h>
@@ -193,33 +194,6 @@ static bool getBufferProtocolObject(
     }
     outBufferProtocolPtr = (char*)view.buf;
     outBufferProtocolSize = (int)view.len;
-    return true;
-}
-
-static bool getArrayOfNums(ModuleState& moduleState, PyObject* constants, std::vector<int>& rawNums)
-{
-    if (!PyList_Check(constants))
-        return false;
-
-    auto& listObj = *((PyListObject*)constants);
-    int listSize = Py_SIZE(constants);
-    rawNums.reserve(listSize);
-    for (int i = 0; i < listSize; ++i)
-    {
-        PyObject* obj = listObj.ob_item[i];
-        if (PyLong_Check(obj))
-        {
-            rawNums.push_back((int)PyLong_AsLong(obj));
-        }
-        else if (PyFloat_Check(obj))
-        {
-            float f = (float)(PyFloat_AS_DOUBLE(obj));
-            rawNums.push_back(*reinterpret_cast<int*>((&f)));
-        }
-        else
-            return false;
-    }
-
     return true;
 }
 

@@ -16,6 +16,7 @@ enum class TypeId : int
     Buffer,
     InResourceTable,
     OutResourceTable,
+    SamplerTable,
     ImguiBuilder,
     Counts,
 

@@ -1,6 +1,7 @@
 #include "Resources.h"
 #include "ModuleState.h"
 #include "CoalpyTypeObject.h"
+#include "PyUtils.h"
 #include <coalpy.render/IDevice.h>
 #include <coalpy.texture/ITextureLoader.h>
 
@@ -208,6 +209,51 @@ int Sampler::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     if (!moduleState.checkValidDevice())
         return -1;
 
+    static char* arguments[] = { "filter_type", "address_u", "address_v", "address_w", "border_color", "min_lod", "max_lod", "max_aniso", nullptr };
+    const char* name = "<unknown>";
+    PyObject* borderColorObj = nullptr;
+    render::SamplerDesc samplerDesc;
+
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|iiiiOiii", arguments, &samplerDesc.type, &samplerDesc.addressU, &samplerDesc.addressV, &samplerDesc.addressW, &borderColorObj, &samplerDesc.minLod, &samplerDesc.maxLod, &samplerDesc.maxAnisoQuality))
+        return -1;
+    if (!validateEnum(moduleState, (int)samplerDesc.type, (int)render::FilterType::Count, "filter_type", "FilterType"))
+        return -1;
+    if (!validateEnum(moduleState, (int)samplerDesc.addressU, (int)render::TextureAddressMode::Count, "address_u", "TextureAddressMode"))
+        return -1;
+    if (!validateEnum(moduleState, (int)samplerDesc.addressV, (int)render::TextureAddressMode::Count, "address_v", "TextureAddressMode"))
+        return -1;
+    if (!validateEnum(moduleState, (int)samplerDesc.addressW, (int)render::TextureAddressMode::Count, "address_w", "TextureAddressMode"))
+        return -1;
+    if (!validateEnum(moduleState, (int)samplerDesc.minLod, 8, "minLod", ""))
+        return -1;
+    if (!validateEnum(moduleState, (int)samplerDesc.maxLod, 8, "maxLod", ""))
+        return -1;
+
+    std::vector<int> nums;
+    if (borderColorObj)
+    {
+        if (!getArrayOfNums(moduleState, borderColorObj, nums, true, false) || nums.size() != 4)
+        {
+            PyErr_SetString(moduleState.exObj(), "border_color must be an array of exactly 4 float values, from 0 to 1 representing an RGBA value");
+            return -1;
+        }
+
+        const float* bordCol = reinterpret_cast<float*>(nums.data());
+        for (int i = 0; i < 4; ++i)
+            samplerDesc.borderColor[i] = bordCol[i];
+    }
+    else
+        for (int i = 0; i < 4; ++i)
+            samplerDesc.borderColor[i] = 0.0f;
+
+    render::SamplerResult samplerResult = moduleState.device().createSampler(samplerDesc);
+    if (!samplerResult.success())
+    {
+        PyErr_Format(moduleState.exObj(), "Could not create sampler. Issue: %s", samplerResult.message.c_str());
+        return -1;
+    }
+
+    sampler->sampler = samplerResult;
     return 0;
 }
 
@@ -416,6 +462,76 @@ void OutResourceTable::destroy(PyObject* self)
     ModuleState& moduleState = parentModule(self);
     moduleState.device().release(table->table);
     table->~OutResourceTable();
+    Py_TYPE(self)->tp_free(self);
+}
+
+void SamplerTable::constructType(PyTypeObject& t)
+{
+    t.tp_name = "gpu.SamplerTable";
+    t.tp_basicsize = sizeof(SamplerTable);
+    t.tp_doc   = R"(
+    Sampler table. Use this to specify a table of Samplers to be used in a CommandList and shader.
+
+    Constructor:
+        name (str): name / identifier of this sampler table.
+        samplers: array of Samplers to be specified.
+    )";
+    t.tp_flags = Py_TPFLAGS_DEFAULT;
+    t.tp_new = PyType_GenericNew;
+    t.tp_init = SamplerTable::init;
+    t.tp_dealloc = SamplerTable::destroy;
+}
+
+int SamplerTable::init(PyObject* self, PyObject * vargs, PyObject* kwds)
+{
+    auto* newTable = (SamplerTable*)self;
+    new (newTable) SamplerTable;
+
+    ModuleState& moduleState = parentModule(self);
+    if (!moduleState.checkValidDevice())
+        return -1;
+
+    PyObject* resourceList = nullptr;
+    const char* name = "<unknown>";
+    static char* arguments[] = { "name", "samplers", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "sO", arguments, &name, &resourceList))
+        return -1;
+
+    std::vector<render::ResourceHandle> resources;
+    if (!convertToResourceHandleList(moduleState, resourceList, resources))
+        return -1;
+
+    render::ResourceTableDesc tableDesc;
+    tableDesc.name = name;
+    tableDesc.resources = resources.data();
+    tableDesc.resourcesCount = (int)resources.size();
+    render::SamplerTableResult tableResult = moduleState.device().createSamplerTable(tableDesc);
+    if (!tableResult.success())
+    {
+        PyErr_Format(moduleState.exObj(), "Error creating sampler table %s with error: %s", name, tableResult.message.c_str());
+        return -1;
+    }
+
+    newTable->table = tableResult.object;
+
+    if (!newTable->table.valid())
+    {
+        PyErr_SetString(moduleState.exObj(), "Internal error while creating table. Check error stream for rendering errors.");
+        return -1;
+    }
+
+    return 0;
+}
+
+void SamplerTable::destroy(PyObject* self)
+{
+    auto* table = (SamplerTable*)self;
+    if (!table->table.valid())
+        return;
+
+    ModuleState& moduleState = parentModule(self);
+    moduleState.device().release(table->table);
+    table->~SamplerTable();
     Py_TYPE(self)->tp_free(self);
 }
 

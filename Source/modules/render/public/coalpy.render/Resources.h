@@ -53,7 +53,7 @@ enum class TextureAddressMode
 
 enum class FilterType
 {
-    Point, Linear, Min, Max, Anisotropic
+    Point, Linear, Min, Max, Anisotropic, Count
 };
 
 struct SamplerDesc
