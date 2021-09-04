@@ -26,7 +26,7 @@ public:
 
     void start();
     void stop();
-    void deferRelease(ID3D12Pageable& object);
+    void deferRelease(ID3D12Pageable& object, Dx12CounterHandle counterHandle = Dx12CounterHandle());
     void flush();
 
 private:

@@ -21,10 +21,10 @@ Dx12Gc::~Dx12Gc()
     flushDelete(true /*wait on GPU by blocking CPU*/);
 }
 
-void Dx12Gc::deferRelease(ID3D12Pageable& resource)
+void Dx12Gc::deferRelease(ID3D12Pageable& resource, Dx12CounterHandle counterHandle)
 {
     std::unique_lock lock(m_gcMutex);
-    Object object { &resource, Dx12CounterHandle() };
+    Object object { &resource, counterHandle };
     m_pendingDeletion.push(object);
 }
 

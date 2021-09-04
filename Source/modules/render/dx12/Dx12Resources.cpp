@@ -4,6 +4,7 @@
 #include "Dx12Device.h"
 #include "Dx12Formats.h"
 #include "Dx12Utils.h"
+#include "Dx12Gc.h"
 #include <coalpy.core/String.h>
 #include <string>
 
@@ -84,6 +85,7 @@ Dx12ResourceInitResult Dx12Resource::init()
         HRESULT r = m_device.device().CreateCommittedResource(
             &m_data.heapProps, m_data.heapFlags, &m_data.resDesc,
 	    	defaultD3d12State(), nullptr, DX_RET(m_data.resource));
+
         CPY_ASSERT_MSG(r == S_OK, "CreateCommittedResource has failed");
         if (r != S_OK)
             return Dx12ResourceInitResult {  ResourceResult::InvalidParameter, "Failed to call CreateCommittedResource." };
@@ -146,7 +148,9 @@ Dx12Resource::~Dx12Resource()
         m_data.mappedMemory = {};
         
         if ((m_specialFlags & ResourceSpecialFlag_NoDeferDelete) == 0)
-            m_device.deferRelease(*m_data.resource);
+            m_device.gc().deferRelease(*m_data.resource, m_counterHandle);
+        else if (m_counterHandle.valid())
+            m_device.counterPool().free(m_counterHandle);
 
         m_data.resource->Release();
     }
@@ -381,16 +385,37 @@ Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpeci
         srvDesc.Buffer.Flags = desc.type == BufferType::Raw ? D3D12_BUFFER_SRV_FLAG_RAW : D3D12_BUFFER_SRV_FLAG_NONE;
     }
 
+    if (m_buffDesc.isAppendConsume)
+       m_counterHandle = m_device.counterPool().allocate();
+
     if ((desc.memFlags & MemFlag_GpuWrite) != 0)
     {
         auto& uavDesc = m_data.uavDesc;
-        uavDesc.Format = desc.type == BufferType::Standard ? getDxFormat(desc.format) :  ( desc.type == BufferType::Raw ? DXGI_FORMAT_R32_TYPELESS : DXGI_FORMAT_UNKNOWN);
+        UINT defaultByteStride = 0;
+        if (desc.isAppendConsume)
+        {
+            uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+            defaultByteStride = getDxFormatStride(desc.format);
+        }
+        else if (desc.type == BufferType::Standard)
+            uavDesc.Format = getDxFormat(desc.format);
+        else if (desc.type == BufferType::Structured)
+            uavDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+        else 
+            uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+
         uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
         uavDesc.Buffer.FirstElement = 0u;
         uavDesc.Buffer.NumElements = desc.elementCount;
-        uavDesc.Buffer.StructureByteStride = desc.type == BufferType::Structured ? desc.stride : 0;
         uavDesc.Buffer.CounterOffsetInBytes = 0u;
         uavDesc.Buffer.Flags = desc.type == BufferType::Raw ? D3D12_BUFFER_UAV_FLAG_RAW : D3D12_BUFFER_UAV_FLAG_NONE;
+    
+        if (desc.isAppendConsume)
+        {
+            uavDesc.Buffer.CounterOffsetInBytes = m_device.counterPool().counterOffset(m_counterHandle);
+        }
+
+        uavDesc.Buffer.StructureByteStride = desc.type == BufferType::Structured ? desc.stride : defaultByteStride;
     }
 
     m_data.resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -414,6 +439,9 @@ Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpeci
 
 Dx12ResourceInitResult Dx12Buffer::init()
 {
+    if (m_buffDesc.type == BufferType::Raw && m_buffDesc.isAppendConsume)
+        return Dx12ResourceInitResult{ ResourceResult::InvalidParameter, "Append consume buffers cannot be of type raw." };
+
     auto parentResult = Dx12Resource::init();
     if (!parentResult.success())
         return parentResult;
@@ -425,7 +453,11 @@ Dx12ResourceInitResult Dx12Buffer::init()
         {
             m_uavs.push_back(descriptorPool.allocateSrvOrUavOrCbv());
 		    m_device.device().CreateUnorderedAccessView(
-		    	m_data.resource, nullptr, &m_data.uavDesc, m_uavs.back().handle);
+		    	m_data.resource,
+                m_buffDesc.isAppendConsume && m_counterHandle.valid()
+                ? &m_device.counterPool().resource()
+                : nullptr,
+                &m_data.uavDesc, m_uavs.back().handle);
         }
     }
 

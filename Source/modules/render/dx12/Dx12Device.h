@@ -75,6 +75,7 @@ public:
     Dx12DescriptorPool& descriptors() { return *m_descriptors; }
     Dx12ShaderDb& shaderDb() { return *m_shaderDb; }
     Dx12BufferPool& readbackPool() { return *m_readbackPool; }
+    Dx12Gc& gc() { return *m_gc; }
     WorkBundleDb& workDb() { return m_workDb; } 
 
 
@@ -89,6 +90,8 @@ public:
     ScheduleStatus internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle); 
 
     void deferRelease(ID3D12Pageable& object);
+
+    
 
 private:
     ID3D12Debug* m_debugLayer;

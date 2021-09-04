@@ -37,6 +37,8 @@ void Buffer::constructType(PyTypeObject& t)
         format (int): Format of buffer. See coalpy.gpu.Format for available formats. This argument is ignored if buffer is Structured or Raw. Default format is RGBA_32_SINT
         element_count (int): number of elements this buffer will have
         stride (int): stride count in case of Structured type
+        is_constant_buffer (Bool) : True if this can be used as a constant buffer. False otherwise.
+        is_append_consume (Bool) : True if this can be used as an append consume buffer in the GPU. False otherwise. This wont work for raw buffers.
     )";
 
     t.tp_flags = Py_TPFLAGS_DEFAULT;
@@ -55,13 +57,25 @@ int Buffer::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     if (!moduleState.checkValidDevice())
         return -1;
 
-    static char* arguments[] = { "name", "mem_flags", "type", "format", "element_count", "stride", nullptr };
+    static char* arguments[] = { "name", "mem_flags", "type", "format", "element_count", "stride", "is_constant_buffer", "is_append_consume", nullptr };
     const char* name = "<unknown>";
     render::BufferDesc buffDesc;
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|siiiii", arguments, &name, &buffDesc.memFlags, &buffDesc.type, &buffDesc.format, &buffDesc.elementCount, &buffDesc.stride))
+    int isConstantBuffer = 0;
+    int isAppendConsume = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|siiiiipp", arguments,
+            &name,
+            &buffDesc.memFlags,
+            &buffDesc.type,
+            &buffDesc.format,
+            &buffDesc.elementCount,
+            &buffDesc.stride,
+            &isConstantBuffer,
+            &isAppendConsume))
         return -1;
 
     buffDesc.name = name;
+    buffDesc.isConstantBuffer = isConstantBuffer;
+    buffDesc.isAppendConsume  = isAppendConsume;
 
     //validate
     if (!validateEnum(moduleState, (int)buffDesc.type, (int)render::BufferType::Count, "type", "BufferType"))

@@ -78,9 +78,9 @@ void constructTypes(TypeList& outTypes)
 
     {
         static EnumEntry s_BufferType[] = {
-            { "Standard",   (int)render::BufferType::Standard, "Standard buffer. Obeys the format specified when sampling / writting into it." },
-            { "Structured", (int)render::BufferType::Structured, "Structured buffer, requires stride parameter." },
-            { "Raw",        (int)render::BufferType::Raw, "Raw byte buffer." },
+            { "Standard",       (int)render::BufferType::Standard, "Standard buffer. Obeys the format specified when sampling / writting into it." },
+            { "Structured",     (int)render::BufferType::Structured, "Structured buffer, requires stride parameter." },
+            { "Raw",            (int)render::BufferType::Raw, "Raw byte buffer." },
             { nullptr, 0, nullptr }
         };
         outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumBufferType", "BufferType", s_BufferType, "Type of buffer")); 

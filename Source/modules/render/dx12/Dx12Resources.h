@@ -5,6 +5,7 @@
 #include <coalpy.render/Resources.h>
 #include <coalpy.core/Assert.h>
 #include "Dx12DescriptorPool.h"
+#include "Dx12CounterPool.h"
 #include "WorkBundleDb.h"
 #include <string>
 #include <vector>
@@ -146,6 +147,7 @@ protected:
     D3D12_RESOURCE_STATES m_defaultState = D3D12_RESOURCE_STATE_COMMON;
     ResourceDesc m_config;
     Dx12Device& m_device;
+    Dx12CounterHandle m_counterHandle;
 };
 
 class Dx12Texture : public Dx12Resource

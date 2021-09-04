@@ -1033,6 +1033,34 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testAppendConsumeBufferCreate(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+
+        BufferDesc bufferDesc;
+        bufferDesc.isAppendConsume = true;
+        bufferDesc.elementCount = 10;
+        
+        Buffer buffer1 = device.createBuffer(bufferDesc);
+        CPY_ASSERT(buffer1.valid());
+
+        bufferDesc.type = BufferType::Structured;
+        bufferDesc.stride = 64;
+        Buffer buffer2 = device.createBuffer(bufferDesc);
+        CPY_ASSERT(buffer2.valid());
+
+        bufferDesc.type = BufferType::Raw;
+        Buffer buffer3 = device.createBuffer(bufferDesc);
+        CPY_ASSERT(!buffer3.valid());
+
+        device.release(buffer1);
+        device.release(buffer2);
+    
+        renderTestCtx.end();
+    }
+
     //registration of tests
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
@@ -1050,6 +1078,7 @@ namespace coalpy
             { "textureSamplers",  testTextureSampler },
             { "uavBarrier",  testUavBarrier },
             { "upload2dTexture",  testUpload2dTexture },
+            { "appendConsumeBufferCreate",  testAppendConsumeBufferCreate },
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

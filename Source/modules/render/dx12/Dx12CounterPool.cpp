@@ -15,7 +15,7 @@ Dx12CounterPool::Dx12CounterPool(Dx12Device& device)
     D3D12_RESOURCE_DESC desc;
     desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     desc.Alignment = 0;
-    desc.Width = alignByte<UINT>(4 * MaxCounters, D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT);
+    desc.Width = D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT * MaxCounters; //offsets must be unfortunately 4096 bytes apart -_-. Thats 2kb waste per counter.
     desc.Height  = 1;
     desc.DepthOrArraySize  = 1;
     desc.MipLevels = 1;
@@ -57,7 +57,7 @@ D3D12_UNORDERED_ACCESS_VIEW_DESC Dx12CounterPool::uavDesc(Dx12CounterHandle hand
         return {};
 
     D3D12_UNORDERED_ACCESS_VIEW_DESC uav = m_uavDesc;
-    uav.Buffer.FirstElement = handle.handleId;
+    uav.Buffer.FirstElement = (handle.handleId * D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT) / 4;
     uav.Buffer.NumElements = 1u;
     return uav;
 }
@@ -67,7 +67,7 @@ Dx12CounterHandle Dx12CounterPool::allocate()
     Dx12CounterHandle handle;
     CounterSlot& slot = m_counters.allocate(handle);
     if (handle.valid())
-        slot.offset = handle.handleId * 4;
+        slot.offset = handle.handleId * D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT;
 
     return handle;
 }
