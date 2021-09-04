@@ -7,8 +7,8 @@ namespace coalpy
 namespace render
 {
 
-Dx12Gc::Dx12Gc(int frequencyMs, Dx12Fence& fence)
-: m_frequency(frequencyMs), m_fence(fence), m_active(false)
+Dx12Gc::Dx12Gc(int frequencyMs, Dx12CounterPool& counterPool, Dx12Fence& fence)
+: m_frequency(frequencyMs), m_counterPool(counterPool), m_fence(fence), m_active(false)
 {
 }
 
@@ -21,10 +21,11 @@ Dx12Gc::~Dx12Gc()
     flushDelete(true /*wait on GPU by blocking CPU*/);
 }
 
-void Dx12Gc::deferRelease(ID3D12Pageable& object)
+void Dx12Gc::deferRelease(ID3D12Pageable& resource)
 {
     std::unique_lock lock(m_gcMutex);
-    m_pendingDeletion.push(&object);
+    Object object { &resource, Dx12CounterHandle() };
+    m_pendingDeletion.push(object);
 }
 
 void Dx12Gc::start()
@@ -44,13 +45,13 @@ void Dx12Gc::start()
 
 void Dx12Gc::gatherGarbage(int quota)
 {
-    std::vector<SmartPtr<ID3D12Pageable>> tmpObjects;
+    std::vector<Object> tmpObjects;
     
     {
         std::unique_lock lock(m_gcMutex);
         while (!m_pendingDeletion.empty() && (quota != 0))
         {
-            SmartPtr<ID3D12Pageable> obj = m_pendingDeletion.front();
+            Object obj = m_pendingDeletion.front();
             m_pendingDeletion.pop();
             tmpObjects.push_back(obj);
             --quota;
@@ -82,8 +83,12 @@ void Dx12Gc::flushDelete(bool waitOnCpu)
         bool performDelete = m_fence.isComplete(g.fenceValue);
         if (performDelete)
         {
-            g.object = nullptr;
+            if (g.object.counterHandle.valid())
+                m_counterPool.free(g.object.counterHandle);
+
+            g.object = Object();
             g = m_garbage.back();
+
             m_garbage.back() = ResourceGarbage();
             ++deleted;
         }

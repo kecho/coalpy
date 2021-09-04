@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Dx12CounterPool.h"
 #include <vector>
 #include <queue>
 #include <mutex>
@@ -14,12 +15,13 @@ namespace render
 {
 
 class Dx12Fence;
+class Dx12CounterPool;
 
 //Async GPU garbage collector
 class Dx12Gc
 {
 public:
-    Dx12Gc(int frequencyMs, Dx12Fence& fence);
+    Dx12Gc(int frequencyMs, Dx12CounterPool& counterPool, Dx12Fence& fence);
     ~Dx12Gc();
 
     void start();
@@ -38,13 +40,20 @@ private:
     std::mutex m_gcMutex;
     std::thread m_thread;
 
+    struct Object
+    {
+        SmartPtr<ID3D12Pageable> resource;
+        Dx12CounterHandle counterHandle;
+    };
+
     struct ResourceGarbage
     {
         UINT64 fenceValue = {};
-        SmartPtr<ID3D12Pageable> object;
+        Object object;
     };
 
-    std::queue<SmartPtr<ID3D12Pageable>> m_pendingDeletion;
+    Dx12CounterPool& m_counterPool;
+    std::queue<Object> m_pendingDeletion;
     std::vector<ResourceGarbage> m_garbage;
 };
 

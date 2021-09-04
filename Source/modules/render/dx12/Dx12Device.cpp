@@ -25,6 +25,7 @@
 #include "Dx12DescriptorPool.h"
 #include "Dx12WorkBundle.h"
 #include "Dx12BufferPool.h"
+#include "Dx12CounterPool.h"
 #include "Dx12Fence.h"
 #include "Dx12Gc.h"
 
@@ -156,6 +157,7 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
 , m_debugLayer(nullptr)
 , m_device(nullptr)
 , m_shaderDb(nullptr)
+, m_counterPool(nullptr)
 , m_readbackPool(nullptr)
 , m_gc(nullptr)
 {
@@ -194,7 +196,9 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
     m_queues = new Dx12Queues(*this);
 
 
-    m_gc = new Dx12Gc(125/*every 125ms tick*/, m_queues->getFence(WorkType::Graphics));
+    m_counterPool = new Dx12CounterPool(*this);
+
+    m_gc = new Dx12Gc(125/*every 125ms tick*/, *m_counterPool, m_queues->getFence(WorkType::Graphics));
 
     m_resources = new Dx12ResourceCollection(*this, m_workDb);
 
@@ -224,6 +228,7 @@ Dx12Device::~Dx12Device()
     delete m_readbackPool;
     delete m_resources;
     delete m_gc;
+    delete m_counterPool;
     delete m_queues;
     delete m_descriptors;
     delete m_dx12WorkInfos;

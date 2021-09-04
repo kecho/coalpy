@@ -193,7 +193,6 @@ Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSp
     else if (desc.type != TextureType::k2dArray)
         m_slices = 1;
 
-
     if ((desc.memFlags & MemFlag_GpuRead) != 0)
     {
         auto& srvDesc = m_data.srvDesc;

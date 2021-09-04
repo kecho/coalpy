@@ -25,6 +25,7 @@ class Dx12Queues;
 class Dx12DescriptorPool;
 class Dx12ResourceCollection;
 class Dx12BufferPool;
+class Dx12CounterPool;
 class Dx12Gc;
 struct Dx12WorkInformationMap;
 
@@ -70,6 +71,7 @@ public:
     ID3D12Device2& device() { return *m_device; }
     Dx12Queues& queues() { return *m_queues; }
     Dx12ResourceCollection& resources() { return *m_resources; }
+    Dx12CounterPool& counterPool() { return *m_counterPool; }
     Dx12DescriptorPool& descriptors() { return *m_descriptors; }
     Dx12ShaderDb& shaderDb() { return *m_shaderDb; }
     Dx12BufferPool& readbackPool() { return *m_readbackPool; }
@@ -92,6 +94,7 @@ private:
     ID3D12Debug* m_debugLayer;
     ID3D12Device2* m_device;
     ID3D12RootSignature* m_computeRootSignature;
+    Dx12CounterPool* m_counterPool;
     Dx12ResourceCollection* m_resources;
     Dx12DescriptorPool* m_descriptors;
     Dx12Queues* m_queues;
