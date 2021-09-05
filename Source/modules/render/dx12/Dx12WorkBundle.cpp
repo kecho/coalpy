@@ -5,6 +5,7 @@
 #include "Dx12ShaderDb.h"
 #include "Dx12Utils.h"
 #include "Dx12Formats.h"
+#include "Dx12CounterPool.h"
 
 namespace coalpy
 {
@@ -368,6 +369,29 @@ void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCm
 
 }
 
+void Dx12WorkBundle::buildClearAppendConsumeCounter(const unsigned char* data, const AbiClearAppendConsumeCounter* abiCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandListX& outList)
+{
+    Dx12ResourceCollection& resources = m_device.resources();
+    Dx12Resource& destinationResource = resources.unsafeGetResource(abiCmd->source);
+    CPY_ASSERT(cmdInfo.uploadBufferOffset < m_uploadMemBlock.uploadSize);
+    CPY_ASSERT(4u <= (m_uploadMemBlock.uploadSize - cmdInfo.uploadBufferOffset));
+    if (destinationResource.isBuffer())
+    {
+        //TODO: this can be jobified.
+        {
+            static unsigned int intZeroValue = 0u;
+            memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + cmdInfo.uploadBufferOffset, &intZeroValue, 4u);
+        }
+
+        outList.CopyBufferRegion(
+            &m_device.counterPool().resource(),
+            m_device.counterPool().counterOffset(destinationResource.counterHandle()),
+            m_uploadMemBlock.buffer,
+            m_uploadMemBlock.offset + cmdInfo.uploadBufferOffset,
+            4u);
+    }
+}
+
 void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, ID3D12GraphicsCommandListX& outList)
 {
     CPY_ASSERT(cmdList->isFinalized());
@@ -403,6 +427,12 @@ void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList,
             {
                 const auto* abiCmd = (const AbiDownloadCmd*)cmdBlob;
                 buildDownloadCmd(listData, abiCmd, cmdInfo, workType, outList);
+            }
+            break;
+        case AbiCmdTypes::ClearAppendConsumeCounter:
+            {
+                const auto* abiCmd = (const AbiClearAppendConsumeCounter*)cmdBlob;
+                buildClearAppendConsumeCounter(listData, abiCmd, cmdInfo, outList);
             }
             break;
         default:

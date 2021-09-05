@@ -114,7 +114,11 @@ BufferResult Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12
     outPtr->type = ResType::Buffer;
     outPtr->resource = bufferObj;
     outPtr->handle = resHandle;
-    m_workDb.registerResource(resHandle, desc.memFlags, outPtr->resource->defaultGpuState());
+
+    Buffer counterBuffer;
+    if (desc.isAppendConsume)
+        counterBuffer = m_device.countersBuffer();
+    m_workDb.registerResource(resHandle, desc.memFlags, outPtr->resource->defaultGpuState(), counterBuffer);
     return BufferResult { ResourceResult::Ok, Buffer { resHandle.handleId } };
 }
 

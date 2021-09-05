@@ -187,6 +187,13 @@ void CommandList::writeCommand(const DownloadCommand& cmd)
     finalizeCommand(abiCmd);
 }
 
+void CommandList::writeCommand(const ClearAppendConsumeCounter& cmd)
+{
+    auto& abiCmd = allocate<AbiClearAppendConsumeCounter>();
+    abiCmd.source = cmd.m_source;
+    finalizeCommand(abiCmd);
+}
+
 MemOffset CommandList::uploadInlineResource(ResourceHandle destination, int sourceSize)
 {
     MemOffset cmdOffset = m_internal.buffer.size();

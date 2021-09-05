@@ -396,6 +396,37 @@ bool processDownload(const AbiDownloadCmd* cmd, const unsigned char* data, WorkB
     return true;
 }
 
+bool processClearAppendConsume(const AbiClearAppendConsumeCounter* cmd, const unsigned char* data, WorkBuildContext& context)
+{
+    const auto& resourceInfos = *context.resourceInfos;
+    auto& resourceInfoIt = resourceInfos.find(cmd->source);
+    if (resourceInfoIt == resourceInfos.end())
+    {
+        std::stringstream ss;
+        ss << "Could not find resource with ID: " << cmd->source.handleId;
+        context.errorType = ScheduleErrorType::InvalidResource;
+        context.errorMsg = ss.str();
+        return false;
+    }
+
+    if (!resourceInfoIt->second.counterBuffer.valid())
+    {
+        std::stringstream ss;
+        ss << "Resource in command clearAppendConsume is not an append consume buffer. Ensure this resource is a buffer with the flag isAppendConsume.";
+        context.errorType = ScheduleErrorType::InvalidResource;
+        context.errorMsg = ss.str();
+        return false;
+    }
+
+    if (!transitionResource(resourceInfoIt->second.counterBuffer, ResourceGpuState::CopyDst, context))
+        return false;
+
+    CommandInfo& info = context.currentCommandInfo();
+    info.uploadBufferOffset = context.totalUploadBufferSize;
+    context.totalUploadBufferSize += 4u; //we are gonna just copy one int.
+    return true;
+}
+
 void parseCommandList(const unsigned char* data, WorkBuildContext& context)
 {
     MemOffset offset = 0ull;
@@ -453,6 +484,13 @@ void parseCommandList(const unsigned char* data, WorkBuildContext& context)
                 {
                     const auto* abiCmd = (const AbiDownloadCmd*)(data + offset);
                     finished = !processDownload(abiCmd, data, context);
+                    offset += abiCmd->cmdSize;
+                }
+                break;
+            case AbiCmdTypes::ClearAppendConsumeCounter:
+                {
+                    const auto* abiCmd = (const AbiClearAppendConsumeCounter*)(data + offset);
+                    finished = !processClearAppendConsume(abiCmd, data, context);
                     offset += abiCmd->cmdSize;
                 }
                 break;
@@ -566,11 +604,12 @@ void WorkBundleDb::unregisterTable(ResourceTable table)
     m_tables.erase(table);
 }
 
-void WorkBundleDb::registerResource(ResourceHandle handle, MemFlags flags, ResourceGpuState initialState)
+void WorkBundleDb::registerResource(ResourceHandle handle, MemFlags flags, ResourceGpuState initialState, Buffer counterBuffer)
 {
     auto& resInfo = m_resources[handle];
     resInfo.memFlags = flags;
     resInfo.gpuState = initialState;
+    resInfo.counterBuffer = counterBuffer;
 }
 
 void WorkBundleDb::unregisterResource(ResourceHandle handle)

@@ -111,6 +111,7 @@ struct WorkResourceInfo
 {
     MemFlags memFlags = {};
     ResourceGpuState gpuState = ResourceGpuState::Default;
+    Buffer counterBuffer;
 };
 
 using WorkTableInfos = std::unordered_map<ResourceTable,  WorkTableInfo>;
@@ -129,7 +130,7 @@ public:
     void unregisterTable(ResourceTable table);
     void clearAllTables() { m_tables.clear(); }
 
-    void registerResource(ResourceHandle handle, MemFlags flags, ResourceGpuState initialState);
+    void registerResource(ResourceHandle handle, MemFlags flags, ResourceGpuState initialState, Buffer counterBuffer = Buffer());
     void unregisterResource(ResourceHandle handle);
     void clearAllResources() { m_resources.clear(); }
 

@@ -127,6 +127,19 @@ private:
     ResourceHandle m_source;
 };
 
+struct ClearAppendConsumeCounter
+{
+    friend class CommandList;
+public:
+    void setData(ResourceHandle source)
+    {
+        m_source = source;
+    }
+
+private:
+    ResourceHandle m_source;
+};
+
 class InternalCommandList;
 
 class CommandList
@@ -139,6 +152,7 @@ public:
     void writeCommand(const CopyCommand& cmd);
     void writeCommand(const UploadCommand& cmd);
     void writeCommand(const DownloadCommand& cmd);
+    void writeCommand(const ClearAppendConsumeCounter& cmd);
 
     MemOffset uploadInlineResource(ResourceHandle destination, int sourceSize);
 

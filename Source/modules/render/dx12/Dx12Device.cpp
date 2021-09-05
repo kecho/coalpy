@@ -215,10 +215,20 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
 
     m_gc->start();
 
+    //register counter as a buffer handle
+    {
+        BufferDesc bufferDesc;
+        bufferDesc.format = Format::RGBA_32_UINT;
+        bufferDesc.elementCount = 1;
+        bufferDesc.memFlags = (MemFlags)0u;
+        m_countersBuffer = m_resources->createBuffer(bufferDesc, &m_counterPool->resource());
+    }
 }
 
 Dx12Device::~Dx12Device()
 {
+    release(m_countersBuffer);
+
     m_gc->stop();
 
     for (auto p : m_dx12WorkInfos->workMap)

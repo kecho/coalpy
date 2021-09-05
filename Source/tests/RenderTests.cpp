@@ -1061,6 +1061,101 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testAppendConsumeBufferAppend(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+        IShaderDb& db = *renderTestCtx.db;
+
+        const char* producerShaderSrc = R"(
+            AppendStructuredBuffer<int> output : register(u0);
+
+            [numthreads(10,1,1)]
+            void csMain(uint3 dti : SV_DispatchThreadID)
+            {
+                output.Append(dti.x);
+            }
+        )";
+
+        ShaderInlineDesc shaderDesc{ ShaderType::Compute, "acBufferShader", "csMain", producerShaderSrc };
+        ShaderHandle shader = db.requestCompile(shaderDesc);
+        db.resolve(shader);
+        CPY_ASSERT(db.isValid(shader));
+
+        BufferDesc bufferDesc;
+        bufferDesc.format = Format::R32_SINT;
+        bufferDesc.isAppendConsume = true;
+        bufferDesc.elementCount = 10;
+        
+        Buffer acbufferTmp = device.createBuffer(bufferDesc);//a second one to test the pool of buffers.
+        Buffer acbuffer = device.createBuffer(bufferDesc);
+        CPY_ASSERT(acbuffer.valid());
+    
+        ResourceTableDesc tableDesc;
+        tableDesc.resources = &acbuffer;
+        tableDesc.resourcesCount = 1;
+        OutResourceTable outTable = device.createOutResourceTable(tableDesc);
+
+        CommandList cmdList;
+        {
+            ClearAppendConsumeCounter clrCmd;
+            clrCmd.setData(acbuffer);
+            cmdList.writeCommand(clrCmd);
+        }
+
+        {
+            ComputeCommand cmd;
+            cmd.setShader(shader);
+            cmd.setOutResources(&outTable, 1);
+            cmd.setDispatch("appendConsumeTest", 1, 1, 1);
+            cmdList.writeCommand(cmd);
+        }
+
+        {
+            DownloadCommand downloadCmd;
+            downloadCmd.setData(acbuffer);
+            cmdList.writeCommand(downloadCmd);
+        }
+
+        cmdList.finalize();
+
+        
+        CommandList* lists[] = { &cmdList };
+        auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle);
+        CPY_ASSERT(result.success());
+
+        auto waitStatus = device.waitOnCpu(result.workHandle, -1);
+        CPY_ASSERT(waitStatus.success());
+
+        
+        {
+            auto downloadStatus = device.getDownloadStatus(result.workHandle, acbuffer);
+            CPY_ASSERT(downloadStatus.success());
+            CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
+            CPY_ASSERT(downloadStatus.downloadByteSize == 10 * sizeof(int));
+            std::vector<int> hasResults(10, 0);
+            if (downloadStatus.downloadPtr != nullptr)
+            {
+                const int* results = (const int*)downloadStatus.downloadPtr;
+                for (int i = 0; i < 10; ++i)
+                    ++hasResults[results[i]];
+
+                for (int i = 0; i < 10; ++i)
+                    CPY_ASSERT(hasResults[i] == 1);
+            }
+            else
+            {
+                CPY_ASSERT(false);
+            }
+        }
+
+        device.release(result.workHandle);
+        device.release(acbuffer);
+        device.release(acbufferTmp);
+        renderTestCtx.end();
+    }
+
     //registration of tests
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
@@ -1079,6 +1174,7 @@ namespace coalpy
             { "uavBarrier",  testUavBarrier },
             { "upload2dTexture",  testUpload2dTexture },
             { "appendConsumeBufferCreate",  testAppendConsumeBufferCreate },
+            { "appendConsumeBufferAppend",  testAppendConsumeBufferAppend },
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

@@ -91,6 +91,7 @@ public:
 
     void deferRelease(ID3D12Pageable& object);
 
+    Buffer countersBuffer() { return m_countersBuffer; }
     
 
 private:
@@ -107,6 +108,8 @@ private:
     DeviceInfo m_info;
 
     Dx12WorkInformationMap* m_dx12WorkInfos;
+
+    Buffer m_countersBuffer;
 };
 
 }

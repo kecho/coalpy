@@ -37,7 +37,8 @@ Dx12CounterPool::Dx12CounterPool(Dx12Device& device)
         &heapProps,
         D3D12_HEAP_FLAG_NONE,
         &desc,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, DX_RET(m_resource));
+        D3D12_RESOURCE_STATE_COMMON, //This must match the same resource state in dx12Resources.cpp
+        nullptr, DX_RET(m_resource));
     CPY_ASSERT_MSG(r == S_OK, "Failed creating counter resource ints pool.");
 
     m_uavDesc.Format = DXGI_FORMAT_R32_UINT;

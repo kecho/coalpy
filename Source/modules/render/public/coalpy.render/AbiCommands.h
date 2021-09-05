@@ -18,7 +18,8 @@ enum class AbiCmdTypes : int
     Compute = 'COMP', 
     Copy = 'COPY', 
     Upload = 'UPLD',
-    Download = 'DWLD'
+    Download = 'DWLD',
+    ClearAppendConsumeCounter = 'CLAC'
 };
 
 template<typename ElementType>
@@ -88,6 +89,13 @@ struct AbiUploadCmd
 struct AbiDownloadCmd
 {
     int sentinel = (int)AbiCmdTypes::Download;
+    MemSize cmdSize = {};
+    ResourceHandle source;
+};
+
+struct AbiClearAppendConsumeCounter
+{
+    int sentinel = (int)AbiCmdTypes::ClearAppendConsumeCounter;
     MemSize cmdSize = {};
     ResourceHandle source;
 };

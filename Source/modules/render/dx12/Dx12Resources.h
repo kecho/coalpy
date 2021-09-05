@@ -119,6 +119,7 @@ public:
 
     virtual size_t byteSize() const = 0;
 
+    Dx12CounterHandle counterHandle() const { return m_counterHandle; }
 protected:
     Dx12Descriptor m_srv = {};
     std::vector<Dx12Descriptor> m_uavs;
