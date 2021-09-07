@@ -123,8 +123,20 @@ public:
         m_source = source;
     }
 
+    void setMipLevel(int mipLevel)
+    {
+        m_mipLevel = mipLevel;
+    }
+
+    void setArraySlice(int arraySlice)
+    {
+        m_arraySlice = arraySlice;
+    }
+
 private:
     ResourceHandle m_source;
+    int m_arraySlice = 0;
+    int m_mipLevel = 0;
 };
 
 struct ClearAppendConsumeCounter

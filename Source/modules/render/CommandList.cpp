@@ -184,6 +184,8 @@ void CommandList::writeCommand(const DownloadCommand& cmd)
 {
     auto& abiCmd = allocate<AbiDownloadCmd>();
     abiCmd.source = cmd.m_source;   
+    abiCmd.mipLevel = cmd.m_mipLevel;
+    abiCmd.arraySlice = cmd.m_arraySlice;
     finalizeCommand(abiCmd);
 }
 

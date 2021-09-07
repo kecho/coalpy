@@ -228,9 +228,19 @@ Dx12ResourceTableResult Dx12ResourceCollection::createResourceTable(const Resour
     if (!convertTableDescToResourceList(desc, isUav,  gatheredResources, containersToTrack, result))
         return result;
 
+    if (isUav && desc.uavTargetMips)
+    {
+        for (int i = 0; i < gatheredResources.size(); ++i)
+        {
+            Dx12Resource* res = gatheredResources[i];
+            if (desc.uavTargetMips[i] >= res->uavCounts())
+                return Dx12ResourceTableResult { ResourceResult::InvalidParameter, ResourceTable(), "Could not create resource table. Mip level requested exceeds the mip count of the current resource." };
+        }
+    }
+
     ResourceTable handle;
     auto& outPtr = m_resourceTables.allocate(handle);
-    outPtr = new Dx12ResourceTable(m_device, gatheredResources.data(), (int)gatheredResources.size(), isUav);
+    outPtr = new Dx12ResourceTable(m_device, gatheredResources.data(), (int)gatheredResources.size(), isUav, isUav ? desc.uavTargetMips : nullptr);
 
     if (!containersToTrack.empty())
     {

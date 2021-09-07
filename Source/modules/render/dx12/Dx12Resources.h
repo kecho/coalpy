@@ -113,6 +113,7 @@ public:
 
     const Dx12Descriptor srv() const { return m_srv; }
     const Dx12Descriptor uav(int mipLevel = 0) const { return m_uavs[mipLevel]; }
+    int uavCounts() const { return (int)m_uavs.size(); }
 
     bool isBuffer() const { return m_data.resDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER; };
     ResourceSpecialFlags specialFlags() const { return m_specialFlags; }
@@ -201,7 +202,7 @@ private:
 class Dx12ResourceTable : public RefCounted
 {
 public:
-    Dx12ResourceTable(Dx12Device& device, Dx12Resource** resources, int count, bool isUav);
+    Dx12ResourceTable(Dx12Device& device, Dx12Resource** resources, int count, bool isUav, const int* targetUavMips = nullptr);
     Dx12ResourceTable(Dx12Device& device, Dx12Sampler** samplers, int count);
     ~Dx12ResourceTable();
 

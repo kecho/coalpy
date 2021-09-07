@@ -551,16 +551,25 @@ Dx12Sampler::~Dx12Sampler()
     m_device.descriptors().release(m_descriptor);
 }
 
-Dx12ResourceTable::Dx12ResourceTable(Dx12Device& device, Dx12Resource** resources, int count, bool isUav)
+Dx12ResourceTable::Dx12ResourceTable(Dx12Device& device, Dx12Resource** resources, int count, bool isUav, const int* targetUavMips)
 : m_device(device)
 {
     std::vector<Dx12Descriptor> descriptors;
     m_resources.insert(m_resources.end(), resources, resources + count);
-    for (auto& r : m_resources)
+    for (int i = 0; i < count; ++i)
     {
+        auto& r = m_resources[i];
         if (!r)
             continue;
-        descriptors.push_back(isUav ? r->uav() : r->srv());
+        if (isUav)
+        {
+            int mipId = targetUavMips ? targetUavMips[i] : 0;
+            descriptors.push_back(r->uav(mipId));
+        }
+        else
+        {
+            descriptors.push_back(r->srv());
+        }
     }
 
     m_cpuTable = m_device.descriptors().allocateTable(

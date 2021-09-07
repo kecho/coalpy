@@ -101,6 +101,7 @@ struct ResourceTableDesc
 {
     ResourceName name;
     const ResourceHandle* resources = nullptr;
+    const int* uavTargetMips = nullptr;
     int resourcesCount = 0;
 };
 

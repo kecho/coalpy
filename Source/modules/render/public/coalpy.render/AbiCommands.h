@@ -91,6 +91,8 @@ struct AbiDownloadCmd
     int sentinel = (int)AbiCmdTypes::Download;
     MemSize cmdSize = {};
     ResourceHandle source;
+    int mipLevel;
+    int arraySlice;
 };
 
 struct AbiClearAppendConsumeCounter
