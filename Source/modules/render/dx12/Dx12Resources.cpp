@@ -312,6 +312,24 @@ size_t Dx12Texture::byteSize() const
     return rowPitch * height * depth;
 }
 
+int Dx12Texture::mipCounts() const
+{
+    return m_data.resDesc.MipLevels;
+}
+
+int Dx12Texture::arraySlicesCounts() const
+{
+    if (m_texDesc.type == TextureType::k2dArray || m_texDesc.type == TextureType::CubeMap || m_texDesc.type == TextureType::CubeMapArray)
+        return m_data.resDesc.DepthOrArraySize;
+    else
+        return 1;
+}
+
+int Dx12Texture::subresourceIndex(int mipLevels, int arraySlice) const
+{
+    return mipLevels + (arraySlice * mipCounts());
+}
+
 void Dx12Texture::getCpuTextureSizes(int mipId, size_t& outRowPitch, int& outWidth, int& outHeight, int& outDepth) const
 {
     CPY_ASSERT(mipId >=0 && mipId < m_data.resDesc.MipLevels);

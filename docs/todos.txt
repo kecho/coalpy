@@ -2,6 +2,7 @@
 * Write uav mip slice and array slice tests.
 * Write uav write to 3d texture and 3d texture mip slice.
 * Write 'update' of resource tables.
+* Py API - Write boiler plate & test for indirect dispatch.
 * Py API - Write tmp resource tables at the python level - ensure we can recycle resource tables handles.
 * Py API - Expose tmp resource tables on command list
 * Py API - Expose python API for download command

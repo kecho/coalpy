@@ -164,6 +164,10 @@ public:
 
     void getCpuTextureSizes(int mipId, size_t& outRowPitch, int& width, int& outHeight, int& depth) const;
 
+    int subresourceIndex(int mipLevel, int arraySlice) const;
+    int mipCounts() const;
+    int arraySlicesCounts() const;
+
 protected:
     int m_slices;
     TextureDesc m_texDesc;

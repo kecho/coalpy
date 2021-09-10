@@ -279,7 +279,7 @@ void Dx12WorkBundle::buildDownloadCmd(
         D3D12_TEXTURE_COPY_LOCATION srcLoc;
         srcLoc.pResource = &dx12Texture.d3dResource();
         srcLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-        srcLoc.SubresourceIndex = 0u;
+        srcLoc.SubresourceIndex = (UINT)dx12Texture.subresourceIndex(downloadCmd->mipLevel, downloadCmd->arraySlice);
 
         D3D12_TEXTURE_COPY_LOCATION dstLoc;
         dstLoc.pResource = downloadState.memoryBlock.buffer;

@@ -379,6 +379,20 @@ bool processDownload(const AbiDownloadCmd* cmd, const unsigned char* data, WorkB
         return false;
     }
 
+    if (cmd->mipLevel >= resourceInfoIt->second.mipLevels)
+    {
+        context.errorType = ScheduleErrorType::OutOfBounds;
+        context.errorMsg = "Mip level for download out of bounds. Must be within range of resource";
+        return false;
+    }
+
+    if (cmd->arraySlice >= resourceInfoIt->second.arraySlices)
+    {
+        context.errorType = ScheduleErrorType::OutOfBounds;
+        context.errorMsg = "Array slice out of bounds. Must be within range of array slices";
+        return false;
+    }
+
     auto it = context.resourcesToDownload.insert(cmd->source);
     if (!it.second)
     {
@@ -386,6 +400,8 @@ bool processDownload(const AbiDownloadCmd* cmd, const unsigned char* data, WorkB
         context.errorMsg = "Multiple downloads on the same resource during the same schedule call. You are only allowed to download a resource once per scheduling bundle.";
         return false;
     }
+
+
 
     if (!transitionResource(cmd->source, ResourceGpuState::CopySrc, context))
         return false;

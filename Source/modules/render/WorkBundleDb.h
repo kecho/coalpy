@@ -112,6 +112,8 @@ struct WorkResourceInfo
     MemFlags memFlags = {};
     ResourceGpuState gpuState = ResourceGpuState::Default;
     Buffer counterBuffer;
+    int mipLevels = 1;
+    int arraySlices = 1;
 };
 
 using WorkTableInfos = std::unordered_map<ResourceTable,  WorkTableInfo>;
