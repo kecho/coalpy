@@ -1156,6 +1156,28 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testTextureArray(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+        IShaderDb& db = *renderTestCtx.db;
+
+        const char* producerShaderSrc = R"(
+            AppendStructuredBuffer<int> output : register(u0);
+
+            [numthreads(10,1,1)]
+            void csMain(uint3 dti : SV_DispatchThreadID)
+            {
+                output.Append(dti.x);
+            }
+        )";
+
+        //TODO: implement
+
+        renderTestCtx.end();
+    }
+
     //registration of tests
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
@@ -1175,6 +1197,7 @@ namespace coalpy
             { "upload2dTexture",  testUpload2dTexture },
             { "appendConsumeBufferCreate",  testAppendConsumeBufferCreate },
             { "appendConsumeBufferAppend",  testAppendConsumeBufferAppend },
+            { "textureArray",  testTextureArray },
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

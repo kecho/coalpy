@@ -620,12 +620,20 @@ void WorkBundleDb::unregisterTable(ResourceTable table)
     m_tables.erase(table);
 }
 
-void WorkBundleDb::registerResource(ResourceHandle handle, MemFlags flags, ResourceGpuState initialState, Buffer counterBuffer)
+void WorkBundleDb::registerResource(
+    ResourceHandle handle,
+    MemFlags flags,
+    ResourceGpuState initialState,
+    int mipLevels,
+    int arraySlices,
+    Buffer counterBuffer)
 {
     auto& resInfo = m_resources[handle];
     resInfo.memFlags = flags;
     resInfo.gpuState = initialState;
     resInfo.counterBuffer = counterBuffer;
+    resInfo.mipLevels = mipLevels;
+    resInfo.arraySlices = arraySlices;
 }
 
 void WorkBundleDb::unregisterResource(ResourceHandle handle)

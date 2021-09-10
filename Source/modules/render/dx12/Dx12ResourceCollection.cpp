@@ -32,7 +32,7 @@ TextureResult Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3
 {
     std::unique_lock lock(m_resourceMutex);
 
-    SmartPtr<Dx12Resource> textureObj = new Dx12Texture(m_device, desc, flags);
+    SmartPtr<Dx12Texture> textureObj = new Dx12Texture(m_device, desc, flags);
     if (resource)
         textureObj->acquireD3D12Resource(resource);
     auto initResult = textureObj->init();
@@ -46,9 +46,9 @@ TextureResult Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3
     CPY_ASSERT(outPtr->resource == nullptr);
     
     outPtr->type = ResType::Texture;
-    outPtr->resource = textureObj;
+    outPtr->resource = &(*textureObj);
     outPtr->handle = resHandle;
-    m_workDb.registerResource(resHandle, desc.memFlags, outPtr->resource->defaultGpuState());
+    m_workDb.registerResource(resHandle, desc.memFlags, outPtr->resource->defaultGpuState(), textureObj->mipCounts(), textureObj->arraySlicesCounts());
     return TextureResult { ResourceResult::Ok, Texture { resHandle.handleId } };
 }
 
@@ -77,15 +77,15 @@ TextureResult Dx12ResourceCollection::recreateTexture(Texture handle, const Text
         return TextureResult { ResourceResult::InternalApiFailure, Texture(), "Handles don't match, internal error on recreation." };
 
     auto oldFlags = c->resource->specialFlags();
-    SmartPtr<Dx12Resource> textureObj = new Dx12Texture(m_device, desc, oldFlags);
+    SmartPtr<Dx12Texture> textureObj = new Dx12Texture(m_device, desc, oldFlags);
     if (resourceToAcquire)
         textureObj->acquireD3D12Resource(resourceToAcquire);
     auto initResult = textureObj->init();
     if (!initResult.success())
         return TextureResult { initResult.result, Texture(), std::move(initResult.message) };
 
-    c->resource = textureObj; 
-    m_workDb.registerResource(handle, desc.memFlags, c->resource->defaultGpuState());
+    c->resource = &(*textureObj); 
+    m_workDb.registerResource(handle, desc.memFlags, c->resource->defaultGpuState(), textureObj->mipCounts(), textureObj->arraySlicesCounts());
 
     for (auto t : parentTables)
         recreateUnsafe(t);
@@ -118,7 +118,7 @@ BufferResult Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12
     Buffer counterBuffer;
     if (desc.isAppendConsume)
         counterBuffer = m_device.countersBuffer();
-    m_workDb.registerResource(resHandle, desc.memFlags, outPtr->resource->defaultGpuState(), counterBuffer);
+    m_workDb.registerResource(resHandle, desc.memFlags, outPtr->resource->defaultGpuState(), 1, 1, counterBuffer);
     return BufferResult { ResourceResult::Ok, Buffer { resHandle.handleId } };
 }
 

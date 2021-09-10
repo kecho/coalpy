@@ -132,7 +132,13 @@ public:
     void unregisterTable(ResourceTable table);
     void clearAllTables() { m_tables.clear(); }
 
-    void registerResource(ResourceHandle handle, MemFlags flags, ResourceGpuState initialState, Buffer counterBuffer = Buffer());
+    void registerResource(
+        ResourceHandle handle,
+        MemFlags flags,
+        ResourceGpuState initialState,
+        int mipLevels, int arraySlices,
+        Buffer counterBuffer = Buffer());
+
     void unregisterResource(ResourceHandle handle);
     void clearAllResources() { m_resources.clear(); }
 
