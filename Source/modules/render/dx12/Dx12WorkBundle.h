@@ -21,6 +21,7 @@ class Dx12Device;
 
 struct Dx12ResourceDownloadState
 {
+    ResourceDownloadKey downloadKey;
     WorkType queueType = WorkType::Graphics;
     UINT64 fenceValue = {};
     Dx12CpuMemBlock memoryBlock;
@@ -31,7 +32,7 @@ struct Dx12ResourceDownloadState
     int depth  = 0;
 };
 
-using Dx12DownloadResourceMap = std::unordered_map<ResourceHandle, Dx12ResourceDownloadState>;
+using Dx12DownloadResourceMap = std::unordered_map<ResourceDownloadKey, Dx12ResourceDownloadState>;
 
 class Dx12WorkBundle
 {

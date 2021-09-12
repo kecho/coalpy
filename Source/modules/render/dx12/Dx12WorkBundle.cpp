@@ -264,6 +264,7 @@ void Dx12WorkBundle::buildDownloadCmd(
     CPY_ASSERT(cmdInfo.commandDownloadIndex >= 0 && cmdInfo.commandDownloadIndex < (int)m_downloadStates.size());
     CPY_ASSERT(downloadCmd->source.valid());
     auto& downloadState = m_downloadStates[cmdInfo.commandDownloadIndex];
+    downloadState.downloadKey = ResourceDownloadKey { downloadCmd->source, downloadCmd->mipLevel, downloadCmd->arraySlice };
     Dx12Resource& dx12Resource = resources.unsafeGetResource(downloadCmd->source);
     if (dx12Resource.isBuffer())
     {
@@ -503,7 +504,7 @@ UINT64 Dx12WorkBundle::execute(CommandList** commandLists, int commandListsCount
 void Dx12WorkBundle::getDownloadResourceMap(Dx12DownloadResourceMap& downloadMap)
 {
     for (auto& state : m_downloadStates)
-        downloadMap[state.resource] = state;
+        downloadMap[state.downloadKey] = state;
 }
 
 }

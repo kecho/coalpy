@@ -29,7 +29,7 @@ struct WorkBuildContext
     ScheduleErrorType errorType = ScheduleErrorType::Ok;
     std::string errorMsg;
     ResourceStateMap states;
-    ResourceSet resourcesToDownload;
+    ResourceDownloadSet resourcesToDownload;
     TableGpuAllocationMap tableAllocations;
     std::vector<ProcessedList> processedList;
     int totalTableSize = 0;
@@ -393,15 +393,15 @@ bool processDownload(const AbiDownloadCmd* cmd, const unsigned char* data, WorkB
         return false;
     }
 
-    auto it = context.resourcesToDownload.insert(cmd->source);
+    ResourceDownloadKey downloadKey { cmd->source, cmd->mipLevel, cmd->arraySlice };
+
+    auto it = context.resourcesToDownload.insert(downloadKey);
     if (!it.second)
     {
         context.errorType = ScheduleErrorType::MultipleDownloadsOnSameResource;
         context.errorMsg = "Multiple downloads on the same resource during the same schedule call. You are only allowed to download a resource once per scheduling bundle.";
         return false;
     }
-
-
 
     if (!transitionResource(cmd->source, ResourceGpuState::CopySrc, context))
         return false;

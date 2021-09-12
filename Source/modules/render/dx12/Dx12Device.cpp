@@ -331,13 +331,14 @@ WaitStatus Dx12Device::waitOnCpu(WorkHandle handle, int milliseconds)
         return WaitStatus { WaitErrorType::NotReady, "" };
 }
 
-DownloadStatus Dx12Device::getDownloadStatus(WorkHandle bundle, ResourceHandle handle)
+DownloadStatus Dx12Device::getDownloadStatus(WorkHandle bundle, ResourceHandle handle, int mipLevel, int arraySlice)
 {
     auto it = m_dx12WorkInfos->workMap.find(bundle.handleId);
     if (it == m_dx12WorkInfos->workMap.end())
         return DownloadStatus { DownloadResult::Invalid, nullptr, 0u };
 
-    auto downloadStateIt = it->second.downloadMap.find(handle);
+    ResourceDownloadKey downloadKey { handle, mipLevel, arraySlice };
+    auto downloadStateIt = it->second.downloadMap.find(downloadKey);
     if (downloadStateIt == it->second.downloadMap.end())
         return DownloadStatus { DownloadResult::Invalid, nullptr, 0u };
 

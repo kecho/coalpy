@@ -19,6 +19,76 @@ namespace render
 
 class IDevice;
 
+struct ResourceDownloadKey
+{
+    ResourceHandle handle;
+    int mipLevel = 0;
+    int arraySlice = 0;
+
+    unsigned hash() const
+    {
+        return (unsigned)(handle.handleId & 0xFFFF) | (unsigned)((mipLevel & 0xF) << 16) | (unsigned)((arraySlice & 0xFF) << 20);
+    }
+
+    bool operator <(const ResourceDownloadKey& other) const
+    {
+        return hash() < other.hash();
+    }
+
+    bool operator==(const ResourceDownloadKey& other) const
+    {
+        return hash() == other.hash();
+    }
+
+    bool operator >(const ResourceDownloadKey& other) const
+    {
+        return hash() > other.hash();
+    }
+
+    bool operator <=(const ResourceDownloadKey& other) const
+    {
+        auto h0 = hash();
+        auto h1 = other.hash();
+        return h0 <= h1;
+    }
+
+    bool operator >=(const ResourceDownloadKey& other) const
+    {
+        auto h0 = hash();
+        auto h1 = other.hash();
+        return h0 >= h1;
+    }
+
+    bool operator !=(const ResourceDownloadKey& other) const
+    {
+        return hash() != other.hash();
+    }
+};
+
+}
+
+}
+
+namespace std
+{
+
+template<>
+struct hash<coalpy::render::ResourceDownloadKey>
+{
+    size_t operator()(const coalpy::render::ResourceDownloadKey& k) const
+    {
+        return k.hash();
+    }
+};
+
+}
+
+namespace coalpy
+{
+
+namespace render
+{
+
 enum class ResourceGpuState
 {
     Default,
@@ -84,7 +154,7 @@ struct WorkResourceState
 
 using ResourceStateMap = std::unordered_map<ResourceHandle, WorkResourceState>;
 using TableGpuAllocationMap = std::unordered_map<ResourceTable, TableAllocation>;
-using ResourceSet  = std::set<ResourceHandle>;
+using ResourceDownloadSet  = std::set<ResourceDownloadKey>;
 
 struct WorkBundle
 {
@@ -96,7 +166,7 @@ struct WorkBundle
     int totalUploadBufferSize = 0;
     int totalSamplers = 0;
 
-    ResourceSet resourcesToDownload;
+    ResourceDownloadSet resourcesToDownload;
     TableGpuAllocationMap tableAllocations;
 };
 

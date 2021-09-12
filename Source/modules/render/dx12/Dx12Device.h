@@ -58,7 +58,7 @@ public:
     virtual SamplerTableResult  createSamplerTable (const ResourceTableDesc& config) override;
     virtual void getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo) override;
     virtual WaitStatus waitOnCpu(WorkHandle handle, int milliseconds = 0) override;
-    virtual DownloadStatus getDownloadStatus(WorkHandle bundle, ResourceHandle handle) override;
+    virtual DownloadStatus getDownloadStatus(WorkHandle bundle, ResourceHandle handle, int mipLevel, int arraySlice) override;
     virtual void release(ResourceHandle resource) override;
     virtual void release(ResourceTable table) override;
     virtual const DeviceInfo& info() const override { return m_info; }
