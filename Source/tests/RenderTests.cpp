@@ -1164,17 +1164,141 @@ namespace coalpy
         IShaderDb& db = *renderTestCtx.db;
 
         const char* producerShaderSrc = R"(
-            AppendStructuredBuffer<int> output : register(u0);
+            RWTexture2DArray<int4> output : register(u0);
 
-            [numthreads(10,1,1)]
+            cbuffer Constants : register(b0)
+            {
+                int mipId;
+                int maxWidth;
+                int maxHeight;
+                int padding0;
+            }
+
+            [numthreads(4,4,4)]
             void csMain(uint3 dti : SV_DispatchThreadID)
             {
-                output.Append(dti.x);
+                if (any(dti.xy >= int2(maxWidth, maxHeight)))
+                    return;
+
+                output[dti] = int4(dti.xyz, mipId);
             }
         )";
 
-        //TODO: implement
+        ShaderInlineDesc shaderDesc;
+        shaderDesc.type = ShaderType::Compute;
+        shaderDesc.name = "TextureArrayProducer";
+        shaderDesc.mainFn = "csMain";
+        shaderDesc.immCode = producerShaderSrc;
+        ShaderHandle shaderHandle = db.requestCompile(shaderDesc);
+        db.resolve(shaderHandle);
+        CPY_ASSERT(db.isValid(shaderHandle));
 
+        Texture texArray;
+        const int mipSlices = 3;
+        const int arraySlices = 4;
+        {
+            TextureDesc desc;
+            desc.type = TextureType::k2dArray;
+            desc.format = Format::RGBA_32_SINT;
+            desc.width = 8;
+            desc.height = 8;
+            desc.depth = 4;
+            //desc.mipLevels = 8;
+            //texArray = device.createTexture(desc);
+            //CPY_ASSERT(!texArray.valid());
+
+            desc.mipLevels = mipSlices;
+            texArray = device.createTexture(desc);
+            CPY_ASSERT(texArray.valid());
+        }
+
+        OutResourceTable mipTables[mipSlices];
+        {
+            ResourceTableDesc desc;
+            desc.resources = &texArray;
+            desc.resourcesCount = 1;
+            for (int i = 0; i < mipSlices; ++i)
+            {
+                desc.uavTargetMips = &i;
+                mipTables[i] = device.createOutResourceTable(desc);
+                CPY_ASSERT(mipTables[i].valid())
+            }
+        }
+
+        CommandList cmdList;
+        for (int i = 0; i < mipSlices; ++i)
+        {
+            int w = 8 >> i;
+            int h = 8 >> i;
+            ComputeCommand cmd;
+            cmd.setShader(shaderHandle);
+            struct {
+                int mipId;
+                int maxWidth;
+                int maxHeight;
+                int padd0;
+            } constants = { i, w, h, 0 };
+            cmd.setInlineConstant((const char*)&constants, sizeof(constants));
+            cmd.setOutResources(&mipTables[i], 1);
+            cmd.setDispatch("texArray", 2, 2, arraySlices/4);
+            cmdList.writeCommand(cmd);
+        }
+
+        for (int mipLevel = 0; mipLevel < mipSlices; ++mipLevel)
+        {
+            for (int arraySlice = 0; arraySlice < arraySlices; ++arraySlice)
+            {
+                DownloadCommand cmd;
+                cmd.setData(texArray);
+                cmd.setMipLevel(mipLevel);
+                cmd.setArraySlice(arraySlice);
+                cmdList.writeCommand(cmd);
+            }
+        }
+
+        cmdList.finalize();
+
+        CommandList* cmdLists;
+        cmdLists = &cmdList;
+        ScheduleStatus scheduleStatus = device.schedule(&cmdLists, 1, ScheduleFlags_GetWorkHandle);
+        CPY_ASSERT_MSG(scheduleStatus.success(), scheduleStatus.message.c_str());
+
+        auto waitStatus = device.waitOnCpu(scheduleStatus.workHandle, -1);
+        CPY_ASSERT(waitStatus.success());
+
+        for (int mipLevel = 0; mipLevel < mipSlices; ++mipLevel)
+        {
+            for (int arraySlice = 0; arraySlice < arraySlices; ++arraySlice)
+            {
+                DownloadStatus downloadStatus = device.getDownloadStatus(scheduleStatus.workHandle, texArray, mipLevel, arraySlice);
+                CPY_ASSERT(downloadStatus.success());
+                if (!downloadStatus.success())
+                    continue;
+                char* ptr = (char*)downloadStatus.downloadPtr;
+                int pixelPitch = sizeof(int) * 4;
+                int w = 8 >> mipLevel;
+                int h = 8 >> mipLevel;
+                for (int x = 0; x < w; ++x)
+                {
+                    for (int y = 0; y < h; ++y)
+                    {
+                        int* pixelPtr = (int*)(ptr + (x * pixelPitch + y * downloadStatus.rowPitch)); 
+                        CPY_ASSERT_FMT(pixelPtr[0] == x, "expected %d, got %d", x, pixelPtr[0]);
+                        CPY_ASSERT_FMT(pixelPtr[1] == y, "expected %d, got %d", y, pixelPtr[1]);
+                        CPY_ASSERT_FMT(pixelPtr[2] == arraySlice, "expected %d, got %d", arraySlice, pixelPtr[2]);
+                        CPY_ASSERT_FMT(pixelPtr[3] == mipLevel, "expected %d, got %d", mipLevel, pixelPtr[3]);
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < mipSlices; ++i)
+        {
+            device.release(mipTables[i]);
+        }
+
+        device.release(scheduleStatus.workHandle);
+        device.release(texArray);
         renderTestCtx.end();
     }
 

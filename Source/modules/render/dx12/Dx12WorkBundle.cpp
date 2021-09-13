@@ -274,7 +274,7 @@ void Dx12WorkBundle::buildDownloadCmd(
     else
     {
         auto& dx12Texture = (Dx12Texture&)dx12Resource;
-        dx12Texture.getCpuTextureSizes(0u, downloadState.rowPitch, downloadState.width, downloadState.height, downloadState.depth);
+        dx12Texture.getCpuTextureSizes(downloadCmd->mipLevel, downloadState.rowPitch, downloadState.width, downloadState.height, downloadState.depth);
         downloadState.memoryBlock = m_device.readbackPool().allocate(downloadState.rowPitch * downloadState.height * downloadState.depth);
 
         D3D12_TEXTURE_COPY_LOCATION srcLoc;

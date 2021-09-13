@@ -166,6 +166,7 @@ bool transitionResource(
             context.processedList[context.listIndex]
                 .commandSchedule[context.currentCommandIndex]
                 .preBarrier.push_back(newBarrier);
+            currState->state = newState;
         }
 
         if (prevState == ResourceGpuState::Uav && newState == ResourceGpuState::Uav)
