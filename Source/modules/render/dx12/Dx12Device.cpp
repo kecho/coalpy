@@ -299,6 +299,11 @@ SamplerTableResult Dx12Device::createSamplerTable (const ResourceTableDesc& conf
     return m_resources->createSamplerTable(config);
 }
 
+UpdateTableResult Dx12Device::updateResourceTable(ResourceTable table, const ResourceTableDesc& config)
+{
+    return UpdateTableResult { ResourceResult::InternalApiFailure, ResourceTable(), "Unimplemented" };
+}
+
 void Dx12Device::getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo)
 {
     m_resources->getResourceMemoryInfo(handle, memInfo);

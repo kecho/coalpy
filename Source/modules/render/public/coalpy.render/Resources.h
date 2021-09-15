@@ -134,6 +134,7 @@ using SamplerResult = TemplateResourceResult<Sampler>;
 using InResourceTableResult  = TemplateResourceResult<InResourceTable>;
 using OutResourceTableResult = TemplateResourceResult<OutResourceTable>;
 using SamplerTableResult  = TemplateResourceResult<SamplerTable>;
+using UpdateTableResult  = TemplateResourceResult<ResourceTable>;
 
 }
 

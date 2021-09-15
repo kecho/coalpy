@@ -56,6 +56,7 @@ public:
     virtual InResourceTableResult createInResourceTable  (const ResourceTableDesc& config) override;
     virtual OutResourceTableResult createOutResourceTable (const ResourceTableDesc& config) override;
     virtual SamplerTableResult  createSamplerTable (const ResourceTableDesc& config) override;
+    virtual UpdateTableResult updateResourceTable(ResourceTable table, const ResourceTableDesc& config) override;
     virtual void getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo) override;
     virtual WaitStatus waitOnCpu(WorkHandle handle, int milliseconds = 0) override;
     virtual DownloadStatus getDownloadStatus(WorkHandle bundle, ResourceHandle handle, int mipLevel, int arraySlice) override;
