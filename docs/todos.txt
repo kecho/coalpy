@@ -1,4 +1,3 @@
-* Write 'update' of resource tables.
 * Write a proper buffer copy render command.
 * Write a test for buffer copy render command.
 * Write a proper texture copy render command.
@@ -6,5 +5,3 @@
 * Py API - Expose new buffer copy render command.
 * Py API - Expose new texture copy render command.
 * Py API - Write boiler plate & test for indirect dispatch.
-* Py API - Write tmp resource tables at the python level - ensure we can recycle resource tables handles.
-* Py API - Expose tmp resource tables on command list

@@ -60,8 +60,8 @@ def main():
             x = xv, y = yv, z = 1,
             constants = [float(render_args.render_time), dims[0], dims[1], 0],
             shader = s1,
-            input_tables = input_table,
-            output_tables = output_table
+            inputs = test_image,
+            outputs = render_args.window.display_texture
         )
         gpu.schedule([cmdList])
     

@@ -55,7 +55,6 @@ public:
     virtual SamplerTableResult      createSamplerTable (const ResourceTableDesc& config) = 0;
 
     virtual TextureResult recreateTexture(Texture handle, const TextureDesc& config) = 0;
-    virtual UpdateTableResult updateResourceTable(ResourceTable table, const ResourceTableDesc& config) = 0;
 
     virtual void release(ResourceHandle resource) = 0;
     virtual void release(ResourceTable table) = 0;

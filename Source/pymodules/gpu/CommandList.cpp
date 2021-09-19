@@ -37,18 +37,20 @@ static PyMethodDef g_cmdListMethods[] = {
                                   or any object compatible with the object protocol, or a list of Buffer objects.
                                   If a list of Buffer objects, these can be indexed via register(b#) in the shader used,
                                   Every other type will always be bound to a constant buffer on register(b0).
-            sampler_tables (optional): a single SamplerTable object, or an array of SamplerTable objects. If a single
-                                   object is used, the table will be automatically bound to register space 0, and each resource accessed either
+            samplers (optional): a single Sampler object, or an array of Sampler objects, or a single SamplerTable object, or an array of SamplerTable objects. If a single
+                                   SamplerTable object is used, the table will be automatically bound to register space 0, and each resource accessed either
                                    by bindless dynamic indexing, or a hard register(s#). If an array of SamplerTable is passed, each resource
                                    table will be bound using a register space index corresponding to the table index in the array, and the rules
                                    to reference each sampler within the table stay the same.
-            input_tables (optional): a single InResourceTable object, or an array of InResourceTable objects. If a single
+                                   If and array of Sampler objects are passed (or a single Sampler object), each sampler object is bound to a single register and always to the default space (0).
+            inputs (optional): a single InResourceTable object, or an array of InResourceTable objects, or a single Texture/Buffer object, or an array of Texture/Buffer objects. If a single
                                    object is used, the table will be automatically bound to register space 0, and each resource accessed either
                                    by bindless dynamic indexing, or a hard register(t#). If an array of InResourceTable is passed, each resource
                                    table will be bound using a register space index corresponding to the table index in the array, and the rules
                                    to reference each resource within the table stay the same.
-            output_tables (optional): a single OutResourceTable object, or an array of OutResourceTable objects. Same rules as input_tables apply,
-                                     but we use registers u# to address the UAVs
+                                   If and array of Texture/Buffer objects are passed (or a single Texture/Buffer object), each object is bound to a single register and always to the default space (0).
+            outputs (optional): a single OutResourceTable object, or an array of OutResourceTable objects. Same rules as inputs apply,
+                                     but we use registers u# to address the UAVs.
     )"),
     KW_FN(copy_resource, cmdCopyResource, R"(
         copy_resource method, copies one resource to another.
@@ -102,8 +104,11 @@ void CommandList::destroy(PyObject* self)
     auto& pycmdList = *((CommandList*)self);
     moduleState.deleteCommandList(pycmdList.cmdList);
 
-    for (auto* r : pycmdList.references)
+    for (auto* r : pycmdList.references.objects)
         Py_DECREF(r);
+
+    for (render::ResourceTable tmpTable : pycmdList.references.tmpTables)
+        moduleState.device().release(tmpTable);
 
     pycmdList.~CommandList();
     Py_TYPE(self)->tp_free(self);
@@ -113,7 +118,7 @@ static bool getListOfBuffers(
     ModuleState& moduleState,
     PyObject* opaqueList,
     std::vector<render::Buffer>& bufferList,
-    std::vector<PyObject*>& references)
+    CommandListReferences& references)
 {
     PyTypeObject* bufferType = moduleState.getType(TypeId::Buffer);
     if (!PyList_Check(opaqueList))
@@ -122,7 +127,7 @@ static bool getListOfBuffers(
         {
             Buffer& buff = *((Buffer*)opaqueList);
             bufferList.push_back(buff.buffer);
-            references.push_back(opaqueList);
+            references.objects.push_back(opaqueList);
             return true;
         }
         return false;
@@ -138,27 +143,104 @@ static bool getListOfBuffers(
 
         Buffer& buff = *((Buffer*)obj);
         bufferList.push_back(buff.buffer);
-        references.push_back(obj);
+        references.objects.push_back(obj);
     }
 
     return true;
 }
 
-template<typename PyTableType, typename TableType>
+enum class TmpTableFunction
+{
+    Sampler, Input, Output
+};
+
+template<typename PyTableType, typename TableType, TmpTableFunction tmpTableFn>
 static bool getListOfTables(
     ModuleState& moduleState,
     PyObject* opaqueList,
     std::vector<TableType>& bufferList,
-    std::vector<PyObject*>& references)
+    CommandListReferences& references)
 {
-    PyTypeObject* pyObjType = moduleState.getType(PyTableType::s_typeId);
+    PyTypeObject* pyTableType = moduleState.getType(PyTableType::s_typeId);
+    if (opaqueList == Py_None)
+        return true;
+
     if (!PyList_Check(opaqueList))
     {
-        if (opaqueList->ob_type == pyObjType)
+        if (opaqueList->ob_type == pyTableType)
         {
             PyTableType& tobj = *((PyTableType*)opaqueList);
             bufferList.push_back(tobj.table);
-            references.push_back(opaqueList);
+            references.objects.push_back(opaqueList);
+            return true;
+        }
+        else if (tmpTableFn == TmpTableFunction::Input || tmpTableFn == TmpTableFunction::Output)
+        {
+            PyTypeObject* bufferType = moduleState.getType(Buffer::s_typeId);
+            PyTypeObject* textureType = moduleState.getType(Texture::s_typeId);
+
+            render::ResourceHandle resource;
+            if (opaqueList->ob_type == bufferType)
+            {
+                resource = ((Buffer*)(opaqueList))->buffer;
+            }
+            else if (opaqueList->ob_type == textureType)
+            {
+                resource = ((Texture*)(opaqueList))->texture;
+            }
+            else return false;
+
+            render::ResourceTableDesc tableDesc;
+            tableDesc.name = "tmpTable";
+            render::ResourceTable tmpResourceTable;
+            tableDesc.resources = &resource;
+            tableDesc.resourcesCount = 1;
+            if (tmpTableFn == TmpTableFunction::Input)
+            {
+                auto result = moduleState.device().createInResourceTable(tableDesc);
+                if (!result.success())
+                {
+                    PyErr_SetString(moduleState.exObj(), result.message.c_str());
+                    return false;
+                }
+                tmpResourceTable = result.object;
+            }
+            else 
+            {
+                auto result = moduleState.device().createOutResourceTable(tableDesc);
+                if (!result.success())
+                {
+                    PyErr_SetString(moduleState.exObj(), result.message.c_str());
+                    return false;
+                }
+                tmpResourceTable = result.object;
+            }
+
+            bufferList.push_back(TableType { tmpResourceTable.handleId });
+            references.tmpTables.push_back(tmpResourceTable);
+            return true;
+        }
+        else if (tmpTableFn == TmpTableFunction::Sampler)
+        {
+            PyTypeObject* samplerType = moduleState.getType(Sampler::s_typeId);
+            render::ResourceHandle resource;
+            if (opaqueList->ob_type == samplerType)
+            {
+                resource = ((Sampler*)opaqueList)->sampler;
+            }
+            else return false;
+
+            render::ResourceTableDesc tableDesc;
+            tableDesc.name = "tmpTable";
+            render::ResourceTable tmpResourceTable;
+            tableDesc.resources = &resource;
+            tableDesc.resourcesCount = 1;
+            auto result = moduleState.device().createSamplerTable(tableDesc);
+            if (!result.success())
+            {
+                PyErr_SetString(moduleState.exObj(), result.message.c_str());
+                return false;
+            }
             return true;
         }
         return false;
@@ -166,15 +248,105 @@ static bool getListOfTables(
 
     auto& listObj = *((PyListObject*)opaqueList);
     int listSize = Py_SIZE(opaqueList);
-    for (int i = 0; i < listSize; ++i)
-    {
-        PyObject* obj = listObj.ob_item[i];
-        if (obj->ob_type != pyObjType)
-            return false;
+    if (listSize <= 0)
+        return true;
 
-        PyTableType& tobj = *((PyTableType*)obj);
-        bufferList.push_back(tobj.table);
-        references.push_back(obj);
+    //initial case, we have and expect a list of explicit tables
+    if (listObj.ob_item[0]->ob_type == pyTableType)
+    {
+        for (int i = 0; i < listSize; ++i)
+        {
+            PyObject* obj = listObj.ob_item[i];
+            if (obj->ob_type != pyTableType)
+                return false;
+
+            PyTableType& tobj = *((PyTableType*)obj);
+            bufferList.push_back(tobj.table);
+            references.objects.push_back(obj);
+        }
+    }
+    else
+    {
+        //secondary case, we have a list of resources.
+        std::vector<render::ResourceHandle> resources;
+        render::ResourceTableDesc tableDesc;
+
+        if (tmpTableFn == TmpTableFunction::Input || tmpTableFn == TmpTableFunction::Output)
+        {
+            PyTypeObject* bufferType = moduleState.getType(Buffer::s_typeId);
+            PyTypeObject* textureType = moduleState.getType(Texture::s_typeId);
+
+            for (int i = 0; i < listSize; ++i)
+            {
+                PyObject* obj = listObj.ob_item[i];
+                if (obj->ob_type == bufferType)
+                {
+                    resources.push_back(((Buffer*)obj)->buffer);
+                    references.objects.push_back(obj);
+                }
+                else if (obj->ob_type == textureType)
+                {
+                    resources.push_back(((Texture*)obj)->texture);
+                    references.objects.push_back(obj);
+                }
+                else
+                    return false;
+            }
+        }
+        else
+        {
+            PyTypeObject* samplerType = moduleState.getType(Sampler::s_typeId);
+            for (int i = 0; i < listSize; ++i)
+            {
+                PyObject* obj = listObj.ob_item[i];
+                if (obj->ob_type == samplerType)
+                {
+                    resources.push_back(((Sampler*)obj)->sampler);
+                    references.objects.push_back(obj);
+                }
+                else
+                    return false;
+            }
+        }
+
+        tableDesc.name = "tmpTable";
+        tableDesc.resources = resources.data();
+        tableDesc.resourcesCount = resources.size();
+        
+        render::ResourceTable tmpResourceTable;
+        if (tmpTableFn == TmpTableFunction::Input)
+        {
+            auto result = moduleState.device().createInResourceTable(tableDesc);
+            if (!result.success())
+            {
+                PyErr_SetString(moduleState.exObj(), result.message.c_str());
+                return false;
+            }
+            tmpResourceTable = result.object;
+        }
+        else if (tmpTableFn == TmpTableFunction::Output)
+        {
+            auto result = moduleState.device().createOutResourceTable(tableDesc);
+            if (!result.success())
+            {
+                PyErr_SetString(moduleState.exObj(), result.message.c_str());
+                return false;
+            }
+            tmpResourceTable = result.object;
+        }
+        else if (tmpTableFn == TmpTableFunction::Sampler)
+        {
+            auto result = moduleState.device().createSamplerTable(tableDesc);
+            if (!result.success())
+            {
+                PyErr_SetString(moduleState.exObj(), result.message.c_str());
+                return false;
+            }
+            tmpResourceTable = result.object;
+        }
+
+        bufferList.push_back(TableType { tmpResourceTable.handleId });
+        references.tmpTables.push_back(tmpResourceTable);
     }
 
     return true;
@@ -227,7 +399,7 @@ namespace methods
     PyObject* cmdDispatch(PyObject* self, PyObject* vargs, PyObject* kwds)
     {
         ModuleState& moduleState = parentModule(self);
-        static char* arguments[] = { "x", "y", "z", "shader", "name", "constants", "sampler_tables", "input_tables", "output_tables", nullptr };
+        static char* arguments[] = { "x", "y", "z", "shader", "name", "constants", "samplers", "inputs", "outputs", nullptr };
         int x = 1;
         int y = 1;
         int z = 1;
@@ -246,6 +418,7 @@ namespace methods
             return nullptr;
         }
 
+        CommandListReferences references;
         auto& cmdList = *(CommandList*)self;
 
         render::ComputeCommand cmd;
@@ -258,7 +431,6 @@ namespace methods
         std::vector<render::InResourceTable> inTables;
         std::vector<render::OutResourceTable> outTables;
         std::vector<render::SamplerTable> samplerTables;
-        std::vector<PyObject*> references;
 
         PyTypeObject* shaderType = moduleState.getType(Shader::s_typeId);
         if (shader->ob_type != shaderType)
@@ -268,7 +440,7 @@ namespace methods
         }
 
         Shader& shaderObj = *((Shader*)shader);
-        references.push_back(shader);
+        references.objects.push_back(shader);
         cmd.setShader(shaderObj.handle);
 
         if (constants)
@@ -305,9 +477,9 @@ namespace methods
 
         if (sampler_tables)
         {
-            if (!getListOfTables<SamplerTable, render::SamplerTable>(moduleState, sampler_tables, samplerTables, references))
+            if (!getListOfTables<SamplerTable, render::SamplerTable, TmpTableFunction::Sampler>(moduleState, sampler_tables, samplerTables, references))
             {
-                PyErr_SetString(moduleState.exObj(), "sampler_table argument must be a list of SamplerTable");
+                PyErr_SetString(moduleState.exObj(), "samplers argument must be a list of SamplerTable, or a single SamplerTable, or a list of Samplers or a single Sampler");
                 return nullptr;
             }
 
@@ -319,9 +491,9 @@ namespace methods
 
         if (input_tables)
         {
-            if (!getListOfTables<InResourceTable, render::InResourceTable>(moduleState, input_tables, inTables, references))
+            if (!getListOfTables<InResourceTable, render::InResourceTable, TmpTableFunction::Input>(moduleState, input_tables, inTables, references))
             {
-                PyErr_SetString(moduleState.exObj(), "input_tables argument must be a list of InResourceTable");
+                PyErr_SetString(moduleState.exObj(), "inputs argument must be a list of InResourceTable, or a single InResourceTable, or a list of resources, or a single resource");
                 return nullptr;
             }
 
@@ -333,9 +505,9 @@ namespace methods
 
         if (output_tables)
         {
-            if (!getListOfTables<OutResourceTable, render::OutResourceTable>(moduleState, output_tables, outTables, references))
+            if (!getListOfTables<OutResourceTable, render::OutResourceTable, TmpTableFunction::Output>(moduleState, output_tables, outTables, references))
             {
-                PyErr_SetString(moduleState.exObj(), "output_tables argument must be a list of OutResourceTable");
+                PyErr_SetString(moduleState.exObj(), "outputs argument must be a list of OutResourceTable, or a single OutResourceTable, or a list of resources, or a single resource");
                 return nullptr;
             }
 
@@ -346,9 +518,10 @@ namespace methods
         }
 
         cmdList.cmdList->writeCommand(cmd);
-        cmdList.references.insert(cmdList.references.end(), references.begin(), references.end());
-        for (auto* r : references)
-            Py_INCREF(r);
+        for (auto* obj : references.objects)
+            Py_INCREF(obj);
+
+        cmdList.references.append(references);
 
         for (auto& v : bufferViews)
             PyBuffer_Release(&v);
@@ -381,9 +554,9 @@ namespace methods
         }
 
         Py_INCREF(source);
-        cmdList.references.push_back(source);
+        cmdList.references.objects.push_back(source);
         Py_INCREF(destination);
-        cmdList.references.push_back(destination);
+        cmdList.references.objects.push_back(destination);
         
         render::CopyCommand cmd;
         cmd.setResources(sourceHandle, destHandle);
@@ -401,7 +574,6 @@ namespace methods
         PyObject* destination = nullptr;
         if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "OO", arguments, &source, &destination))
             return nullptr;
-
 
         render::ResourceHandle destHandle;
         if (!getResourceObject(moduleState, destination, destHandle))
@@ -446,10 +618,10 @@ namespace methods
         if (useSrcReference)
         {
             Py_INCREF(source);
-            cmdList.references.push_back(source);
+            cmdList.references.objects.push_back(source);
         }
         Py_INCREF(destination);
-        cmdList.references.push_back(destination);
+        cmdList.references.objects.push_back(destination);
 
         Py_RETURN_NONE;
     }
