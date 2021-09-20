@@ -244,7 +244,15 @@ void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompute
         outList.SetComputeRootDescriptorTable(m_device.tableIndex(Dx12Device::TableTypes::Sampler, samplerTableId), descriptor);
     }
 
-    outList.Dispatch(computeCmd->x, computeCmd->y, computeCmd->z);
+    if (computeCmd->isIndirect)
+    {
+        Dx12Resource& indirectBuffer = m_device.resources().unsafeGetResource(computeCmd->indirectArguments);
+        outList.ExecuteIndirect(&m_device.indirectDispatchSignature(), 1u, &indirectBuffer.d3dResource(), 0u, nullptr, 0u);
+    }
+    else
+    {
+        outList.Dispatch(computeCmd->x, computeCmd->y, computeCmd->z);
+    }
 }
 
 void Dx12WorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd* copyCmd, ID3D12GraphicsCommandListX& outList)

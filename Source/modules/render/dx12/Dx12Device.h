@@ -11,6 +11,7 @@ struct IDXGIFactory2;
 struct ID3D12Device2;
 struct ID3D12Debug;
 struct ID3D12RootSignature; 
+struct ID3D12CommandSignature;
 struct ID3D12Pageable;
 
 namespace coalpy
@@ -80,6 +81,7 @@ public:
 
 
     ID3D12RootSignature& defaultComputeRootSignature() const { return *m_computeRootSignature; }
+    ID3D12CommandSignature& indirectDispatchSignature() const { return *m_indirectDispatchCommandSignature; }
 
     int tableIndex(TableTypes type, int registerSpace) const
     {
@@ -92,12 +94,15 @@ public:
     void deferRelease(ID3D12Pageable& object);
 
     Buffer countersBuffer() { return m_countersBuffer; }
+
     
 
 private:
     ID3D12Debug* m_debugLayer;
     ID3D12Device2* m_device;
     ID3D12RootSignature* m_computeRootSignature;
+    ID3D12CommandSignature* m_indirectDispatchCommandSignature;
+
     Dx12CounterPool* m_counterPool;
     Dx12ResourceCollection* m_resources;
     Dx12DescriptorPool* m_descriptors;

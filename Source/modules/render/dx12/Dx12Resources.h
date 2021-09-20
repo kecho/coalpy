@@ -71,12 +71,12 @@ inline D3D12_RESOURCE_STATES getDx12GpuState(ResourceGpuState state)
             return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
         case ResourceGpuState::Srv:
             return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-        case ResourceGpuState::IndirectArgs:
-            return D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
         case ResourceGpuState::CopyDst:
             return D3D12_RESOURCE_STATE_COPY_DEST;
         case ResourceGpuState::CopySrc:
             return D3D12_RESOURCE_STATE_COPY_SOURCE;
+        case ResourceGpuState::IndirectArgs:
+            return D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
         case ResourceGpuState::Cbv:
             return D3D12_RESOURCE_STATE_GENERIC_READ;
         case ResourceGpuState::Rtv:

@@ -325,6 +325,21 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         }
     }
 
+    if (cmd->isIndirect)
+    {
+        if (!cmd->indirectArguments.valid())
+        {
+            std::stringstream ss;
+            ss << "Indirect argument buffer is not valid for indirect dispatch command ";
+            context.errorMsg = ss.str();
+            context.errorType = ScheduleErrorType::InvalidResource;
+            return false;
+        }
+
+        if (!transitionResource(cmd->indirectArguments, ResourceGpuState::IndirectArgs, context))
+            return false;
+    }
+
     ++context.currentListInfo().computeCommandsCount;
 
     return true;

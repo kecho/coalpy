@@ -1302,6 +1302,145 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    
+    void testIndirectDispatch(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+        IShaderDb& db = *renderTestCtx.db;
+
+        const char* setIndirectArgsSrc = R"(
+            RWBuffer<int4> output;
+            [numthreads(1,1,1)]
+            void csMain(uint3 dti : SV_DispatchThreadID)
+            {
+                output[0] = int4(2,3,4,0);
+            }
+        )";
+
+        ShaderHandle setIndirectShader;
+        {
+            ShaderInlineDesc shaderDesc;
+            shaderDesc.type = ShaderType::Compute;
+            shaderDesc.name = "SetIndirectArgs";
+            shaderDesc.mainFn = "csMain";
+            shaderDesc.immCode = setIndirectArgsSrc;
+            setIndirectShader = db.requestCompile(shaderDesc);
+            db.resolve(setIndirectShader);
+            CPY_ASSERT(db.isValid(setIndirectShader));
+        }
+
+        const char* executeIndirectSrc = R"(
+            RWBuffer<int4> output;
+            [numthreads(1,1,1)]
+            void csMain(uint3 gti : SV_GroupID)
+            {
+                int index = gti.x + gti.y * 2 + gti.z * (2 * 3);
+                output[index] = int4(gti, 9.0);
+            }
+        )";
+
+        ShaderHandle executeIndirectShader;
+        {
+            ShaderInlineDesc shaderDesc;
+            shaderDesc.type = ShaderType::Compute;
+            shaderDesc.name = "executeIndirectShader";
+            shaderDesc.mainFn = "csMain";
+            shaderDesc.immCode = executeIndirectSrc;
+            executeIndirectShader = db.requestCompile(shaderDesc);
+            db.resolve(executeIndirectShader);
+            CPY_ASSERT(db.isValid(executeIndirectShader));
+        }
+
+        Buffer indirectArgsBuffer;
+        {
+            BufferDesc desc;
+            desc.elementCount = 1;
+            indirectArgsBuffer = device.createBuffer(desc);
+            CPY_ASSERT(indirectArgsBuffer.valid());
+        }
+
+        Buffer outputBuffer;
+        {
+            BufferDesc desc;
+            desc.elementCount =  2 * 3 * 4;
+            outputBuffer = device.createBuffer(desc);
+            CPY_ASSERT(outputBuffer.valid());
+        }
+
+        OutResourceTable indirectOutTable;
+        {
+            ResourceTableDesc desc;
+            desc.resources = &indirectArgsBuffer;
+            desc.resourcesCount = 1;
+            indirectOutTable = device.createOutResourceTable(desc);
+        }
+
+        OutResourceTable outputTable;
+        {
+            ResourceTableDesc desc;
+            desc.resources = &outputBuffer;
+            desc.resourcesCount = 1;
+            outputTable = device.createOutResourceTable(desc);
+        }
+
+        CommandList cmdList;
+        {
+            ComputeCommand cmd;
+            cmd.setShader(setIndirectShader);
+            cmd.setOutResources(&indirectOutTable, 1);
+            cmd.setDispatch("setupArgs", 1, 1, 1);
+            cmdList.writeCommand(cmd);
+        }
+
+        {
+            ComputeCommand cmd;
+            cmd.setShader(executeIndirectShader);
+            cmd.setOutResources(&outputTable, 1);
+            cmd.setIndirectDispatch("indirectDispatch", indirectArgsBuffer);
+            cmdList.writeCommand(cmd);
+        }
+
+        {
+            DownloadCommand cmd;
+            cmd.setData(outputBuffer);
+            cmdList.writeCommand(cmd);
+        }
+        
+        cmdList.finalize();
+
+        CommandList* cmdLists = &cmdList;
+        ScheduleStatus scheduleStatus = device.schedule(&cmdLists, 1, ScheduleFlags_GetWorkHandle);
+        CPY_ASSERT(scheduleStatus.success());
+
+        WaitStatus waitStatus = device.waitOnCpu(scheduleStatus.workHandle, -1);
+        CPY_ASSERT(waitStatus.success());
+
+        DownloadStatus downloadResult = device.getDownloadStatus(scheduleStatus.workHandle, outputBuffer);
+        CPY_ASSERT(downloadResult.success());
+
+        const int* intptr = (int*)downloadResult.downloadPtr;
+        for (int x = 0; x < 2; ++x)
+            for (int y = 0; y < 3; ++y)
+                for (int z = 0; z < 4; ++z)
+                {
+                    int index = x + y * 2 + z * 2 * 3;
+                    const int* data = intptr + index * 4;
+                    CPY_ASSERT(data[0] == x);
+                    CPY_ASSERT(data[1] == y);
+                    CPY_ASSERT(data[2] == z);
+                    CPY_ASSERT(data[3] == 9);
+                }
+
+        device.release(scheduleStatus.workHandle);
+        device.release(indirectArgsBuffer);
+        device.release(outputBuffer);
+        device.release(indirectOutTable);
+        device.release(outputTable);
+        renderTestCtx.end();
+    }
+
     //registration of tests
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
@@ -1322,6 +1461,7 @@ namespace coalpy
             { "appendConsumeBufferCreate",  testAppendConsumeBufferCreate },
             { "appendConsumeBufferAppend",  testAppendConsumeBufferAppend },
             { "textureArray",  testTextureArray },
+            { "indirectDispatch",  testIndirectDispatch },
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

@@ -149,10 +149,21 @@ void CommandList::writeCommand(const ComputeCommand& cmd)
     const char* str = cmd.m_debugName ? cmd.m_debugName : "";
     int strSz = strlen(cmd.m_debugName) + 1;
     m_internal.deferArrayStore(abiCmd.debugName, cmd.m_debugName, strSz);
+
     abiCmd.debugNameSize = strSz;
-    abiCmd.x = cmd.m_x;
-    abiCmd.y = cmd.m_y;
-    abiCmd.z = cmd.m_z;
+
+    if (cmd.m_isIndirect)
+    {
+        abiCmd.isIndirect = 1;
+        abiCmd.indirectArguments = cmd.m_argumentBuffer;
+    }
+    else
+    {
+        abiCmd.isIndirect = 0;
+        abiCmd.x = cmd.m_x;
+        abiCmd.y = cmd.m_y;
+        abiCmd.z = cmd.m_z;
+    }
 
     finalizeCommand(abiCmd);
 }

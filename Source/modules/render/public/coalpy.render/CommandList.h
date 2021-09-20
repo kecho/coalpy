@@ -52,10 +52,18 @@ public:
 
     inline void setDispatch(const char* debugNameMarker, int x, int y, int z)
     {
+        m_isIndirect = false;
         m_debugName = debugNameMarker;
         m_x = x;
         m_y = y;
         m_z = z;
+    }
+
+    inline void setIndirectDispatch(const char* debugNameMarker, Buffer argumentBuffer)
+    {
+        m_isIndirect = true;
+        m_debugName = debugNameMarker;
+        m_argumentBuffer = argumentBuffer;
     }
 
 private:
@@ -80,6 +88,9 @@ private:
     int m_x = 1;
     int m_y = 1;
     int m_z = 1;
+
+    bool m_isIndirect = false;
+    Buffer m_argumentBuffer;
 };
 
 class CopyCommand

@@ -139,6 +139,24 @@ ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device)
     return outRootSignature;
 }
 
+ID3D12CommandSignature* createIndirectDispatchCommandSignature(ID3D12Device2& device)
+{
+    ID3D12CommandSignature* indirectDispatchCmdSignature = nullptr;
+    
+    D3D12_COMMAND_SIGNATURE_DESC desc = {};
+    D3D12_INDIRECT_ARGUMENT_DESC argDesc = {};
+    desc.ByteStride = sizeof(D3D12_DISPATCH_ARGUMENTS);
+    desc.NumArgumentDescs = 1;
+    desc.pArgumentDescs = &argDesc;
+
+    argDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH;
+
+    DX_OK(device.CreateCommandSignature(&desc, nullptr, DX_RET(indirectDispatchCmdSignature)));
+
+    return indirectDispatchCmdSignature;
+}
+
+
 }
 
 struct Dx12WorkInfo
@@ -206,6 +224,8 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
 
     m_computeRootSignature = createComputeRootSignature(*m_device);
 
+    m_indirectDispatchCommandSignature = createIndirectDispatchCommandSignature(*m_device);
+
     if (config.shaderDb)
     {
         m_shaderDb = static_cast<Dx12ShaderDb*>(config.shaderDb);
@@ -251,6 +271,9 @@ Dx12Device::~Dx12Device()
 
     if (m_computeRootSignature)
         m_computeRootSignature->Release();
+
+    if (m_indirectDispatchCommandSignature)
+        m_indirectDispatchCommandSignature->Release();
 
     if (m_shaderDb && m_shaderDb->parentDevice() == this)
         m_shaderDb->setParentDevice(nullptr);

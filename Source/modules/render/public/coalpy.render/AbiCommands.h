@@ -62,8 +62,11 @@ struct AbiComputeCmd
     AbiPtr<SamplerTable> samplerTables;
     int       samplerTablesCounts = 0;
 
+    Buffer indirectArguments;
+
     AbiPtr<char> debugName;
     int debugNameSize = 0;
+    int isIndirect = 0;
     int x = 1;
     int y = 1;
     int z = 1;
