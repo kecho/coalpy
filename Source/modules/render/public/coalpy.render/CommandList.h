@@ -99,13 +99,64 @@ class CopyCommand
 public:
     void setResources(ResourceHandle source, ResourceHandle destination)
     {
+        m_fullCopy = true;
         m_source = source;
         m_destination = destination;
+    }
+
+    void setBuffers(Buffer source, Buffer destination, int byteSize = -1, int sourceByteOffset = 0, int destinationByteOffset = 0)
+    {
+        m_fullCopy = false;
+        m_source = source;
+        m_destination = destination;
+        m_sourceX = sourceByteOffset;
+        m_destX = destinationByteOffset;
+        m_sizeX = byteSize;
+    }
+
+    void setTextures(Texture source, Texture destination,
+        int sizeX = -1, int sizeY = -1, int sizeZ = -1,
+        int sourceX = 0,
+        int sourceY = 0,
+        int sourceZ = 0,
+        int destX = 0,
+        int destY = 0,
+        int destZ = 0,
+        int mipLevel = 0)
+    {
+        m_fullCopy = false;
+        m_source = source;
+        m_destination = destination;
+        m_mipLevel = mipLevel;
+        m_sourceX = sourceX;
+        m_sourceY = sourceY;
+        m_sourceZ = sourceZ;
+        m_destX = destX;
+        m_destY = destY;
+        m_destZ = destZ;
+        m_sizeX = sizeX;
+        m_sizeY = sizeY;
+        m_sizeZ = sizeZ;
     }
 
 private:
     ResourceHandle m_source;
     ResourceHandle m_destination;
+
+    int m_mipLevel = 0;
+    int m_sourceX = -1;
+    int m_sourceY = -1;
+    int m_sourceZ = -1;
+
+    int m_destX = 0;
+    int m_destY = 0;
+    int m_destZ = 0;
+
+    int m_sizeX = 0;
+    int m_sizeY = 0;
+    int m_sizeZ = 0;
+
+    bool m_fullCopy = true;
 };
 
 struct UploadCommand

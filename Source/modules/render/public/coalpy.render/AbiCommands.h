@@ -78,6 +78,20 @@ struct AbiCopyCmd
     MemSize cmdSize = {};
     ResourceHandle source;
     ResourceHandle destination;
+
+    int fullCopy = 0;
+    int mipLevel = 0;
+    int sourceX = -1;
+    int sourceY = -1;
+    int sourceZ = -1;
+
+    int destX = 0;
+    int destY = 0;
+    int destZ = 0;
+
+    int sizeX = 0;
+    int sizeY = 0;
+    int sizeZ = 0;
 };
 
 struct AbiUploadCmd
@@ -94,8 +108,8 @@ struct AbiDownloadCmd
     int sentinel = (int)AbiCmdTypes::Download;
     MemSize cmdSize = {};
     ResourceHandle source;
-    int mipLevel;
-    int arraySlice;
+    int mipLevel = 0;
+    int arraySlice = 0;
 };
 
 struct AbiClearAppendConsumeCounter

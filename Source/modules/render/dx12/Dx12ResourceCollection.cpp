@@ -48,7 +48,11 @@ TextureResult Dx12ResourceCollection::createTexture(const TextureDesc& desc, ID3
     outPtr->type = ResType::Texture;
     outPtr->resource = &(*textureObj);
     outPtr->handle = resHandle;
-    m_workDb.registerResource(resHandle, desc.memFlags, outPtr->resource->defaultGpuState(), textureObj->mipCounts(), textureObj->arraySlicesCounts());
+    const D3D12_RESOURCE_DESC& resDesc = textureObj->d3dResDesc();
+    m_workDb.registerResource(
+        resHandle, desc.memFlags, outPtr->resource->defaultGpuState(),
+        (int)resDesc.Width, (int)resDesc.Height, (int)resDesc.DepthOrArraySize,
+        textureObj->mipCounts(), textureObj->arraySlicesCounts());
     return TextureResult { ResourceResult::Ok, Texture { resHandle.handleId } };
 }
 
@@ -85,7 +89,12 @@ TextureResult Dx12ResourceCollection::recreateTexture(Texture handle, const Text
         return TextureResult { initResult.result, Texture(), std::move(initResult.message) };
 
     c->resource = &(*textureObj); 
-    m_workDb.registerResource(handle, desc.memFlags, c->resource->defaultGpuState(), textureObj->mipCounts(), textureObj->arraySlicesCounts());
+    
+    const D3D12_RESOURCE_DESC& resDesc = textureObj->d3dResDesc();
+    m_workDb.registerResource(
+        handle, desc.memFlags, c->resource->defaultGpuState(),
+        (int)resDesc.Width, (int)resDesc.Height, (int)resDesc.DepthOrArraySize,
+        textureObj->mipCounts(), textureObj->arraySlicesCounts());
 
     for (auto t : parentTables)
         recreateUnsafe(t);
@@ -118,7 +127,12 @@ BufferResult Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12
     Buffer counterBuffer;
     if (desc.isAppendConsume)
         counterBuffer = m_device.countersBuffer();
-    m_workDb.registerResource(resHandle, desc.memFlags, outPtr->resource->defaultGpuState(), 1, 1, counterBuffer);
+
+    const D3D12_RESOURCE_DESC& resDesc = outPtr->resource->d3dResDesc();
+    m_workDb.registerResource(
+        resHandle, desc.memFlags, outPtr->resource->defaultGpuState(), 
+        resDesc.Width, 1, 1,
+        1, 1, counterBuffer);
     return BufferResult { ResourceResult::Ok, Buffer { resHandle.handleId } };
 }
 

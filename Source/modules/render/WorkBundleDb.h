@@ -182,6 +182,9 @@ struct WorkResourceInfo
     MemFlags memFlags = {};
     ResourceGpuState gpuState = ResourceGpuState::Default;
     Buffer counterBuffer;
+    int sizeX = 0;
+    int sizeY = 0;
+    int sizeZ = 0;
     int mipLevels = 1;
     int arraySlices = 1;
 };
@@ -206,6 +209,7 @@ public:
         ResourceHandle handle,
         MemFlags flags,
         ResourceGpuState initialState,
+        int sizeX, int sizeY, int sizeZ,
         int mipLevels, int arraySlices,
         Buffer counterBuffer = Buffer());
 

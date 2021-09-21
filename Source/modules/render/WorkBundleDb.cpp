@@ -353,6 +353,81 @@ bool processCopy(const AbiCopyCmd* cmd, const unsigned char* data, WorkBuildCont
     if (!transitionResource(cmd->destination, ResourceGpuState::CopyDst, context))
         return false;
 
+    auto fitsInCopyCmd = [&context, &cmd](ResourceHandle handle, const char* resourceTypeName, int offsetX, int offsetY, int offsetZ)
+    {
+        auto it = context.resourceInfos->find(handle);
+        if (it == context.resourceInfos->end())
+        {
+            std::stringstream ss;
+            ss << "Invalid resource passed on copy command";
+            context.errorMsg = ss.str();
+            context.errorType = ScheduleErrorType::InvalidResource;
+            return false;
+        }
+
+        const WorkResourceInfo& resourceInfo = it->second;
+        int remainingSizeX = resourceInfo.sizeX - offsetX;
+        int remainingSizeY = resourceInfo.sizeY - offsetY;
+        int remainingSizeZ = resourceInfo.sizeY - offsetZ;
+        if (cmd->sizeX > remainingSizeX || cmd->sizeY > remainingSizeY || cmd->sizeZ > remainingSizeZ)
+        {
+            std::stringstream ss;
+            ss << resourceTypeName << " in copy command is outside of bounds. Resource sizes are ["
+               << resourceInfo.sizeX << ", " << resourceInfo.sizeY << ", " << resourceInfo.sizeZ << "]"
+               << ", attempted to access offset [" << offsetX << ", " << offsetY << ", " << offsetZ << "]"
+               << ", remaining resource size being [" << remainingSizeX << ", " << remainingSizeY << ", " << remainingSizeZ << "]";
+            context.errorMsg = ss.str();
+            context.errorType = ScheduleErrorType::OutOfBounds;
+            return false;
+        }
+
+        if (cmd->mipLevel >= resourceInfo.mipLevels)
+        {
+            std::stringstream ss;
+            ss << resourceTypeName << " in copy command accesses a mip that is out of bounds," 
+               << " mipLevel is " << cmd->mipLevel << " and total mip size is " << resourceInfo.mipLevels;
+            context.errorMsg = ss.str();
+            context.errorType = ScheduleErrorType::OutOfBounds;
+            return false;
+        }
+
+        return true;
+    };
+
+    if (cmd->fullCopy)
+    {
+        const auto srcIt = context.resourceInfos->find(cmd->source);
+        const auto dstIt = context.resourceInfos->find(cmd->destination);
+        if (srcIt == context.resourceInfos->end() || dstIt == context.resourceInfos->end())
+        {
+            std::stringstream ss;
+            ss << "Invalid resource passed on copy command";
+            context.errorMsg = ss.str();
+            context.errorType = ScheduleErrorType::InvalidResource;
+            return false;
+        }
+
+        if (srcIt->second.sizeX != dstIt->second.sizeX 
+        || srcIt->second.sizeY != dstIt->second.sizeY
+        || srcIt->second.sizeZ != dstIt->second.sizeZ
+        || srcIt->second.mipLevels != dstIt->second.mipLevels)
+        {
+            std::stringstream ss;
+            ss << "Cannot copy resources, mismatching sizes.";
+            context.errorMsg = ss.str();
+            context.errorType = ScheduleErrorType::InvalidResource;
+            return false;
+        }
+    }
+    else
+    {
+        if (!fitsInCopyCmd(cmd->source, "Source", cmd->sourceX, cmd->sourceY, cmd->sourceZ))
+            return false;
+
+        if (!fitsInCopyCmd(cmd->destination, "Destination", cmd->destX, cmd->destY, cmd->destZ))
+            return false;
+    }
+
     return true;
 }
 
@@ -640,6 +715,7 @@ void WorkBundleDb::registerResource(
     ResourceHandle handle,
     MemFlags flags,
     ResourceGpuState initialState,
+    int sizeX, int sizeY, int sizeZ,
     int mipLevels,
     int arraySlices,
     Buffer counterBuffer)
@@ -648,6 +724,9 @@ void WorkBundleDb::registerResource(
     resInfo.memFlags = flags;
     resInfo.gpuState = initialState;
     resInfo.counterBuffer = counterBuffer;
+    resInfo.sizeX = sizeX;
+    resInfo.sizeY = sizeY;
+    resInfo.sizeZ = sizeZ;
     resInfo.mipLevels = mipLevels;
     resInfo.arraySlices = arraySlices;
 }

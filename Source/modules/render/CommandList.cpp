@@ -177,8 +177,19 @@ void CommandList::reset()
 void CommandList::writeCommand(const CopyCommand& cmd)
 {
     auto& abiCmd = allocate<AbiCopyCmd>();
+    abiCmd.fullCopy = cmd.m_fullCopy ? 1 : 0;
     abiCmd.source = cmd.m_source;
     abiCmd.destination = cmd.m_destination;
+    abiCmd.mipLevel = cmd.m_mipLevel;
+    abiCmd.sourceX = cmd.m_sourceX;
+    abiCmd.sourceY = cmd.m_sourceY;
+    abiCmd.sourceZ = cmd.m_sourceZ;
+    abiCmd.destX = cmd.m_destX;
+    abiCmd.destY = cmd.m_destY;
+    abiCmd.destZ = cmd.m_destZ;
+    abiCmd.sizeX = cmd.m_sizeX;
+    abiCmd.sizeY = cmd.m_sizeY;
+    abiCmd.sizeZ = cmd.m_sizeZ;
     finalizeCommand(abiCmd);
 }
 

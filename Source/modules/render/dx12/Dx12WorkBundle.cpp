@@ -260,7 +260,30 @@ void Dx12WorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd* c
     Dx12ResourceCollection& resources = m_device.resources();
     Dx12Resource& src = resources.unsafeGetResource(copyCmd->source);
     Dx12Resource& dst = resources.unsafeGetResource(copyCmd->destination);
-    outList.CopyResource(&dst.d3dResource(), &src.d3dResource());
+    if (copyCmd->fullCopy)
+        outList.CopyResource(&dst.d3dResource(), &src.d3dResource());
+    else if (src.isBuffer())
+    {
+        UINT64 sizeToCopy;
+        if (copyCmd->sizeX >= 0)
+        {
+            sizeToCopy = copyCmd->sizeX;
+        }
+        else
+        {
+            int dstRemainingSize = ((int)dst.byteSize() - copyCmd->destX);
+            int srcRemainingSize = ((int)src.byteSize() - copyCmd->sourceX);
+            sizeToCopy = min(dstRemainingSize, srcRemainingSize);
+        }
+
+        outList.CopyBufferRegion(
+            &dst.d3dResource(), (UINT64)copyCmd->destX,
+            &src.d3dResource(), (UINT64)copyCmd->sourceX, sizeToCopy);
+    }
+    else
+    {
+        //TODO copy texture region shenanigans
+    }
 }
 
 void Dx12WorkBundle::buildDownloadCmd(
