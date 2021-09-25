@@ -200,6 +200,8 @@ void CommandList::writeCommand(const UploadCommand& cmd)
     abiCmd.destination = cmd.m_destination;
     m_internal.deferArrayStore(abiCmd.sources, cmd.m_source, cmd.m_sourceSize);
     abiCmd.sourceSize = cmd.m_sourceSize;
+    abiCmd.mipLevel = cmd.m_mipLevel;
+    abiCmd.arraySlice = cmd.m_arraySlice;
     finalizeCommand(abiCmd);
 }
 

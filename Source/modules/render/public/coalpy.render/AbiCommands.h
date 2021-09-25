@@ -101,7 +101,9 @@ struct AbiUploadCmd
     MemSize cmdSize = {};
     ResourceHandle destination;
     AbiPtr<char> sources; 
-    int  sourceSize = 0; 
+    int sourceSize = 0; 
+    int mipLevel = 0;
+    int arraySlice = 0;
 };
 
 struct AbiDownloadCmd

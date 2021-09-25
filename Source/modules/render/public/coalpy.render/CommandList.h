@@ -174,9 +174,17 @@ public:
         m_destination = destination;
     }
 
+    void setTextureDestInfo(int mipLevel, int arraySlice = 0)
+    {
+        m_mipLevel = mipLevel;
+        m_arraySlice = arraySlice;
+    }
+
 private:
-    const char* m_source;
-    int m_sourceSize;
+    const char* m_source = nullptr;
+    int m_sourceSize = 0;
+    int m_mipLevel = 0;
+    int m_arraySlice = 0;
     ResourceHandle m_destination;
 };
 
