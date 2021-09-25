@@ -1549,8 +1549,149 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testCopyTexture(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
 
-    //registration of tests
+        const int txW = 4;
+        const int txH = 4;
+        const int totalPixels = txW * txH;
+        const int pixelVals[totalPixels] = {
+            1, 2, 3, 4,
+            5, 6, 7, 8,
+            9, 10, 11, 12,
+            13, 14, 15, 16 };
+
+        Texture srcTexture;
+        Texture dstTexture;
+        Texture dstSmallTexture;
+        {
+            TextureDesc desc;
+
+            desc.type = TextureType::k2d;
+            desc.format = Format::R32_SINT;
+            desc.width = txW;
+            desc.height = txH;
+            desc.mipLevels = 1;
+            srcTexture = device.createTexture(desc);
+
+            desc.type = TextureType::k2d;
+            desc.width = txW;
+            desc.height = txH;
+            desc.mipLevels = 1;
+            dstTexture = device.createTexture(desc);
+
+            desc.type = TextureType::k2d;
+            desc.width >>= 1;
+            desc.height >>= 1;
+            desc.mipLevels = 1;
+            dstSmallTexture = device.createTexture(desc);
+        }
+
+        CommandList cmdList;
+        {
+            UploadCommand cmd;
+            cmd.setData((const char*)pixelVals, totalPixels * sizeof(int), srcTexture);
+            cmdList.writeCommand(cmd);
+        }
+
+        {
+            CopyCommand cmd;
+            cmd.setResources(srcTexture, dstTexture);
+            cmdList.writeCommand(cmd);
+        }
+
+        {
+            DownloadCommand cmd;
+            cmd.setData(dstTexture);
+            cmdList.writeCommand(cmd);
+        }
+
+        cmdList.finalize();
+
+        //Check simple copy
+        {
+            CommandList* cmdListPtr = &cmdList;
+            ScheduleStatus scheduleStatus = device.schedule(&cmdListPtr, 1, ScheduleFlags_GetWorkHandle);
+            CPY_ASSERT_MSG(scheduleStatus.success(), scheduleStatus.message.c_str());
+
+            WaitStatus waitStatus = device.waitOnCpu(scheduleStatus.workHandle, -1);
+            CPY_ASSERT(waitStatus.success());
+
+            //Verify simple copy
+            DownloadStatus downloadStatus = device.getDownloadStatus(scheduleStatus.workHandle, dstTexture);
+            CPY_ASSERT(downloadStatus.success());
+
+            const char* resultTexels = (const char*)downloadStatus.downloadPtr;
+            for (int y = 0; y < txH; ++y)
+            {
+                const int* row = (const int*)(resultTexels + (downloadStatus.rowPitch * y));
+                for (int x = 0; x < txW; ++x)
+                {
+                    CPY_ASSERT(pixelVals[y * txW + x] == row[x]);
+                }
+            }
+
+            device.release(scheduleStatus.workHandle);
+        }
+
+        ///////////////////
+
+        cmdList.reset();
+
+        const int xSrcOffset = 1;
+        const int ySrcOffset = 2;
+        const int smallCopyWidth = 2;
+        const int smallCopyHeight = 2;
+
+        {
+            CopyCommand cmd;
+            cmd.setTextures(srcTexture, dstSmallTexture, smallCopyWidth, smallCopyHeight, 1,
+                xSrcOffset, ySrcOffset, 0,
+                0, 0, 0);
+            cmdList.writeCommand(cmd);
+        }
+
+        {
+            DownloadCommand cmd;
+            cmd.setData(dstSmallTexture);
+            cmdList.writeCommand(cmd);
+        }
+        
+        cmdList.finalize();
+
+        //Check more complex copy
+        {
+            CommandList* cmdListPtr = &cmdList;
+            ScheduleStatus scheduleStatus = device.schedule(&cmdListPtr, 1, ScheduleFlags_GetWorkHandle);
+            CPY_ASSERT_MSG(scheduleStatus.success(), scheduleStatus.message.c_str());
+
+            WaitStatus waitStatus = device.waitOnCpu(scheduleStatus.workHandle, -1);
+            CPY_ASSERT(waitStatus.success());
+
+            DownloadStatus downloadStatus = device.getDownloadStatus(scheduleStatus.workHandle, dstSmallTexture);
+            CPY_ASSERT(downloadStatus.success());
+
+            const char* resultTexels = (const char*)downloadStatus.downloadPtr;
+            for (int y = 0; y < smallCopyWidth; ++y)
+            {
+                const int* row = (const int*)(resultTexels + (downloadStatus.rowPitch * y));
+                for (int x = 0; x < smallCopyHeight; ++x)
+                {
+                    CPY_ASSERT(pixelVals[(y + ySrcOffset) * txW + (x + xSrcOffset)] == row[x]);
+                }
+            }
+
+            device.release(scheduleStatus.workHandle);
+        }
+
+        device.release(srcTexture);
+        device.release(dstTexture);
+        device.release(dstSmallTexture);
+        renderTestCtx.end();
+    }
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
     {
@@ -1572,6 +1713,7 @@ namespace coalpy
             { "textureArray",  testTextureArray },
             { "indirectDispatch",  testIndirectDispatch },
             { "copyBuffer",  testCopyBuffer },
+            { "copyTexture",  testCopyTexture },
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

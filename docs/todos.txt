@@ -1,7 +1,5 @@
-* Write a proper buffer copy render command.
-* Write a test for buffer copy render command.
-* Write a proper texture copy render command.
-* Write a test for texture copy render command.
+* Finish upload resource command for textures.
+* Write a test for texture mip and array copy render command.
 * Py API - Expose new buffer copy render command.
 * Py API - Expose new texture copy render command.
 * Py API - Write boiler plate & test for indirect dispatch.

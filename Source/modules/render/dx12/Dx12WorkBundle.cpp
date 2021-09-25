@@ -282,7 +282,41 @@ void Dx12WorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd* c
     }
     else
     {
-        //TODO copy texture region shenanigans
+        Dx12Texture& srcTexture = (Dx12Texture&)src;
+        Dx12Texture& dstTexture = (Dx12Texture&)dst;
+
+        const auto& srcDesc = srcTexture.texDesc();
+        const auto& dstDesc = dstTexture.texDesc();
+
+        auto zAsSlice = [](TextureType t) { return t == TextureType::k2dArray || t == TextureType::CubeMapArray || t == TextureType::CubeMap; };
+        D3D12_TEXTURE_COPY_LOCATION srcLocation;
+        srcLocation.pResource = &srcTexture.d3dResource();
+        srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        int srcSliceId = zAsSlice(srcDesc.type) ? copyCmd->sourceZ : 0;
+        srcLocation.SubresourceIndex = (UINT)srcTexture.subresourceIndex(copyCmd->mipLevel, srcSliceId);
+
+
+        D3D12_TEXTURE_COPY_LOCATION dstLocation;
+        dstLocation.pResource = &dstTexture.d3dResource();
+        dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        int dstSliceId = zAsSlice(dstDesc.type) ? copyCmd->destZ : 0;
+        dstLocation.SubresourceIndex = (UINT)dstTexture.subresourceIndex(copyCmd->mipLevel, dstSliceId);
+
+        int szX = copyCmd->sizeX < 0 ? (min(srcDesc.width  - copyCmd->sourceX, dstDesc.width   - copyCmd->destX)) : copyCmd->sizeX;
+        int szY = copyCmd->sizeY < 0 ? (min(srcDesc.height - copyCmd->sourceY, dstDesc.height  - copyCmd->destY)) : copyCmd->sizeY;
+        int szZ = copyCmd->sizeZ < 0 ? (min(srcDesc.depth  - copyCmd->sourceZ, dstDesc.depth   - copyCmd->destZ)) : copyCmd->sizeZ;
+
+        D3D12_BOX box;
+        box.left  = (UINT)copyCmd->sourceX;
+        box.top   = (UINT)copyCmd->sourceY;
+        box.front = (UINT)copyCmd->sourceZ;
+        box.right  = box.left  + (UINT)szX; 
+        box.bottom = box.top   + (UINT)szY; 
+        box.back   = box.front + (UINT)szZ; 
+
+        outList.CopyTextureRegion(
+            &dstLocation, (UINT)copyCmd->destX, (UINT)copyCmd->destY, (UINT)copyCmd->destZ,
+            &srcLocation, &box);
     }
 }
 
