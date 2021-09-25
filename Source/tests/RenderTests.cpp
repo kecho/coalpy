@@ -1311,7 +1311,7 @@ namespace coalpy
         IShaderDb& db = *renderTestCtx.db;
 
         const char* setIndirectArgsSrc = R"(
-            RWBuffer<int4> output;
+            RWBuffer<int4> output : register(u0);
             [numthreads(1,1,1)]
             void csMain(uint3 dti : SV_DispatchThreadID)
             {
@@ -1332,7 +1332,7 @@ namespace coalpy
         }
 
         const char* executeIndirectSrc = R"(
-            RWBuffer<int4> output;
+            RWBuffer<int4> output : register(u0);
             [numthreads(1,1,1)]
             void csMain(uint3 gti : SV_GroupID)
             {
@@ -1441,6 +1441,115 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testCopyBuffer(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+
+        const int bufferLen = 8;
+        const int testBuffer[bufferLen] = { 2, 3, 4, 5, 7, 8, 90, 0xfffff };
+
+        Buffer srcBuffer;
+        Buffer dstBuffer;
+
+        { 
+            BufferDesc bufferDesc;
+            bufferDesc.format = Format::R32_SINT;
+            bufferDesc.elementCount = bufferLen;
+            srcBuffer = device.createBuffer(bufferDesc);
+            dstBuffer = device.createBuffer(bufferDesc);
+        }
+
+        CommandList cmdList;
+
+        {
+            UploadCommand cmd;
+            cmd.setData((const char*)testBuffer, sizeof(int) * bufferLen, srcBuffer);
+            cmdList.writeCommand(cmd);
+        }
+
+        //Simple copy
+        {
+            CopyCommand cmd;
+            cmd.setResources(srcBuffer, dstBuffer);
+            cmdList.writeCommand(cmd);
+        }
+
+        {
+            DownloadCommand cmd;
+            cmd.setData(dstBuffer);
+            cmdList.writeCommand(cmd);
+        }
+
+        cmdList.finalize();
+
+        {
+            CommandList* cmdListPtr = &cmdList;
+            ScheduleStatus scheduleStatus = device.schedule(&cmdListPtr, 1, ScheduleFlags_GetWorkHandle);
+            CPY_ASSERT(scheduleStatus.success());
+
+            WaitStatus waitStatus = device.waitOnCpu(scheduleStatus.workHandle, -1);
+            CPY_ASSERT(waitStatus.success());
+
+            //Verify simple copy
+            DownloadStatus downloadStatus = device.getDownloadStatus(scheduleStatus.workHandle, dstBuffer);
+            CPY_ASSERT(downloadStatus.success());
+
+            auto resultList = (int*)downloadStatus.downloadPtr;
+            for (int i = 0; i < bufferLen; ++i)
+                CPY_ASSERT(testBuffer[i] == resultList[i]);
+        
+            device.release(scheduleStatus.workHandle);
+        }
+
+        cmdList.reset();
+
+        const int copyLen = 4;
+        const int srcOffset = 4;
+        const int dstOffset = 1;
+
+        //Complex copy
+        {
+            CopyCommand cmd;
+            cmd.setBuffers(srcBuffer, dstBuffer, copyLen * sizeof(int), srcOffset * sizeof(int), dstOffset * sizeof(int));
+            cmdList.writeCommand(cmd);
+        }
+
+        {
+            DownloadCommand cmd;
+            cmd.setData(dstBuffer);
+            cmdList.writeCommand(cmd);
+        }
+
+        cmdList.finalize();
+
+        {
+            CommandList* cmdListPtr = &cmdList;
+            ScheduleStatus scheduleStatus = device.schedule(&cmdListPtr, 1, ScheduleFlags_GetWorkHandle);
+            CPY_ASSERT(scheduleStatus.success());
+
+            WaitStatus waitStatus = device.waitOnCpu(scheduleStatus.workHandle, -1);
+            CPY_ASSERT(waitStatus.success());
+
+            //Verify simple copy
+            DownloadStatus downloadStatus = device.getDownloadStatus(scheduleStatus.workHandle, dstBuffer);
+            CPY_ASSERT(downloadStatus.success());
+
+            auto resultList = (int*)downloadStatus.downloadPtr;
+            for (int i = 0; i < copyLen; ++i)
+                CPY_ASSERT(testBuffer[i + srcOffset] == resultList[i + dstOffset]);
+        
+            device.release(scheduleStatus.workHandle);
+        }
+        
+
+        device.release(srcBuffer);
+        device.release(dstBuffer);
+        renderTestCtx.end();
+    }
+
+
     //registration of tests
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
@@ -1462,6 +1571,7 @@ namespace coalpy
             { "appendConsumeBufferAppend",  testAppendConsumeBufferAppend },
             { "textureArray",  testTextureArray },
             { "indirectDispatch",  testIndirectDispatch },
+            { "copyBuffer",  testCopyBuffer },
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
