@@ -122,12 +122,12 @@ public:
         int destX = 0,
         int destY = 0,
         int destZ = 0,
-        int mipLevel = 0)
+        int srcMipLevel = 0,
+        int dstMipLevel = 0)
     {
         m_fullCopy = false;
         m_source = source;
         m_destination = destination;
-        m_mipLevel = mipLevel;
         m_sourceX = sourceX;
         m_sourceY = sourceY;
         m_sourceZ = sourceZ;
@@ -137,13 +137,14 @@ public:
         m_sizeX = sizeX;
         m_sizeY = sizeY;
         m_sizeZ = sizeZ;
+        m_srcMipLevel = srcMipLevel;
+        m_dstMipLevel = dstMipLevel;
     }
 
 private:
     ResourceHandle m_source;
     ResourceHandle m_destination;
 
-    int m_mipLevel = 0;
     int m_sourceX = -1;
     int m_sourceY = -1;
     int m_sourceZ = -1;
@@ -155,6 +156,9 @@ private:
     int m_sizeX = 0;
     int m_sizeY = 0;
     int m_sizeZ = 0;
+
+    int m_srcMipLevel = 0;
+    int m_dstMipLevel = 0;
 
     bool m_fullCopy = true;
 };

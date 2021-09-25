@@ -80,7 +80,8 @@ struct AbiCopyCmd
     ResourceHandle destination;
 
     int fullCopy = 0;
-    int mipLevel = 0;
+    int srcMipLevel = 0;
+    int dstMipLevel = 0;
     int sourceX = -1;
     int sourceY = -1;
     int sourceZ = -1;

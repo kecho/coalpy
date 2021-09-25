@@ -353,7 +353,7 @@ bool processCopy(const AbiCopyCmd* cmd, const unsigned char* data, WorkBuildCont
     if (!transitionResource(cmd->destination, ResourceGpuState::CopyDst, context))
         return false;
 
-    auto fitsInCopyCmd = [&context, &cmd](ResourceHandle handle, const char* resourceTypeName, int offsetX, int offsetY, int offsetZ)
+    auto fitsInCopyCmd = [&context, &cmd](ResourceHandle handle, const char* resourceTypeName, int offsetX, int offsetY, int offsetZ, int mipLevel)
     {
         auto it = context.resourceInfos->find(handle);
         if (it == context.resourceInfos->end())
@@ -381,11 +381,11 @@ bool processCopy(const AbiCopyCmd* cmd, const unsigned char* data, WorkBuildCont
             return false;
         }
 
-        if (cmd->mipLevel >= resourceInfo.mipLevels)
+        if (mipLevel >= resourceInfo.mipLevels)
         {
             std::stringstream ss;
             ss << resourceTypeName << " in copy command accesses a mip that is out of bounds," 
-               << " mipLevel is " << cmd->mipLevel << " and total mip size is " << resourceInfo.mipLevels;
+               << " mipLevel is " << mipLevel << " and total mip size is " << resourceInfo.mipLevels;
             context.errorMsg = ss.str();
             context.errorType = ScheduleErrorType::OutOfBounds;
             return false;
@@ -409,8 +409,7 @@ bool processCopy(const AbiCopyCmd* cmd, const unsigned char* data, WorkBuildCont
 
         if (srcIt->second.sizeX != dstIt->second.sizeX 
         || srcIt->second.sizeY != dstIt->second.sizeY
-        || srcIt->second.sizeZ != dstIt->second.sizeZ
-        || srcIt->second.mipLevels != dstIt->second.mipLevels)
+        || srcIt->second.sizeZ != dstIt->second.sizeZ)
         {
             std::stringstream ss;
             ss << "Cannot copy resources, mismatching sizes.";
@@ -421,10 +420,10 @@ bool processCopy(const AbiCopyCmd* cmd, const unsigned char* data, WorkBuildCont
     }
     else
     {
-        if (!fitsInCopyCmd(cmd->source, "Source", cmd->sourceX, cmd->sourceY, cmd->sourceZ))
+        if (!fitsInCopyCmd(cmd->source, "Source", cmd->sourceX, cmd->sourceY, cmd->sourceZ, cmd->srcMipLevel))
             return false;
 
-        if (!fitsInCopyCmd(cmd->destination, "Destination", cmd->destX, cmd->destY, cmd->destZ))
+        if (!fitsInCopyCmd(cmd->destination, "Destination", cmd->destX, cmd->destY, cmd->destZ, cmd->dstMipLevel))
             return false;
     }
 

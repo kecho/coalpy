@@ -180,7 +180,6 @@ void CommandList::writeCommand(const CopyCommand& cmd)
     abiCmd.fullCopy = cmd.m_fullCopy ? 1 : 0;
     abiCmd.source = cmd.m_source;
     abiCmd.destination = cmd.m_destination;
-    abiCmd.mipLevel = cmd.m_mipLevel;
     abiCmd.sourceX = cmd.m_sourceX;
     abiCmd.sourceY = cmd.m_sourceY;
     abiCmd.sourceZ = cmd.m_sourceZ;
@@ -190,6 +189,8 @@ void CommandList::writeCommand(const CopyCommand& cmd)
     abiCmd.sizeX = cmd.m_sizeX;
     abiCmd.sizeY = cmd.m_sizeY;
     abiCmd.sizeZ = cmd.m_sizeZ;
+    abiCmd.srcMipLevel = cmd.m_srcMipLevel;
+    abiCmd.dstMipLevel = cmd.m_dstMipLevel;
     finalizeCommand(abiCmd);
 }
 

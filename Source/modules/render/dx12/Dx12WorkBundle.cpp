@@ -293,14 +293,14 @@ void Dx12WorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd* c
         srcLocation.pResource = &srcTexture.d3dResource();
         srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
         int srcSliceId = zAsSlice(srcDesc.type) ? copyCmd->sourceZ : 0;
-        srcLocation.SubresourceIndex = (UINT)srcTexture.subresourceIndex(copyCmd->mipLevel, srcSliceId);
+        srcLocation.SubresourceIndex = (UINT)srcTexture.subresourceIndex(copyCmd->srcMipLevel, srcSliceId);
 
 
         D3D12_TEXTURE_COPY_LOCATION dstLocation;
         dstLocation.pResource = &dstTexture.d3dResource();
         dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
         int dstSliceId = zAsSlice(dstDesc.type) ? copyCmd->destZ : 0;
-        dstLocation.SubresourceIndex = (UINT)dstTexture.subresourceIndex(copyCmd->mipLevel, dstSliceId);
+        dstLocation.SubresourceIndex = (UINT)dstTexture.subresourceIndex(copyCmd->dstMipLevel, dstSliceId);
 
         int szX = copyCmd->sizeX < 0 ? (min(srcDesc.width  - copyCmd->sourceX, dstDesc.width   - copyCmd->destX)) : copyCmd->sizeX;
         int szY = copyCmd->sizeY < 0 ? (min(srcDesc.height - copyCmd->sourceY, dstDesc.height  - copyCmd->destY)) : copyCmd->sizeY;
