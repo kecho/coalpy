@@ -6,6 +6,7 @@
 #include "Resources.h"
 #include "RenderEnum.h"
 #include "CommandList.h"
+#include "ResourceDownloadRequest.h"
 #include "CoalpyTypeObject.h"
 #include "ImguiBuilder.h"
 #include <coalpy.core/Formats.h>
@@ -50,17 +51,18 @@ CoalpyTypeObject* registerFormats()
 void constructTypes(TypeList& outTypes)
 {
     //** Register Types **//
-    RegisterType(Window,           outTypes);
-    RegisterType(Shader,           outTypes);
-    RegisterType(RenderArgs,       outTypes);
-    RegisterType(Sampler,          outTypes);
-    RegisterType(Buffer,           outTypes);
-    RegisterType(CommandList,      outTypes);
-    RegisterType(Texture,          outTypes);
-    RegisterType(InResourceTable,  outTypes);
-    RegisterType(OutResourceTable, outTypes);
-    RegisterType(SamplerTable,     outTypes);
-    RegisterType(ImguiBuilder,     outTypes);
+    RegisterType(Window,                  outTypes);
+    RegisterType(Shader,                  outTypes);
+    RegisterType(RenderArgs,              outTypes);
+    RegisterType(Sampler,                 outTypes);
+    RegisterType(Buffer,                  outTypes);
+    RegisterType(CommandList,             outTypes);
+    RegisterType(Texture,                 outTypes);
+    RegisterType(InResourceTable,         outTypes);
+    RegisterType(OutResourceTable,        outTypes);
+    RegisterType(ResourceDownloadRequest, outTypes);
+    RegisterType(SamplerTable,            outTypes);
+    RegisterType(ImguiBuilder,            outTypes);
     
     //** Register Enums **//
     {
