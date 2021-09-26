@@ -103,7 +103,12 @@ struct AbiUploadCmd
     AbiPtr<char> sources; 
     int sourceSize = 0; 
     int mipLevel = 0;
-    int arraySlice = 0;
+    int sizeX = -1;
+    int sizeY = -1;
+    int sizeZ = -1;
+    int destX = 0;
+    int destY = 0;
+    int destZ = 0;
 };
 
 struct AbiDownloadCmd

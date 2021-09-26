@@ -174,10 +174,22 @@ public:
         m_destination = destination;
     }
 
-    void setTextureDestInfo(int mipLevel, int arraySlice = 0)
+    void setBufferDestOffset(int offset)
+    {
+        m_destX = offset;
+    }
+
+    void setTextureDestInfo(
+        int sizeX, int sizeY, int sizeZ,
+        int destX, int destY, int destZ, int mipLevel)
     {
         m_mipLevel = mipLevel;
-        m_arraySlice = arraySlice;
+        m_sizeX = sizeX;
+        m_sizeY = sizeY;
+        m_sizeZ = sizeZ;
+        m_destX = destX;
+        m_destY = destY;
+        m_destZ = destZ;
     }
 
 private:
@@ -185,6 +197,12 @@ private:
     int m_sourceSize = 0;
     int m_mipLevel = 0;
     int m_arraySlice = 0;
+    int m_sizeX = -1;
+    int m_sizeY = -1;
+    int m_sizeZ = -1;
+    int m_destX = 0;
+    int m_destY = 0;
+    int m_destZ = 0;
     ResourceHandle m_destination;
 };
 

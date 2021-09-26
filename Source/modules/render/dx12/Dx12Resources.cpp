@@ -307,8 +307,9 @@ Dx12Texture::~Dx12Texture()
 size_t Dx12Texture::byteSize() const
 {
     int width, height, depth;
+    int unused;
     size_t rowPitch;
-    getCpuTextureSizes(0u, rowPitch, width, height, depth);
+    getCpuTextureSizes(0u, unused, rowPitch, width, height, depth);
     return rowPitch * height * depth;
 }
 
@@ -330,7 +331,7 @@ int Dx12Texture::subresourceIndex(int mipLevels, int arraySlice) const
     return mipLevels + (arraySlice * mipCounts());
 }
 
-void Dx12Texture::getCpuTextureSizes(int mipId, size_t& outRowPitch, int& outWidth, int& outHeight, int& outDepth) const
+void Dx12Texture::getCpuTextureSizes(int mipId, int& outPixelPitch, size_t& outRowPitch, int& outWidth, int& outHeight, int& outDepth) const
 {
     CPY_ASSERT(mipId >=0 && mipId < m_data.resDesc.MipLevels);
 
@@ -344,7 +345,8 @@ void Dx12Texture::getCpuTextureSizes(int mipId, size_t& outRowPitch, int& outWid
     outWidth = outWidth >= 1 ? outWidth : 1;
     outHeight = outHeight >= 1 ? outHeight : 1;
     outDepth = outDepth >= 1 ? outDepth : 1;
-    outRowPitch = (size_t)alignByte(getDxFormatStride(m_texDesc.format) * outWidth, (int)D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+    outPixelPitch = getDxFormatStride(m_texDesc.format);
+    outRowPitch = (size_t)alignByte(outPixelPitch * outWidth, (int)D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 }
 
 Dx12ResourceInitResult Dx12Texture::init()

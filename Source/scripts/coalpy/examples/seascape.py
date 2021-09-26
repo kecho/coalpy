@@ -43,7 +43,7 @@ def on_render(render_args : gpu.RenderArgs):
             specular, diffuse, refraction, 0.0
         ],
         shader = seascapeShader,
-        output_tables = output_table
+        outputs = render_args.window.display_texture 
     )
 
     gpu.schedule([cmdList])

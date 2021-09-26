@@ -162,7 +162,7 @@ public:
     const TextureDesc& texDesc() const { return m_texDesc; }
     virtual size_t byteSize() const;
 
-    void getCpuTextureSizes(int mipId, size_t& outRowPitch, int& width, int& outHeight, int& depth) const;
+    void getCpuTextureSizes(int mipId, int& pixelPitch, size_t& outRowPitch, int& width, int& outHeight, int& depth) const;
 
     int subresourceIndex(int mipLevel, int arraySlice) const;
     int mipCounts() const;

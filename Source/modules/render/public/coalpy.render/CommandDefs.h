@@ -79,6 +79,7 @@ struct ResourceMemoryInfo
     int width = 0u;
     int height = 0u;
     int depth  = 0u;
+    int texelElementPitch = 0u;
     size_t rowPitch = 0u;
 };
 

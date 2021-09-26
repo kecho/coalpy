@@ -292,14 +292,16 @@ void Dx12WorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd* c
         D3D12_TEXTURE_COPY_LOCATION srcLocation;
         srcLocation.pResource = &srcTexture.d3dResource();
         srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-        int srcSliceId = zAsSlice(srcDesc.type) ? copyCmd->sourceZ : 0;
-        srcLocation.SubresourceIndex = (UINT)srcTexture.subresourceIndex(copyCmd->srcMipLevel, srcSliceId);
 
+        bool srcZAsSlice = zAsSlice(dstDesc.type);
+        int srcSliceId = srcZAsSlice ? copyCmd->sourceZ : 0;
+        srcLocation.SubresourceIndex = (UINT)srcTexture.subresourceIndex(copyCmd->srcMipLevel, srcSliceId);
 
         D3D12_TEXTURE_COPY_LOCATION dstLocation;
         dstLocation.pResource = &dstTexture.d3dResource();
         dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-        int dstSliceId = zAsSlice(dstDesc.type) ? copyCmd->destZ : 0;
+        bool dstZAsSlice = zAsSlice(dstDesc.type);
+        int dstSliceId = dstZAsSlice ? copyCmd->destZ : 0;
         dstLocation.SubresourceIndex = (UINT)dstTexture.subresourceIndex(copyCmd->dstMipLevel, dstSliceId);
 
         int szX = copyCmd->sizeX < 0 ? (min(srcDesc.width  - copyCmd->sourceX, dstDesc.width   - copyCmd->destX)) : copyCmd->sizeX;
@@ -309,13 +311,13 @@ void Dx12WorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd* c
         D3D12_BOX box;
         box.left  = (UINT)copyCmd->sourceX;
         box.top   = (UINT)copyCmd->sourceY;
-        box.front = (UINT)copyCmd->sourceZ;
+        box.front = srcZAsSlice ? 0 : (UINT)copyCmd->sourceZ;
         box.right  = box.left  + (UINT)szX; 
         box.bottom = box.top   + (UINT)szY; 
-        box.back   = box.front + (UINT)szZ; 
+        box.back   = box.front + (srcZAsSlice ? 1 : (UINT)szZ);
 
         outList.CopyTextureRegion(
-            &dstLocation, (UINT)copyCmd->destX, (UINT)copyCmd->destY, (UINT)copyCmd->destZ,
+            &dstLocation, (UINT)copyCmd->destX, (UINT)copyCmd->destY, dstZAsSlice ? 0 : (UINT)copyCmd->destZ,
             &srcLocation, &box);
     }
 }
@@ -339,7 +341,8 @@ void Dx12WorkBundle::buildDownloadCmd(
     else
     {
         auto& dx12Texture = (Dx12Texture&)dx12Resource;
-        dx12Texture.getCpuTextureSizes(downloadCmd->mipLevel, downloadState.rowPitch, downloadState.width, downloadState.height, downloadState.depth);
+        int unused = 0;
+        dx12Texture.getCpuTextureSizes(downloadCmd->mipLevel, unused, downloadState.rowPitch, downloadState.width, downloadState.height, downloadState.depth);
         downloadState.memoryBlock = m_device.readbackPool().allocate(downloadState.rowPitch * downloadState.height * downloadState.depth);
 
         D3D12_TEXTURE_COPY_LOCATION srcLoc;
@@ -371,7 +374,7 @@ void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCm
     Dx12ResourceCollection& resources = m_device.resources();
     Dx12Resource& destinationResource = resources.unsafeGetResource(uploadCmd->destination);
     CPY_ASSERT(cmdInfo.uploadBufferOffset < m_uploadMemBlock.uploadSize);
-    CPY_ASSERT(cmdInfo.uploadDestinationMemoryInfo.byteSize <= (m_uploadMemBlock.uploadSize - cmdInfo.uploadBufferOffset));
+    CPY_ASSERT((m_uploadMemBlock.uploadSize - cmdInfo.uploadBufferOffset) <= cmdInfo.uploadDestinationMemoryInfo.byteSize);
     if (destinationResource.isBuffer())
     {
         //TODO: this can be jobified.
@@ -381,7 +384,7 @@ void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCm
 
         outList.CopyBufferRegion(
             &destinationResource.d3dResource(),
-            0ull,
+            (UINT)uploadCmd->destX,
             m_uploadMemBlock.buffer,
             m_uploadMemBlock.offset + cmdInfo.uploadBufferOffset,
             uploadCmd->sourceSize);
@@ -391,17 +394,29 @@ void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCm
         Format format = ((Dx12Texture&)destinationResource).texDesc().format;
         int formatStride = getDxFormatStride(format);
 
+        CPY_ASSERT(formatStride == cmdInfo.uploadDestinationMemoryInfo.texelElementPitch);
+
+        auto zAsSlice = [](TextureType t) { return t == TextureType::k2dArray || t == TextureType::CubeMapArray || t == TextureType::CubeMap; };
+        Dx12Texture& destTexture = (Dx12Texture&)destinationResource;
+        bool useZAsSlice = zAsSlice(destTexture.texDesc().type);
+
+
         D3D12_TEXTURE_COPY_LOCATION destTexLoc;
         destTexLoc.pResource = &destinationResource.d3dResource();
         destTexLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX; 
-        destTexLoc.SubresourceIndex = 0;
+        destTexLoc.SubresourceIndex = destTexture.subresourceIndex(uploadCmd->mipLevel,  useZAsSlice ? uploadCmd->destZ : 0);
 
-        int segments = cmdInfo.uploadDestinationMemoryInfo.depth * cmdInfo.uploadDestinationMemoryInfo.height;
-        int sourceRowPitch = (uploadCmd->sourceSize / (segments));
-        CPY_ASSERT(cmdInfo.uploadDestinationMemoryInfo.width * formatStride == sourceRowPitch);
+        int szX = uploadCmd->sizeX < 0 ? (cmdInfo.uploadDestinationMemoryInfo.width  - uploadCmd->destX) : uploadCmd->sizeX;
+        int szY = uploadCmd->sizeY < 0 ? (cmdInfo.uploadDestinationMemoryInfo.height - uploadCmd->destY) : uploadCmd->sizeY;
+        int szZ = uploadCmd->sizeZ < 0 ? (cmdInfo.uploadDestinationMemoryInfo.depth  - uploadCmd->destZ) : uploadCmd->sizeZ;
+
+        szZ = useZAsSlice ? 1 : szZ;
+
+        int segments = szY * szZ;
+        int sourceRowPitch = szX * formatStride;
         if ((sourceRowPitch % D3D12_TEXTURE_DATA_PITCH_ALIGNMENT) == 0) //is aligned!
         {
-            memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + cmdInfo.uploadBufferOffset, uploadCmd->sources.data(data), uploadCmd->sourceSize);
+            memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + cmdInfo.uploadBufferOffset, uploadCmd->sources.data(data), sourceRowPitch * segments);
         }
         else
         {
@@ -421,14 +436,14 @@ void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCm
         srcTexLoc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
         srcTexLoc.PlacedFootprint.Offset = m_uploadMemBlock.offset + cmdInfo.uploadBufferOffset;
         srcTexLoc.PlacedFootprint.Footprint.Format = destDesc.Format;
-        srcTexLoc.PlacedFootprint.Footprint.Width = destDesc.Width;
-        srcTexLoc.PlacedFootprint.Footprint.Height = destDesc.Height;
-        srcTexLoc.PlacedFootprint.Footprint.Depth = destDesc.DepthOrArraySize;
+        srcTexLoc.PlacedFootprint.Footprint.Width = szX;
+        srcTexLoc.PlacedFootprint.Footprint.Height = szY;
+        srcTexLoc.PlacedFootprint.Footprint.Depth = szZ;
         srcTexLoc.PlacedFootprint.Footprint.RowPitch = (UINT)cmdInfo.uploadDestinationMemoryInfo.rowPitch;
 
         outList.CopyTextureRegion(
             &destTexLoc,
-            0u, 0u, 0u,
+            uploadCmd->destX, uploadCmd->destY, uploadCmd->destZ,
             &srcTexLoc,
             nullptr);
     }

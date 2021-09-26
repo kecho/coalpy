@@ -368,7 +368,7 @@ bool processCopy(const AbiCopyCmd* cmd, const unsigned char* data, WorkBuildCont
         const WorkResourceInfo& resourceInfo = it->second;
         int remainingSizeX = resourceInfo.sizeX - offsetX;
         int remainingSizeY = resourceInfo.sizeY - offsetY;
-        int remainingSizeZ = resourceInfo.sizeY - offsetZ;
+        int remainingSizeZ = resourceInfo.sizeZ - offsetZ;
         if (cmd->sizeX > remainingSizeX || cmd->sizeY > remainingSizeY || cmd->sizeZ > remainingSizeZ)
         {
             std::stringstream ss;
@@ -437,22 +437,69 @@ bool processUpload(const AbiUploadCmd* cmd, const unsigned char* data, WorkBuild
 
     IDevice& device = *context.device;
 
+    const auto resourceInfoIt = context.resourceInfos->find(cmd->destination);
+    const WorkResourceInfo& resourceInfo = resourceInfoIt->second;
+
     CommandInfo& info = context.currentCommandInfo();
     device.getResourceMemoryInfo(cmd->destination, info.uploadDestinationMemoryInfo);
-    if (cmd->sourceSize > info.uploadDestinationMemoryInfo.byteSize)
-    {
-        std::stringstream ss;
-        ss << "Upload command request exceeded resource capacity. Tried to upload "
-            << cmd->sourceSize << " bytes with a resource of "
-            << info.uploadDestinationMemoryInfo.byteSize << "bytes.";
 
-        context.errorMsg = ss.str();
-        context.errorType = ScheduleErrorType::OutOfBounds;
-        return false;
+    if (info.uploadDestinationMemoryInfo.isBuffer)
+    {
+        size_t remainingSize = info.uploadDestinationMemoryInfo.byteSize - cmd->destX;
+        if (cmd->sourceSize > remainingSize)
+        {
+            std::stringstream ss;
+            ss << "Upload command request exceeded resource capacity. Tried to upload "
+                << cmd->sourceSize << " bytes with a resource of "
+                << info.uploadDestinationMemoryInfo.byteSize << "bytes." 
+                << "offset being " << cmd->destX << " and remaining size being " << remainingSize;
+
+            context.errorMsg = ss.str();
+            context.errorType = ScheduleErrorType::OutOfBounds;
+            return false;
+        }
+
+        info.uploadBufferOffset = context.totalUploadBufferSize;
+        context.totalUploadBufferSize += (int)remainingSize;
     }
-    
-    info.uploadBufferOffset = context.totalUploadBufferSize;
-    context.totalUploadBufferSize += info.uploadDestinationMemoryInfo.byteSize;
+    else
+    {
+        int szX = cmd->sizeX < 0 ? (info.uploadDestinationMemoryInfo.width  - cmd->destX) : cmd->sizeX;
+        int szY = cmd->sizeY < 0 ? (info.uploadDestinationMemoryInfo.height - cmd->destY) : cmd->sizeY;
+        int szZ = cmd->sizeZ < 0 ? (info.uploadDestinationMemoryInfo.depth  - cmd->destZ) : cmd->sizeZ;
+        int srcBoxByteSize = szX * szY * szZ * info.uploadDestinationMemoryInfo.texelElementPitch;
+        if (srcBoxByteSize > cmd->sourceSize)
+        {
+            std::stringstream ss;
+            ss << "Upload command request exceed the source buffer capacity of "
+                << cmd->sourceSize << "bytes. The box source size being "
+                << szX << ", " << szY << ", " << szZ << "with a pixel pitch of " << info.uploadDestinationMemoryInfo.texelElementPitch 
+                << "amounts to a total size of " << srcBoxByteSize;
+            context.errorMsg = ss.str();
+            context.errorType = ScheduleErrorType::OutOfBounds;
+            return false;
+        }
+
+        int sizeLeftX = info.uploadDestinationMemoryInfo.width - cmd->destX;
+        int sizeLeftY = info.uploadDestinationMemoryInfo.height  - cmd->destY;
+        int sizeLeftZ = info.uploadDestinationMemoryInfo.depth - cmd->destZ;
+        if (szX > sizeLeftX || szY > sizeLeftY || szZ > sizeLeftZ)
+        {
+            std::stringstream ss;
+            ss << "Upload of texture window of size"
+                << szX << ", " << szY << ", " << szZ 
+                << " Exceeds the destination remaining size of "
+                << sizeLeftX << ", " << sizeLeftY << ", ", sizeLeftZ;
+            context.errorMsg = ss.str();
+            context.errorType = ScheduleErrorType::OutOfBounds;
+            return false;
+        }
+
+        int hardwareUploadSize = info.uploadDestinationMemoryInfo.rowPitch * szY * szZ; 
+        info.uploadBufferOffset = context.totalUploadBufferSize;
+        context.totalUploadBufferSize += hardwareUploadSize;
+    }
+
     return true;
 }
 

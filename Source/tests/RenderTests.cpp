@@ -1693,6 +1693,103 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testCopyTextureArrayAndMips(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+
+        const int txW = 4;
+        const int txH = 4;
+        const int totalPixels = txW * txH;
+        const int pixelVals[totalPixels] = {
+            1, 2, 3, 4,
+            5, 6, 7, 8,
+            9, 10, 11, 12,
+            13, 14, 15, 16 };
+
+        Texture srcTexture;
+        Texture dstTexture;
+        {
+            TextureDesc desc;
+
+            desc.type = TextureType::k2d;
+            desc.format = Format::R32_SINT;
+            desc.width = txW;
+            desc.height = txH;
+            desc.mipLevels = 2;
+            srcTexture = device.createTexture(desc);
+
+            desc.type = TextureType::k2dArray;
+            desc.width >>= 1;
+            desc.height >>= 1;
+            desc.depth = 3;
+            desc.mipLevels = 1;
+            dstTexture = device.createTexture(desc);
+        }
+
+        CommandList cmdList;
+        {
+            UploadCommand cmd;
+            cmd.setData((const char*)pixelVals, totalPixels * sizeof(int), srcTexture);
+            cmd.setTextureDestInfo(
+                2, 2, 1, //size
+                0, 0, 0, //dest
+                1); //mip level
+            cmdList.writeCommand(cmd);
+        }
+
+        {
+            CopyCommand cmd;
+            cmd.setTextures(srcTexture, dstTexture, txW >> 1, txH >> 1,  1,
+                0, 0, 0, 
+                0, 0, 2, //dst array 2
+                1, 0); //src mip level is 1
+            cmdList.writeCommand(cmd);
+        }
+
+        {
+            DownloadCommand cmd;
+            cmd.setData(dstTexture);
+            cmd.setArraySlice(2);
+            cmdList.writeCommand(cmd);
+        }
+
+        cmdList.finalize();
+
+        //Check
+        {
+            CommandList* cmdListPtr = &cmdList;
+            ScheduleStatus scheduleStatus = device.schedule(&cmdListPtr, 1, ScheduleFlags_GetWorkHandle);
+            CPY_ASSERT_MSG(scheduleStatus.success(), scheduleStatus.message.c_str());
+
+            WaitStatus waitStatus = device.waitOnCpu(scheduleStatus.workHandle, -1);
+            CPY_ASSERT(waitStatus.success());
+
+            //Verify simple copy
+            DownloadStatus downloadStatus = device.getDownloadStatus(scheduleStatus.workHandle, dstTexture, 0, 2);
+            CPY_ASSERT(downloadStatus.success());
+
+            const char* resultTexels = (const char*)downloadStatus.downloadPtr;
+            for (int y = 0; y < (txH >> 1); ++y)
+            {
+                const int* row = (const int*)(resultTexels + (downloadStatus.rowPitch * y));
+                for (int x = 0; x < (txW >> 1); ++x)
+                {
+                    CPY_ASSERT(pixelVals[y * (txW >> 1) + x] == row[x]);
+                }
+            }
+
+            device.release(scheduleStatus.workHandle);
+        }
+
+        ///////////////////
+
+        device.release(srcTexture);
+        device.release(dstTexture);
+        renderTestCtx.end();
+    }
+
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
     {
         static TestCase sCases[] = {
@@ -1714,6 +1811,7 @@ namespace coalpy
             { "indirectDispatch",  testIndirectDispatch },
             { "copyBuffer",  testCopyBuffer },
             { "copyTexture",  testCopyTexture },
+            { "copyTextureArrayAndMips",  testCopyTextureArrayAndMips },
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

@@ -350,6 +350,7 @@ void Dx12ResourceCollection::getResourceMemoryInfo(ResourceHandle handle, Resour
     if (memInfo.isBuffer)
     {
         auto& buffer = (Dx12Buffer&)(*container->resource);
+        memInfo.texelElementPitch = 0;
         memInfo.byteSize = buffer.byteSize();
         memInfo.rowPitch = memInfo.byteSize;
         memInfo.width = memInfo.height = memInfo.depth = 0;
@@ -358,7 +359,7 @@ void Dx12ResourceCollection::getResourceMemoryInfo(ResourceHandle handle, Resour
     {
         auto& texture = (Dx12Texture&)(*container->resource);
         memInfo.byteSize = texture.byteSize();
-        texture.getCpuTextureSizes(0u, memInfo.rowPitch, memInfo.width, memInfo.height, memInfo.depth);
+        texture.getCpuTextureSizes(0u, memInfo.texelElementPitch, memInfo.rowPitch, memInfo.width, memInfo.height, memInfo.depth);
     }
 }
 
