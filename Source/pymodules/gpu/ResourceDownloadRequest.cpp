@@ -16,16 +16,14 @@ namespace methods
     static PyObject* resolve(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* isReady(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* dataAsByteArray(PyObject* self, PyObject* vargs, PyObject* kwds);
-    static PyObject* dataAsIntArray(PyObject* self, PyObject* vargs, PyObject* kwds);
-    static PyObject* dataAsFloatArray(PyObject* self, PyObject* vargs, PyObject* kwds);
+    static PyObject* dataByteRowPitch(PyObject* self, PyObject* vargs, PyObject* kwds);
 }
 
 static PyMethodDef g_resourceDownloadMethods[] = {
     KW_FN(resolve, resolve,R"()"),
     KW_FN(is_ready, isReady,R"()"),
     KW_FN(data_as_bytearray, dataAsByteArray,R"()"),
-    KW_FN(data_as_intarray, dataAsIntArray,R"()"),
-    KW_FN(data_as_floatarray, dataAsFloatArray,R"()"),
+    KW_FN(data_byte_row_pitch, dataByteRowPitch,R"()"),
     FN_END
 };
 
@@ -135,6 +133,7 @@ void ResourceDownloadRequest::destroy(PyObject* self)
     auto& request = *((ResourceDownloadRequest*)self);
     Py_XDECREF(request.resourcePyObj);
     Py_XDECREF(request.dataAsByteArray);
+    Py_XDECREF(request.rowBytesPitchObject);
 
     if (!request.workHandle.valid())
         moduleState.device().release(request.workHandle);
@@ -237,24 +236,31 @@ PyObject* dataAsByteArray(PyObject* self, PyObject* vargs, PyObject* kwds)
     if (!getDataCommon(moduleState, request, vargs, kwds, status))
         return nullptr;
 
-    request.rowBytesPitch = status.rowPitch;
+    request.rowBytesPitchObject = PyLong_FromLongLong((long)status.rowPitch);
     request.dataAsByteArray = PyBytes_FromStringAndSize((const char*)status.downloadPtr, status.downloadByteSize);
 
     Py_INCREF(request.dataAsByteArray);
     return request.dataAsByteArray;
 }
 
-PyObject* dataAsIntArray(PyObject* self, PyObject* vargs, PyObject* kwds)
+PyObject* dataByteRowPitch(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
-    Py_RETURN_NONE;
+    auto& request = *((ResourceDownloadRequest*)self);
+    if (request.rowBytesPitchObject)
+    {
+        Py_INCREF(request.rowBytesPitchObject);
+        return request.rowBytesPitchObject;
+    }
+
+    ModuleState& moduleState = parentModule(self);
+    if (!moduleState.checkValidDevice())
+        return nullptr;
+
+    PyErr_SetString(moduleState.exObj(), "Data object has not been created. Before calling data_byte_row_pitch, ensure to call data_as_bytearray. Only then the pitch is accessible");
+    return nullptr;
 }
 
-PyObject* dataAsFloatArray(PyObject* self, PyObject* vargs, PyObject* kwds)
-{
-    Py_RETURN_NONE;
-}
+} //namespace methods
 
-}
-
-}
-}
+} //namespace gpu
+} //namespace coalpy

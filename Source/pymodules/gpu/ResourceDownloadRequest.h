@@ -23,8 +23,8 @@ struct ResourceDownloadRequest
 
     PyObject* resourcePyObj = nullptr;
 
-    int rowBytesPitch = 0;
     PyObject* dataAsByteArray = nullptr;
+    PyObject* rowBytesPitchObject = nullptr;
 
     //Functions
     static const TypeId s_typeId = TypeId::ResourceDownloadRequest;
