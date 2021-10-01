@@ -623,6 +623,11 @@ namespace methods
         Py_INCREF(destination);
         cmdList.references.objects.push_back(destination);
 
+        render::UploadCommand cmd;
+        cmd.setBufferDestOffset(0u);
+        cmd.setData(bufferProtocolPtr, bufferProtocolSize, destHandle);
+        cmdList.cmdList->writeCommand(cmd);
+
         Py_RETURN_NONE;
     }
 
