@@ -36,7 +36,9 @@ Dx12imguiRenderer::Dx12imguiRenderer(const IimguiRendererDesc& desc)
 , m_cachedHeight(-1)
 , m_cachedSwapVersion(-1)
 {
+    auto oldContext = ImGui::GetCurrentContext();
     m_context = ImGui::CreateContext();
+    ImGui::SetCurrentContext(m_context);
 
     m_rtv = m_device.descriptors().allocateRtv();
 
@@ -67,6 +69,8 @@ Dx12imguiRenderer::Dx12imguiRenderer(const IimguiRendererDesc& desc)
     CPY_ASSERT(rets2);
 
     setCoalpyStyle();
+
+    ImGui::SetCurrentContext(oldContext);
 }
 
 Dx12imguiRenderer::~Dx12imguiRenderer()
