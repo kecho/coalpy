@@ -130,7 +130,7 @@ int Shader::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         ShaderInlineDesc desc;
         desc.type = ShaderType::Compute;
         desc.mainFn = mainFunction;
-        desc.name = shaderName;
+        desc.name = sshaderName.c_str();
         desc.immCode = sourceCode;
         desc.defines = std::move(defineStrList);
         shader.handle = moduleState.db().requestCompile(desc);

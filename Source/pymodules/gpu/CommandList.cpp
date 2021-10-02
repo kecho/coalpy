@@ -28,9 +28,9 @@ static PyMethodDef g_cmdListMethods[] = {
         Dispatch method, which executes a compute shader with resources bound.
         
         Parameters:
-            x (int): the number of groups on the x axis.
-            y (int): the number of groups on the y axis.
-            z (int):  the number of groups on the z axis.
+            x (int)(optional): the number of groups on the x axis. By default is 1.
+            y (int)(optional): the number of groups on the y axis. By default is 1.
+            z (int)(optional):  the number of groups on the z axis. By default
             shader (Shader): object of type Shader. This will be the compute shader launched on the GPU.
             name (str)(optional): Debug name of this dispatch to see in render doc / profiling captures.
             constants (optional): Constant can be, an array of ints and floats, an array.array
@@ -51,6 +51,9 @@ static PyMethodDef g_cmdListMethods[] = {
                                    If and array of Texture/Buffer objects are passed (or a single Texture/Buffer object), each object is bound to a single register and always to the default space (0).
             outputs (optional): a single OutResourceTable object, or an array of OutResourceTable objects. Same rules as inputs apply,
                                      but we use registers u# to address the UAVs.
+
+            indirect_args (Buffer)(optional): a single object of type Buffer, which contains the x, y and z groups packed tightly as 3 ints. 
+                                      If this buffer is provided, the x, y and z arguments are ignored.
     )"),
     KW_FN(copy_resource, cmdCopyResource, R"(
         copy_resource method, copies one resource to another.
@@ -405,7 +408,7 @@ namespace methods
     PyObject* cmdDispatch(PyObject* self, PyObject* vargs, PyObject* kwds)
     {
         ModuleState& moduleState = parentModule(self);
-        static char* arguments[] = { "x", "y", "z", "shader", "name", "constants", "samplers", "inputs", "outputs", nullptr };
+        static char* arguments[] = { "shader", "x", "y", "z", "name", "constants", "samplers", "inputs", "outputs", "indirect_args", nullptr };
         int x = 1;
         int y = 1;
         int z = 1;
@@ -415,7 +418,8 @@ namespace methods
         PyObject* sampler_tables = nullptr;
         PyObject* input_tables = nullptr;
         PyObject* output_tables = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "iiiO|sOOOO", arguments, &x, &y, &z, &shader, &name, &constants, &sampler_tables, &input_tables, &output_tables))
+        PyObject* indirect_args = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "O|iiisOOOOO", arguments, &shader, &x, &y, &z, &name, &constants, &sampler_tables, &input_tables, &output_tables, &indirect_args))
             return nullptr;
         
         if (x <= 0 || y <= 0 || z <= 0)
@@ -428,7 +432,23 @@ namespace methods
         auto& cmdList = *(CommandList*)self;
 
         render::ComputeCommand cmd;
-        cmd.setDispatch(name ? name : "", x, y, z);
+
+        if (indirect_args != nullptr)
+        {
+            bool srcIsBuffer = false;
+            render::ResourceHandle indirectArgsHandle;
+            if (!getResourceObject(moduleState, indirect_args, indirectArgsHandle, srcIsBuffer) || !indirectArgsHandle.valid())
+            {
+                PyErr_SetString(moduleState.exObj(), "indirect_args for dispatch command must be of type Buffer, and this buffer must be valid.");
+                return nullptr;
+            }
+
+            cmd.setIndirectDispatch(name ? name : "", render::Buffer { indirectArgsHandle.handleId });
+        }
+        else
+        {
+            cmd.setDispatch(name ? name : "", x, y, z);
+        }
 
         //for constants / inline constants. Must be in this scope, because these pointers are needed when writeCommand is called / flushed.
         std::vector<Py_buffer> bufferViews;
