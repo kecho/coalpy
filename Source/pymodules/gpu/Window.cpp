@@ -36,6 +36,7 @@ void Window::constructType(PyTypeObject& t)
         height (int)(optional): initial height of window and swap chain texture.
         on_render (function): Rendering function. The function has 1 argument of type RenderArgs and no return. See RenderArgs for more info.
         use_imgui (Boolean): (True by default), set to True, and during on_render the render_args object will contain an imgui object. Use this object to render imgui into the window.
+                            The ImguiBuilder object will contain the definition of all the available parameters.
                 )";
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
