@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="coalpy.html"><font color="#ffffff">coalpy</font></a>.gpu</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccoalpy%5Ct2-output%5Cwin64-msvc-release-default%5Ccoalpy%5Cgpu.pyd">c:\dev\coalpy\t2-output\win64-msvc-release-default\coalpy\gpu.pyd</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccoalpy%5Ct2-output%5Cwin64-msvc-debug-default%5Ccoalpy%5Cgpu.pyd">c:\dev\coalpy\t2-output\win64-msvc-debug-default\coalpy\gpu.pyd</a></font></td></tr></table>
     <p><tt>&lt;&lt;&nbsp;coalpy&nbsp;&gt;&gt;&nbsp;Compute&nbsp;Abstraction&nbsp;Layer&nbsp;for&nbsp;Python&nbsp;<br>
 &nbsp;by&nbsp;Kleber&nbsp;A&nbsp;Garcia&nbsp;2021&nbsp;(c).&nbsp;<br>
 coalpy&nbsp;is&nbsp;a&nbsp;compute&nbsp;abstraction&nbsp;layer&nbsp;for&nbsp;python.&nbsp;It&nbsp;brings<br>
@@ -36,6 +36,7 @@ and&nbsp;start&nbsp;using&nbsp;your&nbsp;GPU!</tt></p>
 <dt><font face="helvetica, arial">gpu.Buffer
 </font></dt><dt><font face="helvetica, arial">gpu.CommandList
 </font></dt><dt><font face="helvetica, arial">gpu.EnumBufferType
+</font></dt><dt><font face="helvetica, arial">gpu.EnumFilterType
 </font></dt><dt><font face="helvetica, arial">gpu.EnumFormat
 </font></dt><dt><font face="helvetica, arial">gpu.EnumMemFlags
 </font></dt><dt><font face="helvetica, arial">gpu.EnumTextureType
@@ -43,6 +44,8 @@ and&nbsp;start&nbsp;using&nbsp;your&nbsp;GPU!</tt></p>
 </font></dt><dt><font face="helvetica, arial">gpu.InResourceTable
 </font></dt><dt><font face="helvetica, arial">gpu.OutResourceTable
 </font></dt><dt><font face="helvetica, arial">gpu.RenderArgs
+</font></dt><dt><font face="helvetica, arial">gpu.ResourceDownloadRequest
+</font></dt><dt><font face="helvetica, arial">gpu.SamplerTable
 </font></dt><dt><font face="helvetica, arial">gpu.Shader
 </font></dt><dt><font face="helvetica, arial">gpu.Texture
 </font></dt><dt><font face="helvetica, arial">gpu.Window
@@ -64,7 +67,9 @@ Constructor:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;type&nbsp;(int):&nbsp;See&nbsp;coalpy.gpu.BufferType.&nbsp;Default&nbsp;is&nbsp;Standard.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;format&nbsp;(int):&nbsp;Format&nbsp;of&nbsp;buffer.&nbsp;See&nbsp;coalpy.gpu.Format&nbsp;for&nbsp;available&nbsp;formats.&nbsp;This&nbsp;argument&nbsp;is&nbsp;ignored&nbsp;if&nbsp;buffer&nbsp;is&nbsp;Structured&nbsp;or&nbsp;Raw.&nbsp;Default&nbsp;format&nbsp;is&nbsp;RGBA_32_SINT<br>
 &nbsp;&nbsp;&nbsp;&nbsp;element_count&nbsp;(int):&nbsp;number&nbsp;of&nbsp;elements&nbsp;this&nbsp;buffer&nbsp;will&nbsp;have<br>
-&nbsp;&nbsp;&nbsp;&nbsp;stride&nbsp;(int):&nbsp;stride&nbsp;count&nbsp;in&nbsp;case&nbsp;of&nbsp;Structured&nbsp;type<br>&nbsp;</tt></td></tr>
+&nbsp;&nbsp;&nbsp;&nbsp;stride&nbsp;(int):&nbsp;stride&nbsp;count&nbsp;in&nbsp;case&nbsp;of&nbsp;Structured&nbsp;type<br>
+&nbsp;&nbsp;&nbsp;&nbsp;is_constant_buffer&nbsp;(Bool)&nbsp;:&nbsp;True&nbsp;if&nbsp;this&nbsp;can&nbsp;be&nbsp;used&nbsp;as&nbsp;a&nbsp;constant&nbsp;buffer.&nbsp;False&nbsp;otherwise.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;is_append_consume&nbsp;(Bool)&nbsp;:&nbsp;True&nbsp;if&nbsp;this&nbsp;can&nbsp;be&nbsp;used&nbsp;as&nbsp;an&nbsp;append&nbsp;consume&nbsp;buffer&nbsp;in&nbsp;the&nbsp;GPU.&nbsp;False&nbsp;otherwise.&nbsp;This&nbsp;wont&nbsp;work&nbsp;for&nbsp;raw&nbsp;buffers.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="Buffer-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
@@ -88,36 +93,51 @@ and&nbsp;can&nbsp;be&nbsp;reused&nbsp;to&nbsp;avoid&nbsp;cost.<br>&nbsp;</tt></t
 <dl><dt><a name="CommandList-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
 
 <dl><dt><a name="CommandList-copy_resource"><strong>copy_resource</strong></a>(...)</dt><dd><tt>copy_resource&nbsp;method,&nbsp;copies&nbsp;one&nbsp;resource&nbsp;to&nbsp;another.<br>
-&nbsp;<br>
+Both&nbsp;source&nbsp;and&nbsp;destination&nbsp;must&nbsp;be&nbsp;the&nbsp;same&nbsp;type&nbsp;(either&nbsp;<a href="#Buffer">Buffer</a>&nbsp;or&nbsp;textures).<br>
 Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;source&nbsp;(<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>):&nbsp;an&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>.&nbsp;This&nbsp;will&nbsp;be&nbsp;the&nbsp;source&nbsp;resource&nbsp;to&nbsp;copy&nbsp;from.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;destination&nbsp;(<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>):&nbsp;an&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>.&nbsp;This&nbsp;will&nbsp;be&nbsp;the&nbsp;destination&nbsp;resource&nbsp;to&nbsp;copy&nbsp;to.</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;destination&nbsp;(<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>):&nbsp;an&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>.&nbsp;This&nbsp;will&nbsp;be&nbsp;the&nbsp;destination&nbsp;resource&nbsp;to&nbsp;copy&nbsp;to.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;source_offset&nbsp;(tuple&nbsp;or&nbsp;int):&nbsp;if&nbsp;texture&nbsp;copy,&nbsp;a&nbsp;tuple&nbsp;with&nbsp;x,&nbsp;y,&nbsp;z&nbsp;offsets&nbsp;and&nbsp;mipLevel&nbsp;must&nbsp;be&nbsp;specified.&nbsp;If&nbsp;<a href="#Buffer">Buffer</a>&nbsp;copy,&nbsp;it&nbsp;must&nbsp;be&nbsp;a&nbsp;single&nbsp;integer&nbsp;with&nbsp;the&nbsp;byte&nbsp;offset&nbsp;for&nbsp;the&nbsp;source&nbsp;<a href="#Buffer">Buffer</a>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;destination_offset&nbsp;(tuple&nbsp;or&nbsp;int):&nbsp;if&nbsp;texture&nbsp;copy,&nbsp;a&nbsp;tuple&nbsp;with&nbsp;x,&nbsp;y,&nbsp;z&nbsp;offsets&nbsp;and&nbsp;mipLevel&nbsp;must&nbsp;be&nbsp;specified.&nbsp;If&nbsp;<a href="#Buffer">Buffer</a>&nbsp;copy,&nbsp;it&nbsp;must&nbsp;be&nbsp;a&nbsp;single&nbsp;integer&nbsp;with&nbsp;the&nbsp;byte&nbsp;offset&nbsp;for&nbsp;the&nbsp;destianation&nbsp;<a href="#Buffer">Buffer</a>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;size&nbsp;(tuple&nbsp;or&nbsp;int):&nbsp;if&nbsp;texture&nbsp;a&nbsp;tuple&nbsp;with&nbsp;the&nbsp;x,&nbsp;y&nbsp;and&nbsp;z&nbsp;size.&nbsp;If&nbsp;<a href="#Buffer">Buffer</a>&nbsp;just&nbsp;an&nbsp;int&nbsp;with&nbsp;the&nbsp;proper&nbsp;byte&nbsp;size.&nbsp;Default&nbsp;covers&nbsp;the&nbsp;entire&nbsp;size.</tt></dd></dl>
 
 <dl><dt><a name="CommandList-dispatch"><strong>dispatch</strong></a>(...)</dt><dd><tt>Dispatch&nbsp;method,&nbsp;which&nbsp;executes&nbsp;a&nbsp;compute&nbsp;shader&nbsp;with&nbsp;resources&nbsp;bound.<br>
 &nbsp;<br>
 Parameters:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;(int):&nbsp;the&nbsp;number&nbsp;of&nbsp;groups&nbsp;on&nbsp;the&nbsp;x&nbsp;axis.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;y&nbsp;(int):&nbsp;the&nbsp;number&nbsp;of&nbsp;groups&nbsp;on&nbsp;the&nbsp;y&nbsp;axis.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;z&nbsp;(int):&nbsp;&nbsp;the&nbsp;number&nbsp;of&nbsp;groups&nbsp;on&nbsp;the&nbsp;z&nbsp;axis.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;(int)(optional):&nbsp;the&nbsp;number&nbsp;of&nbsp;groups&nbsp;on&nbsp;the&nbsp;x&nbsp;axis.&nbsp;By&nbsp;default&nbsp;is&nbsp;1.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;y&nbsp;(int)(optional):&nbsp;the&nbsp;number&nbsp;of&nbsp;groups&nbsp;on&nbsp;the&nbsp;y&nbsp;axis.&nbsp;By&nbsp;default&nbsp;is&nbsp;1.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;z&nbsp;(int)(optional):&nbsp;&nbsp;the&nbsp;number&nbsp;of&nbsp;groups&nbsp;on&nbsp;the&nbsp;z&nbsp;axis.&nbsp;By&nbsp;default<br>
 &nbsp;&nbsp;&nbsp;&nbsp;shader&nbsp;(<a href="#Shader">Shader</a>):&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Shader">Shader</a>.&nbsp;This&nbsp;will&nbsp;be&nbsp;the&nbsp;compute&nbsp;shader&nbsp;launched&nbsp;on&nbsp;the&nbsp;GPU.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str)(optional):&nbsp;Debug&nbsp;name&nbsp;of&nbsp;this&nbsp;dispatch&nbsp;to&nbsp;see&nbsp;in&nbsp;render&nbsp;doc&nbsp;/&nbsp;profiling&nbsp;captures.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;constants&nbsp;(optional):&nbsp;Constant&nbsp;can&nbsp;be,&nbsp;an&nbsp;array&nbsp;of&nbsp;ints&nbsp;and&nbsp;floats,&nbsp;an&nbsp;array.array<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;or&nbsp;any&nbsp;<a href="builtins.html#object">object</a>&nbsp;compatible&nbsp;with&nbsp;the&nbsp;<a href="builtins.html#object">object</a>&nbsp;protocol,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;<a href="#Buffer">Buffer</a>&nbsp;objects.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;a&nbsp;list&nbsp;of&nbsp;<a href="#Buffer">Buffer</a>&nbsp;objects,&nbsp;these&nbsp;can&nbsp;be&nbsp;indexed&nbsp;via&nbsp;register(b#)&nbsp;in&nbsp;the&nbsp;shader&nbsp;used,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Every&nbsp;other&nbsp;type&nbsp;will&nbsp;always&nbsp;be&nbsp;bound&nbsp;to&nbsp;a&nbsp;constant&nbsp;buffer&nbsp;on&nbsp;register(b0).<br>
-&nbsp;&nbsp;&nbsp;&nbsp;input_tables&nbsp;(optional):&nbsp;a&nbsp;single&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;objects.&nbsp;If&nbsp;a&nbsp;single<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Every&nbsp;other&nbsp;type&nbsp;will&nbsp;always&nbsp;be&nbsp;bound&nbsp;to&nbsp;a&nbsp;constant&nbsp;<a href="#Buffer">Buffer</a>&nbsp;on&nbsp;register(b0).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;samplers&nbsp;(optional):&nbsp;a&nbsp;single&nbsp;Sampler&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;Sampler&nbsp;objects,&nbsp;or&nbsp;a&nbsp;single&nbsp;<a href="#SamplerTable">SamplerTable</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#SamplerTable">SamplerTable</a>&nbsp;objects.&nbsp;If&nbsp;a&nbsp;single<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#SamplerTable">SamplerTable</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;is&nbsp;used,&nbsp;the&nbsp;table&nbsp;will&nbsp;be&nbsp;automatically&nbsp;bound&nbsp;to&nbsp;register&nbsp;space&nbsp;0,&nbsp;and&nbsp;each&nbsp;resource&nbsp;accessed&nbsp;either<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;by&nbsp;bindless&nbsp;dynamic&nbsp;indexing,&nbsp;or&nbsp;a&nbsp;hard&nbsp;register(s#).&nbsp;If&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#SamplerTable">SamplerTable</a>&nbsp;is&nbsp;passed,&nbsp;each&nbsp;resource<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;table&nbsp;will&nbsp;be&nbsp;bound&nbsp;using&nbsp;a&nbsp;register&nbsp;space&nbsp;index&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;table&nbsp;index&nbsp;in&nbsp;the&nbsp;array,&nbsp;and&nbsp;the&nbsp;rules<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to&nbsp;reference&nbsp;each&nbsp;sampler&nbsp;within&nbsp;the&nbsp;table&nbsp;stay&nbsp;the&nbsp;same.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;and&nbsp;array&nbsp;of&nbsp;Sampler&nbsp;objects&nbsp;are&nbsp;passed&nbsp;(or&nbsp;a&nbsp;single&nbsp;Sampler&nbsp;<a href="builtins.html#object">object</a>),&nbsp;each&nbsp;sampler&nbsp;<a href="builtins.html#object">object</a>&nbsp;is&nbsp;bound&nbsp;to&nbsp;a&nbsp;single&nbsp;register&nbsp;and&nbsp;always&nbsp;to&nbsp;the&nbsp;default&nbsp;space&nbsp;(0).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;inputs&nbsp;(optional):&nbsp;a&nbsp;single&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;objects,&nbsp;or&nbsp;a&nbsp;single&nbsp;<a href="#Texture">Texture</a>/<a href="#Buffer">Buffer</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#Texture">Texture</a>/<a href="#Buffer">Buffer</a>&nbsp;objects.&nbsp;If&nbsp;a&nbsp;single<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="builtins.html#object">object</a>&nbsp;is&nbsp;used,&nbsp;the&nbsp;table&nbsp;will&nbsp;be&nbsp;automatically&nbsp;bound&nbsp;to&nbsp;register&nbsp;space&nbsp;0,&nbsp;and&nbsp;each&nbsp;resource&nbsp;accessed&nbsp;either<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;by&nbsp;bindless&nbsp;dynamic&nbsp;indexing,&nbsp;or&nbsp;a&nbsp;hard&nbsp;register(t#).&nbsp;If&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;is&nbsp;passed,&nbsp;each&nbsp;resource<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;table&nbsp;will&nbsp;be&nbsp;bound&nbsp;using&nbsp;a&nbsp;register&nbsp;space&nbsp;index&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;table&nbsp;index&nbsp;in&nbsp;the&nbsp;array,&nbsp;and&nbsp;the&nbsp;rules<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to&nbsp;reference&nbsp;each&nbsp;resource&nbsp;within&nbsp;the&nbsp;table&nbsp;stay&nbsp;the&nbsp;same.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;output_tables&nbsp;(optional):&nbsp;a&nbsp;single&nbsp;<a href="#OutResourceTable">OutResourceTable</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#OutResourceTable">OutResourceTable</a>&nbsp;objects.&nbsp;Same&nbsp;rules&nbsp;as&nbsp;input_tables&nbsp;apply,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;but&nbsp;we&nbsp;use&nbsp;registers&nbsp;u#&nbsp;to&nbsp;address&nbsp;the&nbsp;UAVs</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;and&nbsp;array&nbsp;of&nbsp;<a href="#Texture">Texture</a>/<a href="#Buffer">Buffer</a>&nbsp;objects&nbsp;are&nbsp;passed&nbsp;(or&nbsp;a&nbsp;single&nbsp;<a href="#Texture">Texture</a>/<a href="#Buffer">Buffer</a>&nbsp;<a href="builtins.html#object">object</a>),&nbsp;each&nbsp;<a href="builtins.html#object">object</a>&nbsp;is&nbsp;bound&nbsp;to&nbsp;a&nbsp;single&nbsp;register&nbsp;and&nbsp;always&nbsp;to&nbsp;the&nbsp;default&nbsp;space&nbsp;(0).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;outputs&nbsp;(optional):&nbsp;a&nbsp;single&nbsp;<a href="#OutResourceTable">OutResourceTable</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#OutResourceTable">OutResourceTable</a>&nbsp;objects.&nbsp;Same&nbsp;rules&nbsp;as&nbsp;inputs&nbsp;apply,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;but&nbsp;we&nbsp;use&nbsp;registers&nbsp;u#&nbsp;to&nbsp;address&nbsp;the&nbsp;UAVs.<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;indirect_args&nbsp;(<a href="#Buffer">Buffer</a>)(optional):&nbsp;a&nbsp;single&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Buffer">Buffer</a>,&nbsp;which&nbsp;contains&nbsp;the&nbsp;x,&nbsp;y&nbsp;and&nbsp;z&nbsp;groups&nbsp;packed&nbsp;tightly&nbsp;as&nbsp;3&nbsp;ints.&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;this&nbsp;buffer&nbsp;is&nbsp;provided,&nbsp;the&nbsp;x,&nbsp;y&nbsp;and&nbsp;z&nbsp;arguments&nbsp;are&nbsp;ignored.</tt></dd></dl>
 
 <dl><dt><a name="CommandList-upload_resource"><strong>upload_resource</strong></a>(...)</dt><dd><tt>upload_resource&nbsp;method.&nbsp;Uploads&nbsp;an&nbsp;python&nbsp;array&nbsp;[],&nbsp;an&nbsp;array.array&nbsp;or&nbsp;any&nbsp;buffer&nbsp;protocol&nbsp;compatible&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;a&nbsp;gpu&nbsp;resource.<br>
 &nbsp;<br>
 Parameters:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;source:&nbsp;an&nbsp;array&nbsp;of&nbsp;ints&nbsp;and&nbsp;floats,&nbsp;or&nbsp;an&nbsp;array.array&nbsp;<a href="builtins.html#object">object</a>&nbsp;or&nbsp;any&nbsp;<a href="builtins.html#object">object</a>&nbsp;compatible&nbsp;with&nbsp;the&nbsp;buffer&nbsp;protocol.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;destination&nbsp;(<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>):&nbsp;a&nbsp;destination&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>.</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;source:&nbsp;an&nbsp;array&nbsp;of&nbsp;ints&nbsp;and&nbsp;floats,&nbsp;or&nbsp;an&nbsp;array.array&nbsp;<a href="builtins.html#object">object</a>&nbsp;or&nbsp;any&nbsp;<a href="builtins.html#object">object</a>&nbsp;compatible&nbsp;with&nbsp;the&nbsp;buffer&nbsp;protocol&nbsp;(for&nbsp;example&nbsp;a&nbsp;bytearray).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;destination&nbsp;(<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>):&nbsp;a&nbsp;destination&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;size&nbsp;(tuple):&nbsp;if&nbsp;texture&nbsp;upload,&nbsp;a&nbsp;tuple&nbsp;with&nbsp;the&nbsp;x,&nbsp;y&nbsp;and&nbsp;z&nbsp;size&nbsp;of&nbsp;the&nbsp;box&nbsp;to&nbsp;copy&nbsp;of&nbsp;the&nbsp;source&nbsp;buffer.&nbsp;If&nbsp;a&nbsp;<a href="#Buffer">Buffer</a>&nbsp;upload,&nbsp;then&nbsp;this&nbsp;parameter&nbsp;gets&nbsp;ignored.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;destination_offset&nbsp;(tuple&nbsp;or&nbsp;int):&nbsp;if&nbsp;texture&nbsp;copy,&nbsp;a&nbsp;tuple&nbsp;with&nbsp;x,&nbsp;y,&nbsp;z&nbsp;offsets&nbsp;and&nbsp;mipLevel&nbsp;must&nbsp;be&nbsp;specified.&nbsp;If&nbsp;<a href="#Buffer">Buffer</a>&nbsp;copy,&nbsp;it&nbsp;must&nbsp;be&nbsp;a&nbsp;single&nbsp;integer&nbsp;with&nbsp;the&nbsp;byte&nbsp;offset&nbsp;for&nbsp;the&nbsp;destianation&nbsp;<a href="#Buffer">Buffer</a>.</tt></dd></dl>
 
 <hr>
 Static methods defined here:<br>
@@ -132,7 +152,11 @@ Static methods defined here:<br>
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
 <td colspan=2><tt>Type&nbsp;of&nbsp;buffer<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
-<td width="100%">Static methods defined here:<br>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumBufferType-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
 <dl><dt><a name="EnumBufferType-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
 
 <hr>
@@ -150,12 +174,49 @@ Data descriptors defined here:<br>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
 <td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumFilterType">class <strong>EnumFilterType</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Filter&nbsp;types&nbsp;for&nbsp;samplers&nbsp;enumeration.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumFilterType-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumFilterType-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>Anisotropic</strong></dt>
+<dd><tt>High&nbsp;quality&nbsp;anisotropic&nbsp;filter&nbsp;type.</tt></dd>
+</dl>
+<dl><dt><strong>Linear</strong></dt>
+<dd><tt>Bilinear/trilinear&nbsp;filter&nbsp;type.</tt></dd>
+</dl>
+<dl><dt><strong>Max</strong></dt>
+<dd><tt>Min&nbsp;value&nbsp;of&nbsp;neighborhood&nbsp;filter&nbsp;type.</tt></dd>
+</dl>
+<dl><dt><strong>Min</strong></dt>
+<dd><tt>Max&nbsp;value&nbsp;of&nbsp;neighborhood&nbsp;filter&nbsp;type.</tt></dd>
+</dl>
+<dl><dt><strong>Point</strong></dt>
+<dd><tt>Point&nbsp;(nearest&nbsp;neighbor)&nbsp;filter&nbsp;type.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="EnumFormat">class <strong>EnumFormat</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
 <td colspan=2><tt>Formats&nbsp;supported&nbsp;for&nbsp;Textures&nbsp;and&nbsp;Standard&nbsp;Buffers.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
-<td width="100%">Static methods defined here:<br>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumFormat-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
 <dl><dt><a name="EnumFormat-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
 
 <hr>
@@ -263,7 +324,11 @@ Data descriptors defined here:<br>
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
 <td colspan=2><tt>Memory&nbsp;access&nbsp;enumerations.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
-<td width="100%">Static methods defined here:<br>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumMemFlags-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
 <dl><dt><a name="EnumMemFlags-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
 
 <hr>
@@ -283,7 +348,11 @@ Data descriptors defined here:<br>
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
 <td colspan=2><tt>Type&nbsp;of&nbsp;texture<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
-<td width="100%">Static methods defined here:<br>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumTextureType-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
 <dl><dt><a name="EnumTextureType-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
 
 <hr>
@@ -422,6 +491,56 @@ Data descriptors defined here:<br>
 </dl>
 <dl><dt><strong>window</strong></dt>
 </dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ResourceDownloadRequest">class <strong>ResourceDownloadRequest</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Class&nbsp;that&nbsp;represents&nbsp;a&nbsp;GPU&nbsp;-&gt;&nbsp;CPU&nbsp;resource&nbsp;download&nbsp;request.<br>
+This&nbsp;class&nbsp;can&nbsp;be&nbsp;used&nbsp;to&nbsp;read&nbsp;the&nbsp;memory&nbsp;of&nbsp;a&nbsp;resource&nbsp;in&nbsp;the&nbsp;CPU&nbsp;synchorneously&nbsp;or&nbsp;asynchronesouly&nbsp;(throug&nbsp;polling).<br>
+&nbsp;<br>
+Constructor:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;resource&nbsp;(<a href="#Texture">Texture</a>&nbsp;or&nbsp;<a href="#Buffer">Buffer</a>):&nbsp;The&nbsp;resource&nbsp;to&nbsp;bind&nbsp;and&nbsp;read&nbsp;from&nbsp;the&nbsp;GPU.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;slice_index&nbsp;:&nbsp;If&nbsp;the&nbsp;resource&nbsp;is&nbsp;a&nbsp;texture&nbsp;array,&nbsp;gets&nbsp;the&nbsp;slice&nbsp;index.&nbsp;If&nbsp;out&nbsp;of&nbsp;range&nbsp;or&nbsp;not&nbsp;a&nbsp;texture&nbsp;array,&nbsp;an&nbsp;exception&nbsp;is&nbsp;thrown.&nbsp;Default&nbsp;value&nbsp;is&nbsp;0.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mip_level&nbsp;:&nbsp;If&nbsp;the&nbsp;resource&nbsp;is&nbsp;a&nbsp;texture,&nbsp;gets&nbsp;the&nbsp;mip&nbsp;level.&nbsp;If&nbsp;the&nbsp;mip&nbsp;level&nbsp;is&nbsp;out&nbsp;of&nbsp;range&nbsp;or&nbsp;not&nbsp;a&nbsp;texture,&nbsp;an&nbsp;exception&nbsp;is&nbsp;thrown.&nbsp;Default&nbsp;value&nbsp;is&nbsp;0.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ResourceDownloadRequest-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="ResourceDownloadRequest-data_as_bytearray"><strong>data_as_bytearray</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="ResourceDownloadRequest-data_byte_row_pitch"><strong>data_byte_row_pitch</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="ResourceDownloadRequest-is_ready"><strong>is_ready</strong></a>(...)</dt></dl>
+
+<dl><dt><a name="ResourceDownloadRequest-resolve"><strong>resolve</strong></a>(...)</dt></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="ResourceDownloadRequest-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="SamplerTable">class <strong>SamplerTable</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Sampler&nbsp;table.&nbsp;Use&nbsp;this&nbsp;to&nbsp;specify&nbsp;a&nbsp;table&nbsp;of&nbsp;Samplers&nbsp;to&nbsp;be&nbsp;used&nbsp;in&nbsp;a&nbsp;<a href="#CommandList">CommandList</a>&nbsp;and&nbsp;shader.<br>
+&nbsp;<br>
+Constructor:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str):&nbsp;name&nbsp;/&nbsp;identifier&nbsp;of&nbsp;this&nbsp;sampler&nbsp;table.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;samplers:&nbsp;array&nbsp;of&nbsp;Samplers&nbsp;to&nbsp;be&nbsp;specified.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="SamplerTable-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="SamplerTable-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
@@ -602,7 +721,9 @@ Parameters:<br>
     
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><strong>BufferType</strong> = &lt;gpu.EnumBufferType object&gt;<br>
+<strong>FilterType</strong> = &lt;gpu.EnumFilterType object&gt;<br>
 <strong>Format</strong> = &lt;gpu.EnumFormat object&gt;<br>
 <strong>MemFlags</strong> = &lt;gpu.EnumMemFlags object&gt;<br>
+<strong>TextureAddressMode</strong> = &lt;gpu.TextureAddressMode object&gt;<br>
 <strong>TextureType</strong> = &lt;gpu.EnumTextureType object&gt;</td></tr></table>
 </body></html>

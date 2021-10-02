@@ -76,8 +76,8 @@ All documentation of the coalpy Python API is self contained inside the Source/p
 To generate the documentation, cd into the t2-output/win64-msvc-[release|debug|production]-default folder, and run the commands:
 
 ```
-python -m pydoc coalpy
-python -m pydoc coalpy.gpu
+python -m pydoc -w coalpy
+python -m pydoc -w coalpy.gpu
 ```
 
 This will generate coalpy.html and coalpy.gpu.html which can be copied into the docs directory.
