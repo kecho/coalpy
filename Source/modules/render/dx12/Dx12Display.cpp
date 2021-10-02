@@ -135,6 +135,8 @@ void Dx12Display::waitForGpu()
 
 void Dx12Display::resize(unsigned int width, unsigned int height)
 {
+    width = max(width, 1u);
+    height = max(height, 1u);
     waitForGpu();
 
     for (auto t : m_textures)
