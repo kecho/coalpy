@@ -1,11 +1,12 @@
 # coalpy
 Compute abstraction layer for python.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://app.travis-ci.com/kecho/coalpy.svg?branch=master)](https://app.travis-ci.com/github/kecho/coalpy/branches)
+
 Coalpy is a free low friction python 3.9 native module for Windows. Coalpy's main goal is to make modern DX12 GPU compute software easy to write and deploy.
 
 ![seascape_example](docs/images/seascape.png?raw=true "Seascape shadertoy by Alexander Alekseev aka TDM - 2014.")
-[![Build Status](https://app.travis-ci.com/kecho/coalpy.svg?branch=master)](https://app.travis-ci.com/github/kecho/coalpy/branches)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Python module documentation
 
