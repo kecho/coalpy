@@ -145,17 +145,17 @@ private:
     ResourceHandle m_source;
     ResourceHandle m_destination;
 
-    int m_sourceX = -1;
-    int m_sourceY = -1;
-    int m_sourceZ = -1;
+    int m_sourceX = 0;
+    int m_sourceY = 0;
+    int m_sourceZ = 0;
 
     int m_destX = 0;
     int m_destY = 0;
     int m_destZ = 0;
 
-    int m_sizeX = 0;
-    int m_sizeY = 0;
-    int m_sizeZ = 0;
+    int m_sizeX = -1;
+    int m_sizeY = -1;
+    int m_sizeZ = -1;
 
     int m_srcMipLevel = 0;
     int m_dstMipLevel = 0;

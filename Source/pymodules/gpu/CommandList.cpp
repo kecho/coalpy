@@ -6,6 +6,7 @@
 #include "Resources.h"
 #include "TypeIds.h"
 #include "PyUtils.h"
+#include <longobject.h>
 #include <coalpy.render/IDevice.h>
 #include <coalpy.render/Resources.h>
 #include <coalpy.render/CommandList.h>
@@ -20,7 +21,6 @@ namespace methods
     static PyObject* cmdDispatch(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* cmdCopyResource(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* cmdUploadResource(PyObject* self, PyObject* vargs, PyObject* kwds);
-    static PyObject* cmdDownloadResource(PyObject* self, PyObject* vargs, PyObject* kwds);
 }
 
 static PyMethodDef g_cmdListMethods[] = {
@@ -36,7 +36,7 @@ static PyMethodDef g_cmdListMethods[] = {
             constants (optional): Constant can be, an array of ints and floats, an array.array
                                   or any object compatible with the object protocol, or a list of Buffer objects.
                                   If a list of Buffer objects, these can be indexed via register(b#) in the shader used,
-                                  Every other type will always be bound to a constant buffer on register(b0).
+                                  Every other type will always be bound to a constant Buffer on register(b0).
             samplers (optional): a single Sampler object, or an array of Sampler objects, or a single SamplerTable object, or an array of SamplerTable objects. If a single
                                    SamplerTable object is used, the table will be automatically bound to register space 0, and each resource accessed either
                                    by bindless dynamic indexing, or a hard register(s#). If an array of SamplerTable is passed, each resource
@@ -54,19 +54,23 @@ static PyMethodDef g_cmdListMethods[] = {
     )"),
     KW_FN(copy_resource, cmdCopyResource, R"(
         copy_resource method, copies one resource to another.
-
+        Both source and destination must be the same type (either Buffer or textures).
         Parameters:
             source (Texture or Buffer): an object of type Texture or Buffer. This will be the source resource to copy from.
             destination (Texture or Buffer): an object of type Texture or Buffer. This will be the destination resource to copy to.
+            source_offset (tuple or int): if texture copy, a tuple with x, y, z offsets and mipLevel must be specified. If Buffer copy, it must be a single integer with the byte offset for the source Buffer.
+            destination_offset (tuple or int): if texture copy, a tuple with x, y, z offsets and mipLevel must be specified. If Buffer copy, it must be a single integer with the byte offset for the destianation Buffer.
+            size (tuple or int): if texture a tuple with the x, y and z size. If Buffer just an int with the proper byte size. Default covers the entire size.
     )"),
     KW_FN(upload_resource, cmdUploadResource, R"(
         upload_resource method. Uploads an python array [], an array.array or any buffer protocol compatible object to a gpu resource.
         
         Parameters:
-            source: an array of ints and floats, or an array.array object or any object compatible with the buffer protocol.
+            source: an array of ints and floats, or an array.array object or any object compatible with the buffer protocol (for example a bytearray).
             destination (Texture or Buffer): a destination object of type Texture or Buffer.
+            size (tuple): if texture upload, a tuple with the x, y and z size of the box to copy of the source buffer. If a Buffer upload, then this parameter gets ignored.
+            destination_offset (tuple or int): if texture copy, a tuple with x, y, z offsets and mipLevel must be specified. If Buffer copy, it must be a single integer with the byte offset for the destianation Buffer.
     )"),
-    /*KW_FN(download_resource, cmdDownloadResource, ""),*/
     FN_END
 };
 
@@ -374,10 +378,11 @@ static bool getBufferProtocolObject(
     return true;
 }
 
-static bool getResourceObject(ModuleState& moduleState, PyObject* obj, render::ResourceHandle& handle)
+static bool getResourceObject(ModuleState& moduleState, PyObject* obj, render::ResourceHandle& handle, bool& isBuffer)
 {
     auto* texType = moduleState.getType(Texture::s_typeId);
     auto* buffType = moduleState.getType(Buffer::s_typeId);
+    isBuffer = false;
     if (texType == obj->ob_type)
     {
         auto* texObj = (Texture*)obj;
@@ -386,6 +391,7 @@ static bool getResourceObject(ModuleState& moduleState, PyObject* obj, render::R
     }
     else if (buffType == obj->ob_type)
     {
+        isBuffer = true;
         auto* buffObj = (Buffer*)obj;
         handle = buffObj->buffer;
         return true;
@@ -533,24 +539,120 @@ namespace methods
     {
         ModuleState& moduleState = parentModule(self);
         auto& cmdList = *((CommandList*)self); 
-        static char* arguments[] = { "source", "destination", nullptr };
+        static char* arguments[] = { "source", "destination", "source_offset", "destination_offset", "size", nullptr };
         PyObject* source = nullptr;
         PyObject* destination = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "OO", arguments, &source, &destination))
+        PyObject* sourceOffsetObj = nullptr;
+        PyObject* destinationOffsetObj = nullptr;
+        PyObject* sizeObj = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "OO|OOO", arguments, &source, &destination, &sourceOffsetObj, &destinationOffsetObj, &sizeObj))
             return nullptr;
 
         render::ResourceHandle sourceHandle;
         render::ResourceHandle destHandle;
-        if (!getResourceObject(moduleState, source, sourceHandle))
+        bool srcIsBuffer = false;
+        if (!getResourceObject(moduleState, source, sourceHandle, srcIsBuffer))
         {
             PyErr_SetString(moduleState.exObj(), "Source resource must be type texture or buffer");
             return nullptr;
         }
 
-        if (!getResourceObject(moduleState, destination, destHandle))
+        bool destIsBuffer = false;
+        if (!getResourceObject(moduleState, destination, destHandle, destIsBuffer))
         {
             PyErr_SetString(moduleState.exObj(), "Destination resource must be type texture or buffer");
             return nullptr;
+        }
+
+        if (destIsBuffer != srcIsBuffer)
+        {
+            PyErr_Format(moduleState.exObj(), "Destination and source must be both either a texture or a buffer. Source is a %s and destination a %s. ", srcIsBuffer ? "buffer" : "texture", destIsBuffer ? "buffer" : "texture");
+            return nullptr;
+        }
+
+        if (destIsBuffer)
+        {
+            int byteSize = -1;  
+            int sourceOffset = 0;  
+            int destinationOffset = 0;  
+            if (sourceOffsetObj != nullptr)
+            {
+                if (!PyLong_Check(sourceOffsetObj))
+                {
+                    PyErr_SetString(moduleState.exObj(), "The argument provided for source_offset must be an integer when performing buffer to buffer copies.");
+                    return nullptr;
+                }
+        
+                sourceOffset = (int)PyLong_AsLong(sourceOffsetObj);
+            }
+
+            if (destinationOffsetObj != nullptr)
+            {
+                if (!PyLong_Check(destinationOffsetObj))
+                {
+                    PyErr_SetString(moduleState.exObj(), "The argument provided for destination_offset must be an integer when performing buffer to buffer copies.");
+                    return nullptr;
+                }
+
+                destinationOffset = (int)PyLong_AsLong(destinationOffsetObj);
+            }
+
+            if (sizeObj != nullptr)
+            {
+                if (!PyLong_Check(sizeObj))
+                {
+                    PyErr_SetString(moduleState.exObj(), "The argument provided for size must be an integer when performing buffer to buffer copies.");
+                    return nullptr;
+                }
+
+                byteSize = (int)PyLong_AsLong(sizeObj);
+            }
+
+            render::CopyCommand cmd;
+            cmd.setBuffers(
+                render::Buffer { sourceHandle.handleId }, render::Buffer { destHandle.handleId},
+                byteSize, sourceOffset, destinationOffset);
+            cmdList.cmdList->writeCommand(cmd);
+        }
+        else
+        {
+            int sourceArgs[4] = { 0, 0, 0, 0 }; //sourceX, sourceY, sourceZ and srcMipLevel
+            if (sourceOffsetObj != nullptr)
+            {
+                if (!getTupleValues(sourceOffsetObj, sourceArgs, 1, 4))
+                {
+                    PyErr_SetString(moduleState.exObj(), "The argument provided for source_offset must be a tuple or list of 1 to 4 ints [sourceX, sourceY, sourceZ, sourceMipLevel] when performing texture to texture copies.");
+                    return nullptr;
+                }
+            }
+
+            int destinationArgs[4] = { 0, 0, 0, 0 }; //destX, destY, destZ and destMipLevel
+            if (destinationOffsetObj != nullptr)
+            {
+                if (!getTupleValues(destinationOffsetObj, destinationArgs, 1, 4))
+                {
+                    PyErr_SetString(moduleState.exObj(), "The argument provided for destination_offset must be a tuple or list of 1 to 4 ints [destX, destY, destZ, destMipLevel] when performing texture to texture copies.");
+                    return nullptr;
+                }
+            }
+
+            int sizesArgs[3] = { -1, -1, -1 }; //sizeX, sizeY, sizeZ
+            if (sizeObj != nullptr)
+            {
+                if (!getTupleValues(sizeObj, sizesArgs, 1, 3))
+                {
+                    PyErr_SetString(moduleState.exObj(), "The argument provided for size must be a tuple or list of 1 to 3 ints [sizeX, sizeY, sizeZ] when performing texture to texture copies.");
+                    return nullptr;
+                }
+            }
+
+            render::CopyCommand cmd;
+            cmd.setTextures( render::Texture { sourceHandle.handleId }, render::Texture { destHandle.handleId },
+                sizesArgs[0], sizesArgs[1], sizesArgs[2],
+                sourceArgs[0], sourceArgs[1], sourceArgs[2],
+                destinationArgs[0], destinationArgs[1], destinationArgs[2],
+                sourceArgs[3], destinationArgs[3]);
+            cmdList.cmdList->writeCommand(cmd);
         }
 
         Py_INCREF(source);
@@ -558,9 +660,6 @@ namespace methods
         Py_INCREF(destination);
         cmdList.references.objects.push_back(destination);
         
-        render::CopyCommand cmd;
-        cmd.setResources(sourceHandle, destHandle);
-        cmdList.cmdList->writeCommand(cmd);
 
         Py_RETURN_NONE;
     }
@@ -569,14 +668,17 @@ namespace methods
     {
         ModuleState& moduleState = parentModule(self);
         auto& cmdList = *((CommandList*)self); 
-        static char* arguments[] = { "source", "destination", nullptr };
+        static char* arguments[] = { "source", "destination", "size", "destination_offset", nullptr };
         PyObject* source = nullptr;
         PyObject* destination = nullptr;
-        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "OO", arguments, &source, &destination))
+        PyObject* sizeObj = nullptr;
+        PyObject* destinationOffsetObj = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "OO|OO", arguments, &source, &destination, &sizeObj, &destinationOffsetObj))
             return nullptr;
 
         render::ResourceHandle destHandle;
-        if (!getResourceObject(moduleState, destination, destHandle))
+        bool isDestBuffer = false;
+        if (!getResourceObject(moduleState, destination, destHandle, isDestBuffer))
         {
             PyErr_SetString(moduleState.exObj(), "Destination resource must be type texture or buffer");
             return nullptr;
@@ -614,7 +716,56 @@ namespace methods
             PyErr_SetString(moduleState.exObj(), "Source buffer must not be of size 0 or null.");
             return nullptr;
         }
-        
+
+        if (isDestBuffer)
+        {
+            int destinationOffset = 0;  
+
+            if (destinationOffsetObj != nullptr)
+            {
+                if (!PyLong_Check(destinationOffsetObj))
+                {
+                    PyErr_SetString(moduleState.exObj(), "The argument provided for destination_offset must be an integer when performing buffer upload.");
+                    return nullptr;
+                }
+    
+                destinationOffset = (int)PyLong_AsLong(destinationOffsetObj);
+            }
+
+            render::UploadCommand cmd;
+            cmd.setData(bufferProtocolPtr, bufferProtocolSize, destHandle);
+            cmd.setBufferDestOffset(destinationOffset);
+            cmdList.cmdList->writeCommand(cmd);
+        }
+        else
+        {
+            int sizeArgs[3] = { 1, 1, 1 };
+            if (sizeObj != nullptr)
+            {
+                if (!getTupleValues(sizeObj, sizeArgs, 1, 3))
+                {
+                    PyErr_SetString(moduleState.exObj(), "The argument provided for size must be a tuple of x, y and z texture sizes for the source.");
+                    return nullptr;
+                }
+            }
+
+            int destinationArgs[4] = { 0, 0, 0, 0 };
+            if (destinationOffsetObj != nullptr)
+            {
+                if (!getTupleValues(destinationOffsetObj, destinationArgs, 1, 4))
+                {
+                    PyErr_SetString(moduleState.exObj(), "The argument provided for desintation offset must be a tuple with 4 values, destination x, y z and mip level");
+                    return nullptr;
+                }
+            }
+
+            render::UploadCommand cmd;
+            cmd.setData(bufferProtocolPtr, bufferProtocolSize, destHandle);
+            cmd.setTextureDestInfo(sizeArgs[0], sizeArgs[1], sizeArgs[2],
+                destinationArgs[0], destinationArgs[1], destinationArgs[2], destinationArgs[3]);
+            cmdList.cmdList->writeCommand(cmd);
+        }
+
         if (useSrcReference)
         {
             Py_INCREF(source);
@@ -623,16 +774,6 @@ namespace methods
         Py_INCREF(destination);
         cmdList.references.objects.push_back(destination);
 
-        render::UploadCommand cmd;
-        cmd.setBufferDestOffset(0u);
-        cmd.setData(bufferProtocolPtr, bufferProtocolSize, destHandle);
-        cmdList.cmdList->writeCommand(cmd);
-
-        Py_RETURN_NONE;
-    }
-
-    PyObject* cmdDownloadResource(PyObject* self, PyObject* vargs, PyObject* kwds)
-    {
         Py_RETURN_NONE;
     }
 }

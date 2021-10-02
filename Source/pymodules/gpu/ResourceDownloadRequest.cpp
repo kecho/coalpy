@@ -52,7 +52,6 @@ int ResourceDownloadRequest::init(PyObject* self, PyObject * vargs, PyObject* kw
 {
     auto& request = *((ResourceDownloadRequest*)self);
     new (&request) ResourceDownloadRequest;
-
     ModuleState& moduleState = parentModule(self);
     if (!moduleState.checkValidDevice())
         return -1;
@@ -100,7 +99,6 @@ int ResourceDownloadRequest::init(PyObject* self, PyObject * vargs, PyObject* kw
     }
 
     request.resource = renderResource;
-
     render::CommandList* cmdList = moduleState.newCommandList();
     render::DownloadCommand cmd;
     cmd.setData(renderResource);
@@ -115,15 +113,16 @@ int ResourceDownloadRequest::init(PyObject* self, PyObject * vargs, PyObject* kw
         PyErr_Format(moduleState.exObj(), "Failed creating resource download request, error: %s", scheduleStatus.message.c_str());
         return -1;
     }
+
     moduleState.deleteCommandList(cmdList);
 
     request.mipLevel = mipLevel;
     request.sliceIndex = sliceIndex;
     request.workHandle = scheduleStatus.workHandle;
-
     request.resourcePyObj = resourcePyObj;
     Py_INCREF(resourcePyObj);
     return 0;
+
 }
 
 void ResourceDownloadRequest::destroy(PyObject* self)
@@ -135,8 +134,11 @@ void ResourceDownloadRequest::destroy(PyObject* self)
     Py_XDECREF(request.dataAsByteArray);
     Py_XDECREF(request.rowBytesPitchObject);
 
-    if (!request.workHandle.valid())
+    if (request.workHandle.valid())
         moduleState.device().release(request.workHandle);
+
+    request.~ResourceDownloadRequest();
+    Py_TYPE(self)->tp_free(self);
 }
 
 namespace methods

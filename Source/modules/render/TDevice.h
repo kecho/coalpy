@@ -87,6 +87,8 @@ ScheduleStatus TDevice<PlatDevice>::schedule(CommandList** commandLists, int lis
 template<class PlatDevice>
 void TDevice<PlatDevice>::release(WorkHandle handle)
 {
+    auto& platDevice = *((PlatDevice*)this);
+    platDevice.internalReleaseWorkHandle(handle);
     m_workDb.release(handle);
 }
 

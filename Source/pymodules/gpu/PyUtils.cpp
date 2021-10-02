@@ -1,6 +1,8 @@
 #include "PyUtils.h"
 #include "ModuleState.h"
-
+#include <tupleobject.h>
+#include <listobject.h>
+#include <longobject.h>
 
 namespace coalpy
 {
@@ -41,6 +43,48 @@ bool getArrayOfNums(ModuleState& moduleState, PyObject* constants, std::vector<i
     }
 
     return true;
+}
+
+bool getTupleValues(PyObject* obj, int* outArray, int minCount, int maxCount)
+{
+    if (obj == nullptr)
+        return false;
+
+    if (PyTuple_Check(obj))
+    {
+        int sz = (int)PyTuple_Size(obj);
+        if (sz < minCount || sz > maxCount)
+            return false;
+
+        for (int i = 0; i < sz; ++i)
+        {
+            PyObject* item = PyTuple_GetItem(obj, i);
+            if (item == nullptr || !PyLong_Check(item))
+                return false;
+
+            outArray[i] = (int)PyLong_AsLong(item);
+        }
+
+        return true;
+    }
+    else if (PyList_Check(obj))
+    {
+        int sz = (int)PyList_Size(obj);
+        if (sz < minCount || sz > maxCount)
+            return false;
+
+        for (int i = 0; i < sz; ++i)
+        {
+            PyObject* item = PyList_GetItem(obj, i);
+            if (item == nullptr || !PyLong_Check(item))
+                return false;
+
+            outArray[i] = (int)PyLong_AsLong(item);
+        }
+        return true;
+    }
+    else
+        return false;
 }
 
 }

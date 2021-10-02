@@ -369,7 +369,7 @@ bool processCopy(const AbiCopyCmd* cmd, const unsigned char* data, WorkBuildCont
         int remainingSizeX = resourceInfo.sizeX - offsetX;
         int remainingSizeY = resourceInfo.sizeY - offsetY;
         int remainingSizeZ = resourceInfo.sizeZ - offsetZ;
-        if (cmd->sizeX > remainingSizeX || cmd->sizeY > remainingSizeY || cmd->sizeZ > remainingSizeZ)
+        if (cmd->sizeX > remainingSizeX || cmd->sizeY > remainingSizeY || cmd->sizeZ > remainingSizeZ || offsetX < 0 || offsetY < 0 || offsetZ < 0)
         {
             std::stringstream ss;
             ss << resourceTypeName << " in copy command is outside of bounds. Resource sizes are ["
@@ -446,7 +446,7 @@ bool processUpload(const AbiUploadCmd* cmd, const unsigned char* data, WorkBuild
     if (info.uploadDestinationMemoryInfo.isBuffer)
     {
         size_t remainingSize = info.uploadDestinationMemoryInfo.byteSize - cmd->destX;
-        if (cmd->sourceSize > remainingSize)
+        if (cmd->sourceSize > remainingSize || cmd->destX < 0)
         {
             std::stringstream ss;
             ss << "Upload command request exceeded resource capacity. Tried to upload "
@@ -483,7 +483,7 @@ bool processUpload(const AbiUploadCmd* cmd, const unsigned char* data, WorkBuild
         int sizeLeftX = info.uploadDestinationMemoryInfo.width - cmd->destX;
         int sizeLeftY = info.uploadDestinationMemoryInfo.height  - cmd->destY;
         int sizeLeftZ = info.uploadDestinationMemoryInfo.depth - cmd->destZ;
-        if (szX > sizeLeftX || szY > sizeLeftY || szZ > sizeLeftZ)
+        if (szX > sizeLeftX || szY > sizeLeftY || szZ > sizeLeftZ || cmd->destX < 0 || cmd->destY < 0 || cmd->destZ)
         {
             std::stringstream ss;
             ss << "Upload of texture window of size"

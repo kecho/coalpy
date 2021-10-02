@@ -374,7 +374,7 @@ void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCm
     Dx12ResourceCollection& resources = m_device.resources();
     Dx12Resource& destinationResource = resources.unsafeGetResource(uploadCmd->destination);
     CPY_ASSERT(cmdInfo.uploadBufferOffset < m_uploadMemBlock.uploadSize);
-    CPY_ASSERT((m_uploadMemBlock.uploadSize - cmdInfo.uploadBufferOffset) <= cmdInfo.uploadDestinationMemoryInfo.byteSize);
+    CPY_ASSERT((m_uploadMemBlock.uploadSize - cmdInfo.uploadBufferOffset) >= uploadCmd->sourceSize);
     if (destinationResource.isBuffer())
     {
         //TODO: this can be jobified.

@@ -393,7 +393,7 @@ PyObject* schedule(PyObject* self, PyObject* vargs, PyObject* kwds)
     auto result = moduleState.device().schedule(cmdListsVector.data(), (int)cmdListsVector.size());
     if (!result.success())
     {
-        PyErr_Format(moduleState.exObj(), "schedule call failed, reson: %s", result.message.c_str());
+        PyErr_Format(moduleState.exObj(), "schedule call failed, reason: %s", result.message.c_str());
         return nullptr;
     }
 
