@@ -30,7 +30,13 @@ void ImguiBuilder::constructType(PyTypeObject& t)
 {
     t.tp_name = "gpu.ImguiBuilder";
     t.tp_basicsize = sizeof(ImguiBuilder);
-    t.tp_doc   = "";
+    t.tp_doc   = R"(
+    Imgui builder class. Use this class' methods to build a Dear ImGUI on a specified window.
+    To utilize you need to instantiate a Window object. In its constructor set use_imgui to True (which is by default).
+    On the on_render function, you will receive a RenderArgs object. There will be a ImguiBuilder object in the imgui member that you can now
+    query to construct your user interface.
+    Coalpy does not support creation of a ImguiBuilder object, it will always be passed as an argument on the RenderArgs of the window.
+    )";
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
     t.tp_init = ImguiBuilder::init;
@@ -137,7 +143,7 @@ PyObject* inputText(PyObject* self, PyObject* vargs, PyObject* kwds)
     CHECK_IMGUI
     char* label;
     char* inputStr;
-    static char* argnames[] = { "label", "str", nullptr };
+    static char* argnames[] = { "label", "v", nullptr };
     if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "ss", argnames, &label, &inputStr))
         return nullptr;
 

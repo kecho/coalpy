@@ -9,13 +9,13 @@ namespace gpu
 {
 
 static PyMemberDef g_renderArgMemembers[] = {
-    { "render_time", T_DOUBLE, offsetof(RenderArgs, renderTime), READONLY, "" },
-    { "delta_time",  T_DOUBLE, offsetof(RenderArgs, deltaTime),  READONLY, "" },
-    { "window", T_OBJECT, offsetof(RenderArgs, window), READONLY, "" },
-    { "user_data", T_OBJECT, offsetof(RenderArgs, userData), READONLY, "" },
-    { "width",  T_INT, offsetof(RenderArgs, width), READONLY, "" },
-    { "height", T_INT, offsetof(RenderArgs, height), READONLY, "" },
-    { "imgui", T_OBJECT, offsetof(RenderArgs, imguiBuilder), READONLY, "" },
+    { "render_time", T_DOUBLE, offsetof(RenderArgs, renderTime), READONLY, "Total rendering time from the start of this application, in milliseconds" },
+    { "delta_time",  T_DOUBLE, offsetof(RenderArgs, deltaTime),  READONLY, "Delta time from previous frame in milliseconds" },
+    { "window", T_OBJECT, offsetof(RenderArgs, window), READONLY, "The window object being rendered." },
+    { "user_data", T_OBJECT, offsetof(RenderArgs, userData), READONLY, "Custom user_data object set in the Window object. You can store here your view user data such as texture / buffers / shaders." },
+    { "width",  T_INT, offsetof(RenderArgs, width), READONLY, "The current width of this window." },
+    { "height", T_INT, offsetof(RenderArgs, height), READONLY, "The current height of this window." },
+    { "imgui", T_OBJECT, offsetof(RenderArgs, imguiBuilder), READONLY, "The ImguiBuilder object, used to build a Dear Imgui. For more info read on Window constructor,  ImguiBuilder and its methods." },
     { nullptr }
 };
 

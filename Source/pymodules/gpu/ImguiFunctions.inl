@@ -30,16 +30,121 @@ IMGUI_FN(pop_id, popId, R"(
     Pops a corresponding name for a scope. Must be paired with a push_id.
 )")
 
-IMGUI_FN(begin_main_menu_bar, beginMainMenuBar, "")
-IMGUI_FN(end_main_menu_bar, endMainMenuBar, "")
-IMGUI_FN(begin_menu, beginMenu, "")
-IMGUI_FN(menu_item, menuItem, "")
-IMGUI_FN(end_menu, endMenu, "")
-IMGUI_FN(collapsing_header, collapsingHeader, "")
-IMGUI_FN(show_demo_window, showDemoWindow, "")
-IMGUI_FN(slider_float, sliderFloat, "")
-IMGUI_FN(input_float, inputFloat, "")
-IMGUI_FN(input_text, inputText, "")
-IMGUI_FN(text, text, "")
-IMGUI_FN(button, button, "")
-IMGUI_FN(checkbox, checkbox, "")
+IMGUI_FN(begin_main_menu_bar, beginMainMenuBar, R"(
+    Starts the scope of a main menu at the top of the window. Use the MainMenu and BeginMenu/EndMenu functions to add / remove components.
+    Must be paired with a end_main_menu_bar method.
+
+    Returns:
+        if returns true, call end_main_menu_bar. If returns false means its not rendered.
+)")
+
+IMGUI_FN(end_main_menu_bar, endMainMenuBar, R"(
+    End method for main menu bar. Must be paired with a begin_main_menu_bar method.
+    
+    Only call this if begin_main_menu_bar returns true.
+)")
+
+IMGUI_FN(begin_menu, beginMenu, R"(
+    Starts a menu item in the menu bar. Must be paird with an end_menu method.
+    Parameters:
+        label (str): name of this menu item. Can recursively have more menu items.
+
+    Returns:
+        if returns true, call end_menu. If returns false means its not rendered.
+)")
+
+IMGUI_FN(menu_item, menuItem, R"(
+    Parameters:
+        label (str) : label of this menu item.
+        shortcut (str): short cut key for this menu item.
+        enabled (bool) : enables / disables menu item.
+
+    Returns:
+        True if activated. False otherwise.
+)")
+
+IMGUI_FN(end_menu, endMenu, R"(
+    End method for menu item. Must be paired with a begin_menu method.
+    Only call this if begin_menu returns true.
+)")
+
+IMGUI_FN(collapsing_header, collapsingHeader, R"(
+    Returns the state of a header label (collapsed or non collapsed).
+
+    Parameters:
+        (label) str : label of this item.
+
+    Returns:
+        True if open, False otherwise.
+)")
+
+IMGUI_FN(show_demo_window, showDemoWindow, R"(
+    Shows the demo window.
+)")
+
+IMGUI_FN(slider_float, sliderFloat, R"(
+    Draws a slider for a float value.
+
+    Parameters:
+        label (str): the label name for this slider.
+        v (float): the actual value to draw the slider.
+        v_min (float); the minimum possible value.
+        v_max (float): the maximum possible value.
+        fmt (str)(optional): A formatting value to draw the float. For example %.3f draws 3 decimal precision.
+
+    Returns:
+        The new float value that the user set. Feed this value back on v on the next call to see a proper state update.
+)")
+
+IMGUI_FN(input_float, inputFloat, R"(
+    Draws a bix to input a single float value.
+    
+    Parameters:
+        label (str): the label name for this box.
+        v (float): the actual value to draw the slider.
+        step (float)(optional): step value when scrolling slow
+        step_fast (float)(optional): step value when scrolling fast.
+        fmt (str)(optional): A formatting value to draw the float. For example %.3f draws 3 decimal precision.
+
+    Returns:
+        The new float value that the user set. Feed this value back on v on the next call to see a proper state update.
+)")
+
+IMGUI_FN(input_text, inputText, R"(
+    Draws a box for input text.
+    
+    Parameters:
+        label (str): the label name for this box.
+        v (str): the actual string value to display by default.
+
+    Returns:
+        The new str value that the user set. Feed this value back on v on the next call to see a proper state update.
+)")
+
+IMGUI_FN(text, text, R"(
+    Draws a box with solid text.
+
+    Parameters:
+        text (str): the label value to display
+)")
+
+IMGUI_FN(button, button, R"(
+    Draws a button.
+
+    Parameters:
+        label (str): the label name for this button.
+
+    Returns:
+        True if button was pressed, false otherwise.
+)")
+
+IMGUI_FN(checkbox, checkbox, R"(
+    Draws a checkbox ui item.
+
+    Parameters:
+        label (str): the label name for this checkbox.
+        v (bool): The current state of the checkbox
+
+    Returns:
+        The new bool value that the user set. Feed this value back on v on the next call to see a proper state update.
+)")
