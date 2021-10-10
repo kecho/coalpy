@@ -176,8 +176,8 @@ Win32Window::HandleMessageRet Win32Window::handleMessage(
     HandleMessageRet ret = {};
 
     //reset non sticky keys
-    m_inputState.setKeyState(SpecialKeys.MouseLeftDouble, false);
-    m_inputState.setKeyState(SpecialKeys.MouseRightDouble, false);
+    m_inputState.setKeyState(Keys::MouseLeftDouble, false);
+    m_inputState.setKeyState(Keys::MouseRightDouble, false);
 
     switch (message)
     {
@@ -200,6 +200,7 @@ Win32Window::HandleMessageRet Win32Window::handleMessage(
         }
         ret.handled = true;
         break;
+    /*
     case WM_LBUTTONUP:
         m_inputState.setKeyState(SpecialKeys.MouseLeft, true);
         break;
@@ -218,6 +219,7 @@ Win32Window::HandleMessageRet Win32Window::handleMessage(
     case WM_RBUTTONDBLCLK:
         m_inputState.setKeyState(SpecialKeys.MouseRightDouble, true);
         break;
+    */
         
     
     }

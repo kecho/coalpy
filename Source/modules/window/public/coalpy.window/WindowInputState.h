@@ -1,28 +1,12 @@
 #pragma once
+#include <coalpy.window/Keys.h>
 
 namespace coalpy
 {
 
-enum class SpecialKeys
-{
-    LAlt,
-    RAlt,
-    LShift,
-    RShift,    
-    Space,
-    Esc,
-    Num0, Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9,
-    F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
-    MouseLeft,
-    MouseRight,
-    MouseLeftDouble,
-    MouseRightDouble,
-};
-               
 class WindowInputState
 {
 public:
-
     WindowInputState()
     {
         reset();
@@ -32,52 +16,45 @@ public:
     {
         m_mouseX = 0;
         m_mouseY = 0;
-        m_asciiKeyStates = 0;
-        m_specialKeyStates = 0;
+        for (auto& s : m_keyStates)
+            s = 0;
     }
 
     int mouseX() const { return m_mouseX; }
     int mouseY() const { return m_mouseY; }
 
-    bool keyPressed(char key) const
+    void setKeyState(Keys key, bool state)
     {
-        if (key < 'a' || key > 'z')
-            return false;
-
-        return (m_asciiKeyStates & (1 << (int)(key - 'a'))) != 0;
-    }
-
-    void setKeyState(char key, bool state)
-    {
-        if (key < 'a' || key > 'z')
-            return;
-        
-        int mask = (1 << (key - 'a'));
+        int bucket, mask;
+        keyLocation(key, bucket, mask);
         if (state)
-            m_asciiKeyStates |= mask;
+            m_keyStates[bucket] |= mask;
         else
-            m_asciiKeyStates &= ~mask;
+            m_keyStates[bucket] &= ~mask;
     }
 
-    bool specialKeyPressed(SpecialKeys key) const
+    bool keyState(Keys key) const
     {
-        return (m_specialKeyStates & (1 << (int)key)) != 0;
-    }
-
-    void setKeyState(SpecialKeys key, bool state)
-    {
-        int mask = 1 << (int)key;
-        if (state)
-            m_specialKeyStates |= mask;
-        else
-            m_specialKeyStates &= ~mask;
+        int bucket, mask;
+        keyLocation(key, bucket, mask);
+        return (m_keyStates[bucket] & mask) != 0;
     }
 
 private:
+    enum 
+    {
+        KeyStateBatchCount = (((int)Keys::Count + 31) / 32)
+    };
+    
+    void keyLocation(Keys key, int& bucket, int& mask) const
+    {
+        bucket = ((int)key) >> 5;
+        mask = 1 << ((int)key & 31);
+    }
+
     int m_mouseX;
     int m_mouseY;
-    int m_asciiKeyStates;
-    int m_specialKeyStates;
+    int m_keyStates[KeyStateBatchCount];
     
 };
 

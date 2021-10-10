@@ -49,7 +49,7 @@ public:
 
     static LRESULT CALLBACK win32WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-    virtual const WindowInputState& inputState() const { m_inputState; }
+    virtual const WindowInputState& inputState() const { return m_inputState; }
 
 private:
     void createWindow();
