@@ -228,12 +228,14 @@ static Keys translateKey(WPARAM p)
     case VK_F12: return Keys::F12;
     case VK_SPACE: return Keys::Space;
     case VK_RETURN: return Keys::Enter;
-    case '/':  return Keys::Slash;
-    case '\\': return Keys::Backslash;
+    case 0x00BF:  return Keys::Slash;
+    case 0x00DC: return Keys::Backslash;
     case VK_BACK: return Keys::Backspace;
-    case '[':  return Keys::LeftBrac;
-    case ']':  return Keys::RightBrac;
-    case ';':  return Keys::Semicolon;
+    case 0x00DB:  return Keys::LeftBrac;
+    case 0x00DD:  return Keys::RightBrac;
+    case 0x00BA:  return Keys::Semicolon;
+    case 0x00BC: return Keys::Comma;
+    case 0x00BE: return Keys::Dot;
     case VK_LSHIFT: return Keys::LeftShift;
     case VK_RSHIFT: return Keys::RightShift;
     case VK_LCONTROL: return Keys::LeftControl;
@@ -377,6 +379,12 @@ LRESULT CALLBACK Win32Window::win32WinProc(HWND hwnd, UINT message, WPARAM wPara
         {
             if (self->m_inputState.keyState(Keys::G))
                 std::cout << "Key G" << std::endl;
+            if (self->m_inputState.keyState(Keys::Comma))
+                std::cout << "Key ," << std::endl;
+            if (self->m_inputState.keyState(Keys::Dot))
+                std::cout << "Key ." << std::endl;
+            if (self->m_inputState.keyState(Keys::Semicolon))
+                std::cout << "Key ;" << std::endl;
             if (self->m_inputState.keyState(Keys::MouseLeft))
                 std::cout << "Key MouseLeft" << std::endl;
             if (self->m_inputState.keyState(Keys::MouseRight))
