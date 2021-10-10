@@ -44,6 +44,9 @@ public:
     HandleMessageRet handleMessage(
         unsigned message, unsigned int* wparam, unsigned long* lparam);
 
+    HandleMessageRet handleInputMessage(
+        unsigned message, unsigned int* wparam, unsigned long* lparam);
+
     int addHook(WindowHookFn hookFn);
     void removeHook(int hookId);
 

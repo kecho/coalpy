@@ -4,6 +4,12 @@
 #include <coalpy.core/Assert.h>
 #include <unordered_map>
 
+//Uncomment this to print out some key states, to test input capture on a window.
+#define TEST_WIN32_KEY_EVENTS 0
+#if TEST_WIN32_KEY_EVENTS
+#include <iostream>
+#endif
+
 namespace coalpy
 {
 
@@ -36,7 +42,7 @@ void registerWindowClass(ModuleOsHandle handle)
 
     // Set up our window class
     windowClass.cbSize = sizeof(WNDCLASSEX);
-    windowClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+    windowClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     windowClass.lpfnWndProc = Win32Window::win32WinProc;
     windowClass.cbClsExtra = 0;
     windowClass.cbWndExtra = 0;
@@ -168,6 +174,143 @@ void Win32Window::dimensions(int& w, int& h) const
     h = m_desc.height;
 }
 
+static Keys translateKey(WPARAM p)
+{
+    switch (p)
+    {
+    case 'A': return Keys::A;
+    case 'B': return Keys::B;
+    case 'C': return Keys::C;
+    case 'D': return Keys::D;
+    case 'E': return Keys::E;
+    case 'F': return Keys::F;
+    case 'G': return Keys::G;
+    case 'H': return Keys::H;
+    case 'I': return Keys::I;
+    case 'J': return Keys::J;
+    case 'K': return Keys::K;
+    case 'L': return Keys::L;
+    case 'M': return Keys::M;
+    case 'N': return Keys::N;
+    case 'O': return Keys::O;
+    case 'P': return Keys::P;
+    case 'Q': return Keys::Q;
+    case 'R': return Keys::R;
+    case 'S': return Keys::S;
+    case 'T': return Keys::T;
+    case 'U': return Keys::U;
+    case 'V': return Keys::V;
+    case 'W': return Keys::W;
+    case 'X': return Keys::X;
+    case 'Y': return Keys::Y;
+    case 'Z': return Keys::Z;
+    case '0': case VK_NUMPAD0: return Keys::k0;
+    case '1': case VK_NUMPAD1: return Keys::k1;
+    case '2': case VK_NUMPAD2: return Keys::k2;
+    case '3': case VK_NUMPAD3: return Keys::k3;
+    case '4': case VK_NUMPAD4: return Keys::k4;
+    case '5': case VK_NUMPAD5: return Keys::k5;
+    case '6': case VK_NUMPAD6: return Keys::k6;
+    case '7': case VK_NUMPAD7: return Keys::k7;
+    case '8': case VK_NUMPAD8: return Keys::k8;
+    case '9': case VK_NUMPAD9: return Keys::k9;
+    case VK_F1: return Keys::F1;
+    case VK_F2: return Keys::F2;
+    case VK_F3: return Keys::F3;
+    case VK_F4: return Keys::F4;
+    case VK_F5: return Keys::F5;
+    case VK_F6: return Keys::F6;
+    case VK_F7: return Keys::F7;
+    case VK_F8: return Keys::F8;
+    case VK_F9: return Keys::F9;
+    case VK_F10: return Keys::F10;
+    case VK_F11: return Keys::F11;
+    case VK_F12: return Keys::F12;
+    case VK_SPACE: return Keys::Space;
+    case VK_RETURN: return Keys::Enter;
+    case '/':  return Keys::Slash;
+    case '\\': return Keys::Backslash;
+    case VK_BACK: return Keys::Backspace;
+    case '[':  return Keys::LeftBrac;
+    case ']':  return Keys::RightBrac;
+    case ';':  return Keys::Semicolon;
+    case VK_LSHIFT: return Keys::LeftShift;
+    case VK_RSHIFT: return Keys::RightShift;
+    case VK_LCONTROL: return Keys::LeftControl;
+    case VK_RCONTROL: return Keys::RightControl;
+    case VK_LMENU: return Keys::LeftAlt;
+    case VK_RMENU: return Keys::RightAlt;
+    case VK_LBUTTON: return Keys::MouseLeft;
+    case VK_RBUTTON: return Keys::MouseRight;
+    case VK_MBUTTON: return Keys::MouseCenter;
+    default: return Keys::Unknown;
+    }
+}
+
+Win32Window::HandleMessageRet Win32Window::handleInputMessage(unsigned message, unsigned int *wparam, unsigned long* lparam)
+{
+    HandleMessageRet ret{};
+
+    //non sticky events:
+    m_inputState.setKeyState(Keys::MouseLeftDouble, false);
+    m_inputState.setKeyState(Keys::MouseRightDouble, false);
+
+    switch (message)
+    {
+    case WM_SYSKEYDOWN:
+    case WM_KEYDOWN:
+        {
+            Keys k = translateKey((WPARAM)wparam);
+            ret.handled = true;
+            if (k != Keys::Unknown)
+                m_inputState.setKeyState(k, true);
+        }
+    break;
+    case WM_SYSKEYUP:
+    case WM_KEYUP:
+        {
+            Keys k = translateKey((WPARAM)wparam);
+            ret.handled = true;
+            if (k != Keys::Unknown)
+                m_inputState.setKeyState(k, false);
+        }
+    break;
+    case WM_LBUTTONDOWN:
+        ret.handled = true;
+        m_inputState.setKeyState(Keys::MouseLeft, true);
+        break;
+    case WM_LBUTTONUP:
+        ret.handled = true;
+        m_inputState.setKeyState(Keys::MouseLeft, false);
+        break;
+    case WM_RBUTTONDOWN:
+        ret.handled = true;
+        m_inputState.setKeyState(Keys::MouseRight, true);
+        break;
+    case WM_RBUTTONUP:
+        ret.handled = true;
+        m_inputState.setKeyState(Keys::MouseRight, false);
+        break;
+    case WM_MBUTTONDOWN:
+        ret.handled = true;
+        m_inputState.setKeyState(Keys::MouseCenter, true);
+        break;
+    case WM_MBUTTONUP:
+        ret.handled = true;
+        m_inputState.setKeyState(Keys::MouseCenter, false);
+        break;
+    case WM_LBUTTONDBLCLK:
+        ret.handled = true;
+        m_inputState.setKeyState(Keys::MouseLeftDouble, true);
+        break;
+    case WM_RBUTTONDBLCLK:
+        ret.handled = true;
+        m_inputState.setKeyState(Keys::MouseRightDouble, true);
+        break;
+    }
+    return ret;
+}
+
 Win32Window::HandleMessageRet Win32Window::handleMessage(
     unsigned message,
     unsigned int* wparam,
@@ -176,8 +319,7 @@ Win32Window::HandleMessageRet Win32Window::handleMessage(
     HandleMessageRet ret = {};
 
     //reset non sticky keys
-    m_inputState.setKeyState(Keys::MouseLeftDouble, false);
-    m_inputState.setKeyState(Keys::MouseRightDouble, false);
+    auto inputRet = handleInputMessage(message, wparam, lparam);
 
     switch (message)
     {
@@ -200,29 +342,10 @@ Win32Window::HandleMessageRet Win32Window::handleMessage(
         }
         ret.handled = true;
         break;
-    /*
-    case WM_LBUTTONUP:
-        m_inputState.setKeyState(SpecialKeys.MouseLeft, true);
-        break;
-    case WM_LBUTTONDOWN:
-        m_inputState.setKeyState(SpecialKeys.MouseLeft, false);
-        break;
-    case WM_RBUTTONUP:
-        m_inputState.setKeyState(SpecialKeys.MouseRight, true);
-        break;
-    case WM_RBUTTONDOWN:
-        m_inputState.setKeyState(SpecialKeys.MouseRight, false);
-        break;
-    case WM_LBUTTONDBLCLK:
-        m_inputState.setKeyState(SpecialKeys.MouseLeftDouble, true);
-        break;
-    case WM_RBUTTONDBLCLK:
-        m_inputState.setKeyState(SpecialKeys.MouseRightDouble, true);
-        break;
-    */
-        
-    
     }
+
+    if (inputRet.handled)
+        ret.handled = true;
     return ret;
 }
 
@@ -247,6 +370,26 @@ LRESULT CALLBACK Win32Window::win32WinProc(HWND hwnd, UINT message, WPARAM wPara
         }
 
         auto ret = self->handleMessage(message, (unsigned int*)wParam, (unsigned long*)lParam);
+
+//Testing
+#if TEST_WIN32_KEY_EVENTS
+        if (ret.handled)
+        {
+            if (self->m_inputState.keyState(Keys::G))
+                std::cout << "Key G" << std::endl;
+            if (self->m_inputState.keyState(Keys::MouseLeft))
+                std::cout << "Key MouseLeft" << std::endl;
+            if (self->m_inputState.keyState(Keys::MouseRight))
+                std::cout << "Key MouseRight" << std::endl;
+            if (self->m_inputState.keyState(Keys::MouseCenter))
+                std::cout << "Key MouseCenter" << std::endl;
+            if (self->m_inputState.keyState(Keys::MouseRightDouble))
+                std::cout << "Key MouseRightDouble" << std::endl;
+            if (self->m_inputState.keyState(Keys::MouseLeftDouble))
+                std::cout << "Key MouseLeftDouble" << std::endl;
+        }
+#endif
+    
         if (ret.handled)
             return (LRESULT)ret.retCode;
     }

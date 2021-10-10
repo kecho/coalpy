@@ -8,6 +8,7 @@ enum class Keys
     #define KEY_DECL(x) x,
     #include <coalpy.window/Keys.inl>
     #undef KEY_DECL
+    Unknown,
     Count
 };
 
@@ -20,7 +21,7 @@ inline const char* keyName(Keys key)
     #undef KEY_DECL
 
     default:
-        return "Uknown";
+        return "Unknown";
     }
 }
 
