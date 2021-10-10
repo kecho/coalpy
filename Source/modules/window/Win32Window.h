@@ -1,6 +1,7 @@
 #pragma once
 
 #include <coalpy.window/IWindow.h>
+#include <coalpy.window/WindowInputState.h>
 #include <set>
 #include "Config.h"
 #include <map>
@@ -48,6 +49,8 @@ public:
 
     static LRESULT CALLBACK win32WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
+    virtual const WindowInputState& inputState() const { m_inputState; }
+
 private:
     void createWindow();
     void destroyWindow();
@@ -57,6 +60,8 @@ private:
 
     int m_nextHookId;
     std::map<int, WindowHookFn> m_hooks;
+
+    WindowInputState m_inputState;
 };
 
 }

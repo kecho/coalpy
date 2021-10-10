@@ -5,6 +5,8 @@
 namespace coalpy
 {
 
+class WindowInputState;
+
 class IWindow
 {
 public:
@@ -14,6 +16,7 @@ public:
     virtual void open() = 0;
     virtual void dimensions(int& w, int& h) const = 0;
     virtual bool isClosed() = 0;
+    virtual const WindowInputState& inputState() const = 0;
     virtual ~IWindow() {}
 
     inline void setUserData(void* userData) { m_userData = userData; }
