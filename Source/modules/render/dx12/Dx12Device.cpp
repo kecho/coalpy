@@ -41,8 +41,23 @@ struct CardInfos
 {
     bool initialized = false;
     int  refs = 0;
-    SmartPtr<IDXGIFactory4> dxgiFactory;
-    std::vector<SmartPtr<IDXGIAdapter4>> cards;
+    IDXGIFactory4* dxgiFactory = nullptr;
+    std::vector<IDXGIAdapter4*> cards;
+
+    void free()
+    {
+        if (dxgiFactory)
+        {
+            dxgiFactory->Release();
+            dxgiFactory = nullptr;
+        }
+
+        for (auto* c : cards)
+            if (c)
+                c->Release();
+
+        cards.clear();
+    }
 } g_cardInfos;
 
 void cacheCardInfos(CardInfos& cardInfos)
@@ -76,6 +91,8 @@ void cacheCardInfos(CardInfos& cardInfos)
 
         SmartPtr<IDXGIAdapter4> adapter4;
         DX_OK(adapter->QueryInterface((IDXGIAdapter4**)&adapter4));
+        
+        adapter4->AddRef();
         cardInfos.cards.push_back(adapter4);
     }
 }
@@ -84,7 +101,7 @@ void shutdownCardInfos(CardInfos& cardInfos)
 {
     --cardInfos.refs;
     if (cardInfos.refs == 0)
-        cardInfos = CardInfos();
+        cardInfos.free();
 }
 
 ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device)
@@ -193,7 +210,7 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
         return;
 
     int selectedDeviceIdx = std::min<int>(std::max<int>(config.index, 0), (int)g_cardInfos.cards.size() - 1);
-    SmartPtr<IDXGIAdapter4>& selectedCard = g_cardInfos.cards[selectedDeviceIdx];
+    IDXGIAdapter4* selectedCard = g_cardInfos.cards[selectedDeviceIdx];
     if (selectedCard == nullptr)
         return;
 
@@ -394,7 +411,7 @@ void Dx12Device::enumerate(std::vector<DeviceInfo>& outputList)
     }
 
     int index = 0;
-    for (SmartPtr<IDXGIAdapter4>& card : cardInfos->cards)
+    for (IDXGIAdapter4* card : cardInfos->cards)
     {
         outputList.emplace_back();
         DeviceInfo& outputDeviceInfo = outputList.back();

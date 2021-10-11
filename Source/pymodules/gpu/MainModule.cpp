@@ -35,7 +35,10 @@ BOOL WINAPI DllMain(
             break;
 
         case DLL_PROCESS_DETACH:
-            coalpy::gpu::ModuleState::clean();
+            //Cant free dx12 stuff in dllMain
+            //so if we have an existing reference, we just let the graphics api 
+            //deallocate for us. We will get an alive object warning message.
+            //coalpy::gpu::ModuleState::clean(); 
             g_ModuleInstance = nullptr;
             for (auto t : g_allTypes)
                 delete t;
