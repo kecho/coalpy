@@ -4,9 +4,11 @@
 #include <structmember.h>
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/IWindow.h>
+#include <coalpy.window/WindowInputState.h>
 #include <coalpy.render/IDisplay.h>
 #include <coalpy.render/IimguiRenderer.h>
 #include <coalpy.render/IDevice.h>
+#include "HelperMacros.h"
 #include "CoalpyTypeObject.h"
 
 extern coalpy::ModuleOsHandle g_ModuleInstance;
@@ -16,12 +18,36 @@ namespace coalpy
 namespace gpu
 {
 
-
 static PyMemberDef g_windowMembers[] = {
     { "display_texture", T_OBJECT, offsetof(Window, displayTexture), READONLY, "Display Texture. Use this as the output texture in CommmandList dispatch command to write directly to the window." },
     { "user_data", T_OBJECT, offsetof(Window, userData), 0, "Set this user data so its accessible during on_render callback. You can put here the custom state of your window." },
     { nullptr }
 };
+
+namespace methods
+{
+    static PyObject* getSize(PyObject* self, PyObject* vargs, PyObject* kwds);   
+    static PyObject* getKeyState(PyObject* self, PyObject* vargs, PyObject* kwds);   
+}
+
+static PyMethodDef g_windowMethods[] = {
+    KW_FN(get_size, getSize, R"(
+        Returns:
+            returns a touple with the current size of the window (width, height)
+    )"),
+    
+    KW_FN(get_key_state, getKeyState, R"(
+        Gets the pressed state of a queried key. For a list of keys see coalpy.gpu.Keys.
+
+        Parameters:
+            key (int enum): The key (keyboard or mouse) to query info from. Use the coalpy.gpu.Keys enumerations to query a valid key.
+
+        Returns:
+            True if the queried key is pressed. False otherwise.
+    )"),
+    FN_END
+};
+
 
 void Window::constructType(PyTypeObject& t)
 {
@@ -42,6 +68,7 @@ void Window::constructType(PyTypeObject& t)
     t.tp_new = PyType_GenericNew;
     t.tp_init = Window::init;
     t.tp_members = g_windowMembers;
+    t.tp_methods = g_windowMethods;
     t.tp_dealloc = Window::destroy;
 }
 
@@ -154,6 +181,51 @@ void Window::destroy(PyObject* self)
     Py_XDECREF(w->userData);
     w->~Window();
     Py_TYPE(self)->tp_free(self);
+}
+
+namespace methods
+{
+    PyObject* getSize(PyObject* self, PyObject* vargs, PyObject* kwds)
+    {
+        ModuleState& moduleState = parentModule(self);
+        if (!moduleState.checkValidDevice())
+            return nullptr;
+
+        auto& window = *((Window*)self);
+        if (window.object == nullptr)
+        {
+            PyErr_SetString(moduleState.exObj(), "Invalid window queried.");
+            return nullptr;
+        }
+
+        int w, h;
+        window.object->dimensions(w, h);
+        return Py_BuildValue("(ii)", w, h);
+    }
+
+    PyObject* getKeyState(PyObject* self, PyObject* vargs, PyObject* kwds)
+    {
+        ModuleState& moduleState = parentModule(self);
+        if (!moduleState.checkValidDevice())
+            return nullptr;
+
+        auto& window = *((Window*)self);
+        if (window.object == nullptr)
+        {
+            PyErr_SetString(moduleState.exObj(), "Invalid window queried.");
+            return nullptr;
+        }
+
+        coalpy::Keys key;
+        static char* arguments[] = { "key", nullptr };
+        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", arguments, &key))
+            return nullptr;
+
+        if (window.object->inputState().keyState(key))
+            Py_RETURN_TRUE;
+        else
+            Py_RETURN_FALSE;
+    }
 }
 
 class ModuleWindowListener : public IWindowListener

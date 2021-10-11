@@ -11,6 +11,7 @@
 #include "ImguiBuilder.h"
 #include <coalpy.core/Formats.h>
 #include <coalpy.core/Assert.h>
+#include <coalpy.window/Keys.h>
 
 #define EnumsBegin(obj)\
 {\
@@ -118,6 +119,16 @@ void constructTypes(TypeList& outTypes)
             { nullptr, 0, nullptr }
         };
         outTypes.push_back(RenderEnum::constructEnumType("gpu.TextureAddressMode", "TextureAddressMode",  s_TextureAddressingModes, "Address behaviour of texture coordinates enumeration.")); 
+    }
+
+    {
+        static EnumEntry s_InputKeys[] = {
+            #define KEY_DECL(x) { #x, (int)Keys::x, #x " key enumeration." },
+            #include <coalpy.window/Keys.inl>
+            #undef KEY_DECL
+            { nullptr, 0, nullptr }
+        };
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.Keys", "Keys",  s_InputKeys, "Enumeration of keyboard / mouse input keys. To be used with the input_state object from the Window.")); 
     }
 
     outTypes.push_back(registerFormats());
