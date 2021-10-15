@@ -8,14 +8,28 @@ Coalpy is a free low friction python 3.9 native module for Windows. Coalpy's mai
 
 ![seascape_example](docs/images/seascape.png?raw=true "Seascape shadertoy by Alexander Alekseev aka TDM - 2014.")
 
-## Python module documentation
+## Python module
 
 Get started with API documentation here:
 [coalpy.gpu documentation](https://kecho.github.io/coalpy/coalpy.gpu.html)
 
+To install, just run the pip command:
+
+```
+pip install coalpy
+```
+
+To check that coalpy is installed properly run the seascape example:
+
+```
+python -m coalpy.examples.seascape
+```
+
+And presto!
+
 ## About Contributing
 
-Use this guide if you plan to build coalpy python module from source.
+The following section specifies guidelines for contributing to the coalpy project.
 
 ### Building requirements
 * Install Python 3.9x
