@@ -64,6 +64,7 @@ private:
     int m_nextHookId;
     std::map<int, WindowHookFn> m_hooks;
 
+    void updateMousePosition();
     WindowInputState m_inputState;
 };
 

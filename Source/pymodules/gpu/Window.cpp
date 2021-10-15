@@ -28,6 +28,7 @@ namespace methods
 {
     static PyObject* getSize(PyObject* self, PyObject* vargs, PyObject* kwds);   
     static PyObject* getKeyState(PyObject* self, PyObject* vargs, PyObject* kwds);   
+    static PyObject* getMousePosition(PyObject* self, PyObject* vargs, PyObject* kwds);   
 }
 
 static PyMethodDef g_windowMethods[] = {
@@ -44,6 +45,16 @@ static PyMethodDef g_windowMethods[] = {
 
         Returns:
             True if the queried key is pressed. False otherwise.
+    )"),
+
+    KW_FN(get_mouse_position, getMousePosition, R"(
+        Gets the mouse position relative to the current window. This function will also give you the mouse coordinates even if the mouse is outside of the window.
+
+        Returns:
+            tuple with: (pixelX, pixelY, normalizedX, normalizedY)
+
+            The pixelX and pixelY represent the pixel index (0 based to get_size()).
+            The normalizedX and normalizedY are the pixel centered coordinates in x and y [0, 1] respectively, i.e.  (x + 0.5)/ (window's width).
     )"),
     FN_END
 };
@@ -201,6 +212,26 @@ namespace methods
         int w, h;
         window.object->dimensions(w, h);
         return Py_BuildValue("(ii)", w, h);
+    }
+
+    PyObject* getMousePosition(PyObject* self, PyObject* vargs, PyObject* kwds)
+    {
+        ModuleState& moduleState = parentModule(self);
+        if (!moduleState.checkValidDevice())
+            return nullptr;
+
+        auto& window = *((Window*)self);
+        if (window.object == nullptr)
+        {
+            PyErr_SetString(moduleState.exObj(), "Invalid window queried.");
+            return nullptr;
+        }
+
+        int mouseX = window.object->inputState().mouseX();
+        int mouseY = window.object->inputState().mouseY();
+        int w, h;
+        window.object->dimensions(w, h);
+        return Py_BuildValue("(iiff)", mouseX, mouseY, ((float)mouseX + 0.5f)/(float)w, ((float)mouseY + 0.5f)/(float)h);
     }
 
     PyObject* getKeyState(PyObject* self, PyObject* vargs, PyObject* kwds)

@@ -249,6 +249,18 @@ static Keys translateKey(WPARAM p)
     }
 }
 
+void Win32Window::updateMousePosition()
+{
+    POINT pos;
+    if (::GetCursorPos(&pos) && ::ScreenToClient(m_state.windowHandle, &pos))
+    {
+        m_inputState.setMouseXY(pos.x, pos.y);
+#if TEST_WIN32_KEY_EVENTS
+        std::cout << pos.x << " " << pos.y << std::endl;
+#endif
+    }
+}
+
 Win32Window::HandleMessageRet Win32Window::handleInputMessage(unsigned message, unsigned int *wparam, unsigned long* lparam)
 {
     HandleMessageRet ret{};
@@ -256,6 +268,9 @@ Win32Window::HandleMessageRet Win32Window::handleInputMessage(unsigned message, 
     //non sticky events:
     m_inputState.setKeyState(Keys::MouseLeftDouble, false);
     m_inputState.setKeyState(Keys::MouseRightDouble, false);
+
+    //Pump mouse position
+    updateMousePosition();
 
     switch (message)
     {

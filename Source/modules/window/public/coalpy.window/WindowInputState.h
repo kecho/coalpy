@@ -23,6 +23,12 @@ public:
     int mouseX() const { return m_mouseX; }
     int mouseY() const { return m_mouseY; }
 
+    void setMouseXY(int mouseX, int mouseY)
+    {
+        m_mouseX = mouseX;
+        m_mouseY = mouseY;
+    }
+
     void setKeyState(Keys key, bool state)
     {
         int bucket, mask;
