@@ -46,6 +46,8 @@ struct CardInfos
 
     void free()
     {
+        refs = 0;
+        initialized = false;
         if (dxgiFactory)
         {
             dxgiFactory->Release();
