@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="coalpy.html"><font color="#ffffff">coalpy</font></a>.gpu</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccoalpy%5Ct2-output%5Cwin64-msvc-debug-default%5Ccoalpy%5Cgpu.pyd">c:\dev\coalpy\t2-output\win64-msvc-debug-default\coalpy\gpu.pyd</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccoalpy%5Ct2-output%5Cwin64-msvc-production-default%5Ccoalpy%5Cgpu.pyd">c:\dev\coalpy\t2-output\win64-msvc-production-default\coalpy\gpu.pyd</a></font></td></tr></table>
     <p><tt>&lt;&lt;&nbsp;coalpy&nbsp;&gt;&gt;&nbsp;Compute&nbsp;Abstraction&nbsp;Layer&nbsp;for&nbsp;Python&nbsp;<br>
 &nbsp;by&nbsp;Kleber&nbsp;A&nbsp;Garcia&nbsp;2021&nbsp;(c).&nbsp;<br>
 coalpy&nbsp;is&nbsp;a&nbsp;compute&nbsp;abstraction&nbsp;layer&nbsp;for&nbsp;python.&nbsp;It&nbsp;brings<br>
@@ -381,43 +381,130 @@ Data descriptors defined here:<br>
 <td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="ImguiBuilder">class <strong>ImguiBuilder</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
-<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Imgui&nbsp;builder&nbsp;class.&nbsp;Use&nbsp;this&nbsp;class'&nbsp;methods&nbsp;to&nbsp;build&nbsp;a&nbsp;Dear&nbsp;ImGUI&nbsp;on&nbsp;a&nbsp;specified&nbsp;window.<br>
+To&nbsp;utilize&nbsp;you&nbsp;need&nbsp;to&nbsp;instantiate&nbsp;a&nbsp;<a href="#Window">Window</a>&nbsp;<a href="builtins.html#object">object</a>.&nbsp;In&nbsp;its&nbsp;constructor&nbsp;set&nbsp;use_imgui&nbsp;to&nbsp;True&nbsp;(which&nbsp;is&nbsp;by&nbsp;default).<br>
+On&nbsp;the&nbsp;on_render&nbsp;function,&nbsp;you&nbsp;will&nbsp;receive&nbsp;a&nbsp;<a href="#RenderArgs">RenderArgs</a>&nbsp;<a href="builtins.html#object">object</a>.&nbsp;There&nbsp;will&nbsp;be&nbsp;a&nbsp;<a href="#ImguiBuilder">ImguiBuilder</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;in&nbsp;the&nbsp;imgui&nbsp;member&nbsp;that&nbsp;you&nbsp;can&nbsp;now<br>
+query&nbsp;to&nbsp;construct&nbsp;your&nbsp;user&nbsp;interface.<br>
+Coalpy&nbsp;does&nbsp;not&nbsp;support&nbsp;creation&nbsp;of&nbsp;a&nbsp;<a href="#ImguiBuilder">ImguiBuilder</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;it&nbsp;will&nbsp;always&nbsp;be&nbsp;passed&nbsp;as&nbsp;an&nbsp;argument&nbsp;on&nbsp;the&nbsp;<a href="#RenderArgs">RenderArgs</a>&nbsp;of&nbsp;the&nbsp;window.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="ImguiBuilder-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-begin"><strong>begin</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-begin"><strong>begin</strong></a>(...)</dt><dd><tt>Begin&nbsp;method,&nbsp;starts&nbsp;the&nbsp;scope&nbsp;of&nbsp;a&nbsp;ImGUI&nbsp;interface.&nbsp;This&nbsp;method&nbsp;must&nbsp;have&nbsp;a&nbsp;corresponding&nbsp;end&nbsp;at&nbsp;some&nbsp;point&nbsp;denoting&nbsp;<br>
+denoting&nbsp;the&nbsp;scope&nbsp;of&nbsp;all&nbsp;functions&nbsp;required.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str):&nbsp;Mandatory&nbsp;name&nbsp;of&nbsp;this&nbsp;interface&nbsp;panel.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;is_open&nbsp;(bool)(optional):&nbsp;Specifies&nbsp;the&nbsp;previous&nbsp;state&nbsp;of&nbsp;this&nbsp;panel.&nbsp;True&nbsp;for&nbsp;open,&nbsp;false&nbsp;otherwise.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Update&nbsp;this&nbsp;state&nbsp;with&nbsp;the&nbsp;return&nbsp;value&nbsp;of&nbsp;this&nbsp;function.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;returns&nbsp;a&nbsp;boolean,&nbsp;True&nbsp;if&nbsp;the&nbsp;X&nbsp;for&nbsp;closing&nbsp;this&nbsp;panel&nbsp;was&nbsp;pressed,&nbsp;False&nbsp;otherwise.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-begin_main_menu_bar"><strong>begin_main_menu_bar</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-begin_main_menu_bar"><strong>begin_main_menu_bar</strong></a>(...)</dt><dd><tt>Starts&nbsp;the&nbsp;scope&nbsp;of&nbsp;a&nbsp;main&nbsp;menu&nbsp;at&nbsp;the&nbsp;top&nbsp;of&nbsp;the&nbsp;window.&nbsp;Use&nbsp;the&nbsp;MainMenu&nbsp;and&nbsp;BeginMenu/EndMenu&nbsp;functions&nbsp;to&nbsp;add&nbsp;/&nbsp;remove&nbsp;components.<br>
+Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;end_main_menu_bar&nbsp;method.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;returns&nbsp;true,&nbsp;call&nbsp;end_main_menu_bar.&nbsp;If&nbsp;returns&nbsp;false&nbsp;means&nbsp;its&nbsp;not&nbsp;rendered.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-begin_menu"><strong>begin_menu</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-begin_menu"><strong>begin_menu</strong></a>(...)</dt><dd><tt>Starts&nbsp;a&nbsp;menu&nbsp;item&nbsp;in&nbsp;the&nbsp;menu&nbsp;bar.&nbsp;Must&nbsp;be&nbsp;paird&nbsp;with&nbsp;an&nbsp;end_menu&nbsp;method.<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;name&nbsp;of&nbsp;this&nbsp;menu&nbsp;item.&nbsp;Can&nbsp;recursively&nbsp;have&nbsp;more&nbsp;menu&nbsp;items.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;returns&nbsp;true,&nbsp;call&nbsp;end_menu.&nbsp;If&nbsp;returns&nbsp;false&nbsp;means&nbsp;its&nbsp;not&nbsp;rendered.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-button"><strong>button</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-button"><strong>button</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;button.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;the&nbsp;label&nbsp;name&nbsp;for&nbsp;this&nbsp;button.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;button&nbsp;was&nbsp;pressed,&nbsp;false&nbsp;otherwise.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-checkbox"><strong>checkbox</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-checkbox"><strong>checkbox</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;checkbox&nbsp;ui&nbsp;item.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;the&nbsp;label&nbsp;name&nbsp;for&nbsp;this&nbsp;checkbox.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;v&nbsp;(bool):&nbsp;The&nbsp;current&nbsp;state&nbsp;of&nbsp;the&nbsp;checkbox<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;new&nbsp;bool&nbsp;value&nbsp;that&nbsp;the&nbsp;user&nbsp;set.&nbsp;Feed&nbsp;this&nbsp;value&nbsp;back&nbsp;on&nbsp;v&nbsp;on&nbsp;the&nbsp;next&nbsp;call&nbsp;to&nbsp;see&nbsp;a&nbsp;proper&nbsp;state&nbsp;update.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-collapsing_header"><strong>collapsing_header</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-collapsing_header"><strong>collapsing_header</strong></a>(...)</dt><dd><tt>Returns&nbsp;the&nbsp;state&nbsp;of&nbsp;a&nbsp;header&nbsp;label&nbsp;(collapsed&nbsp;or&nbsp;non&nbsp;collapsed).<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(label)&nbsp;str&nbsp;:&nbsp;label&nbsp;of&nbsp;this&nbsp;item.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;open,&nbsp;False&nbsp;otherwise.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-end"><strong>end</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-end"><strong>end</strong></a>(...)</dt><dd><tt>End&nbsp;method.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;corresponding&nbsp;begin&nbsp;method.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-end_main_menu_bar"><strong>end_main_menu_bar</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-end_main_menu_bar"><strong>end_main_menu_bar</strong></a>(...)</dt><dd><tt>End&nbsp;method&nbsp;for&nbsp;main&nbsp;menu&nbsp;bar.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;begin_main_menu_bar&nbsp;method.<br>
+&nbsp;<br>
+Only&nbsp;call&nbsp;this&nbsp;if&nbsp;begin_main_menu_bar&nbsp;returns&nbsp;true.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-end_menu"><strong>end_menu</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-end_menu"><strong>end_menu</strong></a>(...)</dt><dd><tt>End&nbsp;method&nbsp;for&nbsp;menu&nbsp;item.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;begin_menu&nbsp;method.<br>
+Only&nbsp;call&nbsp;this&nbsp;if&nbsp;begin_menu&nbsp;returns&nbsp;true.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-input_float"><strong>input_float</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-input_float"><strong>input_float</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;bix&nbsp;to&nbsp;input&nbsp;a&nbsp;single&nbsp;float&nbsp;value.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;the&nbsp;label&nbsp;name&nbsp;for&nbsp;this&nbsp;box.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;v&nbsp;(float):&nbsp;the&nbsp;actual&nbsp;value&nbsp;to&nbsp;draw&nbsp;the&nbsp;slider.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;step&nbsp;(float)(optional):&nbsp;step&nbsp;value&nbsp;when&nbsp;scrolling&nbsp;slow<br>
+&nbsp;&nbsp;&nbsp;&nbsp;step_fast&nbsp;(float)(optional):&nbsp;step&nbsp;value&nbsp;when&nbsp;scrolling&nbsp;fast.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;fmt&nbsp;(str)(optional):&nbsp;A&nbsp;formatting&nbsp;value&nbsp;to&nbsp;draw&nbsp;the&nbsp;float.&nbsp;For&nbsp;example&nbsp;%.3f&nbsp;draws&nbsp;3&nbsp;decimal&nbsp;precision.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;new&nbsp;float&nbsp;value&nbsp;that&nbsp;the&nbsp;user&nbsp;set.&nbsp;Feed&nbsp;this&nbsp;value&nbsp;back&nbsp;on&nbsp;v&nbsp;on&nbsp;the&nbsp;next&nbsp;call&nbsp;to&nbsp;see&nbsp;a&nbsp;proper&nbsp;state&nbsp;update.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-input_text"><strong>input_text</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-input_text"><strong>input_text</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;box&nbsp;for&nbsp;input&nbsp;text.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;the&nbsp;label&nbsp;name&nbsp;for&nbsp;this&nbsp;box.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;v&nbsp;(str):&nbsp;the&nbsp;actual&nbsp;string&nbsp;value&nbsp;to&nbsp;display&nbsp;by&nbsp;default.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;new&nbsp;str&nbsp;value&nbsp;that&nbsp;the&nbsp;user&nbsp;set.&nbsp;Feed&nbsp;this&nbsp;value&nbsp;back&nbsp;on&nbsp;v&nbsp;on&nbsp;the&nbsp;next&nbsp;call&nbsp;to&nbsp;see&nbsp;a&nbsp;proper&nbsp;state&nbsp;update.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-menu_item"><strong>menu_item</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-menu_item"><strong>menu_item</strong></a>(...)</dt><dd><tt>Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str)&nbsp;:&nbsp;label&nbsp;of&nbsp;this&nbsp;menu&nbsp;item.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;shortcut&nbsp;(str):&nbsp;short&nbsp;cut&nbsp;key&nbsp;for&nbsp;this&nbsp;menu&nbsp;item.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;enabled&nbsp;(bool)&nbsp;:&nbsp;enables&nbsp;/&nbsp;disables&nbsp;menu&nbsp;item.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;activated.&nbsp;False&nbsp;otherwise.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-pop_id"><strong>pop_id</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-pop_id"><strong>pop_id</strong></a>(...)</dt><dd><tt>Pops&nbsp;a&nbsp;corresponding&nbsp;name&nbsp;for&nbsp;a&nbsp;scope.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;push_id.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-push_id"><strong>push_id</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-push_id"><strong>push_id</strong></a>(...)</dt><dd><tt>Pushes&nbsp;a&nbsp;custom&nbsp;id&nbsp;name&nbsp;for&nbsp;a&nbsp;scope.&nbsp;<br>
+See&nbsp;(docs/FAQ.md&nbsp;or&nbsp;<a href="http://dearimgui.org/faq">http://dearimgui.org/faq</a>)&nbsp;for&nbsp;more&nbsp;details&nbsp;about&nbsp;how&nbsp;ID&nbsp;are&nbsp;handled&nbsp;in&nbsp;dear&nbsp;imgui.<br>
+This&nbsp;call&nbsp;to&nbsp;push_id&nbsp;must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;corresponding&nbsp;pop_id&nbsp;call.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;text&nbsp;(str):&nbsp;The&nbsp;identifier&nbsp;for&nbsp;this&nbsp;id&nbsp;stack&nbsp;scope.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-show_demo_window"><strong>show_demo_window</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-show_demo_window"><strong>show_demo_window</strong></a>(...)</dt><dd><tt>Shows&nbsp;the&nbsp;demo&nbsp;window.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-slider_float"><strong>slider_float</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-slider_float"><strong>slider_float</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;slider&nbsp;for&nbsp;a&nbsp;float&nbsp;value.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;the&nbsp;label&nbsp;name&nbsp;for&nbsp;this&nbsp;slider.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;v&nbsp;(float):&nbsp;the&nbsp;actual&nbsp;value&nbsp;to&nbsp;draw&nbsp;the&nbsp;slider.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;v_min&nbsp;(float);&nbsp;the&nbsp;minimum&nbsp;possible&nbsp;value.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;v_max&nbsp;(float):&nbsp;the&nbsp;maximum&nbsp;possible&nbsp;value.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;fmt&nbsp;(str)(optional):&nbsp;A&nbsp;formatting&nbsp;value&nbsp;to&nbsp;draw&nbsp;the&nbsp;float.&nbsp;For&nbsp;example&nbsp;%.3f&nbsp;draws&nbsp;3&nbsp;decimal&nbsp;precision.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;new&nbsp;float&nbsp;value&nbsp;that&nbsp;the&nbsp;user&nbsp;set.&nbsp;Feed&nbsp;this&nbsp;value&nbsp;back&nbsp;on&nbsp;v&nbsp;on&nbsp;the&nbsp;next&nbsp;call&nbsp;to&nbsp;see&nbsp;a&nbsp;proper&nbsp;state&nbsp;update.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-text"><strong>text</strong></a>(...)</dt></dl>
+<dl><dt><a name="ImguiBuilder-text"><strong>text</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;box&nbsp;with&nbsp;solid&nbsp;text.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;text&nbsp;(str):&nbsp;the&nbsp;label&nbsp;value&nbsp;to&nbsp;display</tt></dd></dl>
 
 <hr>
 Static methods defined here:<br>
@@ -478,18 +565,25 @@ Static methods defined here:<br>
 <hr>
 Data descriptors defined here:<br>
 <dl><dt><strong>delta_time</strong></dt>
+<dd><tt>Delta&nbsp;time&nbsp;from&nbsp;previous&nbsp;frame&nbsp;in&nbsp;milliseconds</tt></dd>
 </dl>
 <dl><dt><strong>height</strong></dt>
+<dd><tt>The&nbsp;current&nbsp;height&nbsp;of&nbsp;this&nbsp;window.</tt></dd>
 </dl>
 <dl><dt><strong>imgui</strong></dt>
+<dd><tt>The&nbsp;ImguiBuilder&nbsp;object,&nbsp;used&nbsp;to&nbsp;build&nbsp;a&nbsp;Dear&nbsp;Imgui.&nbsp;For&nbsp;more&nbsp;info&nbsp;read&nbsp;on&nbsp;Window&nbsp;constructor,&nbsp;&nbsp;ImguiBuilder&nbsp;and&nbsp;its&nbsp;methods.</tt></dd>
 </dl>
 <dl><dt><strong>render_time</strong></dt>
+<dd><tt>Total&nbsp;rendering&nbsp;time&nbsp;from&nbsp;the&nbsp;start&nbsp;of&nbsp;this&nbsp;application,&nbsp;in&nbsp;milliseconds</tt></dd>
 </dl>
 <dl><dt><strong>user_data</strong></dt>
+<dd><tt>Custom&nbsp;user_data&nbsp;object&nbsp;set&nbsp;in&nbsp;the&nbsp;Window&nbsp;object.&nbsp;You&nbsp;can&nbsp;store&nbsp;here&nbsp;your&nbsp;view&nbsp;user&nbsp;data&nbsp;such&nbsp;as&nbsp;texture&nbsp;/&nbsp;buffers&nbsp;/&nbsp;shaders.</tt></dd>
 </dl>
 <dl><dt><strong>width</strong></dt>
+<dd><tt>The&nbsp;current&nbsp;width&nbsp;of&nbsp;this&nbsp;window.</tt></dd>
 </dl>
 <dl><dt><strong>window</strong></dt>
+<dd><tt>The&nbsp;window&nbsp;object&nbsp;being&nbsp;rendered.</tt></dd>
 </dl>
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -509,13 +603,13 @@ Constructor:<br>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="ResourceDownloadRequest-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
 
-<dl><dt><a name="ResourceDownloadRequest-data_as_bytearray"><strong>data_as_bytearray</strong></a>(...)</dt></dl>
+<dl><dt><a name="ResourceDownloadRequest-data_as_bytearray"><strong>data_as_bytearray</strong></a>(...)</dt><dd><tt>returns&nbsp;the&nbsp;data&nbsp;as&nbsp;a&nbsp;bytearray.&nbsp;This&nbsp;Byte&nbsp;array&nbsp;is&nbsp;internally&nbsp;cached&nbsp;and&nbsp;referenced&nbsp;by&nbsp;the&nbsp;ResourceDownload&nbsp;<a href="builtins.html#object">object</a>.</tt></dd></dl>
 
-<dl><dt><a name="ResourceDownloadRequest-data_byte_row_pitch"><strong>data_byte_row_pitch</strong></a>(...)</dt></dl>
+<dl><dt><a name="ResourceDownloadRequest-data_byte_row_pitch"><strong>data_byte_row_pitch</strong></a>(...)</dt><dd><tt>Assuming&nbsp;the&nbsp;data&nbsp;is&nbsp;ready,&nbsp;this&nbsp;method&nbsp;returns&nbsp;the&nbsp;row&nbsp;pitch&nbsp;(in&nbsp;case&nbsp;the&nbsp;resource&nbsp;is&nbsp;a&nbsp;texture).</tt></dd></dl>
 
-<dl><dt><a name="ResourceDownloadRequest-is_ready"><strong>is_ready</strong></a>(...)</dt></dl>
+<dl><dt><a name="ResourceDownloadRequest-is_ready"><strong>is_ready</strong></a>(...)</dt><dd><tt>Polls&nbsp;the&nbsp;GPU&nbsp;(internally&nbsp;a&nbsp;fence)&nbsp;to&nbsp;check&nbsp;if&nbsp;the&nbsp;data&nbsp;is&nbsp;ready.&nbsp;When&nbsp;doing&nbsp;async&nbsp;this&nbsp;method&nbsp;can&nbsp;be&nbsp;used&nbsp;to&nbsp;query&nbsp;until&nbsp;we&nbsp;have&nbsp;data&nbsp;ready.</tt></dd></dl>
 
-<dl><dt><a name="ResourceDownloadRequest-resolve"><strong>resolve</strong></a>(...)</dt></dl>
+<dl><dt><a name="ResourceDownloadRequest-resolve"><strong>resolve</strong></a>(...)</dt><dd><tt>Waits&nbsp;for&nbsp;binary&nbsp;data&nbsp;of&nbsp;the&nbsp;texture&nbsp;to&nbsp;be&nbsp;downloaded.&nbsp;This&nbsp;method&nbsp;will&nbsp;block&nbsp;the&nbsp;CPU&nbsp;until&nbsp;the&nbsp;GPU&nbsp;has&nbsp;finished&nbsp;downloading&nbsp;the&nbsp;data.&nbsp;After&nbsp;this&nbsp;call,&nbsp;check&nbsp;availability&nbsp;with&nbsp;is_ready&nbsp;and&nbsp;then&nbsp;get&nbsp;the&nbsp;data&nbsp;as&nbsp;desired.</tt></dd></dl>
 
 <hr>
 Static methods defined here:<br>
@@ -606,10 +700,30 @@ Constructor:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;width&nbsp;(int)(optional):&nbsp;initial&nbsp;width&nbsp;of&nbsp;window&nbsp;and&nbsp;swap&nbsp;chain&nbsp;texture.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;height&nbsp;(int)(optional):&nbsp;initial&nbsp;height&nbsp;of&nbsp;window&nbsp;and&nbsp;swap&nbsp;chain&nbsp;texture.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;on_render&nbsp;(function):&nbsp;Rendering&nbsp;function.&nbsp;The&nbsp;function&nbsp;has&nbsp;1&nbsp;argument&nbsp;of&nbsp;type&nbsp;<a href="#RenderArgs">RenderArgs</a>&nbsp;and&nbsp;no&nbsp;return.&nbsp;See&nbsp;<a href="#RenderArgs">RenderArgs</a>&nbsp;for&nbsp;more&nbsp;info.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;use_imgui&nbsp;(Boolean):&nbsp;(True&nbsp;by&nbsp;default),&nbsp;set&nbsp;to&nbsp;True,&nbsp;and&nbsp;during&nbsp;on_render&nbsp;the&nbsp;render_args&nbsp;<a href="builtins.html#object">object</a>&nbsp;will&nbsp;contain&nbsp;an&nbsp;imgui&nbsp;<a href="builtins.html#object">object</a>.&nbsp;Use&nbsp;this&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;render&nbsp;imgui&nbsp;into&nbsp;the&nbsp;window.<br>&nbsp;</tt></td></tr>
+&nbsp;&nbsp;&nbsp;&nbsp;use_imgui&nbsp;(Boolean):&nbsp;(True&nbsp;by&nbsp;default),&nbsp;set&nbsp;to&nbsp;True,&nbsp;and&nbsp;during&nbsp;on_render&nbsp;the&nbsp;render_args&nbsp;<a href="builtins.html#object">object</a>&nbsp;will&nbsp;contain&nbsp;an&nbsp;imgui&nbsp;<a href="builtins.html#object">object</a>.&nbsp;Use&nbsp;this&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;render&nbsp;imgui&nbsp;into&nbsp;the&nbsp;window.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;<a href="#ImguiBuilder">ImguiBuilder</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;will&nbsp;contain&nbsp;the&nbsp;definition&nbsp;of&nbsp;all&nbsp;the&nbsp;available&nbsp;parameters.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="Window-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="Window-get_key_state"><strong>get_key_state</strong></a>(...)</dt><dd><tt>Gets&nbsp;the&nbsp;pressed&nbsp;state&nbsp;of&nbsp;a&nbsp;queried&nbsp;key.&nbsp;For&nbsp;a&nbsp;list&nbsp;of&nbsp;keys&nbsp;see&nbsp;coalpy.gpu.Keys.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;key&nbsp;(int&nbsp;enum):&nbsp;The&nbsp;key&nbsp;(keyboard&nbsp;or&nbsp;mouse)&nbsp;to&nbsp;query&nbsp;info&nbsp;from.&nbsp;Use&nbsp;the&nbsp;coalpy.gpu.Keys&nbsp;enumerations&nbsp;to&nbsp;query&nbsp;a&nbsp;valid&nbsp;key.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;the&nbsp;queried&nbsp;key&nbsp;is&nbsp;pressed.&nbsp;False&nbsp;otherwise.</tt></dd></dl>
+
+<dl><dt><a name="Window-get_mouse_position"><strong>get_mouse_position</strong></a>(...)</dt><dd><tt>Gets&nbsp;the&nbsp;mouse&nbsp;position&nbsp;relative&nbsp;to&nbsp;the&nbsp;current&nbsp;window.&nbsp;This&nbsp;function&nbsp;will&nbsp;also&nbsp;give&nbsp;you&nbsp;the&nbsp;mouse&nbsp;coordinates&nbsp;even&nbsp;if&nbsp;the&nbsp;mouse&nbsp;is&nbsp;outside&nbsp;of&nbsp;the&nbsp;window.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;tuple&nbsp;with:&nbsp;(pixelX,&nbsp;pixelY,&nbsp;normalizedX,&nbsp;normalizedY)<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;pixelX&nbsp;and&nbsp;pixelY&nbsp;represent&nbsp;the&nbsp;pixel&nbsp;index&nbsp;(0&nbsp;based&nbsp;to&nbsp;<a href="#Window-get_size">get_size</a>()).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;normalizedX&nbsp;and&nbsp;normalizedY&nbsp;are&nbsp;the&nbsp;pixel&nbsp;centered&nbsp;coordinates&nbsp;in&nbsp;x&nbsp;and&nbsp;y&nbsp;[0,&nbsp;1]&nbsp;respectively,&nbsp;i.e.&nbsp;&nbsp;(x&nbsp;+&nbsp;0.5)/&nbsp;(window's&nbsp;width).</tt></dd></dl>
+
+<dl><dt><a name="Window-get_size"><strong>get_size</strong></a>(...)</dt><dd><tt>Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;returns&nbsp;a&nbsp;touple&nbsp;with&nbsp;the&nbsp;current&nbsp;size&nbsp;of&nbsp;the&nbsp;window&nbsp;(width,&nbsp;height)</tt></dd></dl>
 
 <hr>
 Static methods defined here:<br>
@@ -723,6 +837,7 @@ Parameters:<br>
 <td width="100%"><strong>BufferType</strong> = &lt;gpu.EnumBufferType object&gt;<br>
 <strong>FilterType</strong> = &lt;gpu.EnumFilterType object&gt;<br>
 <strong>Format</strong> = &lt;gpu.EnumFormat object&gt;<br>
+<strong>Keys</strong> = &lt;gpu.Keys object&gt;<br>
 <strong>MemFlags</strong> = &lt;gpu.EnumMemFlags object&gt;<br>
 <strong>TextureAddressMode</strong> = &lt;gpu.TextureAddressMode object&gt;<br>
 <strong>TextureType</strong> = &lt;gpu.EnumTextureType object&gt;</td></tr></table>
