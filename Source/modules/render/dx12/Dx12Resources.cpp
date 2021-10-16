@@ -420,9 +420,9 @@ Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpeci
         else if (desc.type == BufferType::Standard)
             uavDesc.Format = getDxFormat(desc.format);
         else if (desc.type == BufferType::Structured)
-            uavDesc.Format = DXGI_FORMAT_R32_TYPELESS;
-        else 
             uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+        else 
+            uavDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 
         uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
         uavDesc.Buffer.FirstElement = 0u;
