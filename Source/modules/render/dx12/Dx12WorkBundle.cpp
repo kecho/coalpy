@@ -154,7 +154,7 @@ void Dx12WorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompute
     //TODO: optimize this resolve.
     db.resolve(computeCmd->shader);
     ID3D12PipelineState* pso = db.unsafeGetCsPso(computeCmd->shader);
-    CPY_ASSERT(pso != nullptr);
+    //CPY_ASSERT(pso != nullptr); this assert is dumb spammy
     if (pso == nullptr)
         return;
 
