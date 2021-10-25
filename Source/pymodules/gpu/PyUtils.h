@@ -18,6 +18,7 @@ bool getArrayOfNums(
     std::vector<int>& rawNums, bool allowFloat = true, bool allowInt = true);
 
 bool getTupleValues(PyObject* obj, int* outArray, int minCount, int maxCount);
+bool getTupleValuesFloat(PyObject* obj, float* outArray, int minCount, int maxCount);
 
 }
 }

@@ -1,5 +1,6 @@
 #include "ImguiBuilder.h"
 #include "HelperMacros.h"
+#include "PyUtils.h"
 #include "TypeIds.h"
 #include "CoalpyTypeObject.h"
 #include <functional>
@@ -138,6 +139,75 @@ PyObject* inputFloat(PyObject* self, PyObject* vargs, PyObject* kwds)
     return PyFloat_FromDouble((double)v);
 }
 
+PyObject* inputFloat2(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    ModuleState& moduleState = parentModule(self);
+
+    CHECK_IMGUI
+    char* label;
+    PyObject* v;
+    char* fmt = "%.3f";
+    static char* argnames[] = { "label", "v", "fmt", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "sO|s", argnames, &label, &v, &fmt))
+        return nullptr;
+
+    float vecVal[2];
+    if (!getTupleValuesFloat(v, vecVal, 2, 2)) 
+    {
+        PyErr_SetString(moduleState.exObj(), "Cannot parse v value. Must be a tuple or list of length 2");
+        return nullptr;
+    }
+    
+    ImGui::InputFloat2(label, vecVal, fmt);
+    return Py_BuildValue("(ff)", vecVal[0], vecVal[1]);
+}
+
+PyObject* inputFloat3(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    ModuleState& moduleState = parentModule(self);
+
+    CHECK_IMGUI
+    char* label;
+    PyObject* v;
+    char* fmt = "%.3f";
+    static char* argnames[] = { "label", "v", "fmt", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "sO|s", argnames, &label, &v, &fmt))
+        return nullptr;
+
+    float vecVal[3];
+    if (!getTupleValuesFloat(v, vecVal, 3, 3)) 
+    {
+        PyErr_SetString(moduleState.exObj(), "Cannot parse v value. Must be a tuple or list of length 3");
+        return nullptr;
+    }
+    
+    ImGui::InputFloat3(label, vecVal, fmt);
+    return Py_BuildValue("(fff)", vecVal[0], vecVal[1], vecVal[2]);
+}
+
+PyObject* inputFloat4(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    ModuleState& moduleState = parentModule(self);
+
+    CHECK_IMGUI
+    char* label;
+    PyObject* v;
+    char* fmt = "%.3f";
+    static char* argnames[] = { "label", "v", "fmt", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "sO|s", argnames, &label, &v, &fmt))
+        return nullptr;
+
+    float vecVal[4];
+    if (!getTupleValuesFloat(v, vecVal, 4, 4)) 
+    {
+        PyErr_SetString(moduleState.exObj(), "Cannot parse v value. Must be a tuple or list of length 4");
+        return nullptr;
+    }
+    
+    ImGui::InputFloat4(label, vecVal, fmt);
+    return Py_BuildValue("(ffff)", vecVal[0], vecVal[1], vecVal[2], vecVal[3]);
+}
+
 PyObject* inputText(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI
@@ -241,7 +311,7 @@ PyObject* menuItem(PyObject* self, PyObject* vargs, PyObject* kwds)
     char* shortcut = nullptr;
     int enabledint = 1;
     static char* argnames[] = { "label", "shortcut", "enabled", nullptr };
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|sP", argnames, &label, &shortcut, &enabledint))
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|sp", argnames, &label, &shortcut, &enabledint))
         return nullptr;
 
     bool ret = ImGui::MenuItem(label, shortcut, false, (bool)enabledint);

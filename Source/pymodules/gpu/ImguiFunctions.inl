@@ -97,7 +97,7 @@ IMGUI_FN(slider_float, sliderFloat, R"(
 )")
 
 IMGUI_FN(input_float, inputFloat, R"(
-    Draws a bix to input a single float value.
+    Draws a box to input a single float value.
     
     Parameters:
         label (str): the label name for this box.
@@ -108,6 +108,48 @@ IMGUI_FN(input_float, inputFloat, R"(
 
     Returns:
         The new float value that the user set. Feed this value back on v on the next call to see a proper state update.
+)")
+
+IMGUI_FN(input_float3, inputFloat3, R"(
+    Draws a box to input a float2 value.
+    
+    Parameters:
+        label (str): the label name for this box.
+        v (float): the actual value to draw the slider. (tuple or array)
+        step (float)(optional): step value when scrolling slow
+        step_fast (float)(optional): step value when scrolling fast.
+        fmt (str)(optional): A formatting value to draw the float. For example %.3f draws 3 decimal precision.
+
+    Returns:
+        The new float2 value that the user set. Feed this value back on v on the next call to see a proper state update.
+)")
+
+IMGUI_FN(input_float3, inputFloat3, R"(
+    Draws a box to input a float3 value.
+    
+    Parameters:
+        label (str): the label name for this box.
+        v (float): the actual value to draw the slider. (tuple or array)
+        step (float)(optional): step value when scrolling slow
+        step_fast (float)(optional): step value when scrolling fast.
+        fmt (str)(optional): A formatting value to draw the float. For example %.3f draws 3 decimal precision.
+
+    Returns:
+        The new float3 value that the user set. Feed this value back on v on the next call to see a proper state update.
+)")
+
+IMGUI_FN(input_float4, inputFloat4, R"(
+    Draws a box to input a float4 value.
+    
+    Parameters:
+        label (str): the label name for this box.
+        v (float): the actual value to draw the slider. (tuple or array)
+        step (float)(optional): step value when scrolling slow
+        step_fast (float)(optional): step value when scrolling fast.
+        fmt (str)(optional): A formatting value to draw the float. For example %.3f draws 3 decimal precision.
+
+    Returns:
+        The new float4 value that the user set. Feed this value back on v on the next call to see a proper state update.
 )")
 
 IMGUI_FN(input_text, inputText, R"(
