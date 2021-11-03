@@ -449,7 +449,7 @@ Only&nbsp;call&nbsp;this&nbsp;if&nbsp;begin_main_menu_bar&nbsp;returns&nbsp;true
 <dl><dt><a name="ImguiBuilder-end_menu"><strong>end_menu</strong></a>(...)</dt><dd><tt>End&nbsp;method&nbsp;for&nbsp;menu&nbsp;item.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;begin_menu&nbsp;method.<br>
 Only&nbsp;call&nbsp;this&nbsp;if&nbsp;begin_menu&nbsp;returns&nbsp;true.</tt></dd></dl>
 
-<dl><dt><a name="ImguiBuilder-input_float"><strong>input_float</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;bix&nbsp;to&nbsp;input&nbsp;a&nbsp;single&nbsp;float&nbsp;value.<br>
+<dl><dt><a name="ImguiBuilder-input_float"><strong>input_float</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;box&nbsp;to&nbsp;input&nbsp;a&nbsp;single&nbsp;float&nbsp;value.<br>
 &nbsp;<br>
 Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;the&nbsp;label&nbsp;name&nbsp;for&nbsp;this&nbsp;box.<br>
@@ -460,6 +460,30 @@ Parameters:<br>
 &nbsp;<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;new&nbsp;float&nbsp;value&nbsp;that&nbsp;the&nbsp;user&nbsp;set.&nbsp;Feed&nbsp;this&nbsp;value&nbsp;back&nbsp;on&nbsp;v&nbsp;on&nbsp;the&nbsp;next&nbsp;call&nbsp;to&nbsp;see&nbsp;a&nbsp;proper&nbsp;state&nbsp;update.</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-input_float3"><strong>input_float3</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;box&nbsp;to&nbsp;input&nbsp;a&nbsp;float2&nbsp;value.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;the&nbsp;label&nbsp;name&nbsp;for&nbsp;this&nbsp;box.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;v&nbsp;(float):&nbsp;the&nbsp;actual&nbsp;value&nbsp;to&nbsp;draw&nbsp;the&nbsp;slider.&nbsp;(tuple&nbsp;or&nbsp;array)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;step&nbsp;(float)(optional):&nbsp;step&nbsp;value&nbsp;when&nbsp;scrolling&nbsp;slow<br>
+&nbsp;&nbsp;&nbsp;&nbsp;step_fast&nbsp;(float)(optional):&nbsp;step&nbsp;value&nbsp;when&nbsp;scrolling&nbsp;fast.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;fmt&nbsp;(str)(optional):&nbsp;A&nbsp;formatting&nbsp;value&nbsp;to&nbsp;draw&nbsp;the&nbsp;float.&nbsp;For&nbsp;example&nbsp;%.3f&nbsp;draws&nbsp;3&nbsp;decimal&nbsp;precision.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;new&nbsp;float2&nbsp;value&nbsp;that&nbsp;the&nbsp;user&nbsp;set.&nbsp;Feed&nbsp;this&nbsp;value&nbsp;back&nbsp;on&nbsp;v&nbsp;on&nbsp;the&nbsp;next&nbsp;call&nbsp;to&nbsp;see&nbsp;a&nbsp;proper&nbsp;state&nbsp;update.</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-input_float4"><strong>input_float4</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;box&nbsp;to&nbsp;input&nbsp;a&nbsp;float4&nbsp;value.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;the&nbsp;label&nbsp;name&nbsp;for&nbsp;this&nbsp;box.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;v&nbsp;(float):&nbsp;the&nbsp;actual&nbsp;value&nbsp;to&nbsp;draw&nbsp;the&nbsp;slider.&nbsp;(tuple&nbsp;or&nbsp;array)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;step&nbsp;(float)(optional):&nbsp;step&nbsp;value&nbsp;when&nbsp;scrolling&nbsp;slow<br>
+&nbsp;&nbsp;&nbsp;&nbsp;step_fast&nbsp;(float)(optional):&nbsp;step&nbsp;value&nbsp;when&nbsp;scrolling&nbsp;fast.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;fmt&nbsp;(str)(optional):&nbsp;A&nbsp;formatting&nbsp;value&nbsp;to&nbsp;draw&nbsp;the&nbsp;float.&nbsp;For&nbsp;example&nbsp;%.3f&nbsp;draws&nbsp;3&nbsp;decimal&nbsp;precision.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;new&nbsp;float4&nbsp;value&nbsp;that&nbsp;the&nbsp;user&nbsp;set.&nbsp;Feed&nbsp;this&nbsp;value&nbsp;back&nbsp;on&nbsp;v&nbsp;on&nbsp;the&nbsp;next&nbsp;call&nbsp;to&nbsp;see&nbsp;a&nbsp;proper&nbsp;state&nbsp;update.</tt></dd></dl>
 
 <dl><dt><a name="ImguiBuilder-input_text"><strong>input_text</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;box&nbsp;for&nbsp;input&nbsp;text.<br>
 &nbsp;<br>
