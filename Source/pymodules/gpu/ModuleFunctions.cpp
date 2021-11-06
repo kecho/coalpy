@@ -56,6 +56,7 @@ PyMethodDef g_defs[] = {
 
         Parameters:
             index (int): the desired device index. See get_adapters for a full list.
+            flags (gpu.DeviceFlags) (optional): bit mask with device flags.
         )"
     ),
 
@@ -145,13 +146,14 @@ PyObject* getCurrentAdapterInfo(PyObject* self, PyObject* args, PyObject* kwds)
 
 PyObject* setCurrentAdapter(PyObject* self, PyObject* args, PyObject* kwds)
 {
-    static char* argnames[] = { "index", nullptr };
+    static char* argnames[] = { "index", "flags", nullptr };
     int selected = -1;
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i", argnames, &selected))
+    int flags = (int)render::DeviceFlags::None;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i|i", argnames, &selected, &flags))
         return nullptr;
 
     ModuleState& state = getState(self);
-    if (!state.selectAdapter(selected))
+    if (!state.selectAdapter(selected, flags))
         return nullptr;
     
     Py_RETURN_NONE;

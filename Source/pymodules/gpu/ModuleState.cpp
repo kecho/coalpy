@@ -44,7 +44,8 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
         m_fs = IFileSystem::create(desc);
     }
 
-    createDevice(0);
+    auto flags = render::DeviceFlags::None;
+    createDevice(0, (int)flags);
 
     {
         m_windowListener = Window::createWindowListener(*this);
@@ -140,7 +141,7 @@ void ModuleState::internalAddPath(const std::string& p)
         m_tl->addPath(p.c_str());
 }
 
-bool ModuleState::createDevice(int index)
+bool ModuleState::createDevice(int index, int flags)
 {
     {
         std::string dllname = g_ModuleFilePath;
@@ -167,6 +168,10 @@ bool ModuleState::createDevice(int index)
         devConfig.moduleHandle = g_ModuleInstance;
         devConfig.shaderDb = m_db;
         devConfig.index = index;
+        devConfig.flags = (render::DeviceFlags)flags;
+#if _DEBUG
+        devConfig.flags = (render::DeviceFlags)((int)devConfig.flags | (int)render::DeviceFlags::EnableDebug);
+#endif
         m_device = render::IDevice::create(devConfig);
         if (!m_device || !m_device->info().valid)
         {
@@ -197,7 +202,7 @@ void ModuleState::destroyDevice()
     delete m_db;
 }
 
-bool ModuleState::selectAdapter(int index)
+bool ModuleState::selectAdapter(int index, int flags)
 {
     std::vector<render::DeviceInfo> allAdapters;
     render::IDevice::enumerate(render::DevicePlat::Dx12, allAdapters);
@@ -210,10 +215,9 @@ bool ModuleState::selectAdapter(int index)
 
     destroyDevice();
 
-    if (!createDevice(index))
+    if (!createDevice(index, flags))
         return false;
 
-    
     m_tl->start(); //restart the texture loader
     return true;
 }

@@ -9,6 +9,7 @@
 #include "ResourceDownloadRequest.h"
 #include "CoalpyTypeObject.h"
 #include "ImguiBuilder.h"
+#include <coalpy.render/IDevice.h>
 #include <coalpy.core/Formats.h>
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/Keys.h>
@@ -66,6 +67,14 @@ void constructTypes(TypeList& outTypes)
     RegisterType(ImguiBuilder,            outTypes);
     
     //** Register Enums **//
+    {
+        static EnumEntry s_DeviceFlags[] = {
+            { "EnableDebug", (int)render::DeviceFlags::EnableDebug, "Enable debug drivers for current device." },
+            { nullptr, 0, nullptr }
+        };
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumDeviceFlags", "DeviceFlags", s_DeviceFlags, "Flags utilized for device creation."));
+    }
+
     {
         static EnumEntry s_TextureType[] = {
             { "k1d",          (int)render::TextureType::k1d, "One dimensional texture. Width & depth defaults to 1." },

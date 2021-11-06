@@ -23,11 +23,18 @@ enum class DevicePlat
     Dx12
 };
 
+enum class DeviceFlags : int
+{
+    None = 0,
+    EnableDebug = 1 << 0
+};
+
 struct DeviceConfig
 {
     DevicePlat platform = DevicePlat::Dx12;
     ModuleOsHandle moduleHandle = nullptr;
     IShaderDb* shaderDb = nullptr;
+    DeviceFlags flags = DeviceFlags::None;
     int index = -1;
 };
 

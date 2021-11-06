@@ -202,11 +202,12 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
     m_dx12WorkInfos = new Dx12WorkInformationMap;
     cacheCardInfos(g_cardInfos);
 
-#if _DEBUG
-    DX_OK(D3D12GetDebugInterface(DX_RET(m_debugLayer)));
-    if (m_debugLayer)
-        m_debugLayer->EnableDebugLayer();
-#endif
+    if (((int)config.flags & (int)DeviceFlags::EnableDebug) != 0)
+    {
+        DX_OK(D3D12GetDebugInterface(DX_RET(m_debugLayer)));
+        if (m_debugLayer)
+            m_debugLayer->EnableDebugLayer();
+    }
 
     if (g_cardInfos.cards.empty())
         return;

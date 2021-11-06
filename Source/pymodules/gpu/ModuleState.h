@@ -64,7 +64,7 @@ public:
         return reinterpret_cast<ObjectT*>(PyType_GenericAlloc(getType(ObjectT::s_typeId), count));
     }
 
-    bool selectAdapter(int index);
+    bool selectAdapter(int index, int flags);
 
     bool checkValidDevice();
 
@@ -77,7 +77,7 @@ public:
     bool isInRenderLoop() const { return m_runningRenderLoop; }
 
     void destroyDevice();
-    bool createDevice(int index);
+    bool createDevice(int index, int flags);
 
 private:
     void onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString);
