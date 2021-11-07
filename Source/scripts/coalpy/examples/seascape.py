@@ -46,7 +46,7 @@ def on_render(render_args : gpu.RenderArgs):
         outputs = render_args.window.display_texture 
     )
 
-    gpu.schedule([cmdList])
+    gpu.schedule(cmdList)
 
 window = gpu.Window("seascape example", 1920, 1080, on_render)
 output_table = gpu.OutResourceTable("output table", [window.display_texture])

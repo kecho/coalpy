@@ -79,7 +79,7 @@ PyMethodDef g_defs[] = {
         Submits an array of CommandList objects to the GPU to run shader work on.
 
         Parameters:
-            command_lists (array of CommandList): an array of CommandList objects to run in the GPU. CommandList can be resubmitted through more calls of schedule.
+            command_lists (array of CommandList or a single CommandList object): an array of CommandList objects or a single CommandList object to run in the GPU. CommandList can be resubmitted through more calls of schedule.
         )"
     ),
 
@@ -368,28 +368,37 @@ PyObject* schedule(PyObject* self, PyObject* vargs, PyObject* kwds)
     if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "O", arguments, &cmdListsArg))
             return nullptr;
 
-    if (!PyList_Check(cmdListsArg) || Py_SIZE(cmdListsArg) == 0)
-    {
-        PyErr_SetString(moduleState.exObj(), "argument command lists must be a non empty list");
-        return nullptr;
-    }
-
-    int commandListsCounts = Py_SIZE(cmdListsArg);
-    auto& listObj = *((PyListObject*)cmdListsArg);
-    std::vector<render::CommandList*> cmdListsVector;
     PyTypeObject* pyCmdListType = moduleState.getType(CommandList::s_typeId);
-    for (int i = 0; i < commandListsCounts; ++i)
-    {
-        PyObject* obj = listObj.ob_item[i];
-        if (obj->ob_type != pyCmdListType)
-        {
-            PyErr_SetString(moduleState.exObj(), "object inside command list argument list must be of type CommandList.");
-            return nullptr;
-        }
+    std::vector<render::CommandList*> cmdListsVector;
 
-        CommandList& cmdListObj = *((CommandList*)obj);
+    if (PyList_Check(cmdListsArg) && Py_SIZE(cmdListsArg) > 0)
+    {
+        int commandListsCounts = Py_SIZE(cmdListsArg);
+        auto& listObj = *((PyListObject*)cmdListsArg);
+        for (int i = 0; i < commandListsCounts; ++i)
+        {
+            PyObject* obj = listObj.ob_item[i];
+            if (obj->ob_type != pyCmdListType)
+            {
+                PyErr_SetString(moduleState.exObj(), "object inside command list argument list must be of type CommandList.");
+                return nullptr;
+            }
+
+            CommandList& cmdListObj = *((CommandList*)obj);
+            cmdListObj.cmdList->finalize();
+            cmdListsVector.push_back(cmdListObj.cmdList);
+        }
+    }
+    else if (cmdListsArg->ob_type == pyCmdListType)
+    {
+        CommandList& cmdListObj = *((CommandList*)cmdListsArg);
         cmdListObj.cmdList->finalize();
         cmdListsVector.push_back(cmdListObj.cmdList);
+    }
+    else
+    {
+        PyErr_SetString(moduleState.exObj(), "argument command lists must be a non empty list of gpu.CommandList or a single CommandList object.");
+        return nullptr;
     }
 
     auto result = moduleState.device().schedule(cmdListsVector.data(), (int)cmdListsVector.size());
