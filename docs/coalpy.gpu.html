@@ -36,6 +36,7 @@ and&nbsp;start&nbsp;using&nbsp;your&nbsp;GPU!</tt></p>
 <dt><font face="helvetica, arial">gpu.Buffer
 </font></dt><dt><font face="helvetica, arial">gpu.CommandList
 </font></dt><dt><font face="helvetica, arial">gpu.EnumBufferType
+</font></dt><dt><font face="helvetica, arial">gpu.EnumDeviceFlags
 </font></dt><dt><font face="helvetica, arial">gpu.EnumFilterType
 </font></dt><dt><font face="helvetica, arial">gpu.EnumFormat
 </font></dt><dt><font face="helvetica, arial">gpu.EnumMemFlags
@@ -92,6 +93,12 @@ and&nbsp;can&nbsp;be&nbsp;reused&nbsp;to&nbsp;avoid&nbsp;cost.<br>&nbsp;</tt></t
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="CommandList-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
 
+<dl><dt><a name="CommandList-begin_marker"><strong>begin_marker</strong></a>(...)</dt><dd><tt>Sets&nbsp;a&nbsp;string&nbsp;marker.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;call&nbsp;to&nbsp;end_marker.&nbsp;Markers&nbsp;can&nbsp;also&nbsp;be&nbsp;nested.<br>
+You&nbsp;can&nbsp;use&nbsp;renderdoc&nbsp;/&nbsp;pix&nbsp;to&nbsp;explore&nbsp;the&nbsp;resulting&nbsp;frame's&nbsp;markers.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str):&nbsp;string&nbsp;text&nbsp;of&nbsp;the&nbsp;marker&nbsp;to&nbsp;be&nbsp;used.</tt></dd></dl>
+
 <dl><dt><a name="CommandList-copy_resource"><strong>copy_resource</strong></a>(...)</dt><dd><tt>copy_resource&nbsp;method,&nbsp;copies&nbsp;one&nbsp;resource&nbsp;to&nbsp;another.<br>
 Both&nbsp;source&nbsp;and&nbsp;destination&nbsp;must&nbsp;be&nbsp;the&nbsp;same&nbsp;type&nbsp;(either&nbsp;<a href="#Buffer">Buffer</a>&nbsp;or&nbsp;textures).<br>
 Parameters:<br>
@@ -131,6 +138,8 @@ Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;indirect_args&nbsp;(<a href="#Buffer">Buffer</a>)(optional):&nbsp;a&nbsp;single&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Buffer">Buffer</a>,&nbsp;which&nbsp;contains&nbsp;the&nbsp;x,&nbsp;y&nbsp;and&nbsp;z&nbsp;groups&nbsp;packed&nbsp;tightly&nbsp;as&nbsp;3&nbsp;ints.&nbsp;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;this&nbsp;buffer&nbsp;is&nbsp;provided,&nbsp;the&nbsp;x,&nbsp;y&nbsp;and&nbsp;z&nbsp;arguments&nbsp;are&nbsp;ignored.</tt></dd></dl>
 
+<dl><dt><a name="CommandList-end_marker"><strong>end_marker</strong></a>(...)</dt><dd><tt>Finishes&nbsp;the&nbsp;scope&nbsp;of&nbsp;a&nbsp;marker.&nbsp;Must&nbsp;have&nbsp;a&nbsp;corresponding&nbsp;begin_marker.</tt></dd></dl>
+
 <dl><dt><a name="CommandList-upload_resource"><strong>upload_resource</strong></a>(...)</dt><dd><tt>upload_resource&nbsp;method.&nbsp;Uploads&nbsp;an&nbsp;python&nbsp;array&nbsp;[],&nbsp;an&nbsp;array.array&nbsp;or&nbsp;any&nbsp;buffer&nbsp;protocol&nbsp;compatible&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;a&nbsp;gpu&nbsp;resource.<br>
 &nbsp;<br>
 Parameters:<br>
@@ -169,6 +178,27 @@ Data descriptors defined here:<br>
 </dl>
 <dl><dt><strong>Structured</strong></dt>
 <dd><tt>Structured&nbsp;buffer,&nbsp;requires&nbsp;stride&nbsp;parameter.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumDeviceFlags">class <strong>EnumDeviceFlags</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Flags&nbsp;utilized&nbsp;for&nbsp;device&nbsp;creation.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumDeviceFlags-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumDeviceFlags-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>EnableDebug</strong></dt>
+<dd><tt>Enable&nbsp;debug&nbsp;drivers&nbsp;for&nbsp;current&nbsp;device.</tt></dd>
 </dl>
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -846,11 +876,12 @@ Returns:<br>
  <dl><dt><a name="-schedule"><strong>schedule</strong></a>(...)</dt><dd><tt>Submits&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>&nbsp;objects&nbsp;to&nbsp;the&nbsp;GPU&nbsp;to&nbsp;run&nbsp;shader&nbsp;work&nbsp;on.<br>
 &nbsp;<br>
 Parameters:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;command_lists&nbsp;(array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>):&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>&nbsp;objects&nbsp;to&nbsp;run&nbsp;in&nbsp;the&nbsp;GPU.&nbsp;<a href="#CommandList">CommandList</a>&nbsp;can&nbsp;be&nbsp;resubmitted&nbsp;through&nbsp;more&nbsp;calls&nbsp;of&nbsp;schedule.</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;command_lists&nbsp;(array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>&nbsp;or&nbsp;a&nbsp;single&nbsp;<a href="#CommandList">CommandList</a>&nbsp;<a href="builtins.html#object">object</a>):&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>&nbsp;objects&nbsp;or&nbsp;a&nbsp;single&nbsp;<a href="#CommandList">CommandList</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;run&nbsp;in&nbsp;the&nbsp;GPU.&nbsp;<a href="#CommandList">CommandList</a>&nbsp;can&nbsp;be&nbsp;resubmitted&nbsp;through&nbsp;more&nbsp;calls&nbsp;of&nbsp;schedule.</tt></dd></dl>
  <dl><dt><a name="-set_current_adapter"><strong>set_current_adapter</strong></a>(...)</dt><dd><tt>Selects&nbsp;an&nbsp;active&nbsp;GPU&nbsp;adapter.&nbsp;For&nbsp;a&nbsp;list&nbsp;of&nbsp;GPU&nbsp;adapters&nbsp;see&nbsp;coalpy.gpu.get_adapters.<br>
 &nbsp;<br>
 Parameters:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;index&nbsp;(int):&nbsp;the&nbsp;desired&nbsp;device&nbsp;index.&nbsp;See&nbsp;get_adapters&nbsp;for&nbsp;a&nbsp;full&nbsp;list.</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;index&nbsp;(int):&nbsp;the&nbsp;desired&nbsp;device&nbsp;index.&nbsp;See&nbsp;get_adapters&nbsp;for&nbsp;a&nbsp;full&nbsp;list.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;flags&nbsp;(gpu.DeviceFlags)&nbsp;(optional):&nbsp;bit&nbsp;mask&nbsp;with&nbsp;device&nbsp;flags.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">
@@ -859,6 +890,7 @@ Parameters:<br>
     
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><strong>BufferType</strong> = &lt;gpu.EnumBufferType object&gt;<br>
+<strong>DeviceFlags</strong> = &lt;gpu.EnumDeviceFlags object&gt;<br>
 <strong>FilterType</strong> = &lt;gpu.EnumFilterType object&gt;<br>
 <strong>Format</strong> = &lt;gpu.EnumFormat object&gt;<br>
 <strong>Keys</strong> = &lt;gpu.Keys object&gt;<br>
