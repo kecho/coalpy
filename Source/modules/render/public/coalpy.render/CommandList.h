@@ -252,6 +252,8 @@ public:
     CommandList();
     ~CommandList();
 
+    void beginMarker(const char* name);
+    void endMarker();
     void writeCommand(const ComputeCommand& cmd);
     void writeCommand(const CopyCommand& cmd);
     void writeCommand(const UploadCommand& cmd);

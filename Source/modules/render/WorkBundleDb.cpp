@@ -647,6 +647,18 @@ void parseCommandList(const unsigned char* data, WorkBuildContext& context)
                     offset += abiCmd->cmdSize;
                 }
                 break;
+            case AbiCmdTypes::BeginMarker:
+                {
+                    const auto* abiCmd = (const AbiBeginMarker*)(data + offset);
+                    offset += abiCmd->cmdSize;
+                }
+                break;
+            case AbiCmdTypes::EndMarker:
+                {
+                    const auto* abiCmd = (const AbiEndMarker*)(data + offset);
+                    offset += abiCmd->cmdSize;
+                }
+                break;
             default:
             {
                 std::stringstream ss;

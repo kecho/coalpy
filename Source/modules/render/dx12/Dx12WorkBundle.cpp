@@ -517,6 +517,24 @@ void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList,
                 buildClearAppendConsumeCounter(listData, abiCmd, cmdInfo, outList);
             }
             break;
+        case AbiCmdTypes::BeginMarker:
+            {
+                const auto* abiCmd = (const AbiBeginMarker*)cmdBlob;
+                Dx12PixApi* pixApi = m_device.getPixApi();
+                if (pixApi)
+                {
+                    const char* str = abiCmd->str.data(listData);
+                    pixApi->pixBeginEventOnCommandList(&outList, 0xffff00ff, str);
+                }
+            }
+            break;
+        case AbiCmdTypes::EndMarker:
+            {
+                Dx12PixApi* pixApi = m_device.getPixApi();
+                if (pixApi)
+                    pixApi->pixEndEventOnCommandList(&outList);
+            }
+            break;
         default:
             CPY_ASSERT_FMT(false, "Unrecognized serialized command %d", cmdType);
             return;

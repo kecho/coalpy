@@ -19,6 +19,8 @@ enum class AbiCmdTypes : int
     Copy = 'COPY', 
     Upload = 'UPLD',
     Download = 'DWLD',
+    BeginMarker = 'BMKR',
+    EndMarker = 'EMKR',
     ClearAppendConsumeCounter = 'CLAC'
 };
 
@@ -125,6 +127,19 @@ struct AbiClearAppendConsumeCounter
     int sentinel = (int)AbiCmdTypes::ClearAppendConsumeCounter;
     MemSize cmdSize = {};
     ResourceHandle source;
+};
+
+struct AbiBeginMarker
+{
+    int sentinel = (int)AbiCmdTypes::BeginMarker;
+    MemSize cmdSize = {};
+    AbiPtr<char> str;
+};
+
+struct AbiEndMarker
+{
+    int sentinel = (int)AbiCmdTypes::EndMarker;
+    MemSize cmdSize = {};
 };
 
 }

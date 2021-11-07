@@ -21,6 +21,8 @@ namespace methods
     static PyObject* cmdDispatch(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* cmdCopyResource(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* cmdUploadResource(PyObject* self, PyObject* vargs, PyObject* kwds);
+    static PyObject* cmdBeginMarker(PyObject* self, PyObject* vargs, PyObject* kwds);
+    static PyObject* cmdEndMarker(PyObject* self, PyObject* vargs, PyObject* kwds);
 }
 
 static PyMethodDef g_cmdListMethods[] = {
@@ -73,6 +75,16 @@ static PyMethodDef g_cmdListMethods[] = {
             destination (Texture or Buffer): a destination object of type Texture or Buffer.
             size (tuple): if texture upload, a tuple with the x, y and z size of the box to copy of the source buffer. If a Buffer upload, then this parameter gets ignored.
             destination_offset (tuple or int): if texture copy, a tuple with x, y, z offsets and mipLevel must be specified. If Buffer copy, it must be a single integer with the byte offset for the destianation Buffer.
+    )"),
+    KW_FN(begin_marker, cmdBeginMarker, R"(
+        Sets a string marker. Must be paired with a call to end_marker. Markers can also be nested.
+        You can use renderdoc / pix to explore the resulting frame's markers.
+        
+        Parameters:
+            name (str): string text of the marker to be used.
+    )"),
+    KW_FN(end_marker, cmdEndMarker, R"(
+        Finishes the scope of a marker. Must have a corresponding begin_marker.
     )"),
     FN_END
 };
@@ -794,6 +806,25 @@ namespace methods
         Py_INCREF(destination);
         cmdList.references.objects.push_back(destination);
 
+        Py_RETURN_NONE;
+    }
+
+    PyObject* cmdBeginMarker(PyObject* self, PyObject* vargs, PyObject* kwds)
+    {
+        auto& cmdList = *((CommandList*)self); 
+        static char* arguments[] = { "name", nullptr };
+        const char* name  = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s", arguments, &name))
+            return nullptr;
+
+        cmdList.cmdList->beginMarker(name);
+        Py_RETURN_NONE;
+    }
+
+    PyObject* cmdEndMarker(PyObject* self, PyObject* vargs, PyObject* kwds)
+    {
+        auto& cmdList = *((CommandList*)self); 
+        cmdList.cmdList->endMarker();
         Py_RETURN_NONE;
     }
 }

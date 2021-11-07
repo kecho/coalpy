@@ -226,6 +226,22 @@ void CommandList::writeCommand(const ClearAppendConsumeCounter& cmd)
     finalizeCommand(abiCmd);
 }
 
+void CommandList::beginMarker(const char* name)
+{
+    auto& abiCmd = allocate<AbiBeginMarker>();
+    if (name == nullptr)
+        m_internal.deferArrayStore(abiCmd.str, "", 1);
+    else
+        m_internal.deferArrayStore(abiCmd.str, name, strlen(name) + 1);
+    finalizeCommand(abiCmd);
+}
+
+void CommandList::endMarker()
+{
+    auto& abiCmd = allocate<AbiEndMarker>();
+    finalizeCommand(abiCmd);
+}
+
 MemOffset CommandList::uploadInlineResource(ResourceHandle destination, int sourceSize)
 {
     MemOffset cmdOffset = m_internal.buffer.size();

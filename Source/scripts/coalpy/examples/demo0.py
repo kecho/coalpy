@@ -53,6 +53,10 @@ def main():
         buildUi(render_args.imgui)
 
         cmdList = gpu.CommandList()
+
+        cmdList.begin_marker("beginDemo0")
+        cmdList.begin_marker("beginDemoInternal")
+
         xv = int(math.ceil((render_args.width)/8));
         yv = int(math.ceil((render_args.height)/4));
         dims = (1.0/render_args.width, 1.0/render_args.height)
@@ -63,6 +67,8 @@ def main():
             inputs = test_image,
             outputs = render_args.window.display_texture
         )
+        cmdList.end_marker()
+        cmdList.end_marker()
         gpu.schedule([cmdList])
     
         return 0   
