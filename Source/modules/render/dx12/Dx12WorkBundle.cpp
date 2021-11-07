@@ -6,6 +6,7 @@
 #include "Dx12Utils.h"
 #include "Dx12Formats.h"
 #include "Dx12CounterPool.h"
+#include "Dx12PixApi.h"
 
 namespace coalpy
 {

@@ -11,6 +11,8 @@ local DxcBinaryIl = DxcDir.."dxc/bin/x64/dxil.dll"
 local PythonDir = "External/Python39-win64/"
 local OpenEXRDir = "External/OpenEXR/"
 local OpenEXRLibDir = "External/OpenEXR/staticlib/"
+local PixDir ="External/WinPixEventRuntime_1.0.210818001"
+local PixBinaryDll ="External/WinPixEventRuntime_1.0.210818001/bin/WinPixEventRuntime.dll"
 
 
 local LibIncludes = {
@@ -48,7 +50,8 @@ local Libraries = {
 
 local Binaries = {
     DxcBinaryCompiler,
-    DxcBinaryIl
+    DxcBinaryIl,
+    PixBinaryDll
 }
 
 -- Build zlib

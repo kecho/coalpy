@@ -9,6 +9,7 @@
 #include "Dx12Formats.h"
 #include "Dx12Fence.h"
 #include "Dx12ResourceCollection.h"
+#include "Dx12PixApi.h"
 #include "WorkBundleDb.h"
 #include <dxgi1_5.h>
 
@@ -72,7 +73,7 @@ Dx12Display::Dx12Display(const DisplayConfig& config, Dx12Device& device)
     m_surfaceDesc.mipLevels = 1;
     m_surfaceDesc.name = "DisplayBuffer";
     m_surfaceDesc.format = config.format;
-    // Piece of shit dx12 does not allow UAV access to swap chain. See doRetardedDXGIDx12Hack
+    // Piece of shit dx12 does not allow UAV access to swap chain. See copyToSwapChain 
     //m_surfaceDesc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
     m_surfaceDesc.memFlags = {};
     m_buffering = config.buffering;
@@ -98,17 +99,6 @@ void Dx12Display::createComputeTexture()
     {
         TextureResult result = m_device.resources().recreateTexture(m_computeTexture, desc);
         CPY_ASSERT_FMT(result.success(), "Could not create swap chain compute texture: %s", result.message.c_str());
-    }
-
-    m_copyCmdLists.resize(m_buffering);
-    for (int i = 0; i < m_buffering; ++i)
-    {
-        CommandList& list = m_copyCmdLists[i];
-        list.reset();
-        CopyCommand copyCmd;
-        copyCmd.setResources(m_computeTexture, m_textures[i]);
-        list.writeCommand(copyCmd);
-        list.finalize();
     }
 }
 
@@ -170,7 +160,7 @@ void Dx12Display::present()
     present(fence);
 }
 
-void Dx12Display::doRetardedDXGIDx12Hack(int bufferIndex)
+void Dx12Display::copyToSwapChain(int bufferIndex)
 {
     //This is an absolute abomination. So the TL;DR is that for whatever the fuck reason,
     //microsoft does not support write UAV on the swap chain. I've spoken with folks from AMD
@@ -180,7 +170,7 @@ void Dx12Display::doRetardedDXGIDx12Hack(int bufferIndex)
     //that copies to the swap table.
     //To avoid exposing the concept of present all the way up to the high level, just using my intermediate API
     //utilities to submit / manage the resource state and submit a copy into the swap chain.
-    // Thank you microsoft.    
+    // Thank you microsoft.
 
     auto& workDb = m_device.workDb();
     auto presentTexture = m_textures[bufferIndex];
@@ -188,6 +178,11 @@ void Dx12Display::doRetardedDXGIDx12Hack(int bufferIndex)
     auto workType = WorkType::Graphics;
     Dx12List lists;
     m_device.queues().allocate(workType, lists);
+
+    Dx12PixApi* pixApi = m_device.getPixApi();
+    if (pixApi)
+        pixApi->pixBeginEventOnCommandList(lists.list, 0xffffffff, "Dx12Display::copyToSwapChain");
+
     Dx12Resource& srcRes = m_device.resources().unsafeGetResource(m_computeTexture);
     Dx12Resource& dstRes = m_device.resources().unsafeGetResource(presentTexture);
 
@@ -240,6 +235,10 @@ void Dx12Display::doRetardedDXGIDx12Hack(int bufferIndex)
     presentBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
     workDb.resourceInfos()[presentTexture].gpuState = getGpuState(D3D12_RESOURCE_STATE_PRESENT);
     lists.list->ResourceBarrier(1, &presentBarrier);
+
+    if (pixApi)
+        pixApi->pixEndEventOnCommandList(lists.list);
+
     lists.list->Close();
     auto& queue = m_device.queues().cmdQueue(workType);
     ID3D12CommandList* list = &(*lists.list);
@@ -258,7 +257,7 @@ void Dx12Display::present(Dx12Fence& fence)
 {
     auto bufferIndex = currentBuffer();
 
-    doRetardedDXGIDx12Hack(bufferIndex);
+    copyToSwapChain(bufferIndex);
     auto res = m_swapChain->Present(1u, 0u);
     CPY_ASSERT(res == S_OK || res == DXGI_STATUS_OCCLUDED);
 

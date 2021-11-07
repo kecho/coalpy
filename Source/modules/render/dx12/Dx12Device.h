@@ -6,6 +6,7 @@
 
 #include <coalpy.render/Resources.h>
 #include <unordered_map>
+#include <string>
 
 struct IDXGIFactory2;
 struct ID3D12Device2;
@@ -28,6 +29,7 @@ class Dx12ResourceCollection;
 class Dx12BufferPool;
 class Dx12CounterPool;
 class Dx12Gc;
+class Dx12PixApi;
 struct Dx12WorkInformationMap;
 
 class Dx12Device : public TDevice<Dx12Device>
@@ -95,7 +97,7 @@ public:
 
     Buffer countersBuffer() { return m_countersBuffer; }
 
-    
+    Dx12PixApi* getPixApi() const;
 
 private:
     ID3D12Debug* m_debugLayer;

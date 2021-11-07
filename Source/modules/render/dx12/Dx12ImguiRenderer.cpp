@@ -11,6 +11,7 @@
 #include "Dx12Resources.h"
 #include "Dx12Display.h"
 #include "Dx12Queues.h"
+#include "Dx12PixApi.h"
 #include "WorkBundleDb.h"
 #include <imgui.h>
 #include <backends/imgui_impl_win32.h>
@@ -186,6 +187,9 @@ void Dx12imguiRenderer::render()
     auto workType = WorkType::Graphics;
     Dx12List dx12List;
     m_device.queues().allocate(workType, dx12List);
+    Dx12PixApi* pixApi = m_device.getPixApi();
+    if (pixApi)
+        pixApi->pixBeginEventOnCommandList(dx12List.list, 0xffffffff, "Dx12imguiRenderer::render");
     
     auto& workDb = m_device.workDb();
 
@@ -211,6 +215,10 @@ void Dx12imguiRenderer::render()
     ID3D12DescriptorHeap* srvHeap = &(*m_srvHeap);
     dx12List.list->SetDescriptorHeaps(1, &srvHeap);
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), &(*dx12List.list));
+
+    if (pixApi)
+        pixApi->pixEndEventOnCommandList(dx12List.list);
+
     dx12List.list->Close();
 
     ID3D12CommandList* cmdList = &(*dx12List.list);

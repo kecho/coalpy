@@ -143,11 +143,12 @@ void ModuleState::internalAddPath(const std::string& p)
 
 bool ModuleState::createDevice(int index, int flags)
 {
+    std::string dllname = g_ModuleFilePath;
+    std::string modulePath;
+    FileUtils::getDirName(dllname, modulePath);
+    modulePath += "/resources/";
+
     {
-        std::string dllname = g_ModuleFilePath;
-        std::string modulePath;
-        FileUtils::getDirName(dllname, modulePath);
-        modulePath += "/resources/";
 
         ShaderDbDesc desc;
         desc.compilerDllPath = modulePath.c_str();
@@ -169,6 +170,7 @@ bool ModuleState::createDevice(int index, int flags)
         devConfig.shaderDb = m_db;
         devConfig.index = index;
         devConfig.flags = (render::DeviceFlags)flags;
+        devConfig.resourcePath = modulePath;
 #if _DEBUG
         devConfig.flags = (render::DeviceFlags)((int)devConfig.flags | (int)render::DeviceFlags::EnableDebug);
 #endif

@@ -27,6 +27,7 @@
 #include "Dx12BufferPool.h"
 #include "Dx12CounterPool.h"
 #include "Dx12Fence.h"
+#include "Dx12PixApi.h"
 #include "Dx12Gc.h"
 
 namespace coalpy
@@ -174,7 +175,6 @@ ID3D12CommandSignature* createIndirectDispatchCommandSignature(ID3D12Device2& de
 
     return indirectDispatchCmdSignature;
 }
-
 
 }
 
@@ -480,6 +480,11 @@ SmartPtr<IDisplay> Dx12Device::createDisplay(const DisplayConfig& config)
 {
     IDisplay * display = new Dx12Display(config, *this);
     return SmartPtr<IDisplay>(display);
+}
+
+Dx12PixApi* Dx12Device::getPixApi() const
+{
+    return Dx12PixApi::get(m_config.resourcePath.c_str());
 }
 
 IDXGIFactory2* Dx12Device::dxgiFactory()

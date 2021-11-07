@@ -35,6 +35,7 @@ struct DeviceConfig
     ModuleOsHandle moduleHandle = nullptr;
     IShaderDb* shaderDb = nullptr;
     DeviceFlags flags = DeviceFlags::None;
+    std::string resourcePath;
     int index = -1;
 };
 

@@ -37,7 +37,7 @@ public:
 
     int version() { return m_version; }
 private:
-    void doRetardedDXGIDx12Hack(int bufferIndex);
+    void copyToSwapChain(int bufferIndex);
     void createComputeTexture();
     TextureDesc m_surfaceDesc;
     int m_version = 0;
@@ -47,7 +47,6 @@ private:
     std::vector<UINT64>  m_fenceVals;
     IDXGISwapChain4* m_swapChain;
     Dx12Device& m_device;
-    std::vector<CommandList> m_copyCmdLists;
     
 };
 
