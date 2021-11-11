@@ -85,7 +85,7 @@ void constructTypes(TypeList& outTypes)
             { "CubeMapArray", (int)render::TextureType::CubeMapArray, "Array of cube maps. Use the Depth as the number of cube maps supported in an array." },
             { nullptr, 0, nullptr }
         };
-        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumTextureType", "TextureType", s_TextureType, "Type of texture")); 
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumTextureType", "TextureType", s_TextureType, "Type of texture enumeration. Use enum values located at coalpy.gpu.TextureType")); 
     }
 
     {
@@ -95,7 +95,7 @@ void constructTypes(TypeList& outTypes)
             { "Raw",            (int)render::BufferType::Raw, "Raw byte buffer." },
             { nullptr, 0, nullptr }
         };
-        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumBufferType", "BufferType", s_BufferType, "Type of buffer")); 
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumBufferType", "BufferType", s_BufferType, "Type of buffer. Use enum values located at coalpy.gpu.BufferType")); 
     }
 
     {
@@ -104,7 +104,7 @@ void constructTypes(TypeList& outTypes)
             { "GpuWrite", render::MemFlag_GpuWrite, "Specify flag for resource write access from an OutResourceTable / UAV" },
             { nullptr, 0, nullptr }
         };
-        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumMemFlags", "MemFlags", s_MemFlags, "Memory access enumerations.")); 
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumMemFlags", "MemFlags", s_MemFlags, "Memory access enumerations. Use enum values located at coalpy.gpu.MemFlags")); 
     }
 
     {
@@ -116,7 +116,7 @@ void constructTypes(TypeList& outTypes)
             { "Anisotropic",  (int)render::FilterType::Anisotropic, "High quality anisotropic filter type." },
             { nullptr, 0, nullptr }
         };
-        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumFilterType", "FilterType", s_FilterTypes, "Filter types for samplers enumeration.")); 
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumFilterType", "FilterType", s_FilterTypes, "Filter types for samplers enumeration. Use enum values located at coalpy.gpu.FilterType")); 
     }
 
     {
@@ -127,7 +127,7 @@ void constructTypes(TypeList& outTypes)
             { "Border", (int)render::TextureAddressMode::Border, "Samples a border when UVs are in the edge. Set the border color in the sampler object." },
             { nullptr, 0, nullptr }
         };
-        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumTextureAddressMode", "TextureAddressMode",  s_TextureAddressingModes, "Address behaviour of texture coordinates enumeration.")); 
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumTextureAddressMode", "TextureAddressMode",  s_TextureAddressingModes, "Address behaviour of texture coordinates enumeration. Use enum values located at coalpy.gpu.TextureAddressMode")); 
     }
 
     {
@@ -137,7 +137,7 @@ void constructTypes(TypeList& outTypes)
             #undef KEY_DECL
             { nullptr, 0, nullptr }
         };
-        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumKeys", "Keys",  s_InputKeys, "Enumeration of keyboard / mouse input keys. To be used with the input_state object from the Window.")); 
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumKeys", "Keys",  s_InputKeys, "Enumeration of keyboard / mouse input keys. To be used with the input_state object from the Window. Use enum values located at coalpy.gpu.Keys")); 
     }
 
     outTypes.push_back(registerFormats());
