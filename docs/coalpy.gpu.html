@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="coalpy.html"><font color="#ffffff">coalpy</font></a>.gpu</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccoalpy%5Ct2-output%5Cwin64-msvc-production-default%5Ccoalpy%5Cgpu.pyd">c:\dev\coalpy\t2-output\win64-msvc-production-default\coalpy\gpu.pyd</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccoalpy%5Ct2-output%5Cwin64-msvc-debug-default%5Ccoalpy%5Cgpu.pyd">c:\dev\coalpy\t2-output\win64-msvc-debug-default\coalpy\gpu.pyd</a></font></td></tr></table>
     <p><tt>&lt;&lt;&nbsp;coalpy&nbsp;&gt;&gt;&nbsp;Compute&nbsp;Abstraction&nbsp;Layer&nbsp;for&nbsp;Python&nbsp;<br>
 &nbsp;by&nbsp;Kleber&nbsp;A&nbsp;Garcia&nbsp;2021&nbsp;(c).&nbsp;<br>
 coalpy&nbsp;is&nbsp;a&nbsp;compute&nbsp;abstraction&nbsp;layer&nbsp;for&nbsp;python.&nbsp;It&nbsp;brings<br>
@@ -36,9 +36,12 @@ and&nbsp;start&nbsp;using&nbsp;your&nbsp;GPU!</tt></p>
 <dt><font face="helvetica, arial">gpu.Buffer
 </font></dt><dt><font face="helvetica, arial">gpu.CommandList
 </font></dt><dt><font face="helvetica, arial">gpu.EnumBufferType
+</font></dt><dt><font face="helvetica, arial">gpu.EnumDeviceFlags
 </font></dt><dt><font face="helvetica, arial">gpu.EnumFilterType
 </font></dt><dt><font face="helvetica, arial">gpu.EnumFormat
+</font></dt><dt><font face="helvetica, arial">gpu.EnumKeys
 </font></dt><dt><font face="helvetica, arial">gpu.EnumMemFlags
+</font></dt><dt><font face="helvetica, arial">gpu.EnumTextureAddressMode
 </font></dt><dt><font face="helvetica, arial">gpu.EnumTextureType
 </font></dt><dt><font face="helvetica, arial">gpu.ImguiBuilder
 </font></dt><dt><font face="helvetica, arial">gpu.InResourceTable
@@ -92,6 +95,12 @@ and&nbsp;can&nbsp;be&nbsp;reused&nbsp;to&nbsp;avoid&nbsp;cost.<br>&nbsp;</tt></t
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="CommandList-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
 
+<dl><dt><a name="CommandList-begin_marker"><strong>begin_marker</strong></a>(...)</dt><dd><tt>Sets&nbsp;a&nbsp;string&nbsp;marker.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;call&nbsp;to&nbsp;end_marker.&nbsp;Markers&nbsp;can&nbsp;also&nbsp;be&nbsp;nested.<br>
+You&nbsp;can&nbsp;use&nbsp;renderdoc&nbsp;/&nbsp;pix&nbsp;to&nbsp;explore&nbsp;the&nbsp;resulting&nbsp;frame's&nbsp;markers.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str):&nbsp;string&nbsp;text&nbsp;of&nbsp;the&nbsp;marker&nbsp;to&nbsp;be&nbsp;used.</tt></dd></dl>
+
 <dl><dt><a name="CommandList-copy_resource"><strong>copy_resource</strong></a>(...)</dt><dd><tt>copy_resource&nbsp;method,&nbsp;copies&nbsp;one&nbsp;resource&nbsp;to&nbsp;another.<br>
 Both&nbsp;source&nbsp;and&nbsp;destination&nbsp;must&nbsp;be&nbsp;the&nbsp;same&nbsp;type&nbsp;(either&nbsp;<a href="#Buffer">Buffer</a>&nbsp;or&nbsp;textures).<br>
 Parameters:<br>
@@ -131,6 +140,8 @@ Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;indirect_args&nbsp;(<a href="#Buffer">Buffer</a>)(optional):&nbsp;a&nbsp;single&nbsp;<a href="builtins.html#object">object</a>&nbsp;of&nbsp;type&nbsp;<a href="#Buffer">Buffer</a>,&nbsp;which&nbsp;contains&nbsp;the&nbsp;x,&nbsp;y&nbsp;and&nbsp;z&nbsp;groups&nbsp;packed&nbsp;tightly&nbsp;as&nbsp;3&nbsp;ints.&nbsp;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;this&nbsp;buffer&nbsp;is&nbsp;provided,&nbsp;the&nbsp;x,&nbsp;y&nbsp;and&nbsp;z&nbsp;arguments&nbsp;are&nbsp;ignored.</tt></dd></dl>
 
+<dl><dt><a name="CommandList-end_marker"><strong>end_marker</strong></a>(...)</dt><dd><tt>Finishes&nbsp;the&nbsp;scope&nbsp;of&nbsp;a&nbsp;marker.&nbsp;Must&nbsp;have&nbsp;a&nbsp;corresponding&nbsp;begin_marker.</tt></dd></dl>
+
 <dl><dt><a name="CommandList-upload_resource"><strong>upload_resource</strong></a>(...)</dt><dd><tt>upload_resource&nbsp;method.&nbsp;Uploads&nbsp;an&nbsp;python&nbsp;array&nbsp;[],&nbsp;an&nbsp;array.array&nbsp;or&nbsp;any&nbsp;buffer&nbsp;protocol&nbsp;compatible&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;a&nbsp;gpu&nbsp;resource.<br>
 &nbsp;<br>
 Parameters:<br>
@@ -169,6 +180,27 @@ Data descriptors defined here:<br>
 </dl>
 <dl><dt><strong>Structured</strong></dt>
 <dd><tt>Structured&nbsp;buffer,&nbsp;requires&nbsp;stride&nbsp;parameter.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumDeviceFlags">class <strong>EnumDeviceFlags</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Flags&nbsp;utilized&nbsp;for&nbsp;device&nbsp;creation.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumDeviceFlags-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumDeviceFlags-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>EnableDebug</strong></dt>
+<dd><tt>Enable&nbsp;debug&nbsp;drivers&nbsp;for&nbsp;current&nbsp;device.</tt></dd>
 </dl>
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -319,6 +351,243 @@ Data descriptors defined here:<br>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
 <td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumKeys">class <strong>EnumKeys</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Enumeration&nbsp;of&nbsp;keyboard&nbsp;/&nbsp;mouse&nbsp;input&nbsp;keys.&nbsp;To&nbsp;be&nbsp;used&nbsp;with&nbsp;the&nbsp;input_state&nbsp;<a href="builtins.html#object">object</a>&nbsp;from&nbsp;the&nbsp;<a href="#Window">Window</a>.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumKeys-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumKeys-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>A</strong></dt>
+<dd><tt>A&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>B</strong></dt>
+<dd><tt>B&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Backslash</strong></dt>
+<dd><tt>Backslash&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Backspace</strong></dt>
+<dd><tt>Backspace&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>C</strong></dt>
+<dd><tt>C&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Comma</strong></dt>
+<dd><tt>Comma&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>D</strong></dt>
+<dd><tt>D&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Dot</strong></dt>
+<dd><tt>Dot&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Down</strong></dt>
+<dd><tt>Down&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>E</strong></dt>
+<dd><tt>E&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Enter</strong></dt>
+<dd><tt>Enter&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F</strong></dt>
+<dd><tt>F&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F1</strong></dt>
+<dd><tt>F1&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F10</strong></dt>
+<dd><tt>F10&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F11</strong></dt>
+<dd><tt>F11&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F12</strong></dt>
+<dd><tt>F12&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F2</strong></dt>
+<dd><tt>F2&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F3</strong></dt>
+<dd><tt>F3&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F4</strong></dt>
+<dd><tt>F4&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F5</strong></dt>
+<dd><tt>F5&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F6</strong></dt>
+<dd><tt>F6&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F7</strong></dt>
+<dd><tt>F7&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F8</strong></dt>
+<dd><tt>F8&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F9</strong></dt>
+<dd><tt>F9&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>G</strong></dt>
+<dd><tt>G&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>H</strong></dt>
+<dd><tt>H&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>I</strong></dt>
+<dd><tt>I&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>J</strong></dt>
+<dd><tt>J&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>K</strong></dt>
+<dd><tt>K&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>L</strong></dt>
+<dd><tt>L&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Left</strong></dt>
+<dd><tt>Left&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>LeftAlt</strong></dt>
+<dd><tt>LeftAlt&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>LeftBrac</strong></dt>
+<dd><tt>LeftBrac&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>LeftControl</strong></dt>
+<dd><tt>LeftControl&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>LeftShift</strong></dt>
+<dd><tt>LeftShift&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>M</strong></dt>
+<dd><tt>M&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>MouseCenter</strong></dt>
+<dd><tt>MouseCenter&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>MouseLeft</strong></dt>
+<dd><tt>MouseLeft&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>MouseLeftDouble</strong></dt>
+<dd><tt>MouseLeftDouble&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>MouseRight</strong></dt>
+<dd><tt>MouseRight&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>MouseRightDouble</strong></dt>
+<dd><tt>MouseRightDouble&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>N</strong></dt>
+<dd><tt>N&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>O</strong></dt>
+<dd><tt>O&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>P</strong></dt>
+<dd><tt>P&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Q</strong></dt>
+<dd><tt>Q&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>R</strong></dt>
+<dd><tt>R&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Right</strong></dt>
+<dd><tt>Right&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>RightAlt</strong></dt>
+<dd><tt>RightAlt&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>RightBrac</strong></dt>
+<dd><tt>RightBrac&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>RightControl</strong></dt>
+<dd><tt>RightControl&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>RightShift</strong></dt>
+<dd><tt>RightShift&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>S</strong></dt>
+<dd><tt>S&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Semicolon</strong></dt>
+<dd><tt>Semicolon&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Slash</strong></dt>
+<dd><tt>Slash&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Space</strong></dt>
+<dd><tt>Space&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>T</strong></dt>
+<dd><tt>T&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>U</strong></dt>
+<dd><tt>U&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Up</strong></dt>
+<dd><tt>Up&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>V</strong></dt>
+<dd><tt>V&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>W</strong></dt>
+<dd><tt>W&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>X</strong></dt>
+<dd><tt>X&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Y</strong></dt>
+<dd><tt>Y&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Z</strong></dt>
+<dd><tt>Z&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k0</strong></dt>
+<dd><tt>k0&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k1</strong></dt>
+<dd><tt>k1&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k2</strong></dt>
+<dd><tt>k2&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k3</strong></dt>
+<dd><tt>k3&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k4</strong></dt>
+<dd><tt>k4&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k5</strong></dt>
+<dd><tt>k5&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k6</strong></dt>
+<dd><tt>k6&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k7</strong></dt>
+<dd><tt>k7&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k8</strong></dt>
+<dd><tt>k8&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k9</strong></dt>
+<dd><tt>k9&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="EnumMemFlags">class <strong>EnumMemFlags</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
@@ -338,6 +607,36 @@ Data descriptors defined here:<br>
 </dl>
 <dl><dt><strong>GpuWrite</strong></dt>
 <dd><tt>Specify&nbsp;flag&nbsp;for&nbsp;resource&nbsp;write&nbsp;access&nbsp;from&nbsp;an&nbsp;OutResourceTable&nbsp;/&nbsp;UAV</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumTextureAddressMode">class <strong>EnumTextureAddressMode</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Address&nbsp;behaviour&nbsp;of&nbsp;texture&nbsp;coordinates&nbsp;enumeration.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumTextureAddressMode-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumTextureAddressMode-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>Border</strong></dt>
+<dd><tt>Samples&nbsp;a&nbsp;border&nbsp;when&nbsp;UVs&nbsp;are&nbsp;in&nbsp;the&nbsp;edge.&nbsp;Set&nbsp;the&nbsp;border&nbsp;color&nbsp;in&nbsp;the&nbsp;sampler&nbsp;object.</tt></dd>
+</dl>
+<dl><dt><strong>Clamp</strong></dt>
+<dd><tt>Clamps&nbsp;the&nbsp;UV&nbsp;coordinates&nbsp;at&nbsp;the&nbsp;edges.</tt></dd>
+</dl>
+<dl><dt><strong>Mirror</strong></dt>
+<dd><tt>Applies&nbsp;UV&nbsp;mirroring&nbsp;when&nbsp;UV&nbsp;coordinates&nbsp;go&nbsp;into&nbsp;the&nbsp;next&nbsp;edge.</tt></dd>
+</dl>
+<dl><dt><strong>Wrap</strong></dt>
+<dd><tt>Repeats&nbsp;samples&nbsp;when&nbsp;UV&nbsp;coordinates&nbsp;exceed&nbsp;range.</tt></dd>
 </dl>
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -846,11 +1145,12 @@ Returns:<br>
  <dl><dt><a name="-schedule"><strong>schedule</strong></a>(...)</dt><dd><tt>Submits&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>&nbsp;objects&nbsp;to&nbsp;the&nbsp;GPU&nbsp;to&nbsp;run&nbsp;shader&nbsp;work&nbsp;on.<br>
 &nbsp;<br>
 Parameters:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;command_lists&nbsp;(array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>):&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>&nbsp;objects&nbsp;to&nbsp;run&nbsp;in&nbsp;the&nbsp;GPU.&nbsp;<a href="#CommandList">CommandList</a>&nbsp;can&nbsp;be&nbsp;resubmitted&nbsp;through&nbsp;more&nbsp;calls&nbsp;of&nbsp;schedule.</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;command_lists&nbsp;(array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>&nbsp;or&nbsp;a&nbsp;single&nbsp;<a href="#CommandList">CommandList</a>&nbsp;<a href="builtins.html#object">object</a>):&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#CommandList">CommandList</a>&nbsp;objects&nbsp;or&nbsp;a&nbsp;single&nbsp;<a href="#CommandList">CommandList</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;run&nbsp;in&nbsp;the&nbsp;GPU.&nbsp;<a href="#CommandList">CommandList</a>&nbsp;can&nbsp;be&nbsp;resubmitted&nbsp;through&nbsp;more&nbsp;calls&nbsp;of&nbsp;schedule.</tt></dd></dl>
  <dl><dt><a name="-set_current_adapter"><strong>set_current_adapter</strong></a>(...)</dt><dd><tt>Selects&nbsp;an&nbsp;active&nbsp;GPU&nbsp;adapter.&nbsp;For&nbsp;a&nbsp;list&nbsp;of&nbsp;GPU&nbsp;adapters&nbsp;see&nbsp;coalpy.gpu.get_adapters.<br>
 &nbsp;<br>
 Parameters:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;index&nbsp;(int):&nbsp;the&nbsp;desired&nbsp;device&nbsp;index.&nbsp;See&nbsp;get_adapters&nbsp;for&nbsp;a&nbsp;full&nbsp;list.</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;index&nbsp;(int):&nbsp;the&nbsp;desired&nbsp;device&nbsp;index.&nbsp;See&nbsp;get_adapters&nbsp;for&nbsp;a&nbsp;full&nbsp;list.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;flags&nbsp;(gpu.DeviceFlags)&nbsp;(optional):&nbsp;bit&nbsp;mask&nbsp;with&nbsp;device&nbsp;flags.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">
@@ -859,10 +1159,11 @@ Parameters:<br>
     
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><strong>BufferType</strong> = &lt;gpu.EnumBufferType object&gt;<br>
+<strong>DeviceFlags</strong> = &lt;gpu.EnumDeviceFlags object&gt;<br>
 <strong>FilterType</strong> = &lt;gpu.EnumFilterType object&gt;<br>
 <strong>Format</strong> = &lt;gpu.EnumFormat object&gt;<br>
-<strong>Keys</strong> = &lt;gpu.Keys object&gt;<br>
+<strong>Keys</strong> = &lt;gpu.EnumKeys object&gt;<br>
 <strong>MemFlags</strong> = &lt;gpu.EnumMemFlags object&gt;<br>
-<strong>TextureAddressMode</strong> = &lt;gpu.TextureAddressMode object&gt;<br>
+<strong>TextureAddressMode</strong> = &lt;gpu.EnumTextureAddressMode object&gt;<br>
 <strong>TextureType</strong> = &lt;gpu.EnumTextureType object&gt;</td></tr></table>
 </body></html>

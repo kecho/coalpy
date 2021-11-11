@@ -127,7 +127,7 @@ void constructTypes(TypeList& outTypes)
             { "Border", (int)render::TextureAddressMode::Border, "Samples a border when UVs are in the edge. Set the border color in the sampler object." },
             { nullptr, 0, nullptr }
         };
-        outTypes.push_back(RenderEnum::constructEnumType("gpu.TextureAddressMode", "TextureAddressMode",  s_TextureAddressingModes, "Address behaviour of texture coordinates enumeration.")); 
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumTextureAddressMode", "TextureAddressMode",  s_TextureAddressingModes, "Address behaviour of texture coordinates enumeration.")); 
     }
 
     {
@@ -137,7 +137,7 @@ void constructTypes(TypeList& outTypes)
             #undef KEY_DECL
             { nullptr, 0, nullptr }
         };
-        outTypes.push_back(RenderEnum::constructEnumType("gpu.Keys", "Keys",  s_InputKeys, "Enumeration of keyboard / mouse input keys. To be used with the input_state object from the Window.")); 
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumKeys", "Keys",  s_InputKeys, "Enumeration of keyboard / mouse input keys. To be used with the input_state object from the Window.")); 
     }
 
     outTypes.push_back(registerFormats());
