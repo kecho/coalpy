@@ -113,6 +113,11 @@ void Dx12WorkBundle::applyBarriers(const std::vector<ResourceBarrier>& barriers,
         if (!b.isUav && b.prevState == b.postState)
             continue;
 
+        //Ignore begin uav barriers, they are useless. Instead do it at the last minute
+        //TODO: is it better to do a uav barrier at the beginning or at the end?
+        if (b.type == BarrierType::Begin && b.isUav)
+            continue;
+
         Dx12Resource& r = resources.unsafeGetResource(b.resource);
         
         resultBarriers.emplace_back();
@@ -129,6 +134,10 @@ void Dx12WorkBundle::applyBarriers(const std::vector<ResourceBarrier>& barriers,
 
         if (b.isUav)
         {
+            if ((d3d12barrier.Flags & D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY) != 0)
+                d3d12barrier.Flags &= ~D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
+            if ((d3d12barrier.Flags & D3D12_RESOURCE_BARRIER_FLAG_END_ONLY) != 0)
+                d3d12barrier.Flags &= ~D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
             d3d12barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
             d3d12barrier.UAV.pResource = &r.d3dResource();
         }
