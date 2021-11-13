@@ -39,7 +39,9 @@ and&nbsp;start&nbsp;using&nbsp;your&nbsp;GPU!</tt></p>
 </font></dt><dt><font face="helvetica, arial">gpu.EnumDeviceFlags
 </font></dt><dt><font face="helvetica, arial">gpu.EnumFilterType
 </font></dt><dt><font face="helvetica, arial">gpu.EnumFormat
+</font></dt><dt><font face="helvetica, arial">gpu.EnumKeys
 </font></dt><dt><font face="helvetica, arial">gpu.EnumMemFlags
+</font></dt><dt><font face="helvetica, arial">gpu.EnumTextureAddressMode
 </font></dt><dt><font face="helvetica, arial">gpu.EnumTextureType
 </font></dt><dt><font face="helvetica, arial">gpu.ImguiBuilder
 </font></dt><dt><font face="helvetica, arial">gpu.InResourceTable
@@ -159,7 +161,7 @@ Static methods defined here:<br>
 <font color="#000000" face="helvetica, arial"><a name="EnumBufferType">class <strong>EnumBufferType</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
-<td colspan=2><tt>Type&nbsp;of&nbsp;buffer<br>&nbsp;</tt></td></tr>
+<td colspan=2><tt>Type&nbsp;of&nbsp;buffer.&nbsp;Use&nbsp;enum&nbsp;values&nbsp;located&nbsp;at&nbsp;coalpy.gpu.BufferType<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="EnumBufferType-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
@@ -207,7 +209,7 @@ Data descriptors defined here:<br>
 <font color="#000000" face="helvetica, arial"><a name="EnumFilterType">class <strong>EnumFilterType</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
-<td colspan=2><tt>Filter&nbsp;types&nbsp;for&nbsp;samplers&nbsp;enumeration.<br>&nbsp;</tt></td></tr>
+<td colspan=2><tt>Filter&nbsp;types&nbsp;for&nbsp;samplers&nbsp;enumeration.&nbsp;Use&nbsp;enum&nbsp;values&nbsp;located&nbsp;at&nbsp;coalpy.gpu.FilterType<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="EnumFilterType-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
@@ -349,10 +351,247 @@ Data descriptors defined here:<br>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
 <td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumKeys">class <strong>EnumKeys</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Enumeration&nbsp;of&nbsp;keyboard&nbsp;/&nbsp;mouse&nbsp;input&nbsp;keys.&nbsp;To&nbsp;be&nbsp;used&nbsp;with&nbsp;the&nbsp;input_state&nbsp;<a href="builtins.html#object">object</a>&nbsp;from&nbsp;the&nbsp;<a href="#Window">Window</a>.&nbsp;Use&nbsp;enum&nbsp;values&nbsp;located&nbsp;at&nbsp;coalpy.gpu.Keys<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumKeys-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumKeys-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>A</strong></dt>
+<dd><tt>A&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>B</strong></dt>
+<dd><tt>B&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Backslash</strong></dt>
+<dd><tt>Backslash&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Backspace</strong></dt>
+<dd><tt>Backspace&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>C</strong></dt>
+<dd><tt>C&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Comma</strong></dt>
+<dd><tt>Comma&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>D</strong></dt>
+<dd><tt>D&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Dot</strong></dt>
+<dd><tt>Dot&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Down</strong></dt>
+<dd><tt>Down&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>E</strong></dt>
+<dd><tt>E&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Enter</strong></dt>
+<dd><tt>Enter&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F</strong></dt>
+<dd><tt>F&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F1</strong></dt>
+<dd><tt>F1&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F10</strong></dt>
+<dd><tt>F10&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F11</strong></dt>
+<dd><tt>F11&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F12</strong></dt>
+<dd><tt>F12&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F2</strong></dt>
+<dd><tt>F2&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F3</strong></dt>
+<dd><tt>F3&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F4</strong></dt>
+<dd><tt>F4&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F5</strong></dt>
+<dd><tt>F5&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F6</strong></dt>
+<dd><tt>F6&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F7</strong></dt>
+<dd><tt>F7&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F8</strong></dt>
+<dd><tt>F8&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>F9</strong></dt>
+<dd><tt>F9&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>G</strong></dt>
+<dd><tt>G&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>H</strong></dt>
+<dd><tt>H&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>I</strong></dt>
+<dd><tt>I&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>J</strong></dt>
+<dd><tt>J&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>K</strong></dt>
+<dd><tt>K&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>L</strong></dt>
+<dd><tt>L&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Left</strong></dt>
+<dd><tt>Left&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>LeftAlt</strong></dt>
+<dd><tt>LeftAlt&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>LeftBrac</strong></dt>
+<dd><tt>LeftBrac&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>LeftControl</strong></dt>
+<dd><tt>LeftControl&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>LeftShift</strong></dt>
+<dd><tt>LeftShift&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>M</strong></dt>
+<dd><tt>M&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>MouseCenter</strong></dt>
+<dd><tt>MouseCenter&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>MouseLeft</strong></dt>
+<dd><tt>MouseLeft&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>MouseLeftDouble</strong></dt>
+<dd><tt>MouseLeftDouble&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>MouseRight</strong></dt>
+<dd><tt>MouseRight&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>MouseRightDouble</strong></dt>
+<dd><tt>MouseRightDouble&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>N</strong></dt>
+<dd><tt>N&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>O</strong></dt>
+<dd><tt>O&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>P</strong></dt>
+<dd><tt>P&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Q</strong></dt>
+<dd><tt>Q&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>R</strong></dt>
+<dd><tt>R&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Right</strong></dt>
+<dd><tt>Right&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>RightAlt</strong></dt>
+<dd><tt>RightAlt&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>RightBrac</strong></dt>
+<dd><tt>RightBrac&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>RightControl</strong></dt>
+<dd><tt>RightControl&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>RightShift</strong></dt>
+<dd><tt>RightShift&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>S</strong></dt>
+<dd><tt>S&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Semicolon</strong></dt>
+<dd><tt>Semicolon&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Slash</strong></dt>
+<dd><tt>Slash&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Space</strong></dt>
+<dd><tt>Space&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>T</strong></dt>
+<dd><tt>T&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>U</strong></dt>
+<dd><tt>U&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Up</strong></dt>
+<dd><tt>Up&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>V</strong></dt>
+<dd><tt>V&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>W</strong></dt>
+<dd><tt>W&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>X</strong></dt>
+<dd><tt>X&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Y</strong></dt>
+<dd><tt>Y&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>Z</strong></dt>
+<dd><tt>Z&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k0</strong></dt>
+<dd><tt>k0&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k1</strong></dt>
+<dd><tt>k1&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k2</strong></dt>
+<dd><tt>k2&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k3</strong></dt>
+<dd><tt>k3&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k4</strong></dt>
+<dd><tt>k4&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k5</strong></dt>
+<dd><tt>k5&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k6</strong></dt>
+<dd><tt>k6&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k7</strong></dt>
+<dd><tt>k7&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k8</strong></dt>
+<dd><tt>k8&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+<dl><dt><strong>k9</strong></dt>
+<dd><tt>k9&nbsp;key&nbsp;enumeration.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="EnumMemFlags">class <strong>EnumMemFlags</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
-<td colspan=2><tt>Memory&nbsp;access&nbsp;enumerations.<br>&nbsp;</tt></td></tr>
+<td colspan=2><tt>Memory&nbsp;access&nbsp;enumerations.&nbsp;Use&nbsp;enum&nbsp;values&nbsp;located&nbsp;at&nbsp;coalpy.gpu.MemFlags<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="EnumMemFlags-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
@@ -373,10 +612,40 @@ Data descriptors defined here:<br>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
 <td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumTextureAddressMode">class <strong>EnumTextureAddressMode</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Address&nbsp;behaviour&nbsp;of&nbsp;texture&nbsp;coordinates&nbsp;enumeration.&nbsp;Use&nbsp;enum&nbsp;values&nbsp;located&nbsp;at&nbsp;coalpy.gpu.TextureAddressMode<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumTextureAddressMode-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumTextureAddressMode-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>Border</strong></dt>
+<dd><tt>Samples&nbsp;a&nbsp;border&nbsp;when&nbsp;UVs&nbsp;are&nbsp;in&nbsp;the&nbsp;edge.&nbsp;Set&nbsp;the&nbsp;border&nbsp;color&nbsp;in&nbsp;the&nbsp;sampler&nbsp;object.</tt></dd>
+</dl>
+<dl><dt><strong>Clamp</strong></dt>
+<dd><tt>Clamps&nbsp;the&nbsp;UV&nbsp;coordinates&nbsp;at&nbsp;the&nbsp;edges.</tt></dd>
+</dl>
+<dl><dt><strong>Mirror</strong></dt>
+<dd><tt>Applies&nbsp;UV&nbsp;mirroring&nbsp;when&nbsp;UV&nbsp;coordinates&nbsp;go&nbsp;into&nbsp;the&nbsp;next&nbsp;edge.</tt></dd>
+</dl>
+<dl><dt><strong>Wrap</strong></dt>
+<dd><tt>Repeats&nbsp;samples&nbsp;when&nbsp;UV&nbsp;coordinates&nbsp;exceed&nbsp;range.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="EnumTextureType">class <strong>EnumTextureType</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
-<td colspan=2><tt>Type&nbsp;of&nbsp;texture<br>&nbsp;</tt></td></tr>
+<td colspan=2><tt>Type&nbsp;of&nbsp;texture&nbsp;enumeration.&nbsp;Use&nbsp;enum&nbsp;values&nbsp;located&nbsp;at&nbsp;coalpy.gpu.TextureType<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="EnumTextureType-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
@@ -893,8 +1162,8 @@ Parameters:<br>
 <strong>DeviceFlags</strong> = &lt;gpu.EnumDeviceFlags object&gt;<br>
 <strong>FilterType</strong> = &lt;gpu.EnumFilterType object&gt;<br>
 <strong>Format</strong> = &lt;gpu.EnumFormat object&gt;<br>
-<strong>Keys</strong> = &lt;gpu.Keys object&gt;<br>
+<strong>Keys</strong> = &lt;gpu.EnumKeys object&gt;<br>
 <strong>MemFlags</strong> = &lt;gpu.EnumMemFlags object&gt;<br>
-<strong>TextureAddressMode</strong> = &lt;gpu.TextureAddressMode object&gt;<br>
+<strong>TextureAddressMode</strong> = &lt;gpu.EnumTextureAddressMode object&gt;<br>
 <strong>TextureType</strong> = &lt;gpu.EnumTextureType object&gt;</td></tr></table>
 </body></html>

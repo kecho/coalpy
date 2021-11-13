@@ -5,7 +5,7 @@
 #include <unordered_map>
 
 //Uncomment this to print out some key states, to test input capture on a window.
-#define TEST_WIN32_KEY_EVENTS 0
+//#define TEST_WIN32_KEY_EVENTS 1
 #if TEST_WIN32_KEY_EVENTS
 #include <iostream>
 #endif
@@ -240,6 +240,7 @@ static Keys translateKey(WPARAM p)
     case VK_RSHIFT: return Keys::RightShift;
     case VK_LCONTROL: return Keys::LeftControl;
     case VK_RCONTROL: return Keys::RightControl;
+    case VK_MENU:
     case VK_LMENU: return Keys::LeftAlt;
     case VK_RMENU: return Keys::RightAlt;
     case VK_LBUTTON: return Keys::MouseLeft;
@@ -410,6 +411,8 @@ LRESULT CALLBACK Win32Window::win32WinProc(HWND hwnd, UINT message, WPARAM wPara
                 std::cout << "Key MouseRightDouble" << std::endl;
             if (self->m_inputState.keyState(Keys::MouseLeftDouble))
                 std::cout << "Key MouseLeftDouble" << std::endl;
+            if (self->m_inputState.keyState(Keys::LeftAlt))
+                std::cout << "Key LeftAlt" << std::endl;
         }
 #endif
     
