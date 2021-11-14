@@ -193,7 +193,7 @@ void Texture::destroy(PyObject* self)
 
 void Sampler::constructType(PyTypeObject& t)
 {
-    t.tp_name = "gpu.Texture";
+    t.tp_name = "gpu.Sampler";
     t.tp_basicsize = sizeof(Sampler);
     t.tp_doc   = R"(
     Class that represents a Sampler GPU resource.
