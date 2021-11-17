@@ -48,6 +48,7 @@ and&nbsp;start&nbsp;using&nbsp;your&nbsp;GPU!</tt></p>
 </font></dt><dt><font face="helvetica, arial">gpu.OutResourceTable
 </font></dt><dt><font face="helvetica, arial">gpu.RenderArgs
 </font></dt><dt><font face="helvetica, arial">gpu.ResourceDownloadRequest
+</font></dt><dt><font face="helvetica, arial">gpu.Sampler
 </font></dt><dt><font face="helvetica, arial">gpu.SamplerTable
 </font></dt><dt><font face="helvetica, arial">gpu.Shader
 </font></dt><dt><font face="helvetica, arial">gpu.Texture
@@ -122,12 +123,12 @@ Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;or&nbsp;any&nbsp;<a href="builtins.html#object">object</a>&nbsp;compatible&nbsp;with&nbsp;the&nbsp;<a href="builtins.html#object">object</a>&nbsp;protocol,&nbsp;or&nbsp;a&nbsp;list&nbsp;of&nbsp;<a href="#Buffer">Buffer</a>&nbsp;objects.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;a&nbsp;list&nbsp;of&nbsp;<a href="#Buffer">Buffer</a>&nbsp;objects,&nbsp;these&nbsp;can&nbsp;be&nbsp;indexed&nbsp;via&nbsp;register(b#)&nbsp;in&nbsp;the&nbsp;shader&nbsp;used,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Every&nbsp;other&nbsp;type&nbsp;will&nbsp;always&nbsp;be&nbsp;bound&nbsp;to&nbsp;a&nbsp;constant&nbsp;<a href="#Buffer">Buffer</a>&nbsp;on&nbsp;register(b0).<br>
-&nbsp;&nbsp;&nbsp;&nbsp;samplers&nbsp;(optional):&nbsp;a&nbsp;single&nbsp;Sampler&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;Sampler&nbsp;objects,&nbsp;or&nbsp;a&nbsp;single&nbsp;<a href="#SamplerTable">SamplerTable</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#SamplerTable">SamplerTable</a>&nbsp;objects.&nbsp;If&nbsp;a&nbsp;single<br>
+&nbsp;&nbsp;&nbsp;&nbsp;samplers&nbsp;(optional):&nbsp;a&nbsp;single&nbsp;<a href="#Sampler">Sampler</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#Sampler">Sampler</a>&nbsp;objects,&nbsp;or&nbsp;a&nbsp;single&nbsp;<a href="#SamplerTable">SamplerTable</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#SamplerTable">SamplerTable</a>&nbsp;objects.&nbsp;If&nbsp;a&nbsp;single<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#SamplerTable">SamplerTable</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;is&nbsp;used,&nbsp;the&nbsp;table&nbsp;will&nbsp;be&nbsp;automatically&nbsp;bound&nbsp;to&nbsp;register&nbsp;space&nbsp;0,&nbsp;and&nbsp;each&nbsp;resource&nbsp;accessed&nbsp;either<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;by&nbsp;bindless&nbsp;dynamic&nbsp;indexing,&nbsp;or&nbsp;a&nbsp;hard&nbsp;register(s#).&nbsp;If&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#SamplerTable">SamplerTable</a>&nbsp;is&nbsp;passed,&nbsp;each&nbsp;resource<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;table&nbsp;will&nbsp;be&nbsp;bound&nbsp;using&nbsp;a&nbsp;register&nbsp;space&nbsp;index&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;table&nbsp;index&nbsp;in&nbsp;the&nbsp;array,&nbsp;and&nbsp;the&nbsp;rules<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to&nbsp;reference&nbsp;each&nbsp;sampler&nbsp;within&nbsp;the&nbsp;table&nbsp;stay&nbsp;the&nbsp;same.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;and&nbsp;array&nbsp;of&nbsp;Sampler&nbsp;objects&nbsp;are&nbsp;passed&nbsp;(or&nbsp;a&nbsp;single&nbsp;Sampler&nbsp;<a href="builtins.html#object">object</a>),&nbsp;each&nbsp;sampler&nbsp;<a href="builtins.html#object">object</a>&nbsp;is&nbsp;bound&nbsp;to&nbsp;a&nbsp;single&nbsp;register&nbsp;and&nbsp;always&nbsp;to&nbsp;the&nbsp;default&nbsp;space&nbsp;(0).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;and&nbsp;array&nbsp;of&nbsp;<a href="#Sampler">Sampler</a>&nbsp;objects&nbsp;are&nbsp;passed&nbsp;(or&nbsp;a&nbsp;single&nbsp;<a href="#Sampler">Sampler</a>&nbsp;<a href="builtins.html#object">object</a>),&nbsp;each&nbsp;sampler&nbsp;<a href="builtins.html#object">object</a>&nbsp;is&nbsp;bound&nbsp;to&nbsp;a&nbsp;single&nbsp;register&nbsp;and&nbsp;always&nbsp;to&nbsp;the&nbsp;default&nbsp;space&nbsp;(0).<br>
 &nbsp;&nbsp;&nbsp;&nbsp;inputs&nbsp;(optional):&nbsp;a&nbsp;single&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;objects,&nbsp;or&nbsp;a&nbsp;single&nbsp;<a href="#Texture">Texture</a>/<a href="#Buffer">Buffer</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#Texture">Texture</a>/<a href="#Buffer">Buffer</a>&nbsp;objects.&nbsp;If&nbsp;a&nbsp;single<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="builtins.html#object">object</a>&nbsp;is&nbsp;used,&nbsp;the&nbsp;table&nbsp;will&nbsp;be&nbsp;automatically&nbsp;bound&nbsp;to&nbsp;register&nbsp;space&nbsp;0,&nbsp;and&nbsp;each&nbsp;resource&nbsp;accessed&nbsp;either<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;by&nbsp;bindless&nbsp;dynamic&nbsp;indexing,&nbsp;or&nbsp;a&nbsp;hard&nbsp;register(t#).&nbsp;If&nbsp;an&nbsp;array&nbsp;of&nbsp;<a href="#InResourceTable">InResourceTable</a>&nbsp;is&nbsp;passed,&nbsp;each&nbsp;resource<br>
@@ -942,10 +943,36 @@ Static methods defined here:<br>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
 <td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Sampler">class <strong>Sampler</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Class&nbsp;that&nbsp;represents&nbsp;a&nbsp;<a href="#Sampler">Sampler</a>&nbsp;GPU&nbsp;resource.<br>
+&nbsp;<br>
+Constructor:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;filter_type&nbsp;(int):&nbsp;see&nbsp;coalpy.gpu.FilterType.&nbsp;Sets&nbsp;the&nbsp;type&nbsp;of&nbsp;filter&nbsp;to&nbsp;use.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;address_u&nbsp;(int):&nbsp;see&nbsp;coalpy.gpu.TextureAddressMode.&nbsp;Sets&nbsp;behaviour&nbsp;on&nbsp;texture&nbsp;sampling&nbsp;when&nbsp;out&nbsp;of&nbsp;bounds&nbsp;for&nbsp;x&nbsp;axis.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;address_v&nbsp;(int):&nbsp;see&nbsp;coalpy.gpu.TextureAddressMode.&nbsp;Sets&nbsp;behaviour&nbsp;on&nbsp;texture&nbsp;sampling&nbsp;when&nbsp;out&nbsp;of&nbsp;bounds&nbsp;for&nbsp;y&nbsp;axis.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;address_w&nbsp;(int):&nbsp;see&nbsp;coalpy.gpu.TextureAddressMode.&nbsp;Sets&nbsp;behaviour&nbsp;on&nbsp;texture&nbsp;sampling&nbsp;when&nbsp;out&nbsp;of&nbsp;bounds&nbsp;for&nbsp;z&nbsp;axis.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;border_color&nbsp;(array):&nbsp;Must&nbsp;be&nbsp;an&nbsp;array&nbsp;of&nbsp;size&nbsp;4&nbsp;floats.&nbsp;Specifies&nbsp;the&nbsp;color&nbsp;in&nbsp;rgba&nbsp;format&nbsp;on&nbsp;border,&nbsp;when&nbsp;address&nbsp;mode&nbsp;is&nbsp;border.&nbsp;Ranges&nbsp;from&nbsp;0.0&nbsp;to&nbsp;1.0&nbsp;per&nbsp;channel.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;min_lod&nbsp;(float):&nbsp;Minimum&nbsp;texture&nbsp;mip.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_lod&nbsp;(float):&nbsp;Maximum&nbsp;texture&nbsp;mip.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_aniso&nbsp;(int):&nbsp;maximum&nbsp;quality&nbsp;for&nbsp;anisotropic&nbsp;filtering.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Sampler-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="Sampler-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="SamplerTable">class <strong>SamplerTable</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
-<td colspan=2><tt>Sampler&nbsp;table.&nbsp;Use&nbsp;this&nbsp;to&nbsp;specify&nbsp;a&nbsp;table&nbsp;of&nbsp;Samplers&nbsp;to&nbsp;be&nbsp;used&nbsp;in&nbsp;a&nbsp;<a href="#CommandList">CommandList</a>&nbsp;and&nbsp;shader.<br>
+<td colspan=2><tt><a href="#Sampler">Sampler</a>&nbsp;table.&nbsp;Use&nbsp;this&nbsp;to&nbsp;specify&nbsp;a&nbsp;table&nbsp;of&nbsp;Samplers&nbsp;to&nbsp;be&nbsp;used&nbsp;in&nbsp;a&nbsp;<a href="#CommandList">CommandList</a>&nbsp;and&nbsp;shader.<br>
 &nbsp;<br>
 Constructor:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str):&nbsp;name&nbsp;/&nbsp;identifier&nbsp;of&nbsp;this&nbsp;sampler&nbsp;table.<br>
