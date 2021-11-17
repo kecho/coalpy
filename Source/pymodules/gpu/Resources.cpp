@@ -12,7 +12,7 @@ namespace gpu
 
 bool validateEnum(ModuleState& state, int value, int count, const char* name, const char* typeName)
 {
-    if (value >= count || value < 0)
+    if (value > count || value < 0)
     {
         PyErr_Format(state.exObj(),
             "Invalid enum value encountered %d in parameter %s. Range of this enum is [0,%d]. For valid values, see coalpy.gpu.%s",
@@ -238,9 +238,9 @@ int Sampler::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         return -1;
     if (!validateEnum(moduleState, (int)samplerDesc.addressW, (int)render::TextureAddressMode::Count, "address_w", "TextureAddressMode"))
         return -1;
-    if (!validateEnum(moduleState, (int)samplerDesc.minLod, 8, "minLod", ""))
+    if (!validateEnum(moduleState, (int)samplerDesc.minLod, 8, "min_lod", ""))
         return -1;
-    if (!validateEnum(moduleState, (int)samplerDesc.maxLod, 8, "maxLod", ""))
+    if (!validateEnum(moduleState, (int)samplerDesc.maxLod, 8, "max_lod", ""))
         return -1;
 
     std::vector<int> nums;

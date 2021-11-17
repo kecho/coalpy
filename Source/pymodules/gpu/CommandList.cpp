@@ -260,6 +260,10 @@ static bool getListOfTables(
                 PyErr_SetString(moduleState.exObj(), result.message.c_str());
                 return false;
             }
+
+            tmpResourceTable = result.object;
+            bufferList.push_back(TableType { tmpResourceTable.handleId });
+            references.tmpTables.push_back(tmpResourceTable);
             return true;
         }
         return false;

@@ -65,7 +65,7 @@ struct SamplerDesc
     float borderColor [4];
     float mipBias = 0.0f;
     float minLod = 0.0f;
-    float maxLod = 16.0f;
+    float maxLod = 8.0f;
     int maxAnisoQuality = 2;
 };
 
