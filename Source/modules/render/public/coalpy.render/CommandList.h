@@ -235,13 +235,15 @@ struct ClearAppendConsumeCounter
 {
     friend class CommandList;
 public:
-    void setData(ResourceHandle source)
+    void setData(ResourceHandle source, int counter = 0)
     {
         m_source = source;
+        m_counter = counter;
     }
 
 private:
     ResourceHandle m_source;
+    int m_counter;
 };
 
 class InternalCommandList;

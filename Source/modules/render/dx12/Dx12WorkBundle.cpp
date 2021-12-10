@@ -470,8 +470,7 @@ void Dx12WorkBundle::buildClearAppendConsumeCounter(const unsigned char* data, c
     {
         //TODO: this can be jobified.
         {
-            static unsigned int intZeroValue = 0u;
-            memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + cmdInfo.uploadBufferOffset, &intZeroValue, 4u);
+            memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + cmdInfo.uploadBufferOffset, &abiCmd->counter, 4u);
         }
 
         outList.CopyBufferRegion(

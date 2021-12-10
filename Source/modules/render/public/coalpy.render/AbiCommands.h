@@ -127,6 +127,7 @@ struct AbiClearAppendConsumeCounter
     int sentinel = (int)AbiCmdTypes::ClearAppendConsumeCounter;
     MemSize cmdSize = {};
     ResourceHandle source;
+    int counter;
 };
 
 struct AbiBeginMarker
