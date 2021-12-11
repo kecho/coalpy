@@ -223,6 +223,7 @@ void CommandList::writeCommand(const ClearAppendConsumeCounter& cmd)
 {
     auto& abiCmd = allocate<AbiClearAppendConsumeCounter>();
     abiCmd.source = cmd.m_source;
+    abiCmd.counter = cmd.m_counter;
     finalizeCommand(abiCmd);
 }
 
