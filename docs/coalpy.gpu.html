@@ -102,6 +102,20 @@ You&nbsp;can&nbsp;use&nbsp;renderdoc&nbsp;/&nbsp;pix&nbsp;to&nbsp;explore&nbsp;t
 Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str):&nbsp;string&nbsp;text&nbsp;of&nbsp;the&nbsp;marker&nbsp;to&nbsp;be&nbsp;used.</tt></dd></dl>
 
+<dl><dt><a name="CommandList-clear_append_consume_counter"><strong>clear_append_consume_counter</strong></a>(...)</dt><dd><tt>Clears&nbsp;the&nbsp;append&nbsp;consume&nbsp;counter&nbsp;of&nbsp;a&nbsp;<a href="#Buffer">Buffer</a>&nbsp;that&nbsp;was&nbsp;created&nbsp;with&nbsp;the&nbsp;is_append_consume&nbsp;flag&nbsp;set&nbsp;to&nbsp;true.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;source&nbsp;(<a href="#Buffer">Buffer</a>):&nbsp;source&nbsp;<a href="#Buffer">Buffer</a>&nbsp;<a href="builtins.html#object">object</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;clear_value&nbsp;(int)(optional):&nbsp;integer&nbsp;value&nbsp;with&nbsp;the&nbsp;clear&nbsp;count.&nbsp;By&nbsp;default&nbsp;is&nbsp;0.</tt></dd></dl>
+
+<dl><dt><a name="CommandList-copy_append_consume_counter"><strong>copy_append_consume_counter</strong></a>(...)</dt><dd><tt>Copies&nbsp;the&nbsp;counter&nbsp;of&nbsp;an&nbsp;append&nbsp;consume&nbsp;buffer&nbsp;to&nbsp;a&nbsp;destination&nbsp;resource.<br>
+The&nbsp;destination&nbsp;must&nbsp;be&nbsp;a&nbsp;buffer&nbsp;that&nbsp;holds&nbsp;at&nbsp;least&nbsp;4&nbsp;bytes&nbsp;(considering&nbsp;the&nbsp;offset).<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;source&nbsp;(<a href="#Buffer">Buffer</a>):&nbsp;source&nbsp;<a href="#Buffer">Buffer</a>&nbsp;<a href="builtins.html#object">object</a>,&nbsp;must&nbsp;have&nbsp;is_append_consume&nbsp;flag&nbsp;to&nbsp;True.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;destination&nbsp;(<a href="#Buffer">Buffer</a>):&nbsp;Destination&nbsp;buffer&nbsp;to&nbsp;hold&nbsp;value.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;destination_offset&nbsp;(int)(optional):&nbsp;integer&nbsp;value&nbsp;with&nbsp;the&nbsp;destination's&nbsp;buffer&nbsp;offset,&nbsp;in&nbsp;bytes.</tt></dd></dl>
+
 <dl><dt><a name="CommandList-copy_resource"><strong>copy_resource</strong></a>(...)</dt><dd><tt>copy_resource&nbsp;method,&nbsp;copies&nbsp;one&nbsp;resource&nbsp;to&nbsp;another.<br>
 Both&nbsp;source&nbsp;and&nbsp;destination&nbsp;must&nbsp;be&nbsp;the&nbsp;same&nbsp;type&nbsp;(either&nbsp;<a href="#Buffer">Buffer</a>&nbsp;or&nbsp;textures).<br>
 Parameters:<br>
