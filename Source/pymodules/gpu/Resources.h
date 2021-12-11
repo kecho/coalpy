@@ -29,6 +29,7 @@ struct Buffer
 {
     //Data
     PyObject_HEAD
+    bool isAppendConsume = false;
     render::Buffer buffer;
 
     //Functions

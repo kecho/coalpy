@@ -50,7 +50,6 @@ void Buffer::constructType(PyTypeObject& t)
 int Buffer::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 {
     auto* buffer = (Buffer*)self;
-    buffer->buffer = render::Buffer();
     new (buffer) Buffer;
 
     ModuleState& moduleState = parentModule(self);
@@ -76,6 +75,7 @@ int Buffer::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     buffDesc.name = name;
     buffDesc.isConstantBuffer = isConstantBuffer;
     buffDesc.isAppendConsume  = isAppendConsume;
+    buffer->isAppendConsume = isAppendConsume;
 
     //validate
     if (!validateEnum(moduleState, (int)buffDesc.type, (int)render::BufferType::Count, "type", "BufferType"))

@@ -21,6 +21,7 @@ namespace methods
     static PyObject* cmdDispatch(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* cmdCopyResource(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* cmdUploadResource(PyObject* self, PyObject* vargs, PyObject* kwds);
+    static PyObject* cmdClearAppendConsume(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* cmdBeginMarker(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* cmdEndMarker(PyObject* self, PyObject* vargs, PyObject* kwds);
 }
@@ -75,6 +76,13 @@ static PyMethodDef g_cmdListMethods[] = {
             destination (Texture or Buffer): a destination object of type Texture or Buffer.
             size (tuple): if texture upload, a tuple with the x, y and z size of the box to copy of the source buffer. If a Buffer upload, then this parameter gets ignored.
             destination_offset (tuple or int): if texture copy, a tuple with x, y, z offsets and mipLevel must be specified. If Buffer copy, it must be a single integer with the byte offset for the destianation Buffer.
+    )"),
+    KW_FN(clear_append_consume_counter, cmdClearAppendConsume, R"(
+        Clears the append consume counter of a Buffer that was created with the is_append_consume flag set to true.
+
+        Parameters:
+            source (Buffer): source Buffer object
+            clear_value (int)(optional): integer value with the clear count. By default is 0.
     )"),
     KW_FN(begin_marker, cmdBeginMarker, R"(
         Sets a string marker. Must be paired with a call to end_marker. Markers can also be nested.
@@ -809,6 +817,41 @@ namespace methods
         }
         Py_INCREF(destination);
         cmdList.references.objects.push_back(destination);
+
+        Py_RETURN_NONE;
+    }
+
+    PyObject* cmdClearAppendConsume(PyObject* self, PyObject* vargs, PyObject* kwds)
+    {
+        ModuleState& moduleState = parentModule(self);
+        auto& cmdList = *((CommandList*)self); 
+        static char* arguments[] = { "source", "clear_value", nullptr };
+        PyObject* source = nullptr;
+        int clearValue = 0;
+        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "O|i", arguments, &source, &clearValue))
+            return nullptr;
+
+        render::ResourceHandle srcHandle;
+        bool isSourceBuffer = false;
+        if (!getResourceObject(moduleState, source, srcHandle, isSourceBuffer) || !isSourceBuffer)
+        {
+            PyErr_SetString(moduleState.exObj(), "Source resource must be type buffer");
+            return nullptr;
+        }
+
+        Buffer* bufferObj = (Buffer*)source;
+        if (!bufferObj->isAppendConsume)
+        {
+            PyErr_SetString(moduleState.exObj(), "Source buffer must be created with propety is_append_consume to be able to call clear counter.");
+            return nullptr;
+        }
+
+        Py_INCREF(source);
+        cmdList.references.objects.push_back(source);
+
+        render::ClearAppendConsumeCounter clearCmd;
+        clearCmd.setData(srcHandle, clearValue);
+        cmdList.cmdList->writeCommand(clearCmd);
 
         Py_RETURN_NONE;
     }
