@@ -21,6 +21,7 @@ namespace methods
     static PyObject* cmdDispatch(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* cmdCopyResource(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* cmdUploadResource(PyObject* self, PyObject* vargs, PyObject* kwds);
+    static PyObject* cmdCopyAppendConsumeCounter(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* cmdClearAppendConsume(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* cmdBeginMarker(PyObject* self, PyObject* vargs, PyObject* kwds);
     static PyObject* cmdEndMarker(PyObject* self, PyObject* vargs, PyObject* kwds);
@@ -83,6 +84,15 @@ static PyMethodDef g_cmdListMethods[] = {
         Parameters:
             source (Buffer): source Buffer object
             clear_value (int)(optional): integer value with the clear count. By default is 0.
+    )"),
+    KW_FN(copy_append_consume_counter, cmdCopyAppendConsumeCounter, R"(
+        Copies the counter of an append consume buffer to a destination resource.
+        The destination must be a buffer that holds at least 4 bytes (considering the offset).
+
+        Parameters:
+            source (Buffer): source Buffer object, must have is_append_consume flag to True.
+            destination (Buffer): Destination buffer to hold value.
+            destination_offset (int)(optional): integer value with the destination's buffer offset, in bytes.
     )"),
     KW_FN(begin_marker, cmdBeginMarker, R"(
         Sets a string marker. Must be paired with a call to end_marker. Markers can also be nested.
@@ -817,6 +827,54 @@ namespace methods
         }
         Py_INCREF(destination);
         cmdList.references.objects.push_back(destination);
+
+        Py_RETURN_NONE;
+    }
+
+    PyObject* cmdCopyAppendConsumeCounter(PyObject* self, PyObject* vargs, PyObject* kwds)
+    {
+        ModuleState& moduleState = parentModule(self);
+        auto& cmdList = *((CommandList*)self); 
+        static char* arguments[] = { "source", "destination", "destination_offset", nullptr };
+        PyObject* source = nullptr;
+        PyObject* destination = nullptr;
+        int destinationOffset = 0;
+        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "OO|i", arguments, &source, &destination, &destinationOffset))
+            return nullptr;
+
+        render::ResourceHandle srcHandle;
+        bool isSourceBuffer = false;
+        if (!getResourceObject(moduleState, source, srcHandle, isSourceBuffer) || !isSourceBuffer)
+        {
+            PyErr_SetString(moduleState.exObj(), "Source resource must be type buffer");
+            return nullptr;
+        }
+
+        render::ResourceHandle dstHandle;
+        bool isDstBuffer = false;
+        if (!getResourceObject(moduleState, destination, dstHandle, isDstBuffer) || !isDstBuffer)
+        {
+            PyErr_SetString(moduleState.exObj(), "Destination resource must be type buffer");
+            return nullptr;
+        }
+
+        Buffer* bufferObj = (Buffer*)source;
+        if (!bufferObj->isAppendConsume)
+        {
+            PyErr_SetString(moduleState.exObj(), "Source buffer must be created with propety is_append_consume to be able to call clear counter.");
+            return nullptr;
+        }
+
+        Py_INCREF(source);
+        cmdList.references.objects.push_back(source);
+        Py_INCREF(destination);
+        cmdList.references.objects.push_back(destination);
+
+        render::CopyAppendConsumeCounterCommand cmd;
+        cmd.setData(
+            render::Buffer { srcHandle.handleId },
+            render::Buffer { dstHandle.handleId }, destinationOffset);
+        cmdList.cmdList->writeCommand(cmd);
 
         Py_RETURN_NONE;
     }
