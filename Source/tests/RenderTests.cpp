@@ -1088,7 +1088,6 @@ namespace coalpy
         bufferDesc.isAppendConsume = true;
         bufferDesc.elementCount = 10;
         
-        Buffer acbufferTmp = device.createBuffer(bufferDesc);//a second one to test the pool of buffers.
         Buffer acbuffer = device.createBuffer(bufferDesc);
         CPY_ASSERT(acbuffer.valid());
     
@@ -1096,6 +1095,11 @@ namespace coalpy
         tableDesc.resources = &acbuffer;
         tableDesc.resourcesCount = 1;
         OutResourceTable outTable = device.createOutResourceTable(tableDesc);
+
+        BufferDesc counterBufferDesc;
+        counterBufferDesc.format = Format::R32_SINT;
+        counterBufferDesc.elementCount = 2;
+        Buffer counterBuffer = device.createBuffer(counterBufferDesc);
 
         CommandList cmdList;
         {
@@ -1113,8 +1117,32 @@ namespace coalpy
         }
 
         {
+            CopyAppendConsumeCounterCommand cmd;
+            cmd.setData(acbuffer, counterBuffer, 4);
+            cmdList.writeCommand(cmd);
+        }
+
+        {
+            ClearAppendConsumeCounter clrCmd;
+            clrCmd.setData(acbuffer, 6);
+            cmdList.writeCommand(clrCmd);
+        }
+
+        {
+            CopyAppendConsumeCounterCommand cmd;
+            cmd.setData(acbuffer, counterBuffer, 0);
+            cmdList.writeCommand(cmd);
+        }
+
+        {
             DownloadCommand downloadCmd;
             downloadCmd.setData(acbuffer);
+            cmdList.writeCommand(downloadCmd);
+        }
+    
+        {
+            DownloadCommand downloadCmd;
+            downloadCmd.setData(counterBuffer);
             cmdList.writeCommand(downloadCmd);
         }
 
@@ -1129,6 +1157,7 @@ namespace coalpy
         CPY_ASSERT(waitStatus.success());
 
         
+        //test buffer contents
         {
             auto downloadStatus = device.getDownloadStatus(result.workHandle, acbuffer);
             CPY_ASSERT(downloadStatus.success());
@@ -1150,9 +1179,18 @@ namespace coalpy
             }
         }
 
+        {
+            auto downloadStatus = device.getDownloadStatus(result.workHandle, counterBuffer);
+            CPY_ASSERT(downloadStatus.success());
+            CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
+            CPY_ASSERT(downloadStatus.downloadByteSize == 2 * sizeof(int));
+            CPY_ASSERT(6 == *((int*)downloadStatus.downloadPtr));
+            CPY_ASSERT(10 == *((int*)downloadStatus.downloadPtr + 1));
+        }
+
         device.release(result.workHandle);
         device.release(acbuffer);
-        device.release(acbufferTmp);
+        device.release(counterBuffer);
         renderTestCtx.end();
     }
 

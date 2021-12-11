@@ -227,6 +227,15 @@ void CommandList::writeCommand(const ClearAppendConsumeCounter& cmd)
     finalizeCommand(abiCmd);
 }
 
+void CommandList::writeCommand(const CopyAppendConsumeCounterCommand& cmd)
+{
+    auto& abiCmd = allocate<AbiCopyAppendConsumeCounter>();
+    abiCmd.source = cmd.m_source;
+    abiCmd.destination = cmd.m_destination;
+    abiCmd.destinationOffset = cmd.m_destinationOffset;
+    finalizeCommand(abiCmd);
+}
+
 void CommandList::beginMarker(const char* name)
 {
     auto& abiCmd = allocate<AbiBeginMarker>();

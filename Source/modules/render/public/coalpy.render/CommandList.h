@@ -246,6 +246,23 @@ private:
     int m_counter;
 };
 
+struct CopyAppendConsumeCounterCommand
+{
+    friend class CommandList;
+public:
+    void setData(Buffer sourceAppendConsume, Buffer destination, int destinationByteOffset = 0)
+    {
+        m_source = sourceAppendConsume;
+        m_destination = destination;
+        m_destinationOffset = destinationByteOffset;
+    }
+
+private:
+    Buffer m_source;
+    Buffer m_destination;
+    int m_destinationOffset = 0;
+};
+
 class InternalCommandList;
 
 class CommandList
@@ -261,6 +278,7 @@ public:
     void writeCommand(const UploadCommand& cmd);
     void writeCommand(const DownloadCommand& cmd);
     void writeCommand(const ClearAppendConsumeCounter& cmd);
+    void writeCommand(const CopyAppendConsumeCounterCommand& cmd);
 
     MemOffset uploadInlineResource(ResourceHandle destination, int sourceSize);
 

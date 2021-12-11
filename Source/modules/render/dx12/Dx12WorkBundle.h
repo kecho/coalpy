@@ -52,6 +52,7 @@ private:
     void buildDownloadCmd(const unsigned char* data, const AbiDownloadCmd* downloadCmd,  const CommandInfo& cmdInfo, WorkType workType, ID3D12GraphicsCommandListX& outList);
     void buildCopyCmd(const unsigned char* data, const AbiCopyCmd* copyCmd, ID3D12GraphicsCommandListX& outList);
     void buildUploadCmd(const unsigned char* data, const AbiUploadCmd* uploadCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandListX& outList);
+    void buildCopyAppendConsumeCounter(const unsigned char* data, const AbiCopyAppendConsumeCounter* abiCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandListX& outList);
     void buildClearAppendConsumeCounter(const unsigned char* data, const AbiClearAppendConsumeCounter* abiCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandListX& outList);
 
     Dx12Device& m_device;

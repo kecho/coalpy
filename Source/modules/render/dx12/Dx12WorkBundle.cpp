@@ -460,6 +460,26 @@ void Dx12WorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCm
 
 }
 
+void Dx12WorkBundle::buildCopyAppendConsumeCounter(const unsigned char* data, const AbiCopyAppendConsumeCounter* abiCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandListX& outList)
+{
+    Dx12ResourceCollection& resources = m_device.resources();
+    Dx12Resource& sourceResource = resources.unsafeGetResource(abiCmd->source);
+    Dx12Resource& destinationResource = resources.unsafeGetResource(abiCmd->destination);
+    int destinationOffset = abiCmd->destinationOffset;
+    CPY_ASSERT(sourceResource.isBuffer());
+    CPY_ASSERT(sourceResource.counterHandle().valid());
+    CPY_ASSERT(destinationResource.isBuffer());
+    if (destinationResource.isBuffer() && sourceResource.isBuffer() && sourceResource.counterHandle().valid())
+    {
+        outList.CopyBufferRegion(
+            &destinationResource.d3dResource(),
+            destinationOffset,
+            &m_device.counterPool().resource(),
+            m_device.counterPool().counterOffset(sourceResource.counterHandle()),
+            4u);
+    }
+}
+
 void Dx12WorkBundle::buildClearAppendConsumeCounter(const unsigned char* data, const AbiClearAppendConsumeCounter* abiCmd, const CommandInfo& cmdInfo, ID3D12GraphicsCommandListX& outList)
 {
     Dx12ResourceCollection& resources = m_device.resources();
@@ -517,6 +537,12 @@ void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList,
             {
                 const auto* abiCmd = (const AbiDownloadCmd*)cmdBlob;
                 buildDownloadCmd(listData, abiCmd, cmdInfo, workType, outList);
+            }
+            break;
+        case AbiCmdTypes::CopyAppendConsumeCounter:
+            {
+                const auto* abiCmd = (const AbiCopyAppendConsumeCounter*)cmdBlob;
+                buildCopyAppendConsumeCounter(listData, abiCmd, cmdInfo, outList);
             }
             break;
         case AbiCmdTypes::ClearAppendConsumeCounter:

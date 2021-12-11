@@ -549,6 +549,56 @@ bool processDownload(const AbiDownloadCmd* cmd, const unsigned char* data, WorkB
     return true;
 }
 
+bool processCopyAppendConsumeCounter(const AbiCopyAppendConsumeCounter* cmd, const unsigned char* data, WorkBuildContext& context)
+{
+    const auto& resourceInfos = *context.resourceInfos;
+    auto& srcResourceInfoIt = resourceInfos.find((ResourceHandle)cmd->source);
+    if (srcResourceInfoIt == resourceInfos.end())
+    {
+        std::stringstream ss;
+        ss << "Could not find resource with ID: " << cmd->source.handleId;
+        context.errorType = ScheduleErrorType::InvalidResource;
+        context.errorMsg = ss.str();
+        return false;
+    }
+
+    auto& destResourceInfoIt = resourceInfos.find(cmd->destination);
+    if (destResourceInfoIt == resourceInfos.end())
+    {
+        std::stringstream ss;
+        ss << "Could not find resource with ID: " << cmd->destination.handleId;
+        context.errorType = ScheduleErrorType::InvalidResource;
+        context.errorMsg = ss.str();
+        return false;
+    }
+
+    if (!srcResourceInfoIt->second.counterBuffer.valid())
+    {
+        std::stringstream ss;
+        ss << "source Resource in command copyAppendConsumeCounter is not an append consume buffer. Ensure this resource is a buffer with the flag isAppendConsume.";
+        context.errorType = ScheduleErrorType::InvalidResource;
+        context.errorMsg = ss.str();
+        return false;
+    }
+
+    if (cmd->destinationOffset < 0 || (cmd->destinationOffset + 4) > destResourceInfoIt->second.sizeX)
+    {
+        std::stringstream ss;
+        ss << "Cannot fit 4 bytes in destination resource of copyAppendConsumeBuffer destination. Destination buffer must have at least 4 bytes of size left.";
+        context.errorType = ScheduleErrorType::OutOfBounds;
+        context.errorMsg = ss.str();
+        return false;
+    }
+
+    if (!transitionResource(srcResourceInfoIt->second.counterBuffer, ResourceGpuState::CopySrc, context))
+        return false;
+
+    if (!transitionResource(cmd->destination, ResourceGpuState::CopyDst, context))
+        return false;
+
+    return true;
+}
+
 bool processClearAppendConsume(const AbiClearAppendConsumeCounter* cmd, const unsigned char* data, WorkBuildContext& context)
 {
     const auto& resourceInfos = *context.resourceInfos;
@@ -637,6 +687,13 @@ void parseCommandList(const unsigned char* data, WorkBuildContext& context)
                 {
                     const auto* abiCmd = (const AbiDownloadCmd*)(data + offset);
                     finished = !processDownload(abiCmd, data, context);
+                    offset += abiCmd->cmdSize;
+                }
+                break;
+            case AbiCmdTypes::CopyAppendConsumeCounter:
+                {
+                    const auto* abiCmd = (const AbiCopyAppendConsumeCounter*)(data + offset);
+                    finished = !processCopyAppendConsumeCounter(abiCmd, data, context);
                     offset += abiCmd->cmdSize;
                 }
                 break;
