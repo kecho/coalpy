@@ -17,6 +17,7 @@ struct Texture
     render::Texture texture;
     bool owned = true;
     bool isFile = false;
+    bool hasImguiRef = false;
 
     //Functions
     static const TypeId s_typeId = TypeId::Texture;

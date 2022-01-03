@@ -3,6 +3,7 @@
 #include "PyUtils.h"
 #include "TypeIds.h"
 #include "CoalpyTypeObject.h"
+#include "Resources.h"
 #include <functional>
 #include <imgui.h>
 #include <cpp/imgui_stdlib.h>
@@ -56,6 +57,32 @@ void ImguiBuilder::destroy(PyObject* self)
 {
     ((ImguiBuilder*)self)->~ImguiBuilder();
     Py_TYPE(self)->tp_free(self);
+}
+
+ImTextureID ImguiBuilder::getTextureID(Texture* texture)
+{
+    if (activeRenderer == nullptr)
+        return nullptr;
+
+    CPY_ASSERT(texture->texture.valid());
+
+    auto it = textureReferences.insert(texture);
+    if (it.second)
+        Py_INCREF(texture);
+
+    texture->hasImguiRef = true;
+
+    //unregistration occurs in ModuleState's texture's destructor.
+    //the renderer has an internal hashmap that keeps track of the texture's allocated id.
+    return activeRenderer->registerTexture(texture->texture);
+}
+
+void ImguiBuilder::clearTextureReferences()
+{
+    for (auto t : textureReferences)
+        Py_DECREF(t);
+
+    textureReferences.clear();
 }
 
 

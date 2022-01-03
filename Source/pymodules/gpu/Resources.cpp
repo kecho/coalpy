@@ -183,6 +183,8 @@ void Texture::destroy(PyObject* self)
         return;
 
     ModuleState& moduleState = parentModule(self);
+    moduleState.onDestroyTexture(*texture);
+
     if (texture->isFile)
         moduleState.tl().unloadTexture(texture->texture);
     else

@@ -5,9 +5,11 @@
 #include "TypeIds.h"
 #include <set>
 #include <coalpy.render/ShaderDefs.h>
+#include <coalpy.render/Resources.h>
 #include <vector>
 #include <string>
 #include <mutex>
+#include <functional>
 
 namespace coalpy
 {
@@ -28,8 +30,11 @@ namespace render
 namespace gpu
 {
 
+struct Texture;
 struct Window;
 struct CoalpyTypeObject;
+
+using TextureDesctructionCallback = std::function<void(Texture&)>;
 
 class ModuleState
 {
@@ -79,6 +84,9 @@ public:
     void destroyDevice();
     bool createDevice(int index, int flags);
 
+    void setTextureDestructionCallback(TextureDesctructionCallback cb) { m_textureDestructionCallback = cb; }
+    void onDestroyTexture(Texture& texture);
+
 private:
     void onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString);
     void registerTypes(CoalpyTypeObject** types, int typesCount);
@@ -106,6 +114,8 @@ private:
 
     std::set<std::string> m_dataPathPool;
     std::vector<std::string> m_additionalDataPaths;
+
+    TextureDesctructionCallback m_textureDestructionCallback;
 };
 
 }

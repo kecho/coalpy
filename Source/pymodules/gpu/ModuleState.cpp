@@ -24,7 +24,7 @@ namespace gpu
 std::set<ModuleState*> ModuleState::s_allModules;
 
 ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
-: m_fs(nullptr), m_ts(nullptr)
+: m_fs(nullptr), m_ts(nullptr), m_textureDestructionCallback(nullptr)
 {
     {
         FileWatchDesc desc { 120 /*ms*/};
@@ -257,6 +257,14 @@ void ModuleState::clean()
         delete m;
     
     s_allModules.clear();
+}
+
+void ModuleState::onDestroyTexture(Texture& texture)
+{
+    if (m_textureDestructionCallback == nullptr)
+        return;
+
+    m_textureDestructionCallback(texture);
 }
 
 }

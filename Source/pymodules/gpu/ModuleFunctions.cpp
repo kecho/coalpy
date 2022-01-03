@@ -7,6 +7,7 @@
 #include "Shader.h"
 #include "RenderArgs.h"
 #include "ImguiBuilder.h"
+#include "Resources.h"
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/IWindow.h>
 #include <coalpy.render/IShaderDb.h>
@@ -243,6 +244,22 @@ PyObject* addDataPath(PyObject* self, PyObject* args, PyObject* kwds)
 
 }
 
+void unregisterAllImguiTextures(const std::set<Window*>& windowsPtrs, Texture& t)
+{
+    if (!t.hasImguiRef)
+        return;
+
+    for (Window* w : windowsPtrs)
+    {
+        if (w->uiRenderer == nullptr)
+            continue;   
+
+        w->uiRenderer->unregisterTexture(t.texture);
+    }
+
+    t.hasImguiRef = false;
+}
+
 PyObject* run(PyObject* self, PyObject* args)
 {
     ModuleState& state = getState(self);
@@ -254,17 +271,12 @@ PyObject* run(PyObject* self, PyObject* args)
 
     //prepare arguments for this run call.
     RenderArgs* renderArgs = state.alloc<RenderArgs>();
-    ImguiBuilder* imguiBuilder = state.alloc<ImguiBuilder>();
-    new (imguiBuilder) ImguiBuilder;
-
-    renderArgs->window = nullptr;
-    renderArgs->userData = nullptr;
-    renderArgs->renderTime = 0.0;
-    renderArgs->deltaTime = 0.0;
-    renderArgs->width = 0;
-    renderArgs->height = 0;
+    new (renderArgs) RenderArgs;
     renderArgs->imguiBuilder = Py_None;
     Py_INCREF(Py_None);
+
+    ImguiBuilder* imguiBuilder = state.alloc<ImguiBuilder>();
+    new (imguiBuilder) ImguiBuilder;
     
     WindowRunArgs runArgs = {};
     bool raiseException = false;
@@ -296,7 +308,9 @@ PyObject* run(PyObject* self, PyObject* args)
             {
                 renderArgs->imguiBuilder = (PyObject*)imguiBuilder;
                 imguiBuilder->enabled = true;
+                imguiBuilder->activeRenderer = w->uiRenderer;
                 w->uiRenderer->newFrame();
+                state.setTextureDestructionCallback([&windowsPtrs](Texture& t) { unregisterAllImguiTextures(windowsPtrs, t); } );
             }
 
             renderArgs->window = w;
@@ -332,6 +346,9 @@ PyObject* run(PyObject* self, PyObject* args)
             renderArgs->userData = nullptr;
             renderArgs->imguiBuilder = Py_None;
             imguiBuilder->enabled = false;
+            imguiBuilder->activeRenderer = nullptr;
+            imguiBuilder->clearTextureReferences();
+            state.setTextureDestructionCallback(nullptr);
         }
 
         return openedWindows != 0;
