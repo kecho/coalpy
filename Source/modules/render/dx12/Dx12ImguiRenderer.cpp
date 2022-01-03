@@ -2,6 +2,7 @@
 
 #include "Config.h"
 #include "Dx12imguiRenderer.h"
+#include "Dx12Fence.h"
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/IWindow.h>
 #include "Win32Window.h"
@@ -36,6 +37,7 @@ Dx12imguiRenderer::Dx12imguiRenderer(const IimguiRendererDesc& desc)
 , m_cachedWidth(-1)
 , m_cachedHeight(-1)
 , m_cachedSwapVersion(-1)
+, m_graphicsFence(m_device.queues().getFence(WorkType::Graphics))
 {
     auto oldContext = ImGui::GetCurrentContext();
     m_context = ImGui::CreateContext();
@@ -52,7 +54,7 @@ Dx12imguiRenderer::Dx12imguiRenderer(const IimguiRendererDesc& desc)
     {
         D3D12_DESCRIPTOR_HEAP_DESC desc = {};
         desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        desc.NumDescriptors = 1;
+        desc.NumDescriptors = 1 + (int)MaxTextureGpuHandles;
         desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         DX_OK(m_device.device().CreateDescriptorHeap(&desc, DX_RET(m_srvHeap)));
     }
@@ -60,18 +62,31 @@ Dx12imguiRenderer::Dx12imguiRenderer(const IimguiRendererDesc& desc)
     bool rets1 = ImGui_ImplWin32_Init((HWND)m_window.getHandle());
     CPY_ASSERT(rets1);
 
+    D3D12_CPU_DESCRIPTOR_HANDLE srvCpuStart = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
+    D3D12_GPU_DESCRIPTOR_HANDLE srvGpuStart = m_srvHeap->GetGPUDescriptorHandleForHeapStart();
     bool rets2 = ImGui_ImplDX12_Init(
         &m_device.device(),
         m_display.buffering(),
         getDxFormat(m_display.config().format),
         m_srvHeap,
-        m_srvHeap->GetCPUDescriptorHandleForHeapStart(),
-        m_srvHeap->GetGPUDescriptorHandleForHeapStart());
+        srvCpuStart,
+        srvGpuStart);
     CPY_ASSERT(rets2);
 
     setCoalpyStyle();
 
     ImGui::SetCurrentContext(oldContext);
+
+    UINT descriptorIncrSize = m_device.device().GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    //push all free handle slots
+    for (int i = 0; i < (int)MaxTextureGpuHandles; ++i)
+    {
+        UINT descriptorOffset = (1 + i) * descriptorIncrSize;//1 since we reserve the first one for the Init call.
+        m_textureGpuHandles[i].ptr = srvGpuStart.ptr + descriptorOffset;
+        m_textureCpuHandles[i].ptr = srvCpuStart.ptr + descriptorOffset;
+        m_freeGpuHandleIndex.push_back(i);
+    }
 }
 
 Dx12imguiRenderer::~Dx12imguiRenderer()
@@ -180,6 +195,7 @@ void Dx12imguiRenderer::setupSwapChain()
 
 void Dx12imguiRenderer::render()
 {
+    flushPendingDeleteIndices();
     setupSwapChain();
     activate();
 
@@ -238,6 +254,67 @@ IimguiRenderer* IimguiRenderer::create(const IimguiRendererDesc& desc)
     return new Dx12imguiRenderer(desc);
 }
 
+ImTextureID Dx12imguiRenderer::registerTexture(Texture texture)
+{
+    auto it = m_texToGpuHandleIndex.find(texture);
+    int index = -1;
+    if (it != m_texToGpuHandleIndex.end())
+    {
+        index = it->second;
+    }
+    else if(!m_freeGpuHandleIndex.empty())
+    {
+        m_device.resources().lock();
+        Dx12Resource& resource = m_device.resources().unsafeGetResource(texture);
+        if (!resource.isBuffer())
+        {
+            auto& textureResource = (Dx12Texture&)resource;
+            if ((textureResource.config().memFlags & MemFlag_GpuRead) != 0)
+            {
+                index = m_freeGpuHandleIndex.back();
+                m_freeGpuHandleIndex.pop_back();
+                m_texToGpuHandleIndex[texture] = index;
+
+                Dx12Descriptor descriptor = textureResource.srv();
+                m_device.device().CopyDescriptorsSimple(
+                    1, m_textureCpuHandles[index], descriptor.handle,
+                    D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            }
+        }
+        m_device.resources().unlock();
+    }
+    else
+    {
+        CPY_ERROR_MSG(false, "Reached max limit of imgui textures registered.");
+    }
+
+    return index >= 0 ? &m_textureGpuHandles[index] : nullptr;
+}
+
+void Dx12imguiRenderer::flushPendingDeleteIndices()
+{
+    while (!m_textureDeleteQueue.empty())
+    {
+        PendingFreeIndex& obj = m_textureDeleteQueue.front();
+        if (!m_graphicsFence.isComplete(obj.fenceVal))
+            break;
+
+        m_freeGpuHandleIndex.push_back(obj.gpuHandleIndex);
+        m_textureDeleteQueue.pop();
+    }
+}
+
+void Dx12imguiRenderer::unregisterTexture(Texture texture)
+{
+    auto it = m_texToGpuHandleIndex.find(texture);
+    CPY_ASSERT(it != m_texToGpuHandleIndex.end());
+    if (it == m_texToGpuHandleIndex.end())
+        return;
+
+    m_texToGpuHandleIndex.erase(texture);
+    PendingFreeIndex pendingFreeIndex { m_graphicsFence.signal(), it->second };
+    m_textureDeleteQueue.push(pendingFreeIndex);
+}
 
 }
 }
