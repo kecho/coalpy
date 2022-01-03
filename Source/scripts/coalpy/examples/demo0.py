@@ -57,6 +57,8 @@ def buildUi(imgui):
                 imgui.end_combo()
         imgui.pop_id()
 
+        imgui.image(test_image, (250,250))
+
 
         imgui.end();
 

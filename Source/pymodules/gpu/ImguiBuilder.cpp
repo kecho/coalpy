@@ -453,6 +453,46 @@ PyObject* newLine(PyObject* self, PyObject* vargs, PyObject* kwds)
     Py_RETURN_NONE;
 }
 
+PyObject* image(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "texture", "size", "uv0", "uv1", "tint_col", "border_col", nullptr };
+    PyObject* textureObj = nullptr;
+    ImVec2 size(0.0f,0.0f);
+    ImVec2 uv0(0.0f, 0.0f);
+    ImVec2 uv1(1.0f, 1.0f);
+    ImVec4 tintCol(1.0f, 1.0f, 1.0f, 1.0f);
+    ImVec4 borderCol(0.0f, 0.0f, 0.0f, 0.0f);
+
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "O(ff)|(ff)(ff)(ffff)(ffff)", argnames, 
+        &textureObj, &size.x, &size.y, &uv0.x, &uv0.y, &uv1.x, &uv1.y,
+        &tintCol.x, &tintCol.y, &tintCol.z, &tintCol.w,
+        &borderCol.x, &borderCol.y, &borderCol.z, &borderCol.w))
+        return nullptr;
+
+
+    PyTypeObject* textureType = moduleState.getType(Texture::s_typeId);
+    if (textureObj->ob_type != textureType)
+    {
+        PyErr_SetString(moduleState.exObj(), "texture must be a gpu.Texture object.");
+        return nullptr;
+    }
+
+    Texture* texture = (Texture*)textureObj;
+    ImTextureID textureID = imguiBuilder.getTextureID(texture);
+    if (textureID == nullptr)
+    {
+        PyErr_SetString(moduleState.exObj(), "Internal failure: cannot convert a gpu.Texture to internal ImTextureID.");
+        return nullptr;
+    }
+
+    ImGui::Image(textureID, size, uv0, uv1, tintCol, borderCol);
+
+    Py_RETURN_NONE;
+}
+
 }
 
 }

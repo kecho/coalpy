@@ -234,3 +234,14 @@ IMGUI_FN(new_line, newLine, R"(
     Draws new line.
 )")
 
+IMGUI_FN(image, image, R"(
+    Draws an image
+
+    Parameters:
+        texture (Texture): coalpy.gpu.Texture object to draw in the UI.
+        size (tuple): size of the image in pixels
+        uv0 (tuple)(optional): uv coordinate of bottom (default (0.0, 0.0))
+        uv1 (tuple)(optional): uv coordinate of top  (default (1.0, 1.0))
+        tint_col (tuple): size 4 tuple with image tint color (default (1,1,1,1)).
+        border_col (tuple): size 4 tuple with background color (default (0,0,0,0)).
+)")

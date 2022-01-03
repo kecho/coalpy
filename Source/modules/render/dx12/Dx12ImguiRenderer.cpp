@@ -300,7 +300,7 @@ ImTextureID Dx12imguiRenderer::registerTexture(Texture texture)
         CPY_ERROR_FMT(false, "Reached max limit of imgui textures registered. Can only allow up to %d textures to be used in the Imgui.", (int)MaxTextureGpuHandles);
     }
 
-    return index >= 0 ? &m_textureGpuHandles[index] : nullptr;
+    return index >= 0 ? (ImTextureID)m_textureGpuHandles[index].ptr : (ImTextureID)nullptr;
 }
 
 void Dx12imguiRenderer::flushPendingDeleteIndices()
