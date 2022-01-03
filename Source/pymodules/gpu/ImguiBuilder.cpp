@@ -360,6 +360,72 @@ PyObject* checkbox(PyObject* self, PyObject* vargs, PyObject* kwds)
         Py_RETURN_FALSE;
 }
 
+PyObject* beginCombo(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    char* label;
+    char* previewValue;
+    static char* argnames[] = { "label", "preview_value", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "ss", argnames, &label, &previewValue))
+        return nullptr;
+
+    bool ret = ImGui::BeginCombo(label, previewValue);
+    if (ret)
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* endCombo(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    ImGui::EndCombo();
+    Py_RETURN_NONE;
+}
+
+PyObject* selectable(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    char* label;
+    int selectedint;
+    static char* argnames[] = { "label", "selected", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "sp", argnames, &label, &selectedint))
+        return nullptr;
+
+    bool ret = ImGui::Selectable(label, (bool)selectedint);
+    if (ret)
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* sameLine(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    float offsetFromX = 0.0f;
+    float spacing = -1.0f;
+    static char* argnames[] = { "offset_from_start_x", "spacing", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|ff", argnames, &offsetFromX, &spacing))
+        return nullptr;
+
+    ImGui::SameLine(offsetFromX, spacing);
+    Py_RETURN_NONE;
+}
+
+PyObject* separator(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    ImGui::Separator();
+    Py_RETURN_NONE;
+}
+
+PyObject* newLine(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    ImGui::NewLine();
+    Py_RETURN_NONE;
+}
+
 }
 
 }

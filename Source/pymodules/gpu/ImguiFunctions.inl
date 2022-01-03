@@ -190,3 +190,47 @@ IMGUI_FN(checkbox, checkbox, R"(
     Returns:
         The new bool value that the user set. Feed this value back on v on the next call to see a proper state update.
 )")
+
+IMGUI_FN(begin_combo, beginCombo, R"(
+    begins a combo box. Must be paired with an end_combo call.
+    To insert items, use selectable() between begin_combo/end_combo
+
+    Parameters:
+        label (str): the label name for this comboxbox.
+        preview_value (str): preview string value
+
+    Returns:
+        If value returned is true, must call end_combo.
+)")
+
+IMGUI_FN(end_combo, endCombo, R"(
+    Ends a combo box. Must be paired with an begin_combo call only if it returns true..
+)")
+
+IMGUI_FN(selectable, selectable, R"(
+    Draws a selectable item. 
+
+    Parameters:
+        label (str): the label name for this selectable.
+        selected (str): the state if this value is selected. 
+
+    Returns:
+        True if item is selected, false otherwise.
+)")
+
+IMGUI_FN(separator, separator, R"(
+    Draw a separator.
+)")
+
+IMGUI_FN(same_line, sameLine, R"(
+    Sets the same line for drawing next item.
+
+    Parameters:
+        offset_from_start_x (float)(optional): offset from the start of this x
+        spacing (float)(optional): spacing amount
+)")
+
+IMGUI_FN(new_line, newLine, R"(
+    Draws new line.
+)")
+

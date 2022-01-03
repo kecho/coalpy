@@ -18,11 +18,16 @@ b = False
 h1 = False
 w = True
 
+sa = False
+sb = False
+sc = False
+
 test_image = gpu.Texture(file="examples/data/test.png")
 input_table = gpu.InResourceTable("testjpg_table", [test_image])
 
 def buildUi(imgui):
     global f, f2, t, b, w
+    global sa, sb, sc
 
     imgui.begin_main_menu_bar()
     if imgui.begin_menu("Tools"):
@@ -44,7 +49,15 @@ def buildUi(imgui):
             t = imgui.input_text("input text box", t);
             imgui.text("some standard text");
             b = imgui.checkbox("checkbox test", b)
+
+            if imgui.begin_combo("testCombo", "prevValue"):
+                sa = imgui.selectable("sa", sa)
+                sb = imgui.selectable("sb", sb)
+                sc = imgui.selectable("sc", sc)
+                imgui.end_combo()
         imgui.pop_id()
+
+
         imgui.end();
 
 def main():
