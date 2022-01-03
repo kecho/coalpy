@@ -10,6 +10,7 @@
 #include "CoalpyTypeObject.h"
 #include "ImguiBuilder.h"
 #include <coalpy.render/IDevice.h>
+#include <coalpy.render/ShaderDefs.h>
 #include <coalpy.core/Formats.h>
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/Keys.h>
@@ -73,6 +74,16 @@ void constructTypes(TypeList& outTypes)
             { nullptr, 0, nullptr }
         };
         outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumDeviceFlags", "DeviceFlags", s_DeviceFlags, "Flags utilized for device creation."));
+    }
+
+    {
+        static EnumEntry s_ShaderModels[] = {
+            { "Sm6_1", (int)ShaderModel::Sm6_1, "Shader model 6.1 enum value." },
+            { "Sm6_4", (int)ShaderModel::Sm6_4, "Shader model 6.4 enum value." },
+            { "Sm6_5", (int)ShaderModel::Sm6_5, "Shader model 6.5 enum value." },
+            { nullptr, 0, nullptr }
+        };
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.EnumShaderModel", "ShaderModel", s_ShaderModels, "Available shader models. Specify a shader model in shader_model argument of set_current_adapter."));
     }
 
     {

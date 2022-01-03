@@ -69,7 +69,7 @@ public:
         return reinterpret_cast<ObjectT*>(PyType_GenericAlloc(getType(ObjectT::s_typeId), count));
     }
 
-    bool selectAdapter(int index, int flags);
+    bool selectAdapter(int index, int flags, ShaderModel sm, bool dumpPDBs);
 
     bool checkValidDevice();
 
@@ -82,7 +82,7 @@ public:
     bool isInRenderLoop() const { return m_runningRenderLoop; }
 
     void destroyDevice();
-    bool createDevice(int index, int flags);
+    bool createDevice(int index, int flags, ShaderModel shaderModel, bool dumpPDBs);
 
     void setTextureDestructionCallback(TextureDesctructionCallback cb) { m_textureDestructionCallback = cb; }
     void onDestroyTexture(Texture& texture);

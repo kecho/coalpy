@@ -214,14 +214,39 @@ Dx12Compiler::~Dx12Compiler()
 {
 }
 
-void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
+const wchar_t** getShaderModelTargets(ShaderModel sm)
 {
-    //latest and greatest shader model 6.6 baby!!
-    static const wchar_t* s_targets[ShaderType::Count] = {
+    static const wchar_t* sm6_1_targets[ShaderType::Count] = {
+        L"vs_6_1", //Vertex
+        L"ps_6_1", //Pixel
+        L"cs_6_1"  //Compute
+    };
+    static const wchar_t* sm6_4_targets[ShaderType::Count] = {
+        L"vs_6_4", //Vertex
+        L"ps_6_4", //Pixel
+        L"cs_6_4"  //Compute
+    };
+    static const wchar_t* sm6_5_targets[ShaderType::Count] = {
         L"vs_6_5", //Vertex
         L"ps_6_5", //Pixel
         L"cs_6_5"  //Compute
     };
+
+    switch (sm)
+    {
+    case ShaderModel::Sm6_1:
+        return sm6_1_targets;
+    case ShaderModel::Sm6_4:
+        return sm6_4_targets;
+    case ShaderModel::Sm6_5:
+    default:
+        return sm6_5_targets;
+    }
+}
+
+void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
+{
+    const wchar_t** smTargets = getShaderModelTargets(m_desc.shaderModel);
 
     DxcCompilerScope scope;
     DxcInstanceData instanceData = scope.data();
@@ -237,7 +262,7 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
     std::string  sentryPoint = args.mainFn;
     std::wstring wentryPoint = s2ws(sentryPoint);
 
-    const wchar_t* profile = s_targets[(int)args.type];
+    const wchar_t* profile = smTargets[(int)args.type];
 
     std::vector<LPCWSTR> arguments;
     arguments.push_back(DXC_ARG_WARNINGS_ARE_ERRORS);

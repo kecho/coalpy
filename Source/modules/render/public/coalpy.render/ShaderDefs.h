@@ -20,6 +20,15 @@ enum class ShaderType
     Count
 };
 
+enum class ShaderModel
+{
+    Begin,
+    Sm6_1 = Begin,
+    Sm6_4,
+    Sm6_5,
+    End = Sm6_5
+};
+
 struct ShaderDesc
 {
     ShaderType type;
@@ -59,6 +68,8 @@ struct ShaderDbDesc
     OnShaderErrorFn onErrorFn = nullptr;
     bool resolveOnDestruction = false;
     bool enableLiveEditing = false;
+    ShaderModel shaderModel = ShaderModel::Sm6_5;
+    bool dumpPDBs = false;
 };
 
 }

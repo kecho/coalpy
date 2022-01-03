@@ -13,6 +13,7 @@
 #include <coalpy.render/IShaderDb.h>
 #include <coalpy.render/IDevice.h>
 #include <coalpy.render/IimguiRenderer.h>
+#include <coalpy.render/ShaderDefs.h>
 #include <coalpy.core/Stopwatch.h>
 #include <coalpy.core/String.h>
 #include <coalpy.files/IFileSystem.h>
@@ -58,6 +59,8 @@ PyMethodDef g_defs[] = {
         Parameters:
             index (int): the desired device index. See get_adapters for a full list.
             flags (gpu.DeviceFlags) (optional): bit mask with device flags.
+            dump_shader_pdbs (bool)(optional): if True it will dump the built shader's PDBs to the .shader_pdb folder.
+            shader_model (int)(optional):  Default is sm6_5. sets the current shader model used for shader compilation. See the enum coalpy.gpu.ShaderModel for the available models.
         )"
     ),
 
@@ -147,14 +150,24 @@ PyObject* getCurrentAdapterInfo(PyObject* self, PyObject* args, PyObject* kwds)
 
 PyObject* setCurrentAdapter(PyObject* self, PyObject* args, PyObject* kwds)
 {
-    static char* argnames[] = { "index", "flags", nullptr };
+    static char* argnames[] = { "index", "flags", "dump_shader_pdbs", "shader_model", nullptr };
     int selected = -1;
     int flags = (int)render::DeviceFlags::None;
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i|i", argnames, &selected, &flags))
+    int dumpPDBs = 0;
+    ShaderModel shaderModel = ShaderModel::Sm6_5;
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i|ipi", argnames, &selected, &flags, &dumpPDBs, &shaderModel))
         return nullptr;
 
     ModuleState& state = getState(self);
-    if (!state.selectAdapter(selected, flags))
+
+    if ((int)shaderModel < (int)ShaderModel::Begin || (int)shaderModel > (int)ShaderModel::End)
+    {
+        PyErr_SetString(state.exObj(), "Shader model must be a valid value defined in coalpy.gpu.ShaderModel enums");
+        return nullptr;
+    }
+
+    if (!state.selectAdapter(selected, flags, shaderModel, (bool)dumpPDBs))
         return nullptr;
     
     Py_RETURN_NONE;

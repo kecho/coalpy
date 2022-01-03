@@ -5,7 +5,7 @@ print ("<<coalpy demo0>>")
 print ("graphics devices:")
 [print("{}: {}".format(idx, nm)) for (idx, nm) in gpu.get_adapters()]
 
-gpu.set_current_adapter(0)
+gpu.set_current_adapter(0, shader_model = gpu.ShaderModel.Sm6_1)
 info = gpu.get_current_adapter_info()
 print("Current device: {}".format(info[1]))
 
@@ -65,8 +65,6 @@ def buildUi(imgui):
 def main():
 
     def on_render(render_args : gpu.RenderArgs):
-        buildUi(render_args.imgui)
-
         cmdList = gpu.CommandList()
 
         cmdList.begin_marker("beginDemo0")
@@ -85,7 +83,8 @@ def main():
         cmdList.end_marker()
         cmdList.end_marker()
         gpu.schedule([cmdList])
-    
+
+        buildUi(render_args.imgui)
         return 0   
     
     w = gpu.Window("coalpy demo 0", 1920, 1080, on_render)

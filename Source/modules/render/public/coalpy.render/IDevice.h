@@ -26,7 +26,7 @@ enum class DevicePlat
 enum class DeviceFlags : int
 {
     None = 0,
-    EnableDebug = 1 << 0
+    EnableDebug = 1 << 0,
 };
 
 struct DeviceConfig

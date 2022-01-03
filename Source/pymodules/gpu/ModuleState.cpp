@@ -45,7 +45,7 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
     }
 
     auto flags = render::DeviceFlags::None;
-    createDevice(0, (int)flags);
+    createDevice(0, (int)flags, ShaderModel::Sm6_5, false);
 
     {
         m_windowListener = Window::createWindowListener(*this);
@@ -141,7 +141,7 @@ void ModuleState::internalAddPath(const std::string& p)
         m_tl->addPath(p.c_str());
 }
 
-bool ModuleState::createDevice(int index, int flags)
+bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bool dumpPDBs)
 {
     std::string dllname = g_ModuleFilePath;
     std::string modulePath;
@@ -157,6 +157,8 @@ bool ModuleState::createDevice(int index, int flags)
         desc.ts = m_ts;
         desc.fw = m_fw;
         desc.enableLiveEditing = true;
+        desc.shaderModel = shaderModel;
+        desc.dumpPDBs = dumpPDBs;
         desc.onErrorFn = [this](ShaderHandle handle, const char* shaderName, const char* shaderErrorStr)
         {
             onShaderCompileError(handle, shaderName, shaderErrorStr);
@@ -204,7 +206,7 @@ void ModuleState::destroyDevice()
     delete m_db;
 }
 
-bool ModuleState::selectAdapter(int index, int flags)
+bool ModuleState::selectAdapter(int index, int flags, ShaderModel shaderModel, bool dumpPDBs)
 {
     std::vector<render::DeviceInfo> allAdapters;
     render::IDevice::enumerate(render::DevicePlat::Dx12, allAdapters);
@@ -217,7 +219,7 @@ bool ModuleState::selectAdapter(int index, int flags)
 
     destroyDevice();
 
-    if (!createDevice(index, flags))
+    if (!createDevice(index, flags, shaderModel, dumpPDBs))
         return false;
 
     m_tl->start(); //restart the texture loader
