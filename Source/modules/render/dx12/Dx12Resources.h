@@ -167,10 +167,8 @@ public:
     int subresourceIndex(int mipLevel, int arraySlice) const;
     int mipCounts() const;
     int arraySlicesCounts() const;
-    int guid() const { return m_textureGuid; }
 
 protected:
-    int m_textureGuid;
     int m_slices;
     TextureDesc m_texDesc;
 };

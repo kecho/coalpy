@@ -27,9 +27,7 @@ class IimguiRenderer : public RefCounted
 public:
     static IimguiRenderer* create(const IimguiRendererDesc& desc);
 
-
     virtual ~IimguiRenderer() {}
-
     virtual void newFrame() = 0;
     virtual void activate() = 0;
     virtual void render() = 0;

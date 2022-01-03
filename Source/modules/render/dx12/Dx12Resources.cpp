@@ -170,9 +170,6 @@ Dx12Texture::Dx12Texture(Dx12Device& device, const TextureDesc& desc, ResourceSp
 : Dx12Resource(device, desc, specialFlags)
 , m_texDesc(desc)
 {
-    static int s_nextTextureGuid = 1;
-    m_textureGuid = s_nextTextureGuid++;
-
     if (desc.isRtv)
         m_data.resDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 

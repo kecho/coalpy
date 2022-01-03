@@ -2,6 +2,7 @@
 
 #include <d3d12.h>
 #include <coalpy.render/IimguiRenderer.h>
+#include <coalpy.render/Resources.h>
 #include "Dx12DescriptorPool.h" 
 #include <imgui.h>
 #include <vector>
@@ -20,6 +21,7 @@ class Dx12Device;
 class Dx12Display;
 class Dx12Texture;
 class Dx12Fence;
+struct Dx12List;
 
 class Dx12imguiRenderer : public IimguiRenderer
 {
@@ -36,12 +38,13 @@ public:
 private:
     enum 
     {
-        MaxTextureGpuHandles = 256
+        MaxTextureGpuHandles = 64
     };
 
     void setCoalpyStyle();
     void setupSwapChain();
     void flushPendingDeleteIndices();
+    void transitionResourceState(ResourceHandle resource, D3D12_RESOURCE_STATES newState, std::vector<D3D12_RESOURCE_BARRIER>& outBarriers);
 
     Dx12Fence& m_graphicsFence;
     Dx12Device& m_device;

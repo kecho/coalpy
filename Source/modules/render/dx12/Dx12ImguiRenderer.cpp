@@ -37,7 +37,7 @@ Dx12imguiRenderer::Dx12imguiRenderer(const IimguiRendererDesc& desc)
 , m_cachedWidth(-1)
 , m_cachedHeight(-1)
 , m_cachedSwapVersion(-1)
-, m_graphicsFence(m_device.queues().getFence(WorkType::Graphics))
+, m_graphicsFence(((Dx12Device*)desc.device)->queues().getFence(WorkType::Graphics))
 {
     auto oldContext = ImGui::GetCurrentContext();
     m_context = ImGui::CreateContext();
@@ -193,6 +193,24 @@ void Dx12imguiRenderer::setupSwapChain()
     m_cachedSwapVersion = m_display.version();
 }
 
+void Dx12imguiRenderer::transitionResourceState(ResourceHandle resource, D3D12_RESOURCE_STATES newState, std::vector<D3D12_RESOURCE_BARRIER>& outBarriers)
+{
+    auto& workDb = m_device.workDb();
+    WorkResourceInfo& resourceInfo = workDb.resourceInfos()[resource];
+    auto stateBefore = getDx12GpuState(resourceInfo.gpuState);
+    if (stateBefore == newState)
+        return;
+
+    outBarriers.emplace_back();
+    D3D12_RESOURCE_BARRIER& b = outBarriers.back();
+    b.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    b.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    b.Transition.pResource = &m_device.resources().unsafeGetResource(resource).d3dResource();
+    b.Transition.StateBefore = getDx12GpuState(resourceInfo.gpuState);
+    b.Transition.StateAfter = newState;
+    resourceInfo.gpuState = getGpuState(newState);
+}
+
 void Dx12imguiRenderer::render()
 {
     flushPendingDeleteIndices();
@@ -207,25 +225,19 @@ void Dx12imguiRenderer::render()
     if (pixApi)
         pixApi->pixBeginEventOnCommandList(dx12List.list, 0xffffffff, "Dx12imguiRenderer::render");
     
-    auto& workDb = m_device.workDb();
+    //All resources required to be SRVS, and their barriers to put them back where they started.
+    std::vector<D3D12_RESOURCE_BARRIER> barriers;
 
     {
+        barriers.reserve(1 + m_texToGpuHandleIndex.size());
         Texture targetTexture = m_display.texture();
-        WorkResourceInfo& textureResourceInfo = workDb.resourceInfos()[targetTexture];
-        auto stateBefore = getDx12GpuState(textureResourceInfo.gpuState);
-        if (stateBefore != D3D12_RESOURCE_STATE_RENDER_TARGET)
-        {
-            D3D12_RESOURCE_BARRIER b = {};
-            b.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-            b.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-            b.Transition.pResource = &m_device.resources().unsafeGetResource(targetTexture).d3dResource();
-            b.Transition.StateBefore = getDx12GpuState(textureResourceInfo.gpuState);
-            b.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-            textureResourceInfo.gpuState = getGpuState(D3D12_RESOURCE_STATE_RENDER_TARGET);
-            dx12List.list->ResourceBarrier(1, &b);
-        }
+        transitionResourceState(targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, barriers);
+
+        for (auto it : m_texToGpuHandleIndex)
+            transitionResourceState(it.first, getDx12GpuState(ResourceGpuState::Srv), barriers);
     }
 
+    dx12List.list->ResourceBarrier((UINT)barriers.size(), barriers.data());
     dx12List.list->OMSetRenderTargets(1, &m_rtv.handle, false, nullptr);
     
     ID3D12DescriptorHeap* srvHeap = &(*m_srvHeap);
@@ -285,7 +297,7 @@ ImTextureID Dx12imguiRenderer::registerTexture(Texture texture)
     }
     else
     {
-        CPY_ERROR_MSG(false, "Reached max limit of imgui textures registered.");
+        CPY_ERROR_FMT(false, "Reached max limit of imgui textures registered. Can only allow up to %d textures to be used in the Imgui.", (int)MaxTextureGpuHandles);
     }
 
     return index >= 0 ? &m_textureGpuHandles[index] : nullptr;
