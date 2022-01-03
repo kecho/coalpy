@@ -5,7 +5,7 @@ print ("<<coalpy demo0>>")
 print ("graphics devices:")
 [print("{}: {}".format(idx, nm)) for (idx, nm) in gpu.get_adapters()]
 
-gpu.set_current_adapter(0, shader_model = gpu.ShaderModel.Sm6_1)
+gpu.set_current_adapter(0, shader_model = gpu.ShaderModel.Sm6_1, dump_shader_pdbs = True)
 info = gpu.get_current_adapter_info()
 print("Current device: {}".format(info[1]))
 

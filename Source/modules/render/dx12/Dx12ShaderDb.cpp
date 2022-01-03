@@ -24,6 +24,8 @@
 namespace coalpy
 {
 
+const char* s_pdbDir = ".shader_pdb";
+
 struct Dx12CompileState
 {
     ByteBuffer buffer;
@@ -49,6 +51,22 @@ Dx12ShaderDb::Dx12ShaderDb(const ShaderDbDesc& desc)
         CPY_ASSERT_MSG(m_liveEditWatcher != nullptr, "File watcher must not be null when live editing is turned on.");
         startLiveEdit();
     }
+}
+
+void Dx12ShaderDb::preparePdbDir()
+{
+    if (m_createdPdbDir || !m_desc.dumpPDBs)
+        return;
+    
+    FileAttributes attributes = {};
+    m_desc.fs->getFileAttributes(s_pdbDir, attributes);
+    if (attributes.exists && attributes.isDir)
+        m_pdbDirReady = true;
+    else if (!attributes.exists)
+        m_pdbDirReady = m_desc.fs->carveDirectoryPath(s_pdbDir);
+
+    CPY_ASSERT_FMT(m_pdbDirReady, "Could not created pdb directory %s", s_pdbDir);
+    m_createdPdbDir = true;
 }
 
 Dx12ShaderDb::~Dx12ShaderDb()
@@ -108,6 +126,8 @@ Dx12ShaderDb::ShaderState& Dx12ShaderDb::createShaderState(ShaderHandle& outHand
 
 ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
 {
+    preparePdbDir();
+
     auto* compileState = new Dx12CompileState;
 
     std::string filePath = desc.path;
@@ -116,6 +136,7 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
     compileState->compileArgs.type = desc.type;
     compileState->compileArgs.additionalIncludes = m_additionalPaths;
     compileState->compileArgs.defines = desc.defines;
+    compileState->compileArgs.generatePdb = m_pdbDirReady;
 
     compileState->shaderName = desc.name;
     compileState->mainFn = desc.mainFn;
@@ -140,6 +161,8 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderDesc& desc)
 
 ShaderHandle Dx12ShaderDb::requestCompile(const ShaderInlineDesc& desc)
 {
+    preparePdbDir();
+
     auto* compileState = new Dx12CompileState;
 
     compileState->compileArgs = {};
@@ -153,6 +176,7 @@ ShaderHandle Dx12ShaderDb::requestCompile(const ShaderInlineDesc& desc)
     compileState->compileArgs.sourceSize = (int)compileState->buffer.size();
     compileState->compileArgs.additionalIncludes = m_additionalPaths;
     compileState->compileArgs.defines = desc.defines;
+    compileState->compileArgs.generatePdb = m_pdbDirReady;
     compileState->success = false;
 
     prepareCompileJobs(*compileState);
@@ -202,6 +226,7 @@ void Dx12ShaderDb::requestRecompile(ShaderHandle handle)
     compileState.compileArgs.mainFn = recipe.mainFn.c_str();
     compileState.compileArgs.additionalIncludes = m_additionalPaths;
     compileState.compileArgs.defines = recipe.defines;
+    compileState.compileArgs.generatePdb = m_pdbDirReady;
     compileState.mainFn = recipe.mainFn;
     prepareCompileJobs(compileState);
 
@@ -320,7 +345,7 @@ void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
         return result;
     };
     
-    compileState.compileArgs.onFinished = [&compileState, this](bool success, IDxcBlob* resultBlob)
+    compileState.compileArgs.onFinished = [&compileState, this](bool success, IDxcBlob* resultBlob, IDxcBlob* pdbBlob)
     {
         {
             std::unique_lock lock(m_shadersMutex);
@@ -333,6 +358,30 @@ void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
             shaderState->ready = true;
             shaderState->success = success;
             compileState.success = success;
+        }
+
+        if (success && pdbBlob != nullptr && m_pdbDirReady)
+        {
+            std::stringstream ss;
+            ss << s_pdbDir << "/";
+            if  (compileState.shaderName != "")
+                ss << compileState.shaderName;
+            else
+                ss << "unnamed";
+
+            FileLookup lookup(compileState.filePath == "" ? compileState.shaderName : compileState.filePath);
+            ss << "_" << lookup.hash << ".pdb";
+        
+            FileWriteRequest req = {};
+            req.doneCallback = [](FileWriteResponse& response) {};
+            req.path = ss.str();
+            req.buffer = (const char*)pdbBlob->GetBufferPointer();
+            req.size = (int)pdbBlob->GetBufferSize();
+            AsyncFileHandle writeHandle = m_desc.fs->write(req);
+    
+            m_desc.fs->execute(writeHandle);
+            m_desc.fs->wait(writeHandle);
+            m_desc.fs->closeHandle(writeHandle);
         }
     };
 }

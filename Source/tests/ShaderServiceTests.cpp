@@ -80,17 +80,21 @@ void dx12CompileFunction(Dx12Compiler& compiler)
     compilerArgs.mainFn = "csMain";
     compilerArgs.shaderName = "SimpleComputeShader";
     compilerArgs.source = simpleComputeShader();
+    compilerArgs.generatePdb = true;
     compilerArgs.onError = [&](const char* name, const char* errorString)
     {
         CPY_ASSERT_FMT(false, "Unexpected compilation error: \"%s\".", errorString);
     };
 
     int onFinishedReached = 0;
-    compilerArgs.onFinished = [&](bool success, IDxcBlob* blob)
+    compilerArgs.onFinished = [&](bool success, IDxcBlob* blob, IDxcBlob* pdbBlob)
     {
         ++onFinishedReached;
         bool compiledSuccess = success && blob != nullptr;
         CPY_ASSERT_MSG(compiledSuccess, "Unexpected compilation error.");
+
+        bool pdbValid = pdbBlob != nullptr;
+        CPY_ASSERT_MSG(pdbValid, "PDB was not generated.");
     };
 
     compiler.compileShader(compilerArgs);

@@ -13,7 +13,7 @@ namespace coalpy
 class ByteBuffer;
 
 using Dx12CompilerOnError = std::function<void(const char* name, const char* errorString)>;
-using Dx12CompilerOnFinished = std::function<void(bool success, IDxcBlob* resultBlob)>;
+using Dx12CompilerOnFinished = std::function<void(bool success, IDxcBlob* resultBlob, IDxcBlob* pdbBlob)>;
 using Dx12CompilerOnInclude = std::function<bool(const char* path, ByteBuffer& buffer)>;
 
 struct Dx12CompileArgs
@@ -29,6 +29,7 @@ struct Dx12CompileArgs
     Dx12CompilerOnError onError;
     Dx12CompilerOnInclude onInclude;
     Dx12CompilerOnFinished onFinished;
+    bool generatePdb;
 };
 
 class Dx12Compiler

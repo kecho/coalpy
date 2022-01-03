@@ -48,6 +48,7 @@ public:
     }
 
 private:
+    void preparePdbDir();
     void prepareIoJob(Dx12CompileState& state, const std::string& resolvedPath);
     void prepareCompileJobs(Dx12CompileState& state);
 
@@ -93,6 +94,9 @@ private:
     ShaderHandleToFilesMap m_shadersToFiles;
     render::Dx12Device* m_parentDevice = nullptr;
     std::vector<std::string> m_additionalPaths;
+
+    bool m_pdbDirReady = false;
+    bool m_createdPdbDir = false;
 };
 
 }

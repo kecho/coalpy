@@ -268,6 +268,8 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
     arguments.push_back(DXC_ARG_WARNINGS_ARE_ERRORS);
     arguments.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
     arguments.push_back(DXC_ARG_ENABLE_STRICTNESS);
+    if (args.generatePdb)
+        arguments.push_back(DXC_ARG_DEBUG);
 
     std::vector<std::wstring> paths;
     paths.push_back(L"-I.");
@@ -351,6 +353,16 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
                 (void**)&shaderOut,
                 nullptr));
 
+            SmartPtr<IDxcBlob> pdbOut;
+            if (args.generatePdb)
+            {
+                DX_OK(results->GetOutput(
+                    DXC_OUT_PDB,
+                    __uuidof(IDxcBlob),
+                    (void**)&pdbOut,
+                    nullptr));
+            }
+
             if (shaderOut != nullptr)
             {
                 SmartPtr<IDxcOperationResult> validationResult;
@@ -364,7 +376,7 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
                         compiledSuccess = false;
                 }
                 else if (args.onFinished)
-                    args.onFinished(true, &(*shaderOut));
+                    args.onFinished(true, &(*shaderOut), pdbOut == nullptr ? nullptr : &(*pdbOut));
             }
             else if (args.onError)
             {
@@ -394,7 +406,7 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
                 }
                 compiledSuccess = false;
             }
-            args.onFinished(false, nullptr);
+            args.onFinished(false, nullptr, nullptr);
         }
 
     }
