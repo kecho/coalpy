@@ -41,6 +41,7 @@ and&nbsp;start&nbsp;using&nbsp;your&nbsp;GPU!</tt></p>
 </font></dt><dt><font face="helvetica, arial">gpu.EnumFormat
 </font></dt><dt><font face="helvetica, arial">gpu.EnumKeys
 </font></dt><dt><font face="helvetica, arial">gpu.EnumMemFlags
+</font></dt><dt><font face="helvetica, arial">gpu.EnumShaderModel
 </font></dt><dt><font face="helvetica, arial">gpu.EnumTextureAddressMode
 </font></dt><dt><font face="helvetica, arial">gpu.EnumTextureType
 </font></dt><dt><font face="helvetica, arial">gpu.ImguiBuilder
@@ -627,6 +628,33 @@ Data descriptors defined here:<br>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
 <td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumShaderModel">class <strong>EnumShaderModel</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Available&nbsp;shader&nbsp;models.&nbsp;Specify&nbsp;a&nbsp;shader&nbsp;model&nbsp;in&nbsp;shader_model&nbsp;argument&nbsp;of&nbsp;set_current_adapter.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumShaderModel-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumShaderModel-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>Sm6_1</strong></dt>
+<dd><tt>Shader&nbsp;model&nbsp;6.1&nbsp;enum&nbsp;value.</tt></dd>
+</dl>
+<dl><dt><strong>Sm6_4</strong></dt>
+<dd><tt>Shader&nbsp;model&nbsp;6.4&nbsp;enum&nbsp;value.</tt></dd>
+</dl>
+<dl><dt><strong>Sm6_5</strong></dt>
+<dd><tt>Shader&nbsp;model&nbsp;6.5&nbsp;enum&nbsp;value.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="EnumTextureAddressMode">class <strong>EnumTextureAddressMode</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
@@ -716,6 +744,16 @@ Parameters:<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;returns&nbsp;a&nbsp;boolean,&nbsp;True&nbsp;if&nbsp;the&nbsp;X&nbsp;for&nbsp;closing&nbsp;this&nbsp;panel&nbsp;was&nbsp;pressed,&nbsp;False&nbsp;otherwise.</tt></dd></dl>
 
+<dl><dt><a name="ImguiBuilder-begin_combo"><strong>begin_combo</strong></a>(...)</dt><dd><tt>begins&nbsp;a&nbsp;combo&nbsp;box.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;an&nbsp;end_combo&nbsp;call.<br>
+To&nbsp;insert&nbsp;items,&nbsp;use&nbsp;<a href="#ImguiBuilder-selectable">selectable</a>()&nbsp;between&nbsp;begin_combo/end_combo<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;the&nbsp;label&nbsp;name&nbsp;for&nbsp;this&nbsp;comboxbox.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;preview_value&nbsp;(str):&nbsp;preview&nbsp;string&nbsp;value<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;If&nbsp;value&nbsp;returned&nbsp;is&nbsp;true,&nbsp;must&nbsp;call&nbsp;end_combo.</tt></dd></dl>
+
 <dl><dt><a name="ImguiBuilder-begin_main_menu_bar"><strong>begin_main_menu_bar</strong></a>(...)</dt><dd><tt>Starts&nbsp;the&nbsp;scope&nbsp;of&nbsp;a&nbsp;main&nbsp;menu&nbsp;at&nbsp;the&nbsp;top&nbsp;of&nbsp;the&nbsp;window.&nbsp;Use&nbsp;the&nbsp;MainMenu&nbsp;and&nbsp;BeginMenu/EndMenu&nbsp;functions&nbsp;to&nbsp;add&nbsp;/&nbsp;remove&nbsp;components.<br>
 Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;end_main_menu_bar&nbsp;method.<br>
 &nbsp;<br>
@@ -756,12 +794,24 @@ Returns:<br>
 
 <dl><dt><a name="ImguiBuilder-end"><strong>end</strong></a>(...)</dt><dd><tt>End&nbsp;method.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;corresponding&nbsp;begin&nbsp;method.</tt></dd></dl>
 
+<dl><dt><a name="ImguiBuilder-end_combo"><strong>end_combo</strong></a>(...)</dt><dd><tt>Ends&nbsp;a&nbsp;combo&nbsp;box.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;an&nbsp;begin_combo&nbsp;call&nbsp;only&nbsp;if&nbsp;it&nbsp;returns&nbsp;true..</tt></dd></dl>
+
 <dl><dt><a name="ImguiBuilder-end_main_menu_bar"><strong>end_main_menu_bar</strong></a>(...)</dt><dd><tt>End&nbsp;method&nbsp;for&nbsp;main&nbsp;menu&nbsp;bar.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;begin_main_menu_bar&nbsp;method.<br>
 &nbsp;<br>
 Only&nbsp;call&nbsp;this&nbsp;if&nbsp;begin_main_menu_bar&nbsp;returns&nbsp;true.</tt></dd></dl>
 
 <dl><dt><a name="ImguiBuilder-end_menu"><strong>end_menu</strong></a>(...)</dt><dd><tt>End&nbsp;method&nbsp;for&nbsp;menu&nbsp;item.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;begin_menu&nbsp;method.<br>
 Only&nbsp;call&nbsp;this&nbsp;if&nbsp;begin_menu&nbsp;returns&nbsp;true.</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-image"><strong>image</strong></a>(...)</dt><dd><tt>Draws&nbsp;an&nbsp;image<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;texture&nbsp;(<a href="#Texture">Texture</a>):&nbsp;coalpy.gpu.<a href="#Texture">Texture</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;draw&nbsp;in&nbsp;the&nbsp;UI.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;size&nbsp;(tuple):&nbsp;size&nbsp;of&nbsp;the&nbsp;image&nbsp;in&nbsp;pixels<br>
+&nbsp;&nbsp;&nbsp;&nbsp;uv0&nbsp;(tuple)(optional):&nbsp;uv&nbsp;coordinate&nbsp;of&nbsp;bottom&nbsp;(default&nbsp;(0.0,&nbsp;0.0))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;uv1&nbsp;(tuple)(optional):&nbsp;uv&nbsp;coordinate&nbsp;of&nbsp;top&nbsp;&nbsp;(default&nbsp;(1.0,&nbsp;1.0))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;tint_col&nbsp;(tuple):&nbsp;size&nbsp;4&nbsp;tuple&nbsp;with&nbsp;image&nbsp;tint&nbsp;color&nbsp;(default&nbsp;(1,1,1,1)).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;border_col&nbsp;(tuple):&nbsp;size&nbsp;4&nbsp;tuple&nbsp;with&nbsp;background&nbsp;color&nbsp;(default&nbsp;(0,0,0,0)).</tt></dd></dl>
 
 <dl><dt><a name="ImguiBuilder-input_float"><strong>input_float</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;box&nbsp;to&nbsp;input&nbsp;a&nbsp;single&nbsp;float&nbsp;value.<br>
 &nbsp;<br>
@@ -816,6 +866,8 @@ Returns:<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;activated.&nbsp;False&nbsp;otherwise.</tt></dd></dl>
 
+<dl><dt><a name="ImguiBuilder-new_line"><strong>new_line</strong></a>(...)</dt><dd><tt>Draws&nbsp;new&nbsp;line.</tt></dd></dl>
+
 <dl><dt><a name="ImguiBuilder-pop_id"><strong>pop_id</strong></a>(...)</dt><dd><tt>Pops&nbsp;a&nbsp;corresponding&nbsp;name&nbsp;for&nbsp;a&nbsp;scope.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;push_id.</tt></dd></dl>
 
 <dl><dt><a name="ImguiBuilder-push_id"><strong>push_id</strong></a>(...)</dt><dd><tt>Pushes&nbsp;a&nbsp;custom&nbsp;id&nbsp;name&nbsp;for&nbsp;a&nbsp;scope.&nbsp;<br>
@@ -824,6 +876,23 @@ This&nbsp;call&nbsp;to&nbsp;push_id&nbsp;must&nbsp;be&nbsp;paired&nbsp;with&nbsp
 &nbsp;<br>
 Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;text&nbsp;(str):&nbsp;The&nbsp;identifier&nbsp;for&nbsp;this&nbsp;id&nbsp;stack&nbsp;scope.</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-same_line"><strong>same_line</strong></a>(...)</dt><dd><tt>Sets&nbsp;the&nbsp;same&nbsp;line&nbsp;for&nbsp;drawing&nbsp;next&nbsp;item.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;offset_from_start_x&nbsp;(float)(optional):&nbsp;offset&nbsp;from&nbsp;the&nbsp;start&nbsp;of&nbsp;this&nbsp;x<br>
+&nbsp;&nbsp;&nbsp;&nbsp;spacing&nbsp;(float)(optional):&nbsp;spacing&nbsp;amount</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-selectable"><strong>selectable</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;selectable&nbsp;item.&nbsp;<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;the&nbsp;label&nbsp;name&nbsp;for&nbsp;this&nbsp;selectable.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;selected&nbsp;(str):&nbsp;the&nbsp;state&nbsp;if&nbsp;this&nbsp;value&nbsp;is&nbsp;selected.&nbsp;<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;item&nbsp;is&nbsp;selected,&nbsp;false&nbsp;otherwise.</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-separator"><strong>separator</strong></a>(...)</dt><dd><tt>Draw&nbsp;a&nbsp;separator.</tt></dd></dl>
 
 <dl><dt><a name="ImguiBuilder-show_demo_window"><strong>show_demo_window</strong></a>(...)</dt><dd><tt>Shows&nbsp;the&nbsp;demo&nbsp;window.</tt></dd></dl>
 
@@ -1191,7 +1260,9 @@ Parameters:<br>
 &nbsp;<br>
 Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;index&nbsp;(int):&nbsp;the&nbsp;desired&nbsp;device&nbsp;index.&nbsp;See&nbsp;get_adapters&nbsp;for&nbsp;a&nbsp;full&nbsp;list.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;flags&nbsp;(gpu.DeviceFlags)&nbsp;(optional):&nbsp;bit&nbsp;mask&nbsp;with&nbsp;device&nbsp;flags.</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;flags&nbsp;(gpu.DeviceFlags)&nbsp;(optional):&nbsp;bit&nbsp;mask&nbsp;with&nbsp;device&nbsp;flags.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;dump_shader_pdbs&nbsp;(bool)(optional):&nbsp;if&nbsp;True&nbsp;it&nbsp;will&nbsp;dump&nbsp;the&nbsp;built&nbsp;shader's&nbsp;PDBs&nbsp;to&nbsp;the&nbsp;.shader_pdb&nbsp;folder.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;shader_model&nbsp;(int)(optional):&nbsp;&nbsp;Default&nbsp;is&nbsp;sm6_5.&nbsp;sets&nbsp;the&nbsp;current&nbsp;shader&nbsp;model&nbsp;used&nbsp;for&nbsp;shader&nbsp;compilation.&nbsp;See&nbsp;the&nbsp;enum&nbsp;coalpy.gpu.ShaderModel&nbsp;for&nbsp;the&nbsp;available&nbsp;models.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">
@@ -1205,6 +1276,7 @@ Parameters:<br>
 <strong>Format</strong> = &lt;gpu.EnumFormat object&gt;<br>
 <strong>Keys</strong> = &lt;gpu.EnumKeys object&gt;<br>
 <strong>MemFlags</strong> = &lt;gpu.EnumMemFlags object&gt;<br>
+<strong>ShaderModel</strong> = &lt;gpu.EnumShaderModel object&gt;<br>
 <strong>TextureAddressMode</strong> = &lt;gpu.EnumTextureAddressMode object&gt;<br>
 <strong>TextureType</strong> = &lt;gpu.EnumTextureType object&gt;</td></tr></table>
 </body></html>
