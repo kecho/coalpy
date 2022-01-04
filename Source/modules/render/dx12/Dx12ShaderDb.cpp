@@ -345,7 +345,7 @@ void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
         return result;
     };
     
-    compileState.compileArgs.onFinished = [&compileState, this](bool success, IDxcBlob* resultBlob, IDxcBlob* pdbBlob)
+    compileState.compileArgs.onFinished = [&compileState, this](bool success, IDxcBlob* resultBlob, IDxcBlob* pdbBlob, IDxcBlobUtf16* pdbName)
     {
         {
             std::unique_lock lock(m_shadersMutex);
@@ -360,17 +360,11 @@ void Dx12ShaderDb::prepareCompileJobs(Dx12CompileState& compileState)
             compileState.success = success;
         }
 
-        if (success && pdbBlob != nullptr && m_pdbDirReady)
+        if (success && pdbBlob != nullptr && pdbName != nullptr && m_pdbDirReady)
         {
             std::stringstream ss;
             ss << s_pdbDir << "/";
-            if  (compileState.shaderName != "")
-                ss << compileState.shaderName;
-            else
-                ss << "unnamed";
-
-            FileLookup lookup(compileState.filePath == "" ? compileState.shaderName : compileState.filePath);
-            ss << "_" << lookup.hash << ".pdb";
+            ss << ws2s(std::wstring(pdbName->GetStringPointer()));
         
             FileWriteRequest req = {};
             req.doneCallback = [](FileWriteResponse& response) {};

@@ -354,13 +354,14 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
                 nullptr));
 
             SmartPtr<IDxcBlob> pdbOut;
+            SmartPtr<IDxcBlobUtf16> pdbName;
             if (args.generatePdb)
             {
                 DX_OK(results->GetOutput(
                     DXC_OUT_PDB,
                     __uuidof(IDxcBlob),
                     (void**)&pdbOut,
-                    nullptr));
+                    (IDxcBlobUtf16**)(&pdbName)));
             }
 
             if (shaderOut != nullptr)
@@ -376,7 +377,7 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
                         compiledSuccess = false;
                 }
                 else if (args.onFinished)
-                    args.onFinished(true, &(*shaderOut), pdbOut == nullptr ? nullptr : &(*pdbOut));
+                    args.onFinished(true, &(*shaderOut), pdbOut == nullptr ? nullptr : &(*pdbOut), pdbName == nullptr ? nullptr : &(*pdbName));
             }
             else if (args.onError)
             {
@@ -406,7 +407,7 @@ void Dx12Compiler::compileShader(const Dx12CompileArgs& args)
                 }
                 compiledSuccess = false;
             }
-            args.onFinished(false, nullptr, nullptr);
+            args.onFinished(false, nullptr, nullptr, nullptr);
         }
 
     }

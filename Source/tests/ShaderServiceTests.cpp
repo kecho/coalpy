@@ -87,7 +87,7 @@ void dx12CompileFunction(Dx12Compiler& compiler)
     };
 
     int onFinishedReached = 0;
-    compilerArgs.onFinished = [&](bool success, IDxcBlob* blob, IDxcBlob* pdbBlob)
+    compilerArgs.onFinished = [&](bool success, IDxcBlob* blob, IDxcBlob* pdbBlob, IDxcBlobUtf16* pdbName)
     {
         ++onFinishedReached;
         bool compiledSuccess = success && blob != nullptr;
