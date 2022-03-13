@@ -26,7 +26,21 @@ Build {
                 CXXOPTS_RELEASE = { "/Ox", "/MD" },
                 CXXOPTS_PRODUCTION = { "/O2", "/MD" },
             },
-        }
+        },
+        {
+            Name = "linux-gcc",
+            DefaultOnHost = "linux",
+            Tools = { "gcc" },
+            Env = {
+                CPPPATH = {
+                    "$(OBJECTDIR)$(SEP)Source"
+                },
+                CXXOPTS = { "-std=c++17" },
+            },
+            ReplaceEnv = {
+                LD = "$(CXX)"
+            },
+        },
     },
     
     Env = {
