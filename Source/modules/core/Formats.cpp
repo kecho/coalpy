@@ -1,5 +1,6 @@
 #include <coalpy.core/Formats.h>
 #include <coalpy.core/Assert.h>
+#include <stdlib.h>
 
 namespace coalpy
 {

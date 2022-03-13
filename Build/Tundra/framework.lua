@@ -14,11 +14,11 @@ function _G.GenRootIdeHints(rootFolder)
 end
 
 function _G.GetModuleDir(sourceDir, moduleName)
-    return sourceDir.."\\modules\\"..moduleName.."\\"
+    return sourceDir.."/modules/"..moduleName.."/"
 end
 
 function _G.GetModulePublicInclude(sourceDir, moduleName)
-    return _G.GetModuleDir(sourceDir, moduleName).."public\\"
+    return _G.GetModuleDir(sourceDir, moduleName).."public/"
 end
 
 function _G.GetModuleIncludes(sourceDir, moduleList)

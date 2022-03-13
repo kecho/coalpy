@@ -19,7 +19,7 @@ local LibIncludes = {
     PythonDir .. "Include",
     ImguiDir,
     LibJpgDir,
-    LibPngDir
+    LibPngDir,
 }
 
 local Libraries = {
@@ -45,7 +45,10 @@ local Libraries = {
         OpenEXRLibDir.."Imath-2_5.lib",
         Config = { "win64-msvc-release", "win64-msvc-production"  }
     },
-    "User32.lib"
+    {
+        "User32.lib",
+        Config = "win64-msvc-*"
+    }
 }
 
 local Binaries = {
@@ -75,12 +78,41 @@ Default(zlibLib)
 local imguiLib = StaticLibrary {
     Name = "imgui",
     Pass = "BuildCode",
-    Includes = ImguiDir,
+    Includes = {
+        ImguiDir,
+        {
+            "/usr/include/SDL2/",
+            Config = { "linux-gcc-*" }
+        }
+    },
     Sources = {
         Glob {
             Dir = ImguiDir,
             Extensions = { ".cpp", ".h", ".hpp" },
-            Recursive =  true
+            Recursive = false
+        },
+        Glob {
+            Dir = ImguiDir.."/cpp/",
+            Extensions = { ".cpp", ".h", ".hpp" },
+            Recursive = true
+        },
+        {
+            Config = { "win64-msvc-*" },
+            {
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_dx12.cpp",
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_dx12.h",
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_win.h",
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_win.cpp",
+            }
+        },
+        {
+            Config = { "linux-gcc-*" },
+            {
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_sdl.h",
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_sdl.cpp",
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_vulkan.h",
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_vulkan.cpp",
+            }
         }
     },
     IdeGenerationHints = _G.GenRootIdeHints("imgui");
