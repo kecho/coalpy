@@ -74,6 +74,37 @@ t2-output\win64-msvc-debug-default\coalpy_tests.exe
 
 For information about the test suites commands, such as filters / repeating tests etc use the -h flag.
 
+## Compiling in Linux (Ubuntu 20.x LTS+)
+
+### Pre requirements
+
+Linux build has only been tested on Ubuntu 20.x LTS. Please install the following pre requirements:
+
+#### SDL
+To compile in linux, first we must setup SDL for IMGUI to compile correctly.
+
+```
+sudo apt-get install libsdl2-dev
+```
+
+#### Vulkan Lunar SDK
+Follow this by installing vulkan lunar SDK:
+[vulkan lunar SDK](https://vulkan.lunarg.com/doc/view/latest/linux/getting_started_ubuntu.html)
+
+
+### Compiling for Linux
+
+To compile for Linux, use the build.sh script file:
+
+```
+./build.sh debug
+```
+for release mode
+```
+./build.sh release
+```
+
+
 ## Creating Python package
 
 cd into the t2-output\win64-msvc-[debug|release]-default\coalpy_pip directory. Run the command:
