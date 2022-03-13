@@ -10,6 +10,7 @@ template<typename HandleType, typename DataType, int fixedContainerSize = -1>
 class HandleContainer
 {
 public:
+    using BaseHandleType = typename HandleType::BaseType;
     using OnElementFn = std::function<void(HandleType handle, DataType& data)>;
 
     HandleContainer()
@@ -28,7 +29,7 @@ public:
                 return m_data.back().data;
             }
 
-            outHandle.handleId = (HandleType::BaseType)m_data.size();
+            outHandle.handleId = (BaseHandleType)m_data.size();
             m_data.emplace_back();
         }
         else
@@ -45,7 +46,7 @@ public:
 
     void free(HandleType handle, bool resetObject = true)
     {
-        if (handle.handleId >= (HandleType::BaseType)m_data.size())
+        if (handle.handleId >= (BaseHandleType)m_data.size())
             return;
 
         m_freeHandles.push_back(handle);
@@ -66,7 +67,7 @@ public:
 
     bool contains(HandleType h) const
     {
-        if (h.handleId >= (HandleType::BaseType)m_data.size() || !h.valid())
+        if (h.handleId >= (BaseHandleType)m_data.size() || !h.valid())
             return false;
 
         return m_data[h.handleId].valid;

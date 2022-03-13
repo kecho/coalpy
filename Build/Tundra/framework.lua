@@ -52,9 +52,12 @@ function _G.BuildModules(sourceDir, moduleMap, extraIncludes, extraDeps)
                 externalIncludes
             },
             Sources = {
-                Glob {
+                FGlob {
                     Dir = _G.GetModuleDir(sourceDir, k),
                     Extensions = { ".cpp", ".h", ".hpp" },
+                    Filters = {
+                        { Pattern ="dx12", Config = "win64-*-*" }
+                    },
                     Recursive =  true
                 }
             },
@@ -117,25 +120,33 @@ function _G.BuildProgram(programName, programSource, defines, sourceDir, include
     Default(prog)
 end
 
-function _G.DeployPyPackage(packageName, pythonLibName, binaries, scriptsDir)
-    local srcDll = "$(OBJECTDIR)$(SEP)"..pythonLibName..".dll"
+function _G.DeployPyPackage(packageName, pythonLibName, pythonSrcDLL, pythonSrcSO, binaries, scriptsDir)
     local packageDst = "$(OBJECTDIR)$(SEP)"..packageName
     local dstPyd = packageDst.."$(SEP)"..pythonLibName..".pyd"
     local binaryDst = packageDst .. "$(SEP)resources$(SEP)"
-    local cpyFile = CopyFile {
-        Pass = "Deploy",
-        Source = srcDll,
-        Target = dstPyd
-    }
+    local cpyFileWindows = CopyFile {
+                Pass = "Deploy",
+                Source = pythonSrcDLL,
+                Target = dstPyd,
+                Config="win64-*-*"
+            }
+    local cpyFileLinux = CopyFile {
+                Pass = "Deploy",
+                Source = pythonSrcSO,
+                Target = dstPyd,
+                  Config="linux-*-*"
+            },
 
-    Default(cpyFile)
+    Default(cpyFileWindows)
+    Default(cpyFileLinux)
 
     for i, v in ipairs(binaries) do
         local targetName =  binaryDst..npath.get_filename(v)
         local cpCmd = CopyFile {
             Pass = "Deploy",
             Source = v,
-            Target = targetName
+            Target = targetName,
+            Config="win64-*-*"
         }
         Default(cpCmd)
     end

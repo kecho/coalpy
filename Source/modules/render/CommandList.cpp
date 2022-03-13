@@ -1,6 +1,7 @@
 #include <coalpy.render/CommandList.h>
 #include <coalpy.core/ByteBuffer.h>
 #include <coalpy.core/Assert.h>
+#include <cstring>
 #include <vector>
 
 namespace coalpy

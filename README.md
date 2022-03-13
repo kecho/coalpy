@@ -78,13 +78,27 @@ For information about the test suites commands, such as filters / repeating test
 
 ### Pre requirements
 
-Linux build has only been tested on Ubuntu 20.x LTS. Please install the following pre requirements:
+Linux build has only been tested on Ubuntu 20.x LTS. Please install the following pre-requirements:
 
-#### SDL
-To compile in linux, first we must setup SDL for IMGUI to compile correctly.
+#### Python 3.9 SDK
 
 ```
-sudo apt-get install libsdl2-dev
+sudo apt-get install python3.9
+sudo apt-get install python3.9-dev
+```
+
+#### SDL
+
+Required by IMGUI
+
+```
+sudo apt-get install libsdl2-dev=2.0.10+dfsg1-3
+```
+
+#### OpenEXR
+
+```
+sudo apt-get install OpenEXR
 ```
 
 #### Vulkan Lunar SDK

@@ -2,10 +2,10 @@
 
 //Used for python function declarations
 #define KW_FN(pyname, name, desc) \
-    { #pyname, (PyCFunction)(coalpy::gpu::methods::##name), METH_VARARGS | METH_KEYWORDS, desc }
+    { #pyname, (PyCFunction)(coalpy::gpu::methods::name), METH_VARARGS | METH_KEYWORDS, desc }
 
 #define VA_FN(pyname, name, desc) \
-    { #pyname, (coalpy::gpu::methods::##name), METH_VARARGS, desc }
+    { #pyname, (coalpy::gpu::methods::name), METH_VARARGS, desc }
 
 #define FN_END \
     {NULL, NULL, 0, NULL}

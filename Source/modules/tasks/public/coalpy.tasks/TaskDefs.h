@@ -22,7 +22,6 @@ enum class TaskFlags : int
     AutoStart = 1 << 0
 };
 
-
 using TaskBlockFn = std::function<void()>;
 using TaskFn = std::function<void(TaskContext& ctx)>;
 using Task = GenericHandle<unsigned int>;

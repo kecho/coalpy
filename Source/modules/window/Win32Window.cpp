@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Win32Window.h"
 #include <coalpy.core/Assert.h>
 #include <unordered_map>
@@ -424,16 +422,6 @@ LRESULT CALLBACK Win32Window::win32WinProc(HWND hwnd, UINT message, WPARAM wPara
 }
 
 #endif
-
-IWindow* IWindow::create(const WindowDesc& desc)
-{
-#if ENABLE_WIN32_WINDOW
-    return new Win32Window(desc);
-#else
-    #error "No platform supported for IWindow"
-    return nullptr;
-#endif
-}
 
 void IWindow::run(const WindowRunArgs& args)
 {

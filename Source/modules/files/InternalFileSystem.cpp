@@ -354,6 +354,74 @@ namespace InternalFileSystem
     }
 
 }
+#elif defined(__linux__)
+//TODO stubbing linux methods. Fill in with posix??
+namespace InternalFileSystem
+{
+    OpaqueFileHandle openFile(const char* filename, RequestType request)
+    {
+        return nullptr;
+    }
+
+    bool readBytes(OpaqueFileHandle h, char*& outputBuffer, int& bytesRead, bool& isEof)
+    {
+        return false;
+    }
+
+    bool writeBytes(OpaqueFileHandle h, const char* buffer, int bufferSize)
+    {
+        return false;
+    }
+
+    void close(OpaqueFileHandle& h)
+    {
+    }
+
+    void fixStringPath(std::string& str)
+    {
+    }
+
+    void getPathInfo(const std::string& filePath, PathInfo& pathInfo)
+    {
+    }
+
+    bool createDirectory(const char* str)
+    {
+        return false; 
+    }
+
+    bool deleteDirectory(const char* str)
+    {
+        return false; 
+    }
+
+    bool deleteFile(const char* str)
+    {
+        return false; 
+    }
+
+    void getFileName(const std::string& path, std::string& outName)
+    {
+    }
+
+    void getAttributes(const std::string& dirName_in, bool& exists, bool& isDir, bool& isDots)
+    {
+    }
+
+    bool carvePath(const std::string& path, bool lastIsFile)
+    {
+        return false;
+    }
+
+    void enumerateFiles(const std::string& path, std::vector<std::string>& files)
+    {
+    }
+
+    void getAbsolutePath(const std::string& path, std::string& outDir)
+    {
+    }
+
+}
 #else
     #error "Platform not supported"
 #endif

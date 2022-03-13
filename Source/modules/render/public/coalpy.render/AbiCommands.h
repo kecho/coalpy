@@ -11,7 +11,7 @@ namespace render
 typedef uint64_t MemOffset;
 typedef uint64_t MemSize;
 
-enum class AbiCmdTypes : int
+enum class AbiCmdTypes : unsigned int
 {
     CommandListSentinel = 'CMDL',
     CommandListEndSentinel = 'CMDE',

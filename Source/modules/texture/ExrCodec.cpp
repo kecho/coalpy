@@ -1,10 +1,10 @@
 #include "ExrCodec.h"
 
 #include <coalpy.core/Assert.h>
-#include <OpenExr/ImfChannelList.h>
-#include <OpenExr/ImfInputFile.h>
-#include <OpenExr/ImfStringAttribute.h>
-#include <OpenExr/ImfIO.h>
+#include <ImfChannelList.h>
+#include <ImfInputFile.h>
+#include <ImfStringAttribute.h>
+#include <ImfIO.h>
 
 namespace coalpy
 {

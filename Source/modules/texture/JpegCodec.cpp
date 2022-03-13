@@ -72,7 +72,7 @@ ImgCodecResult JpegCodec::decompress(
 
     jpeg_create_decompress(&cinfo);
     jpeg_mem_src(&cinfo, const_cast<unsigned char*>(buffer), bufferSize);
-    jpeg_read_header(&cinfo, true);
+    jpeg_read_header(&cinfo, (boolean)true);
     cinfo.out_color_space = JCS_RGB;    
 
     jpeg_start_decompress(&cinfo);

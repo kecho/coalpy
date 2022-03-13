@@ -16,7 +16,14 @@ local PixBinaryDll ="External/WinPixEventRuntime_1.0.210818001/bin/WinPixEventRu
 
 
 local LibIncludes = {
-    PythonDir .. "Include",
+    {
+        PythonDir .. "Include",
+        Config = "win64-*-*"
+    },
+    {
+        "/usr/include/python3.9",
+        Config = "linux-*-*"
+    },
     ImguiDir,
     LibJpgDir,
     LibPngDir,
@@ -168,7 +175,16 @@ local CoalPyModuleTable = {
 -- C++ module external includes
 local CoalPyModuleIncludes = {
     render = { DxcIncludes, ImguiDir, "Source/modules/window/" },
-    texture = { LibJpgDir, LibPngDir, ZlibDir, OpenEXRDir.."include/" }
+    texture = { LibJpgDir, LibPngDir, ZlibDir,
+        {
+            OpenEXRDir.."include/OpenEXR",
+            Config = "win64-*-*"
+        },
+        {
+            "/usr/include/OpenEXR/",
+            Config = "linux-*-*"
+        }
+    }
 }
 
 local CoalPyModuleDeps = {
@@ -178,12 +194,14 @@ local CoalPyModuleDeps = {
 
 -- Module list for the core coalpy module
 local CoalPyModules = { "core", "tasks", "render", "files", "window", "texture", "libjpeg", "libpng", "zlib"  }
+local SrcDLL = "$(OBJECTDIR)$(SEP)gpu.dll"
+local SrcSO = "$(OBJECTDIR)$(SEP)libgpu.so"
 
 _G.BuildModules(SourceDir, CoalPyModuleTable, CoalPyModuleIncludes, CoalPyModuleDeps)
 _G.BuildPyLib("gpu", "pymodules/gpu", SourceDir, LibIncludes, CoalPyModules, Libraries, CoalPyModuleDeps.render)
-_G.BuildProgram("coalpy_tests", "tests", { "CPY_ASSERT_ENABLED=1" }, SourceDir, LibIncludes, CoalPyModules, Libraries)
-_G.DeployPyPackage("coalpy", "gpu", Binaries, ScriptsDir)
+--_G.BuildProgram("coalpy_tests", "tests", { "CPY_ASSERT_ENABLED=1" }, SourceDir, LibIncludes, CoalPyModules, Libraries)
+_G.DeployPyPackage("coalpy", "gpu", SrcDLL, SrcSO, Binaries, ScriptsDir)
 
 -- Deploy PIP package
-_G.DeployPyPackage("coalpy_pip/src/coalpy", "gpu", Binaries, ScriptsDir)
+_G.DeployPyPackage("coalpy_pip/src/coalpy", "gpu", SrcDLL, SrcSO, Binaries, ScriptsDir)
 _G.DeployPyPipFiles("coalpy_pip", SourceDir.."/../README.md", SourceDir.."/pipfiles")

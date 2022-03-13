@@ -506,7 +506,7 @@ bool processUpload(const AbiUploadCmd* cmd, const unsigned char* data, WorkBuild
 bool processDownload(const AbiDownloadCmd* cmd, const unsigned char* data, WorkBuildContext& context)
 {
     const auto& resourceInfos = *context.resourceInfos;
-    auto& resourceInfoIt = resourceInfos.find(cmd->source);
+    const auto& resourceInfoIt = resourceInfos.find(cmd->source);
     if (resourceInfoIt == resourceInfos.end())
     {
         std::stringstream ss;
@@ -552,7 +552,7 @@ bool processDownload(const AbiDownloadCmd* cmd, const unsigned char* data, WorkB
 bool processCopyAppendConsumeCounter(const AbiCopyAppendConsumeCounter* cmd, const unsigned char* data, WorkBuildContext& context)
 {
     const auto& resourceInfos = *context.resourceInfos;
-    auto& srcResourceInfoIt = resourceInfos.find((ResourceHandle)cmd->source);
+    const auto& srcResourceInfoIt = resourceInfos.find((ResourceHandle)cmd->source);
     if (srcResourceInfoIt == resourceInfos.end())
     {
         std::stringstream ss;
@@ -562,7 +562,7 @@ bool processCopyAppendConsumeCounter(const AbiCopyAppendConsumeCounter* cmd, con
         return false;
     }
 
-    auto& destResourceInfoIt = resourceInfos.find(cmd->destination);
+    const auto& destResourceInfoIt = resourceInfos.find(cmd->destination);
     if (destResourceInfoIt == resourceInfos.end())
     {
         std::stringstream ss;
@@ -602,7 +602,7 @@ bool processCopyAppendConsumeCounter(const AbiCopyAppendConsumeCounter* cmd, con
 bool processClearAppendConsume(const AbiClearAppendConsumeCounter* cmd, const unsigned char* data, WorkBuildContext& context)
 {
     const auto& resourceInfos = *context.resourceInfos;
-    auto& resourceInfoIt = resourceInfos.find(cmd->source);
+    const auto& resourceInfoIt = resourceInfos.find(cmd->source);
     if (resourceInfoIt == resourceInfos.end())
     {
         std::stringstream ss;
