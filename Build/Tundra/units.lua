@@ -108,8 +108,8 @@ local imguiLib = StaticLibrary {
             {
                 ImguiDir.."$(SEP)backends$(SEP)imgui_impl_dx12.cpp",
                 ImguiDir.."$(SEP)backends$(SEP)imgui_impl_dx12.h",
-                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_win.h",
-                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_win.cpp",
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_win32.h",
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_win32.cpp",
             }
         },
         {
