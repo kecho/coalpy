@@ -10,6 +10,7 @@
 #endif
 #include <coalpy.core/Assert.h>
 #include <coalpy.files/Utils.h> 
+#include <coalpy.core/ByteBuffer.h> 
 #include <coalpy.window/WindowDefs.h>
 #include "CoalpyTypeObject.h"
 
@@ -59,8 +60,15 @@ static const char* s_Documentation = ""
     "Start by creating a shader, create a window, passing an onRender function, create a command list\n"
     "and start using your GPU!\n";
 
+void forceLinkUse()
+{
+    coalpy::ByteBuffer bb;
+    coalpy::FileLookup fl;
+}
+
 PyMODINIT_FUNC PyInit_gpu(void)
 {
+    forceLinkUse();
     static PyModuleDef moduleDef = {
         PyModuleDef_HEAD_INIT,
         "gpu", //name

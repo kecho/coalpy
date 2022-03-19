@@ -530,23 +530,6 @@ void Dx12ShaderDb::stopLiveEdit()
     m_liveEditWatcher->removeListener(this);
 }
 
-FileLookup::FileLookup()
-: filename(""), hash(0u)
-{
-}
-
-FileLookup::FileLookup(const char* file)
-: filename(file)
-{
-    hash = stringHash(filename);
-}
-
-FileLookup::FileLookup(const std::string& filename)
-: filename(filename)
-{
-    hash = stringHash(filename);
-}
-
 }
 
 #endif

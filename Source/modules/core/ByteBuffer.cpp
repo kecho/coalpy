@@ -9,6 +9,7 @@ namespace coalpy
 ByteBuffer::ByteBuffer()
 : m_data(nullptr), m_size(0), m_capacity(0)
 {
+    //DO NOT remove this constructor from inlining. Required by some gcc versions.
 }
 
 ByteBuffer::ByteBuffer(const u8* data, size_t size)

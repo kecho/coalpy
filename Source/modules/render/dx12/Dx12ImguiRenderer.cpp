@@ -255,17 +255,6 @@ void Dx12imguiRenderer::render()
     m_device.queues().deallocate(dx12List, fenceVal);
 }
 
-IimguiRenderer* IimguiRenderer::create(const IimguiRendererDesc& desc)
-{
-    if (desc.device == nullptr || desc.window == nullptr || desc.display == nullptr)
-    {
-        CPY_ERROR_MSG(false, "Invalid arguments for IimguiRenderer.");
-        return nullptr;
-    }
-
-    return new Dx12imguiRenderer(desc);
-}
-
 ImTextureID Dx12imguiRenderer::registerTexture(Texture texture)
 {
     auto it = m_texToGpuHandleIndex.find(texture);
