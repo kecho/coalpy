@@ -211,6 +211,11 @@ bool ModuleState::selectAdapter(int index, int flags, ShaderModel shaderModel, b
     std::vector<render::DeviceInfo> allAdapters;
     render::IDevice::enumerate(render::DevicePlat::Dx12, allAdapters);
 
+    if (allAdapters.empty())
+    {
+        PyErr_SetString(exObj(), "No graphics card adapter available in the current system.");
+        return false;
+    }
     if (index < 0 || index >= (int)allAdapters.size())
     {
         PyErr_SetString(exObj(), "Invalid adapter index selected.");

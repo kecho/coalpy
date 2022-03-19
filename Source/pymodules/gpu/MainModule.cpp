@@ -117,27 +117,29 @@ PyMODINIT_FUNC PyInit_gpu(void)
 
     auto state = (coalpy::gpu::ModuleState*)PyModule_GetState(moduleObj);
     new (state) coalpy::gpu::ModuleState(typeList.data(), (int)typeList.size());
-    state->startServices();
-
     PyObject* exceptionObject = PyErr_NewException("gpu.exception_object", NULL, NULL);
     Py_XINCREF(exceptionObject);
     state->setExObj(exceptionObject);
 
-    coalpy::gpu::processTypes(typeList, state, *moduleObj);
-
-    if (PyModule_AddObject(moduleObj, "exception_object", exceptionObject) < 0) {
-        Py_XDECREF(exceptionObject);
-        Py_CLEAR(exceptionObject);
-        Py_DECREF(moduleObj);
-        return NULL;
-    }
-
+    if (state->checkValidDevice())
     {
-        std::string modulePath;
-        std::string moduleFilePath = g_ModuleFilePath;
-        coalpy::FileUtils::getDirName(moduleFilePath, modulePath);
-        state->addDataPath(modulePath.c_str());
-        state->addDataPath(".");
+        state->startServices();
+        coalpy::gpu::processTypes(typeList, state, *moduleObj);
+
+        if (PyModule_AddObject(moduleObj, "exception_object", exceptionObject) < 0) {
+            Py_XDECREF(exceptionObject);
+            Py_CLEAR(exceptionObject);
+            Py_DECREF(moduleObj);
+            return NULL;
+        }
+
+        {
+            std::string modulePath;
+            std::string moduleFilePath = g_ModuleFilePath;
+            coalpy::FileUtils::getDirName(moduleFilePath, modulePath);
+            state->addDataPath(modulePath.c_str());
+            state->addDataPath(".");
+        }
     }
 
     return moduleObj;

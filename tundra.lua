@@ -36,6 +36,7 @@ Build {
                     "$(OBJECTDIR)$(SEP)Source"
                 },
                 CXXOPTS = { "-std=c++17", "-fPIC" },
+                CXXOPTS_DEBUG   = { "-ggdb" },
                 CCOPTS = { "-fPIC" },
             },
             ReplaceEnv = {
