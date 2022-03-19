@@ -68,7 +68,7 @@ function _G.BuildModules(sourceDir, moduleMap, extraIncludes, extraDeps)
     end
 end
 
-function _G.BuildPyLib(libName, libFolder, sourceDir, includeList, moduleList, otherLibs, otherDeps)
+function _G.BuildPyLib(libName, libFolder, sourceDir, includeList, moduleList, otherLibs, otherDeps, otherLibPaths)
     local pythonLib = SharedLibrary {
         Name = libName,
         Pass = "BuildCode",
@@ -87,13 +87,14 @@ function _G.BuildPyLib(libName, libFolder, sourceDir, includeList, moduleList, o
                 Recursive =  true
             },
         },
+        LibPaths = otherLibPaths,
         IdeGenerationHints = _G.GenRootIdeHints("PyModules");
     }
 
     Default(pythonLib)
 end
 
-function _G.BuildProgram(programName, programSource, defines, sourceDir, includeList, moduleList, otherLibs)
+function _G.BuildProgram(programName, programSource, defines, sourceDir, includeList, moduleList, otherLibs, otherLibPaths)
     local prog = Program {
         Name = programName,
         Pass = "BuildCode",
@@ -114,6 +115,7 @@ function _G.BuildProgram(programName, programSource, defines, sourceDir, include
                 Recursive =  true
             },
         },
+        LibPaths = otherLibPaths,
         IdeGenerationHints = _G.GenRootIdeHints("Apps");
     }
 
