@@ -547,11 +547,6 @@ FileLookup::FileLookup(const std::string& filename)
     hash = stringHash(filename);
 }
 
-IShaderDb* IShaderDb::create(const ShaderDbDesc& desc)
-{
-    return new Dx12ShaderDb(desc);
-}
-
 }
 
 #endif

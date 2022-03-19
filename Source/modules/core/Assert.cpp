@@ -9,6 +9,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <debugapi.h>
+#else
+#include <csignal>
 #endif
 
 namespace coalpy
@@ -63,7 +65,7 @@ void AssertSystem::onAssert(const char* condition, const char* file, unsigned in
     {
         va_list args;
         va_start(args, fmt);
-        vsnprintf_s(buffer, ErrorStringBufferSize,  ErrorStringBufferSize - 1, fmt, args);
+        vsnprintf(buffer, ErrorStringBufferSize, fmt, args);
         va_end(args);
     }
 
@@ -79,7 +81,7 @@ void AssertSystem::onAssert(const char* condition, const char* file, unsigned in
 
     }
 #else
-    #error "Platform not supported"
+    std::raise(SIGINT);
 #endif
 
 }
@@ -94,7 +96,7 @@ void AssertSystem::onError(const char* condition, const char* file, unsigned int
     {
         va_list args;
         va_start(args, fmt);
-        vsnprintf_s(buffer, ErrorStringBufferSize,  ErrorStringBufferSize - 1, fmt, args);
+        vsnprintf(buffer, ErrorStringBufferSize, fmt, args);
         va_end(args);
     }
 

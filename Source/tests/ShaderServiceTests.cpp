@@ -5,10 +5,14 @@
 #include <coalpy.files/Utils.h>
 #include <coalpy.render/IShaderDb.h>
 #include <coalpy.render/../../Config.h>
-#include <coalpy.render/../../Dx12/Dx12Compiler.h>
 #include <sstream>
 #include <iostream>
 #include <atomic>
+#include <string.h>
+
+#if ENABLE_DX12
+#include <coalpy.render/../../Dx12/Dx12Compiler.h>
+#endif
 
 namespace coalpy
 {
