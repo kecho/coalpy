@@ -358,6 +358,11 @@ namespace InternalFileSystem
 //TODO stubbing linux methods. Fill in with posix??
 namespace InternalFileSystem
 {
+    bool valid(OpaqueFileHandle h)
+    {
+        return false;
+    }
+
     OpaqueFileHandle openFile(const char* filename, RequestType request)
     {
         return nullptr;
@@ -385,6 +390,10 @@ namespace InternalFileSystem
     {
     }
 
+    void getFileName(const std::string& path, std::string& outName)
+    {
+    }
+
     bool createDirectory(const char* str)
     {
         return false; 
@@ -398,10 +407,6 @@ namespace InternalFileSystem
     bool deleteFile(const char* str)
     {
         return false; 
-    }
-
-    void getFileName(const std::string& path, std::string& outName)
-    {
     }
 
     void getAttributes(const std::string& dirName_in, bool& exists, bool& isDir, bool& isDots)

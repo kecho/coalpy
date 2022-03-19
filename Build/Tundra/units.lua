@@ -55,6 +55,10 @@ local Libraries = {
     {
         "User32.lib",
         Config = "win64-msvc-*"
+    },
+    {
+        "pthread",
+        Config = "linux-*-*"
     }
 }
 

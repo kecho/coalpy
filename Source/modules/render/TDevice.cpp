@@ -10,8 +10,10 @@ namespace render
 
 void IDevice::enumerate(DevicePlat platform, std::vector<DeviceInfo>& outputList)
 {
+#if ENABLE_DX12
     if (platform == DevicePlat::Dx12)
         Dx12Device::enumerate(outputList);
+#endif
 }
 
 IDevice * IDevice::create(const DeviceConfig& config)
