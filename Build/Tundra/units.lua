@@ -59,13 +59,13 @@ local Libraries = {
     },
     {
         "pthread",
-        ":libHalf.a",
-        ":libIex.a",
-        ":libIexMath.a",
-        ":libIlmImf.a",
-        ":libIlmImfUtil.a",
-        ":libIlmThread.a",
-        ":libImath.a",
+        ":libHalf-2_5.a",
+        ":libIex-2_5.a",
+        ":libIexMath-2_5.a",
+        ":libIlmImf-2_5.a",
+        ":libIlmImfUtil-2_5.a",
+        ":libIlmThread-2_5.a",
+        ":libImath-2_5.a",
         Config = "linux-*-*"
     }
 }
@@ -194,11 +194,6 @@ local CoalPyModuleIncludes = {
     texture = { LibJpgDir, LibPngDir, ZlibDir,
         {
             OpenEXRDir.."include/OpenEXR",
-            Config = "win64-*-*"
-        },
-        {
-            "/usr/include/OpenEXR/",
-            Config = "linux-*-*"
         }
     }
 }

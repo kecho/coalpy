@@ -95,12 +95,6 @@ Required by IMGUI
 sudo apt-get install libsdl2-dev=2.0.10+dfsg1-3
 ```
 
-#### OpenEXR
-
-```
-sudo apt-get install OpenEXR
-```
-
 #### Vulkan Lunar SDK
 Follow this by installing vulkan lunar SDK:
 [vulkan lunar SDK](https://vulkan.lunarg.com/doc/view/latest/linux/getting_started_ubuntu.html)

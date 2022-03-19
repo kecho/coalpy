@@ -125,6 +125,7 @@ end
 function _G.DeployPyPackage(packageName, pythonLibName, pythonSrcDLL, pythonSrcSO, binaries, scriptsDir)
     local packageDst = "$(OBJECTDIR)$(SEP)"..packageName
     local dstPyd = packageDst.."$(SEP)"..pythonLibName..".pyd"
+    local dstPydSO = packageDst.."$(SEP)"..pythonLibName..".so"
     local binaryDst = packageDst .. "$(SEP)resources$(SEP)"
     local cpyFileWindows = CopyFile {
                 Pass = "Deploy",
@@ -135,8 +136,8 @@ function _G.DeployPyPackage(packageName, pythonLibName, pythonSrcDLL, pythonSrcS
     local cpyFileLinux = CopyFile {
                 Pass = "Deploy",
                 Source = pythonSrcSO,
-                Target = dstPyd,
-                  Config="linux-*-*"
+                Target = dstPydSO,
+                Config="linux-*-*"
             },
 
     Default(cpyFileWindows)
