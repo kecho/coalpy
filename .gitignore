@@ -1,3 +1,6 @@
 .tundra*
 t2-output
 *.swp
+*.swo
+tags
+

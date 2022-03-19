@@ -33,24 +33,24 @@ local LibIncludes = {
 local Libraries = {
     {
         PythonDir.."python39_d.lib",
-        OpenEXRLibDir.."Half-2_5_d.lib",
-        OpenEXRLibDir.."Iex-2_5_d.lib",
-        OpenEXRLibDir.."IexMath-2_5_d.lib",
-        OpenEXRLibDir.."IlmImf-2_5_d.lib",
-        OpenEXRLibDir.."IlmImfUtil-2_5_d.lib",
-        OpenEXRLibDir.."IlmThread-2_5_d.lib",
-        OpenEXRLibDir.."Imath-2_5_d.lib",
+        "Half-2_5_d.lib",
+        "Iex-2_5_d.lib",
+        "IexMath-2_5_d.lib",
+        "IlmImf-2_5_d.lib",
+        "IlmImfUtil-2_5_d.lib",
+        "IlmThread-2_5_d.lib",
+        "Imath-2_5_d.lib",
         Config = { "win64-msvc-debug-*" }
     },
     {
         PythonDir.."python39.lib",
-        OpenEXRLibDir.."Half-2_5.lib",
-        OpenEXRLibDir.."Iex-2_5.lib",
-        OpenEXRLibDir.."IexMath-2_5.lib",
-        OpenEXRLibDir.."IlmImf-2_5.lib",
-        OpenEXRLibDir.."IlmImfUtil-2_5.lib",
-        OpenEXRLibDir.."IlmThread-2_5.lib",
-        OpenEXRLibDir.."Imath-2_5.lib",
+        "Half-2_5.lib",
+        "Iex-2_5.lib",
+        "IexMath-2_5.lib",
+        "IlmImf-2_5.lib",
+        "IlmImfUtil-2_5.lib",
+        "IlmThread-2_5.lib",
+        "Imath-2_5.lib",
         Config = { "win64-msvc-release", "win64-msvc-production"  }
     },
     {
