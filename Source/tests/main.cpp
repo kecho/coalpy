@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
             const TestCase* cases = suite->getCases(caseCount);
             for (int j = 0; j < caseCount; ++j)
                 printf("   %s\n", cases[j].name);
-            printf("\n", suite->name());
+            printf("\n");
             delete suite;
         }
         return 0;
