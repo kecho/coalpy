@@ -75,25 +75,14 @@ t2-output\win64-msvc-debug-default\coalpy_tests.exe
 For information about the test suites commands, such as filters / repeating tests etc use the -h flag.
 
 ## Compiling in Linux (Ubuntu 20.x LTS+)
-
-### Pre requirements
-
-Linux build has only been tested on Ubuntu 20.x LTS. Please install the following pre-requirements:
-
-#### Python 3.9 SDK
+Before compiling into linux, the necessary dependencies must be installed.
+For ubuntu apt package manager, you can run the script:
 
 ```
-sudo apt-get install python3.9
-sudo apt-get install python3.9-dev
+sudo ./linux-deps.sh
 ```
 
-#### SDL
-
-Required by IMGUI
-
-```
-sudo apt-get install libsdl2-dev=2.0.10+dfsg1-3
-```
+Then proceed to install vulkan lunar SDK as assigned below.
 
 #### Vulkan Lunar SDK
 Follow this by installing vulkan lunar SDK:
@@ -111,7 +100,6 @@ for release mode
 ```
 ./build.sh release
 ```
-
 
 ## Creating Python package
 

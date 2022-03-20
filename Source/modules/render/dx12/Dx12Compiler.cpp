@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 #include <windows.h>
-#include <dxc/inc/dxcapi.h>
+#include <dxcapi.h>
 
 namespace coalpy
 {

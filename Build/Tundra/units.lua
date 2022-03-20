@@ -22,7 +22,6 @@ local LibIncludes = {
     },
     {
         "/usr/include/python3.9",
-        OpenEXRLibDir,
         Config = "linux-*-*"
     },
     ImguiDir,
@@ -59,13 +58,13 @@ local Libraries = {
     },
     {
         "pthread",
-        ":libHalf-2_5.a",
-        ":libIex-2_5.a",
-        ":libIexMath-2_5.a",
-        ":libIlmImf-2_5.a",
-        ":libIlmImfUtil-2_5.a",
-        ":libIlmThread-2_5.a",
-        ":libImath-2_5.a",
+        "Half",
+        "Iex",
+        "IexMath",
+        "IlmImf",
+        "IlmImfUtil",
+        "IlmThread",
+        "Imath",
         Config = "linux-*-*"
     }
 }
@@ -194,6 +193,11 @@ local CoalPyModuleIncludes = {
     texture = { LibJpgDir, LibPngDir, ZlibDir,
         {
             OpenEXRDir.."include/OpenEXR",
+            Config = "win64-*-*"
+        },
+        {
+            "/usr/include/OpenEXR",
+            Config = "linux-*-*"
         }
     }
 }
