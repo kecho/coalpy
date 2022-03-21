@@ -3,7 +3,6 @@
 #include <sstream>
 #include <cstring>
 #include <coalpy.core/ClTokenizer.h>
-#include <iostream>
 
 #ifdef _WIN32 
 #define WIN32_LEAN_AND_MEAN
@@ -384,12 +383,10 @@ namespace InternalFileSystem
 
     OpaqueFileHandle openFile(const char* filename, RequestType request)
     {
-        int fd = ::open(filename, request == InternalFileSystem::Read ? O_RDONLY : (O_CREAT | O_RDWR | S_IRUSR | S_IWUSR));
+        int fd = ::open(filename, request == InternalFileSystem::Read ? O_RDONLY : (O_CREAT | O_TRUNC | O_WRONLY ), S_IRUSR | S_IWUSR);
 
         if (fd == -1)
-        {
             return nullptr;
-        }
 
         struct stat statbuf;
         int err = fstat(fd, &statbuf);
@@ -436,6 +433,8 @@ namespace InternalFileSystem
             return;
 
         ::close(pf->h);
+        delete pf;
+        h = {};
     }
 
     void fixStringPath(std::string& str)
@@ -485,81 +484,7 @@ namespace InternalFileSystem
 
     bool deleteDirectory(const char* path)
     {
-        struct stat stat_path;
-        // stat for the path
-        int s = stat(path, &stat_path);
-        if (s != 0)
-            return false;
-
-        // if path does not exists or is not dir - exit with status -1
-        if (S_ISDIR(stat_path.st_mode) == 0)
-            return false;
-
-        // if not possible to read the directory for this user
-        DIR *dir;
-        if ((dir = opendir(path)) == NULL)
-        {
-            return false;
-        }
-
-        // the length of the path
-        size_t path_len = strlen(path);
-        char *full_path;
-        struct dirent *entry;
-        struct stat stat_entry;
-
-        int errors = 0;
-
-        // iteration through entries in the directory
-        while ((entry = readdir(dir)) != nullptr)
-        {
-            // skip entries "." and ".."
-            if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
-                continue;
-
-            // determinate a full path of an entry
-            full_path = (char*)calloc(path_len + strlen(entry->d_name) + 1, sizeof(char));
-            auto onError = [&errors, &full_path]()
-            {
-                ++errors;
-                free(full_path);
-            };
-
-            strcpy(full_path, path);
-            strcat(full_path, "/");
-            strcat(full_path, entry->d_name);
-
-            // stat for the entry
-            if (stat(full_path, &stat_entry) != 0)
-            {
-                onError();
-                continue;
-            }
-
-            // recursively remove a nested directory
-            if (S_ISDIR(stat_entry.st_mode))
-            {
-                if (!deleteDirectory(full_path))
-                {
-                    onError();
-                    continue;
-                }
-            }
-            // remove a file object
-            else if (unlink(full_path) != 0)
-            {
-                onError();
-                continue;
-            }
-            free(full_path);
-        }
-
-        // remove the devastated directory and close the object of it
-        if (rmdir(path) != 0)
-            return false;
-
-        closedir(dir);
-        return errors == 0; 
+        return rmdir(path) == 0;
     }
 
     bool deleteFile(const char* str)
@@ -623,12 +548,53 @@ namespace InternalFileSystem
 
     void enumerateFiles(const std::string& path, std::vector<std::string>& files)
     {
+        struct stat stat_path;
+        // stat for the path
+        int s = stat(path.c_str(), &stat_path);
+        if (s != 0)
+            return;
+
+        // if path does not exists or is not dir - exit with status -1
+        if (S_ISDIR(stat_path.st_mode) == 0)
+            return;
+
+        // if not possible to read the directory for this user
+        DIR *dir;
+        if ((dir = opendir(path.c_str())) == NULL)
+        {
+            return;
+        }
+
+        // the length of the path
+        size_t path_len = path.size();
+        char *full_path;
+        struct dirent *entry;
+        struct stat stat_entry;
+
+        // iteration through entries in the directory
+        while ((entry = readdir(dir)) != nullptr)
+        {
+            // skip entries "." and ".."
+            if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
+                continue;
+
+            // determinate a full path of an entry
+            full_path = (char*)calloc(path_len + strlen(entry->d_name) + 1, sizeof(char));
+            strcpy(full_path, path.c_str());
+            strcat(full_path, "/");
+            strcat(full_path, entry->d_name);
+            files.push_back(full_path);
+            free(full_path);
+        }
+
+        closedir(dir);
     }
 
     void getAbsolutePath(const std::string& path, std::string& outDir)
     {
-        char resolvedPath[PATH_MAX];
-        outDir = realpath(path.c_str(), resolvedPath);
+        char resolvedPath[PATH_MAX] = {};
+        realpath(path.c_str(), resolvedPath);
+        outDir = resolvedPath;
     }
 
 }
