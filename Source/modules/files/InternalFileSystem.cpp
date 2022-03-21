@@ -1,11 +1,22 @@
 #include "InternalFileSystem.h"
 #include <coalpy.core/Assert.h>
 #include <sstream>
+#include <cstring>
+#include <coalpy.core/ClTokenizer.h>
+#include <iostream>
 
 #ifdef _WIN32 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <coalpy.core/ClTokenizer.h>
+#elif defined(__linux__)
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <linux/limits.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <errno.h>
 #endif
 
 namespace coalpy
@@ -358,64 +369,256 @@ namespace InternalFileSystem
 //TODO stubbing linux methods. Fill in with posix??
 namespace InternalFileSystem
 {
+    struct PosixFile 
+    {
+        int h;
+        unsigned int fileSize;
+        ssize_t offset;
+        char buffer[bufferSize];
+    };
+
     bool valid(OpaqueFileHandle h)
     {
-        return false;
+        return (PosixFile*)h != nullptr;
     }
 
     OpaqueFileHandle openFile(const char* filename, RequestType request)
     {
-        return nullptr;
+        int fd = ::open(filename, request == InternalFileSystem::Read ? O_RDONLY : (O_CREAT | O_RDWR | S_IRUSR | S_IWUSR));
+
+        if (fd == -1)
+        {
+            return nullptr;
+        }
+
+        struct stat statbuf;
+        int err = fstat(fd, &statbuf);
+        if (err < 0)
+        {
+            ::close(fd);
+            return nullptr;
+        }
+        auto* pf = new PosixFile { fd, (unsigned)statbuf.st_size, 0u };
+        return (OpaqueFileHandle)pf;
     }
 
     bool readBytes(OpaqueFileHandle h, char*& outputBuffer, int& bytesRead, bool& isEof)
     {
-        return false;
+        auto* pf = (PosixFile*)h;
+        if (pf == nullptr || pf->h == -1)
+            return false;
+
+        ssize_t preadBytes = pread(pf->h, pf->buffer, std::min((ssize_t)bufferSize, pf->fileSize - pf->offset), pf->offset);
+        if (preadBytes == -1)
+            return false;
+
+        pf->offset += preadBytes;
+        bytesRead = preadBytes;
+        outputBuffer = pf->buffer;
+        isEof = pf->offset >= pf->fileSize;
+        return true;
     }
 
     bool writeBytes(OpaqueFileHandle h, const char* buffer, int bufferSize)
     {
-        return false;
+        auto* pf = (PosixFile*)h;
+        if (pf == nullptr || pf->h == -1)
+            return false;
+        
+        ssize_t pwriteBytes = pwrite(pf->h, buffer, (size_t)bufferSize, 0u);
+        return pwriteBytes != -1;
     }
 
     void close(OpaqueFileHandle& h)
     {
+        auto* pf = (PosixFile*)h;
+        if (pf == nullptr)
+            return;
+
+        ::close(pf->h);
     }
 
     void fixStringPath(std::string& str)
     {
+        for (auto& c : str)
+        {
+            if (c == '\\')
+                c = '/';
+        }
     }
 
     void getPathInfo(const std::string& filePath, PathInfo& pathInfo)
     {
+        pathInfo = {};
+        auto dirCandidates = ClTokenizer::splitString(filePath, '/');
+        for (auto d : dirCandidates)
+            if (d != "")
+                pathInfo.directoryList.push_back(d);
+
+        if (pathInfo.directoryList.empty())
+            return;
+
+        pathInfo.filename = pathInfo.directoryList.back();
+        pathInfo.directoryList.pop_back();
+    
+        std::stringstream ss;
+        for (auto& d : pathInfo.directoryList)
+        {
+            ss << d  << "/";
+        }
+        pathInfo.path = std::move(ss.str());
     }
 
     void getFileName(const std::string& path, std::string& outName)
     {
+        int index = path.size() - 1;
+        for (; index >= 0 && path[index] != '/'; --index);
+        index++;
+        outName = path.c_str() + index;
     }
 
     bool createDirectory(const char* str)
     {
-        return false; 
+        int status = mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        return status == 0; 
     }
 
-    bool deleteDirectory(const char* str)
+    bool deleteDirectory(const char* path)
     {
-        return false; 
+        struct stat stat_path;
+        // stat for the path
+        int s = stat(path, &stat_path);
+        if (s != 0)
+            return false;
+
+        // if path does not exists or is not dir - exit with status -1
+        if (S_ISDIR(stat_path.st_mode) == 0)
+            return false;
+
+        // if not possible to read the directory for this user
+        DIR *dir;
+        if ((dir = opendir(path)) == NULL)
+        {
+            return false;
+        }
+
+        // the length of the path
+        size_t path_len = strlen(path);
+        char *full_path;
+        struct dirent *entry;
+        struct stat stat_entry;
+
+        int errors = 0;
+
+        // iteration through entries in the directory
+        while ((entry = readdir(dir)) != nullptr)
+        {
+            // skip entries "." and ".."
+            if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
+                continue;
+
+            // determinate a full path of an entry
+            full_path = (char*)calloc(path_len + strlen(entry->d_name) + 1, sizeof(char));
+            auto onError = [&errors, &full_path]()
+            {
+                ++errors;
+                free(full_path);
+            };
+
+            strcpy(full_path, path);
+            strcat(full_path, "/");
+            strcat(full_path, entry->d_name);
+
+            // stat for the entry
+            if (stat(full_path, &stat_entry) != 0)
+            {
+                onError();
+                continue;
+            }
+
+            // recursively remove a nested directory
+            if (S_ISDIR(stat_entry.st_mode))
+            {
+                if (!deleteDirectory(full_path))
+                {
+                    onError();
+                    continue;
+                }
+            }
+            // remove a file object
+            else if (unlink(full_path) != 0)
+            {
+                onError();
+                continue;
+            }
+            free(full_path);
+        }
+
+        // remove the devastated directory and close the object of it
+        if (rmdir(path) != 0)
+            return false;
+
+        closedir(dir);
+        return errors == 0; 
     }
 
     bool deleteFile(const char* str)
     {
-        return false; 
+        return unlink(str) == 0;
     }
 
     void getAttributes(const std::string& dirName_in, bool& exists, bool& isDir, bool& isDots)
     {
+        struct stat statbuf;
+        int err = stat(dirName_in.c_str(), &statbuf);
+        exists = false;
+        isDir = false;
+        isDots = false;
+        if (err < 0)
+            return;
+
+        exists = true;
+        if (S_ISDIR(statbuf.st_mode) != 0)
+        {
+            isDir = true;
+            std::string dirNameSanitized = dirName_in;
+            std::string filename;
+            fixStringPath(dirNameSanitized);
+            getFileName(dirNameSanitized, filename);
+            isDots = filename == "." || filename == "..";
+        }
     }
 
     bool carvePath(const std::string& path, bool lastIsFile)
     {
-        return false;
+        bool exists, isDir, isDots;
+        getAttributes(path, exists, isDir, isDots);
+        if (exists)
+            return lastIsFile ? !isDir : isDir;
+
+        //ok so the path doesnt really exists, lets carve it.
+        PathInfo pathInfo;
+        getPathInfo(path, pathInfo);
+        if (pathInfo.filename == "")
+            return false;
+
+        if (!lastIsFile)
+            pathInfo.directoryList.push_back(pathInfo.filename);
+
+        std::stringstream ss;
+        for (auto& d : pathInfo.directoryList)
+        {
+            ss << d << "/";
+            auto currentPath = ss.str();
+            getAttributes(currentPath, exists, isDir, isDots);
+            if (exists && !isDir)
+                return false;
+
+            if (!exists && !createDirectory(currentPath.c_str()))
+                return false;
+        }
+
+        return true;
     }
 
     void enumerateFiles(const std::string& path, std::vector<std::string>& files)
@@ -424,6 +627,8 @@ namespace InternalFileSystem
 
     void getAbsolutePath(const std::string& path, std::string& outDir)
     {
+        char resolvedPath[PATH_MAX];
+        outDir = realpath(path.c_str(), resolvedPath);
     }
 
 }
