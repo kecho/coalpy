@@ -9,6 +9,16 @@
 #ifdef _WIN32 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#elif defined(__linux__)
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <linux/limits.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/inotify.h>
 #endif
 
 #define WATCH_SERVICE_DEBUG_OUTPUT 0
@@ -27,7 +37,11 @@ struct FileWatchMessage
     FileWatchMessageType type;
 };
 
+#ifdef _WIN32
 typedef void* WatchHandle;
+#elif defined(__linux__)
+typedef int WatchHandle;
+#endif
 
 struct FileWatchState
 {
@@ -36,13 +50,15 @@ public:
     std::shared_mutex fileWatchMutex;
     std::set<std::string> directoriesSet;
     std::vector<std::string> directories;
-    std::vector<bool> waitResults;
     std::vector<WatchHandle> handles;
     std::set<IFileWatchListener*> listeners;
     ThreadQueue<FileWatchMessage> queue;
 
 #ifdef _WIN32 
+    std::vector<bool> waitResults;
     std::vector<HANDLE> events;
+#elif defined(__linux__)
+    int inotifyInstance;
 #endif
 
 };
@@ -143,6 +159,8 @@ bool waitListenForDirs(FileWatchState& state, int millisecondsToWait)
             state.waitResults[i] = false;
         }
     }
+#elif defined(__linux__)
+
 #endif
 
     if (!caughtFiles.empty())
@@ -171,6 +189,13 @@ void FileWatcher::start()
     CPY_ASSERT(m_state == nullptr);
     m_state = new FileWatchState;
 
+#ifdef __linux__
+    m_state->inotifyInstance = ::inotify_init();
+    CPY_ASSERT(m_state->inotifyInstance != -1);
+    int hresult = fcntl(m_state->inotifyInstance, F_SETFL, O_NONBLOCK);
+    CPY_ASSERT(hresult == 0);
+#endif
+
     m_state->thread = std::thread(
         [this]()
     {
@@ -198,6 +223,10 @@ void FileWatcher::stop()
 
     for (auto e : m_state->events)
         CloseHandle((HANDLE)e);
+#elif defined(__linux__)
+    for (auto h : m_state->handles)
+        inotify_rm_watch(m_state->inotifyInstance, (int)h);
+    ::close(m_state->inotifyInstance);
 #endif
     
     delete m_state;
@@ -212,11 +241,11 @@ void FileWatcher::addDirectory(const char* directory)
     if (!it.second)
         return;
 
-#ifdef _WIN32 
     #if WATCH_SERVICE_DEBUG_OUTPUT
         std::cout << "opening " << dirStr << std::endl;
     #endif
 
+#ifdef _WIN32 
 
     HANDLE dirHandle = CreateFileA(
         directory,
@@ -232,6 +261,11 @@ void FileWatcher::addDirectory(const char* directory)
     m_state->handles.push_back((WatchHandle)dirHandle);
     m_state->waitResults.push_back(false);
     m_state->events.push_back(CreateEvent(NULL, TRUE, TRUE, NULL));
+#elif defined(__linux__)
+    m_state->directories.push_back(dirStr);
+    int wd = inotify_add_watch(
+        m_state->inotifyInstance, directory, IN_MODIFY | IN_CREATE | IN_DELETE);
+    m_state->handles.push_back((WatchHandle)wd);
 #endif
 }
 
