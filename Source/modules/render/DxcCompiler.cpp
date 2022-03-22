@@ -45,10 +45,12 @@ const char* g_defaultDxcPath = "coalpy\\resources";
 const char* g_dxCompiler = "dxcompiler.dll";
 const char* g_dxil = "dxil.dll";
 #define ENABLE_DXIL_VALIDATION 1
+#define USE_SPIRV 0
 #elif defined(__linux__)
 const char* g_defaultDxcPath = "coalpy/resources";
 const char* g_dxCompiler = "libdxcompiler.so";
 #define ENABLE_DXIL_VALIDATION 0
+#define USE_SPIRV 1 
 #endif
 
 void loadCompilerModule(const char* searchPath, const char* moduleName, LIB_MODULE& outModule, DxcCreateInstanceProc& outProc)
@@ -324,6 +326,9 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
         arguments.push_back(DXC_ARG_DEBUG);
 
     std::vector<std::wstring> paths;
+#if USE_SPIRV
+    paths.push_back(L"-spirv");
+#endif
     paths.push_back(L"-I.");
     paths.push_back(L"-Icoalpy");
 

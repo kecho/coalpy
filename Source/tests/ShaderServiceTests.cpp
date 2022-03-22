@@ -93,8 +93,10 @@ void dxcCompileFunction(DxcCompiler& compiler)
         bool compiledSuccess = success && blob != nullptr;
         CPY_ASSERT_MSG(compiledSuccess, "Unexpected compilation error.");
 
+#if _WIN32
         bool pdbValid = pdbBlob != nullptr;
         CPY_ASSERT_MSG(pdbValid, "PDB was not generated.");
+#endif
     };
 
     compiler.compileShader(compilerArgs);
