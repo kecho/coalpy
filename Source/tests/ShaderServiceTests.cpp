@@ -9,10 +9,7 @@
 #include <iostream>
 #include <atomic>
 #include <string.h>
-
-#if ENABLE_DX12
-#include <coalpy.render/../../Dx12/Dx12Compiler.h>
-#endif
+#include <coalpy.render/../../DxcCompiler.h>
 
 namespace coalpy
 {
@@ -76,10 +73,9 @@ const char* simpleComputeInclude()
     )";
 }
 
-#if ENABLE_DX12
-void dx12CompileFunction(Dx12Compiler& compiler)
+void dxcCompileFunction(DxcCompiler& compiler)
 {
-    Dx12CompileArgs compilerArgs = {};
+    DxcCompileArgs compilerArgs = {};
     compilerArgs.type = ShaderType::Compute;
     compilerArgs.mainFn = "csMain";
     compilerArgs.shaderName = "SimpleComputeShader";
@@ -105,27 +101,27 @@ void dx12CompileFunction(Dx12Compiler& compiler)
     CPY_ASSERT_FMT(onFinishedReached == 1, "onFinishedFunction reached multiple times %d.", onFinishedReached);
 }
 
-void dx12TestSimpleDxcCompile(TestContext& ctx)
+void dxcTestSimpleDxcCompile(TestContext& ctx)
 {
     auto& testContext = (ShaderServiceContext&)ctx;
 
-    ShaderDbDesc dbDesc;
-    dbDesc.compilerDllPath = testContext.rootDir.c_str();
-    Dx12Compiler compiler(dbDesc);
-    dx12CompileFunction(compiler);
+    ShaderDbDesc dbDesc = {};
+    //dbDesc.compilerDllPath = testContext.rootDir.c_str();
+    DxcCompiler compiler(dbDesc);
+    dxcCompileFunction(compiler);
 }
 
-void dx12TestParallelDxcCompile(TestContext& ctx)
+void dxcTestParallelDxcCompile(TestContext& ctx)
 {
     auto& testContext = (ShaderServiceContext&)ctx;
     testContext.begin();
 
-    ShaderDbDesc dbDesc;
-    dbDesc.compilerDllPath = testContext.rootDir.c_str();
-    Dx12Compiler compiler(dbDesc);
+    ShaderDbDesc dbDesc = {};
+    //dbDesc.compilerDllPath = testContext.rootDir.c_str();
+    DxcCompiler compiler(dbDesc);
 
     TaskDesc compileTask([&compiler](TaskContext& taskContext) {
-        dx12CompileFunction(compiler);
+        dxcCompileFunction(compiler);
     });
 
     int compileTasksCount = 20;
@@ -143,20 +139,19 @@ void dx12TestParallelDxcCompile(TestContext& ctx)
     testContext.end();
 }
 
-void dx12TestManySerialDxcCompile(TestContext& ctx)
+void dxcTestManySerialDxcCompile(TestContext& ctx)
 {
     auto& testContext = (ShaderServiceContext&)ctx;
-    ShaderDbDesc dbDesc;
-    dbDesc.compilerDllPath = testContext.rootDir.c_str();
-    Dx12Compiler compiler(dbDesc);
+    ShaderDbDesc dbDesc = {};
+    //dbDesc.compilerDllPath = testContext.rootDir.c_str();
+    DxcCompiler compiler(dbDesc);
 
     int compileTasksCount = 20;
     for (int i = 0; i < compileTasksCount; ++i)
     {
-        dx12CompileFunction(compiler);
+        dxcCompileFunction(compiler);
     }
 }
-#endif
 
 void shaderDbCompile(TestContext& ctx)
 {
@@ -257,11 +252,9 @@ public:
     virtual const TestCase* getCases(int& caseCounts) const
     {
         static TestCase sCases[] = {
-#if ENABLE_DX12
-            { "dx12TestSimpleDxcCompile", dx12TestSimpleDxcCompile },
-            { "dx12TestManyParallelDxcCompile", dx12TestParallelDxcCompile },
-            { "dx12TestManySerialDxcCompile", dx12TestManySerialDxcCompile },
-#endif
+            { "dxcTestSimpleDxcCompile", dxcTestSimpleDxcCompile },
+            { "dxcTestManyParallelDxcCompile", dxcTestParallelDxcCompile },
+            { "dxcTestManySerialDxcCompile", dxcTestManySerialDxcCompile },
             { "shaderDbCompile", shaderDbCompile },
             { "testFilewatch", testFileWatch }
         };

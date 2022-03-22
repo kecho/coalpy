@@ -3,8 +3,8 @@
 #include <coalpy.render/IShaderDb.h>
 #include <coalpy.files/IFileWatcher.h>
 #include <coalpy.files/Utils.h>
+#include <DxcCompiler.h>
 #include <shared_mutex>
-#include "Dx12Compiler.h"
 #include <atomic>
 #include <set>
 
@@ -53,7 +53,7 @@ private:
     void prepareCompileJobs(Dx12CompileState& state);
 
     ShaderDbDesc m_desc;
-    Dx12Compiler m_compiler;
+    DxcCompiler m_compiler;
 
     struct ShaderFileRecipe
     {

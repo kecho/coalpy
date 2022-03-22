@@ -4,10 +4,12 @@ local ImguiDir = "Source/imgui";
 local LibJpgDir = "Source/libjpeg";
 local LibPngDir = "Source/libpng";
 local ZlibDir = "Source/zlib";
-local DxcDir = "External/dxc_2021_04-20/"
-local DxcIncludes = DxcDir
-local DxcBinaryCompiler = DxcDir.."dxc/bin/x64/dxcompiler.dll"
-local DxcBinaryIl = DxcDir.."dxc/bin/x64/dxil.dll"
+local DxcDir = "External/dxc/v1.6.2112/"
+local DxcIncludes = DxcDir.."inc/"
+local DxcLibDir = DxcDir.."lib/x64/"
+local DxcBinaryCompiler = DxcDir.."bin/x64/dxcompiler.dll"
+local DxcBinaryCompilerSo = DxcDir.."bin/x64/libdxcompiler.so"
+local DxcBinaryIl = DxcDir.."bin/x64/dxil.dll"
 local PythonDir = "External/Python39-win64/"
 local OpenEXRDir = "External/OpenEXR/"
 local OpenEXRLibDir = "External/OpenEXR/staticlib/"
@@ -58,6 +60,7 @@ local Libraries = {
     },
     {
         "pthread",
+        "dl",
         "Half",
         "Iex",
         "IexMath",
@@ -65,16 +68,20 @@ local Libraries = {
         "IlmImfUtil",
         "IlmThread",
         "Imath",
+        "dxclib",
+        "LLVMDxcSupport",
         Config = "linux-*-*"
     }
 }
 
 local LibPaths = {
-    OpenEXRLibDir
+    OpenEXRLibDir,
+    DxcLibDir
 }
 
 local Binaries = {
     DxcBinaryCompiler,
+    DxcBinaryCompilerSo,
     DxcBinaryIl,
     PixBinaryDll
 }

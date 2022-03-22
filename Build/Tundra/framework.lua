@@ -149,7 +149,6 @@ function _G.DeployPyPackage(packageName, pythonLibName, pythonSrcDLL, pythonSrcS
             Pass = "Deploy",
             Source = v,
             Target = targetName,
-            Config="win64-*-*"
         }
         Default(cpCmd)
     end

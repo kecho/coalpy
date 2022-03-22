@@ -12,14 +12,13 @@
 #include <coalpy.core/String.h>
 
 #include "Dx12ShaderDb.h" 
-#include "Dx12Compiler.h"
 #include "Dx12Device.h"
 #include <coalpy.core/ByteBuffer.h>
 
 #include <iostream>
 #include <windows.h>
 #include <d3d12.h>
-#include <dxc/inc/dxcapi.h>
+#include <dxcapi.h>
 
 namespace coalpy
 {
@@ -33,7 +32,7 @@ struct Dx12CompileState
     std::string filePath;
     std::string mainFn;
     ShaderHandle shaderHandle;
-    Dx12CompileArgs compileArgs;
+    DxcCompileArgs compileArgs;
     AsyncFileHandle readStep;
     Task compileStep;
     std::set<FileLookup> files;
