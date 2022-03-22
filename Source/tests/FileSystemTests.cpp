@@ -187,7 +187,7 @@ void testFileWatcher(TestContext& ctx)
         CPY_ASSERT_FMT(successes[i], "Failed writting file \"%s\"", fileName.c_str());
     }
     
-    FileWatchDesc fwdesc { 100 };
+    FileWatchDesc fwdesc { 0 };
     IFileWatcher& fileWatcher = *IFileWatcher::create(fwdesc);
     fileWatcher.start();
 

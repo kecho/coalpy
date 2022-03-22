@@ -3,6 +3,9 @@
 #include <coalpy.tasks/ThreadQueue.h>
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <chrono>
+#include <thread>
 #include <shared_mutex>
 #include "FileWatcher.h"
 
@@ -160,7 +163,41 @@ bool waitListenForDirs(FileWatchState& state, int millisecondsToWait)
         }
     }
 #elif defined(__linux__)
+    const size_t fileName = 64;
+    const size_t maxEvents = 512;
+    const size_t buffLen = maxEvents * (sizeof(struct inotify_event) + fileName);
 
+    char eventBuffer[buffLen];
+    ssize_t bytesRead = ::read(state.inotifyInstance, eventBuffer, buffLen);
+    ssize_t i = 0;
+
+    while (i < bytesRead)
+    {
+        struct inotify_event *event = (struct inotify_event *) &eventBuffer[i];
+        if(event->len)
+        {
+            if ( event->mask & IN_MODIFY )
+            {
+                //find the watch descriptor
+                std::stringstream ss;
+                for (int k = 0; k < (int)state.handles.size(); ++k)
+                {
+                    auto wd = state.handles[k];
+                    if (wd != event->wd)
+                        continue;
+                    
+                    const auto& dirName = state.directories[k];
+                    ss << dirName;
+                    if (!dirName.empty() && dirName[dirName.size() - 1] != '/')
+                        ss << '/';
+                    break;
+                }
+                ss << event->name;
+                caughtFiles.insert(ss.str());
+            }
+        }
+        i += sizeof(struct inotify_event) + event->len;
+    }
 #endif
 
     if (!caughtFiles.empty())
@@ -168,6 +205,8 @@ bool waitListenForDirs(FileWatchState& state, int millisecondsToWait)
         for (auto* listener : state.listeners)
             listener->onFilesChanged(caughtFiles);
     }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(millisecondsToWait));
 
     return true;
 }
