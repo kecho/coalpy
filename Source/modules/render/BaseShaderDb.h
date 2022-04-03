@@ -39,14 +39,7 @@ public:
     void setParentDevice(render::IDevice* device) { m_parentDevice = device; }
     render::IDevice* parentDevice() const { return m_parentDevice; }
 
-private:
-    void preparePdbDir();
-    void prepareIoJob(CompileState& state, const std::string& resolvedPath);
-    void prepareCompileJobs(CompileState& state);
-
-    ShaderDbDesc m_desc;
-    DxcCompiler m_compiler;
-
+protected:
     struct ShaderFileRecipe
     {
         ShaderType type;
@@ -69,10 +62,22 @@ private:
         std::atomic<ShaderGPUPayload> payload;
     };
 
-    ShaderState& createShaderState(ShaderHandle& outHandle);
+    virtual void onCreateComputePayload(const ShaderHandle& handle, ShaderState& state) = 0;
+
+    ShaderDbDesc m_desc;
+    render::IDevice* m_parentDevice = nullptr;
 
     mutable std::shared_mutex m_shadersMutex;
     HandleContainer<ShaderHandle, ShaderState*> m_shaders;
+
+private:
+    void preparePdbDir();
+    void prepareIoJob(CompileState& state, const std::string& resolvedPath);
+    void prepareCompileJobs(CompileState& state);
+
+    DxcCompiler m_compiler;
+
+    ShaderState& createShaderState(ShaderHandle& outHandle);
 
     void startLiveEdit();
     void stopLiveEdit();
@@ -82,11 +87,11 @@ private:
     using ShaderHandleToFilesMap = std::unordered_map<ShaderHandle, std::set<FileLookup>>;
     FileToShaderHandlesMap m_fileToShaders;
     ShaderHandleToFilesMap m_shadersToFiles;
-    render::IDevice* m_parentDevice = nullptr;
     std::vector<std::string> m_additionalPaths;
 
     bool m_pdbDirReady = false;
     bool m_createdPdbDir = false;
+
 };
 
 }

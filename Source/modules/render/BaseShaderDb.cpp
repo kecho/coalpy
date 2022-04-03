@@ -13,6 +13,11 @@
 #include <coalpy.core/ByteBuffer.h>
 
 #include <iostream>
+#ifdef _WIN32
+#include <windows.h>
+#elif defined(__linux__)
+#include <dlfcn.h>
+#endif
 #include <dxcapi.h>
 
 namespace coalpy
@@ -79,14 +84,7 @@ BaseShaderDb::~BaseShaderDb()
         if (state->shaderBlob)
             state->shaderBlob->Release();
 
-        //TODO
-        //if (state->csPso)
-        //{
-        //    ID3D12PipelineState* oldPso = state->csPso;
-        //    if (m_parentDevice)
-        //        m_parentDevice->deferRelease(*oldPso);
-        //    oldPso->Release();
-        //}
+        //onDestroyPayload(*state); //cannot be called becase base VT was destroyed.
         delete state;
     });
 
@@ -437,13 +435,8 @@ void BaseShaderDb::resolve(ShaderHandle handle)
         {
             std::shared_lock lock(m_shadersMutex);
             
-            //TODO
-            //if (m_parentDevice != nullptr && shaderState->recipe.type == ShaderType::Compute && compileState->success)
-            //{
-            //    bool psoResult = updateComputePipelineState(*shaderState);
-            //    if (!psoResult && m_desc.onErrorFn != nullptr)
-            //        m_desc.onErrorFn(handle, shaderState->debugName.c_str(), "Compute PSO creation failed. Check D3D12 error log.");
-            //}
+            if (m_parentDevice != nullptr && shaderState->recipe.type == ShaderType::Compute && compileState->success)
+                onCreateComputePayload(handle, *shaderState);
 
             delete compileState;
 
@@ -451,32 +444,6 @@ void BaseShaderDb::resolve(ShaderHandle handle)
         }
     }
 }
-
-/*
-TODO
-bool BaseShaderDb::updateComputePipelineState(ShaderState& state)
-{
-    CPY_ASSERT(m_parentDevice != nullptr);
-    D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
-    desc.pRootSignature = &m_parentDevice->defaultComputeRootSignature();
-    if (!state.shaderBlob)
-        return false;
-
-    desc.CS.pShaderBytecode = state.shaderBlob->GetBufferPointer();
-    desc.CS.BytecodeLength = state.shaderBlob->GetBufferSize();
-    ID3D12PipelineState* pso;
-    HRESULT result = m_parentDevice->device().CreateComputePipelineState(&desc, DX_RET(pso));
-    ID3D12PipelineState* oldPso = state.csPso;
-    state.csPso = pso;
-    if (oldPso)
-    {
-        if (m_parentDevice)
-            m_parentDevice->deferRelease(*oldPso);
-        oldPso->Release();
-    }
-    return result == S_OK;
-}
-*/
 
 bool BaseShaderDb::isValid(ShaderHandle handle) const
 {
