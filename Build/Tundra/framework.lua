@@ -56,7 +56,8 @@ function _G.BuildModules(sourceDir, moduleMap, extraIncludes, extraDeps)
                     Dir = _G.GetModuleDir(sourceDir, k),
                     Extensions = { ".cpp", ".h", ".hpp" },
                     Filters = {
-                        { Pattern ="dx12", Config = "win64-*-*" }
+                        { Pattern ="dx12", Config = "win64-*-*" },
+                        { Pattern ="vulkan", Config = "linux-*-*" }
                     },
                     Recursive =  true
                 }

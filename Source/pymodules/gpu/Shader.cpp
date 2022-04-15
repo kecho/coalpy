@@ -68,7 +68,7 @@ static bool parseStringList(ModuleState& state, PyObject* pyObj, std::vector<std
             return false;
         }
 
-        std::wstring wstr = (wchar_t*)PyUnicode_AS_DATA(element);
+        std::wstring wstr = (wchar_t*)PyUnicode_DATA(element);
         outList.push_back(ws2s(wstr));
     }
 

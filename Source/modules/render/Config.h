@@ -1,13 +1,21 @@
 #pragma once
 
 #ifdef _WIN32
-
 #define ENABLE_DX12 1
+#define ENABLE_VULKAN 0
+#endif
 
-#else
-
+#ifdef __linux__
 #define ENABLE_DX12 0
+#define ENABLE_VULKAN 1
+#endif
 
+#ifndef ENABLE_DX12
+#define ENABLE_DX12 0
+#endif
+
+#ifndef ENABLE_VULKAN
+#define ENABLE_VULKAN 0
 #endif
 
 #define ENABLE_RENDER_RESOURCE_NAMES 1

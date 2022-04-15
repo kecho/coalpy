@@ -35,9 +35,9 @@ Build {
                 CPPPATH = {
                     "$(OBJECTDIR)$(SEP)Source"
                 },
-                CXXOPTS = { "-std=c++17", "-fPIC" },
+                CXXOPTS = { "-std=c++17", "-fPIC", "-Wno-multichar" },
                 CXXOPTS_DEBUG   = { "-ggdb" },
-                CCOPTS = { "-fPIC" },
+                CCOPTS = { "-fPIC", "-Wno-multichar" },
             },
             ReplaceEnv = {
                 LD = "$(CXX)"

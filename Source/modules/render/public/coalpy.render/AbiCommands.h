@@ -11,6 +11,8 @@ namespace render
 typedef uint64_t MemOffset;
 typedef uint64_t MemSize;
 
+const int someIntVal = 'CMDL';
+
 enum class AbiCmdTypes : unsigned int
 {
     CommandListSentinel = 'CMDL',
