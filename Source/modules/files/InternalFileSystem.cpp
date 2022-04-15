@@ -21,6 +21,7 @@
 namespace coalpy
 {
 #ifdef _WIN32
+#define SEP '\\'
 namespace InternalFileSystem
 {
     struct WindowsFile
@@ -228,7 +229,7 @@ namespace InternalFileSystem
     void getPathInfo(const std::string& filePath, PathInfo& pathInfo)
     {
         pathInfo = {};
-        auto dirCandidates = ClTokenizer::splitString(filePath, '\\');
+        auto dirCandidates = ClTokenizer::splitString(filePath, SEP);
         for (auto d : dirCandidates)
             if (d != "")
                 pathInfo.directoryList.push_back(d);
@@ -242,7 +243,7 @@ namespace InternalFileSystem
         std::stringstream ss;
         for (auto& d : pathInfo.directoryList)
         {
-            ss << d  << "\\";
+            ss << d  << SEP;
         }
         pathInfo.path = std::move(ss.str());
     }
@@ -365,6 +366,7 @@ namespace InternalFileSystem
 
 }
 #elif defined(__linux__)
+#define SEP '/'
 //TODO stubbing linux methods. Fill in with posix??
 namespace InternalFileSystem
 {
@@ -651,7 +653,7 @@ namespace FileUtils
         {
             int currIndex = (int)cpy.size() - 1 - i; 
             char c = cpy[currIndex];
-            if (c == '\\')
+            if (c == SEP)
             {
                 foundIndex = currIndex;
                 break;

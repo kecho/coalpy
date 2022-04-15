@@ -19,6 +19,9 @@ VkDevice::VkDevice(const DeviceConfig& config)
         CPY_ASSERT_MSG(m_shaderDb->parentDevice() == nullptr, "shader database can only belong to 1 and only 1 device");
         m_shaderDb->setParentDevice(this);
     }
+
+    m_info = {};
+    m_info.valid = true;
 }
 
 VkDevice::~VkDevice()

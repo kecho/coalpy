@@ -122,7 +122,15 @@ void freeModule(void* modulePtr)
 PyObject* getAdapters(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     std::vector<render::DeviceInfo> infos;
-    render::IDevice::enumerate(render::DevicePlat::Dx12, infos);
+
+#if defined(_WIN32)
+    auto platform = render::DevicePlat::Dx12;
+#elif defined(__linux__)
+    auto platform = render::DevicePlat::Vulkan;
+#elif
+    #error "Platform not supported";
+#endif
+    render::IDevice::enumerate(platform, infos);
     
     PyObject* newList = PyList_New(0);
     for (auto inf : infos)

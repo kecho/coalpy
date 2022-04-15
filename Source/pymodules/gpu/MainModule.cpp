@@ -11,14 +11,14 @@
 #include <coalpy.core/Assert.h>
 #include <coalpy.files/Utils.h> 
 #include <coalpy.core/ByteBuffer.h> 
+#include <coalpy.core/ClTokenizer.h> 
 #include <coalpy.window/WindowDefs.h>
+#include <string>
 #include "CoalpyTypeObject.h"
-
 
 coalpy::ModuleOsHandle g_ModuleInstance = nullptr;
 coalpy::gpu::TypeList g_allTypes;
-#define MAX_PY_MOD_PATH 9056
-char g_ModuleFilePath[MAX_PY_MOD_PATH];
+std::string g_ModuleFilePath;
 
 #if _WIN32
 
@@ -31,8 +31,12 @@ BOOL WINAPI DllMain(
     { 
         case DLL_PROCESS_ATTACH:
             g_ModuleInstance = (coalpy::ModuleOsHandle)hinstDLL;
-            g_ModuleFilePath[0] = '\0';
-            GetModuleFileNameA(hinstDLL, g_ModuleFilePath, MAX_PY_MOD_PATH);
+            
+            #define MAX_PY_MOD_PATH 9056
+            char local_ModuleFilePath[MAX_PY_MOD_PATH];
+            local_ModuleFilePath[0] = '\0';
+            GetModuleFileNameA(hinstDLL, local_ModuleFilePath, MAX_PY_MOD_PATH);
+            g_ModuleFilePath = local_ModuleFilePath;
             break;
 
         case DLL_PROCESS_DETACH:
@@ -49,6 +53,32 @@ BOOL WINAPI DllMain(
     return TRUE;
 }
 
+void setupModule()
+{
+    /*Empty*/
+}
+
+#elif defined(__linux__)
+
+#include <dlfcn.h>
+
+void forceLinkUse()
+{
+    coalpy::ByteBuffer bb;
+    coalpy::FileLookup fl;
+    void* fn = (void*)&coalpy::ClTokenizer::splitString;
+}
+
+void setupModule()
+{
+    forceLinkUse();
+    Dl_info dl_info;
+    dladdr((void*)setupModule, &dl_info);
+    g_ModuleFilePath = dl_info.dli_fname;
+}
+
+#else
+#error "Platform not supported"
 #endif
 
 static const char* s_Documentation = ""
@@ -60,15 +90,9 @@ static const char* s_Documentation = ""
     "Start by creating a shader, create a window, passing an onRender function, create a command list\n"
     "and start using your GPU!\n";
 
-void forceLinkUse()
-{
-    coalpy::ByteBuffer bb;
-    coalpy::FileLookup fl;
-}
-
 PyMODINIT_FUNC PyInit_gpu(void)
 {
-    forceLinkUse();
+    setupModule();
     static PyModuleDef moduleDef = {
         PyModuleDef_HEAD_INIT,
         "gpu", //name

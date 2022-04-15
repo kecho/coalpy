@@ -104,6 +104,11 @@ namespace coalpy
         {
             DeviceConfig config;
             config.shaderDb = db;
+#if defined(_WIN)
+            config.platform = DevicePlat::Dx12;
+#elif defined(__linux__)
+            config.platform = DevicePlat::Vulkan;
+#endif
             device = IDevice::create(config);
         }
     }

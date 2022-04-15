@@ -10,10 +10,11 @@
 #include <coalpy.texture/ITextureLoader.h>
 #include "CoalpyTypeObject.h"
 #include "Window.h"
+#include <string>
 #include <iostream>
 
 extern coalpy::ModuleOsHandle g_ModuleInstance;
-extern char g_ModuleFilePath[];
+extern std::string g_ModuleFilePath;
 
 namespace coalpy
 {
@@ -172,6 +173,8 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
         devConfig.platform = render::DevicePlat::Dx12;
 #elif defined(__linux__)
         devConfig.platform = render::DevicePlat::Vulkan;
+#elif
+    #error "Platform not supported";
 #endif
         devConfig.moduleHandle = g_ModuleInstance;
         devConfig.shaderDb = m_db;
