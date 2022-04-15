@@ -3,6 +3,8 @@
 
 #include "VkDevice.h"
 #include "VkShaderDb.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_vulkan.h>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
 #include <iostream>
@@ -18,6 +20,39 @@ const std::set<std::string>& getRequestedLayerNames()
         layers.emplace("VK_LAYER_KHRONOS_validation");
     }
     return layers;
+}
+
+bool getAvailableVulkanExtensions(SDL_Window* window, std::vector<std::string>& outExtensions)
+{
+    // Figure out the amount of extensions vulkan needs to interface with the os windowing system
+    // This is necessary because vulkan is a platform agnostic API and needs to know how to interface with the windowing system
+    unsigned int ext_count = 0;
+    if (!SDL_Vulkan_GetInstanceExtensions(window, &ext_count, nullptr))
+    {
+        std::cout << "Unable to query the number of Vulkan instance extensions\n";
+        return false;
+    }
+
+    // Use the amount of extensions queried before to retrieve the names of the extensions
+    std::vector<const char*> ext_names(ext_count);
+    if (!SDL_Vulkan_GetInstanceExtensions(window, &ext_count, ext_names.data()))
+    {
+        std::cout << "Unable to query the number of Vulkan instance extension names\n";
+        return false;
+    }
+
+    // Display names
+    std::cout << "found " << ext_count << " Vulkan instance extensions:\n";
+    for (unsigned int i = 0; i < ext_count; i++)
+    {
+        std::cout << i << ": " << ext_names[i] << "\n";
+        outExtensions.emplace_back(ext_names[i]);
+    }
+
+    // Add debug display extension, we need this to relay debug messages
+    outExtensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+    std::cout << "\n";
+    return true;
 }
 
 bool getAvailableVulkanLayers(std::vector<std::string>& outLayers)
