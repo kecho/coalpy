@@ -61,6 +61,7 @@ local Libraries = {
     {
         "pthread",
         "dl",
+        "vulkan",
         "Half",
         "Iex",
         "IexMath",

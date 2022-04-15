@@ -19,6 +19,11 @@ void IDevice::enumerate(DevicePlat platform, std::vector<DeviceInfo>& outputList
     if (platform == DevicePlat::Dx12)
         Dx12Device::enumerate(outputList);
 #endif
+
+#if ENABLE_VULKAN
+    if (platform == DevicePlat::Vulkan)
+        VkDevice::enumerate(outputList);
+#endif
 }
 
 IDevice * IDevice::create(const DeviceConfig& config)
