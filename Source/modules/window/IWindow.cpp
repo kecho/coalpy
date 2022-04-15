@@ -1,4 +1,5 @@
 #include <coalpy.window/IWindow.h> 
+#include <Config.h>
 
 #if ENABLE_WIN32_WINDOW
 #include "Win32Window.h"

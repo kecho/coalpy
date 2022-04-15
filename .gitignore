@@ -3,4 +3,6 @@ t2-output
 *.swp
 *.swo
 tags
+imgui.ini
+.shader_pdb
 
