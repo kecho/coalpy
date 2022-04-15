@@ -168,6 +168,11 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
 
     {
         render::DeviceConfig devConfig;
+#if defined(_WIN32)
+        devConfig.platform = render::DevicePlat::Dx12;
+#elif defined(__linux__)
+        devConfig.platform = render::DevicePlat::Vulkan;
+#endif
         devConfig.moduleHandle = g_ModuleInstance;
         devConfig.shaderDb = m_db;
         devConfig.index = index;

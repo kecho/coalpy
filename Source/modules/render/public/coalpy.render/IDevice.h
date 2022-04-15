@@ -20,7 +20,8 @@ class CommandList;
 
 enum class DevicePlat
 {
-    Dx12
+    Dx12,
+    Vulkan
 };
 
 enum class DeviceFlags : int

@@ -1,7 +1,12 @@
 #include "TDevice.h"
 #include <Config.h>
-#include <dx12/Dx12Device.h>
 #include <coalpy.core/Assert.h>
+#if ENABLE_DX12
+#include <dx12/Dx12Device.h>
+#endif
+#if ENABLE_VULKAN
+#include <vulkan/VkDevice.h>
+#endif
 
 namespace coalpy
 {
@@ -25,6 +30,11 @@ IDevice * IDevice::create(const DeviceConfig& config)
 #if ENABLE_DX12
     if (config.platform == DevicePlat::Dx12)
         return new Dx12Device(config);
+#endif
+
+#if ENABLE_VULKAN
+    if (config.platform == DevicePlat::Vulkan)
+        return new VkDevice(config);
 #endif
 
     return nullptr;

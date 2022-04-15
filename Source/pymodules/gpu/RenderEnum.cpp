@@ -32,7 +32,7 @@ CoalpyGenericEnumTypeObject* RenderEnum::constructEnumType(const char* typeName,
         PyMemberDef def = {
             entry.name,
             T_INT,
-            offsetof(RenderEnum, values) + sizeof(int)*(Py_ssize_t)counts,
+            (Py_ssize_t)(offsetof(RenderEnum, values) + sizeof(int)*(Py_ssize_t)counts),
             READONLY,
             entry.docs };
         ctp->memberDefs.push_back(def);
