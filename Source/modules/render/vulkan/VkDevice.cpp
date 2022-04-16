@@ -22,12 +22,14 @@ const std::set<std::string>& getRequestedLayerNames()
     return layers;
 }
 
-bool getAvailableVulkanExtensions(SDL_Window* window, std::vector<std::string>& outExtensions)
+bool getAvailableVulkanExtensions(std::vector<std::string>& outExtensions)
 {
+    auto* dummyWindow = SDL_CreateWindow("dummy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1, 1, SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN);
+
     // Figure out the amount of extensions vulkan needs to interface with the os windowing system
     // This is necessary because vulkan is a platform agnostic API and needs to know how to interface with the windowing system
     unsigned int ext_count = 0;
-    if (!SDL_Vulkan_GetInstanceExtensions(window, &ext_count, nullptr))
+    if (!SDL_Vulkan_GetInstanceExtensions(dummyWindow, &ext_count, nullptr))
     {
         std::cout << "Unable to query the number of Vulkan instance extensions\n";
         return false;
@@ -35,7 +37,7 @@ bool getAvailableVulkanExtensions(SDL_Window* window, std::vector<std::string>& 
 
     // Use the amount of extensions queried before to retrieve the names of the extensions
     std::vector<const char*> ext_names(ext_count);
-    if (!SDL_Vulkan_GetInstanceExtensions(window, &ext_count, ext_names.data()))
+    if (!SDL_Vulkan_GetInstanceExtensions(dummyWindow, &ext_count, ext_names.data()))
     {
         std::cout << "Unable to query the number of Vulkan instance extension names\n";
         return false;
@@ -52,6 +54,8 @@ bool getAvailableVulkanExtensions(SDL_Window* window, std::vector<std::string>& 
     // Add debug display extension, we need this to relay debug messages
     outExtensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
     std::cout << "\n";
+
+    //SDL_DestroyWindow(dummyWindow);
     return true;
 }
 
@@ -125,8 +129,14 @@ VkDevice::~VkDevice()
 
 void VkDevice::enumerate(std::vector<DeviceInfo>& outputList)
 {
-    std::vector<std::string> dummy;
-    getAvailableVulkanLayers(dummy);
+    int ret = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+    CPY_ASSERT_MSG(ret == 0, "Failed initializing SDL2");
+
+    std::vector<std::string> layers;
+    getAvailableVulkanLayers(layers);
+
+    std::vector<std::string> exts;
+    getAvailableVulkanExtensions(exts);
 }
 
 TextureResult VkDevice::createTexture(const TextureDesc& desc)
