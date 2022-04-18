@@ -14,11 +14,11 @@
 namespace coalpy
 {
 
-class VkShaderDb : public BaseShaderDb
+class VulkanShaderDb : public BaseShaderDb
 {
 public:
-    explicit VkShaderDb(const ShaderDbDesc& desc);
-    virtual ~VkShaderDb();
+    explicit VulkanShaderDb(const ShaderDbDesc& desc);
+    virtual ~VulkanShaderDb();
 
 private:
     virtual void onCreateComputePayload(const ShaderHandle& handle, ShaderState& state) override;

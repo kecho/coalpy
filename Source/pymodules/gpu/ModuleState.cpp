@@ -149,9 +149,18 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
     FileUtils::getDirName(dllname, modulePath);
     modulePath += "/resources/";
 
+#if defined(_WIN32)
+    auto platform = render::DevicePlat::Dx12;
+#elif defined(__linux__)
+    auto platform = render::DevicePlat::Vulkan;
+#elif
+    #error "Platform not supported";
+#endif
+
     {
 
         ShaderDbDesc desc;
+        desc.platform = platform;
         desc.compilerDllPath = modulePath.c_str();
         desc.resolveOnDestruction = true; //this is so there is a nice clean destruction
         desc.fs = m_fs;
@@ -169,13 +178,7 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
 
     {
         render::DeviceConfig devConfig;
-#if defined(_WIN32)
-        devConfig.platform = render::DevicePlat::Dx12;
-#elif defined(__linux__)
-        devConfig.platform = render::DevicePlat::Vulkan;
-#elif
-    #error "Platform not supported";
-#endif
+        devConfig.platform = platform;
         devConfig.moduleHandle = g_ModuleInstance;
         devConfig.shaderDb = m_db;
         devConfig.index = index;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <coalpy.core/GenericHandle.h>
+#include <coalpy.render/IDevice.h>
 #include <functional>
 #include <vector>
 #include <string>
@@ -61,6 +62,7 @@ using OnShaderErrorFn = std::function<void(ShaderHandle handle, const char* shad
 struct ShaderDbDesc
 {
     //optional if we want to specify a path for the compiler library
+    render::DevicePlat platform = render::DevicePlat::Dx12;
     const char* compilerDllPath = nullptr;
     IFileSystem* fs = nullptr;
     ITaskSystem* ts = nullptr;

@@ -6,7 +6,7 @@
 #endif
 
 #if ENABLE_VULKAN
-#include "vulkan/VkShaderDb.h"
+#include "vulkan/VulkanShaderDb.h"
 #endif
 
 namespace coalpy
@@ -15,10 +15,14 @@ namespace coalpy
 IShaderDb* IShaderDb::create(const ShaderDbDesc& desc)
 {
 #if ENABLE_DX12
-    return new Dx12ShaderDb(desc);
-#else
-    return new VkShaderDb(desc);
+    if (desc.platform == render::DevicePlat::Dx12)
+        return new Dx12ShaderDb(desc);
+#elif ENABLE_VULKAN
+    if (desc.platform == render::DevicePlat::Vulkan)
+        return new VulkanShaderDb(desc);
 #endif
+
+    return nullptr;
 }
 
 }

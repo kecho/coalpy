@@ -1,27 +1,27 @@
 #include <Config.h>
-#include "VkShaderDb.h" 
+#include "VulkanShaderDb.h" 
 
 #if ENABLE_VULKAN
 
 namespace coalpy
 {
 
-VkShaderDb::VkShaderDb(const ShaderDbDesc& desc)
+VulkanShaderDb::VulkanShaderDb(const ShaderDbDesc& desc)
 : BaseShaderDb(desc)
 {
 }
 
-void VkShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderState& shaderState)
+void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderState& shaderState)
 {
     //TODO: create vulkan payload.
 }
 
-void VkShaderDb::onDestroyPayload(ShaderState& state)
+void VulkanShaderDb::onDestroyPayload(ShaderState& state)
 {
     //TODO: destroy vulkan payload
 }
 
-VkShaderDb::~VkShaderDb()
+VulkanShaderDb::~VulkanShaderDb()
 {
     m_shaders.forEach([this](ShaderHandle handle, ShaderState* state)
     {

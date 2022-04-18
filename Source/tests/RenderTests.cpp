@@ -92,8 +92,16 @@ namespace coalpy
         CPY_ASSERT(db == nullptr);
         CPY_ASSERT(device == nullptr);
 
+#if defined(_WIN)
+        auto platform = DevicePlat::Dx12;
+#elif defined(__linux__)
+        auto platform = DevicePlat::Vulkan;
+#else
+        #error "Platform not supported"
+#endif
+
         {
-            ShaderDbDesc desc = { rootResourceDir.c_str(), fs, ts };
+            ShaderDbDesc desc = { platform, rootResourceDir.c_str(), fs, ts };
             desc.onErrorFn = [](ShaderHandle handle, const char* shaderName, const char* shaderErrorStr)
             {
                 std::cerr << shaderName << ":" << shaderErrorStr << std::endl;
@@ -104,11 +112,7 @@ namespace coalpy
         {
             DeviceConfig config;
             config.shaderDb = db;
-#if defined(_WIN)
-            config.platform = DevicePlat::Dx12;
-#elif defined(__linux__)
-            config.platform = DevicePlat::Vulkan;
-#endif
+            config.platform = platform;
             device = IDevice::create(config);
         }
     }

@@ -20,5 +20,6 @@
 
 #define ENABLE_RENDER_RESOURCE_NAMES 1
 #define DX_RET(x) __uuidof(x), (void**)&x
-#define DX_OK(x) { HRESULT _r = x; CPY_ASSERT(_r == S_OK) }
+#define DX_OK(x) { HRESULT _r = x; CPY_ASSERT(_r == S_OK); }
+#define VK_OK(x) { VkResult _r = x; CPY_ASSERT(_r == VK_SUCCESS); }
 

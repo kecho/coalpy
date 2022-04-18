@@ -267,6 +267,14 @@ public:
 
     virtual TestContext* createContext()
     {
+        #if defined(_WIN32)
+            auto platform = render::DevicePlat::Dx12;
+        #elif defined(__linux__)
+            auto platform = render::DevicePlat::Vulkan;
+        #else
+            #error "Platform not supported"
+        #endif
+        
         auto testContext = new ShaderServiceContext();
         std::string resourceDir = ApplicationContext::get().resourceRootDir();
 
@@ -282,7 +290,7 @@ public:
         }
 
         {
-            ShaderDbDesc desc = { resourceDir.c_str(), testContext->fs, testContext->ts, nullptr };
+            ShaderDbDesc desc = { platform, resourceDir.c_str(), testContext->fs, testContext->ts, nullptr };
             testContext->db = IShaderDb::create(desc);
         }
 

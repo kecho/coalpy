@@ -5,7 +5,7 @@
 #include <dx12/Dx12Device.h>
 #endif
 #if ENABLE_VULKAN
-#include <vulkan/VkDevice.h>
+#include <vulkan/VulkanDevice.h>
 #endif
 
 namespace coalpy
@@ -22,7 +22,7 @@ void IDevice::enumerate(DevicePlat platform, std::vector<DeviceInfo>& outputList
 
 #if ENABLE_VULKAN
     if (platform == DevicePlat::Vulkan)
-        VkDevice::enumerate(outputList);
+        VulkanDevice::enumerate(outputList);
 #endif
 }
 
@@ -39,7 +39,7 @@ IDevice * IDevice::create(const DeviceConfig& config)
 
 #if ENABLE_VULKAN
     if (config.platform == DevicePlat::Vulkan)
-        return new VkDevice(config);
+        return new VulkanDevice(config);
 #endif
 
     return nullptr;

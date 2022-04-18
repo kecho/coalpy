@@ -4,6 +4,8 @@
 #include <TDevice.h>
 #endif
 
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 #include <coalpy.render/Resources.h>
 #include <unordered_map>
 #include <string>
@@ -11,16 +13,16 @@
 namespace coalpy
 {
 
-class VkShaderDb;
+class VulkanShaderDb;
 
 namespace render
 {
 
-class VkDevice : public TDevice<VkDevice>
+class VulkanDevice : public TDevice<VulkanDevice>
 {
 public:
-    VkDevice(const DeviceConfig& config);
-    virtual ~VkDevice();
+    VulkanDevice(const DeviceConfig& config);
+    virtual ~VulkanDevice();
 
     static void enumerate(std::vector<DeviceInfo>& outputList);
 
@@ -42,9 +44,13 @@ public:
     void internalReleaseWorkHandle(WorkHandle handle);
     ScheduleStatus internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle); 
 
+    VkInstance vkInstance() const { return m_vkInstance; }
 private:
     DeviceInfo m_info;
-    VkShaderDb* m_shaderDb;
+    VulkanShaderDb* m_shaderDb;
+    VkInstance m_vkInstance;
+    VkPhysicalDevice m_vkPhysicalDevice;
+    VkDevice m_vkDevice;
 };
 
 
