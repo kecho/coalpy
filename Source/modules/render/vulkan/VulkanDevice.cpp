@@ -225,17 +225,14 @@ bool createVulkanInstance(VkInstance& outInstance)
     unsigned int apiVersion;
     vkEnumerateInstanceVersion(&apiVersion);
 
-    // Copy layers
     std::vector<const char*> layerNames;
     for (const auto& layer : g_VkInstanceInfo.layerNames)
         layerNames.emplace_back(layer.c_str());
 
-    // Copy extensions
     std::vector<const char*> extNames;
     for (const auto& ext : g_VkInstanceInfo.extensionNames)
         extNames.emplace_back(ext.c_str());
 
-    // initialize the VkApplicationInfo structure
     VkApplicationInfo appInfo = {};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pNext = NULL;
@@ -245,7 +242,6 @@ bool createVulkanInstance(VkInstance& outInstance)
     appInfo.engineVersion = 1;
     appInfo.apiVersion = VK_API_VERSION_1_0;
 
-    // initialize the VkInstanceCreateInfo structure
     VkInstanceCreateInfo instInfo = {};
     instInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instInfo.pNext = NULL;
@@ -264,8 +260,30 @@ bool createVulkanInstance(VkInstance& outInstance)
         return false;
     }
 
+    ++g_VkInstanceInfo.refCount;
     cacheGPUDevices();
     return true;
+}
+
+int getGraphicsComputeQueueFamilyIndex(VkPhysicalDevice device)
+{
+    unsigned int famCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &famCount, nullptr);
+
+    std::vector<VkQueueFamilyProperties> famProps(famCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &famCount, famProps.data());
+
+
+    for (int i = 0; i < (int)famProps.size(); ++i)
+    {
+        const VkQueueFamilyProperties& props = famProps[i];
+        if (props.queueCount > 0 &&
+           (props.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0 &&
+           (props.queueFlags & VK_QUEUE_COMPUTE_BIT) != 0)
+            return i;
+    }
+
+    return -1;
 }
 
 }
@@ -276,7 +294,14 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
 {
     createVulkanInstance(m_vkInstance);
     int selectedDeviceIdx = std::min<int>(std::max<int>(config.index, 0), (int)g_VkInstanceInfo.vkGpus.size() - 1);
+    m_info = g_VkInstanceInfo.gpus[selectedDeviceIdx];
     m_vkPhysicalDevice = g_VkInstanceInfo.vkGpus[selectedDeviceIdx];
+
+    int queueFamIndex = getGraphicsComputeQueueFamilyIndex(m_vkPhysicalDevice);
+    CPY_ASSERT(queueFamIndex != -1);
+
+    if (queueFamIndex == -1)
+        std::cerr << "Could not find a compute queue for device selected" << std::endl;
 
     if (config.shaderDb)
     {
@@ -284,9 +309,6 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
         CPY_ASSERT_MSG(m_shaderDb->parentDevice() == nullptr, "shader database can only belong to 1 and only 1 device");
         m_shaderDb->setParentDevice(this);
     }
-
-    m_info = {};
-    m_info.valid = true;
 }
 
 VulkanDevice::~VulkanDevice()

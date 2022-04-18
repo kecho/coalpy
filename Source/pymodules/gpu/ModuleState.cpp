@@ -220,7 +220,14 @@ void ModuleState::destroyDevice()
 bool ModuleState::selectAdapter(int index, int flags, ShaderModel shaderModel, bool dumpPDBs)
 {
     std::vector<render::DeviceInfo> allAdapters;
-    render::IDevice::enumerate(render::DevicePlat::Dx12, allAdapters);
+#if defined(_WIN32)
+    auto platform = render::DevicePlat::Dx12;
+#elif defined(__linux__)
+    auto platform = render::DevicePlat::Vulkan;
+#elif
+    #error "Platform not supported";
+#endif
+    render::IDevice::enumerate(platform, allAdapters);
 
     if (allAdapters.empty())
     {
