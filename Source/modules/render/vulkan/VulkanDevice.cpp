@@ -3,8 +3,10 @@
 
 #include "VulkanDevice.h"
 #include "VulkanShaderDb.h"
+#if ENABLE_SDL_VULKAN
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
+#endif
 #include <iostream>
 #include <set>
 #include <vector>
@@ -63,33 +65,38 @@ const std::set<std::string>& getRequestedDeviceExtensionNames()
 
 bool getAvailableVulkanExtensions(std::vector<std::string>& outExtensions)
 {
+    unsigned int extCount = 0;
+#if ENABLE_SDL_VULKAN
     auto* dummyWindow = SDL_CreateWindow("dummy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1, 1, SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN);
 
     // Figure out the amount of extensions vulkan needs to interface with the os windowing system
     // This is necessary because vulkan is a platform agnostic API and needs to know how to interface with the windowing system
-    unsigned int ext_count = 0;
-    if (!SDL_Vulkan_GetInstanceExtensions(dummyWindow, &ext_count, nullptr))
+    if (!SDL_Vulkan_GetInstanceExtensions(dummyWindow, &extCount, nullptr))
     {
         CPY_ERROR_MSG(false, "Unable to query the number of Vulkan instance extensions");
         return false;
     }
 
+    std::vector<const char*> extNames(extCount);
     // Use the amount of extensions queried before to retrieve the names of the extensions
-    std::vector<const char*> ext_names(ext_count);
-    if (!SDL_Vulkan_GetInstanceExtensions(dummyWindow, &ext_count, ext_names.data()))
+    if (!SDL_Vulkan_GetInstanceExtensions(dummyWindow, &extCount, extNames.data()))
     {
         CPY_ERROR_MSG(false, "Unable to query the number of Vulkan instance extension names");
         return false;
     }
 
     // Display names
-    for (unsigned int i = 0; i < ext_count; i++)
-        outExtensions.emplace_back(ext_names[i]);
+    for (unsigned int i = 0; i < extCount; i++)
+        outExtensions.emplace_back(extNames[i]);
+#endif
+
 
     // Add debug display extension, we need this to relay debug messages
     outExtensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 
+#if ENABLE_SDL_VULKAN
     SDL_DestroyWindow(dummyWindow);
+#endif
     return true;
 }
 
@@ -222,8 +229,10 @@ bool createVulkanInstance(VkInstance& outInstance)
         return true;
     }
 
+#if ENABLE_SDL_VULKAN
     int ret = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
     CPY_ASSERT_MSG(ret == 0, "Failed initializing SDL2");
+#endif
 
     bool retSuccess;
     retSuccess = getAvailableVulkanLayers(g_VkInstanceInfo.layerNames);
