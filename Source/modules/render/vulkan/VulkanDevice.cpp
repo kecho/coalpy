@@ -51,6 +51,16 @@ const std::set<std::string>& getRequestedLayerNames()
     return layers;
 }
 
+const std::set<std::string>& getRequestedDeviceExtensionNames()
+{
+    static std::set<std::string> layers;
+    if (layers.empty())
+    {
+        layers.emplace(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+    }
+    return layers;
+}
+
 bool getAvailableVulkanExtensions(std::vector<std::string>& outExtensions)
 {
     auto* dummyWindow = SDL_CreateWindow("dummy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1, 1, SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN);
@@ -286,6 +296,63 @@ int getGraphicsComputeQueueFamilyIndex(VkPhysicalDevice device)
     return -1;
 }
 
+VkDevice createVkDevice(
+    VkPhysicalDevice physicalDevice,
+    int queueFamilyIdx)
+{
+    std::vector<const char*> layerNames;
+    for (const auto& layer : g_VkInstanceInfo.layerNames)
+        layerNames.emplace_back(layer.c_str());
+
+    // Get the number of available extensions for our graphics card
+    uint32_t devicePropertyCount = 0;
+    VK_OK(vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &devicePropertyCount, NULL))
+
+    // Acquire their actual names
+    std::vector<VkExtensionProperties> deviceProperties(devicePropertyCount);
+    VK_OK(vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &devicePropertyCount, deviceProperties.data()))
+
+    // Match names against requested extension
+    std::vector<const char*> devicePropertyNames;
+    const std::set<std::string>& requiredExtensionNames = getRequestedDeviceExtensionNames();
+    for (const auto& extProperty : deviceProperties)
+    {
+        auto it = requiredExtensionNames.find(std::string(extProperty.extensionName));
+        if (it != requiredExtensionNames.end())
+            devicePropertyNames.emplace_back(extProperty.extensionName);
+    }
+
+    // Create queue information structure used by device based on the previously fetched queue information from the physical device
+    // We create one command processing queue for graphics
+    VkDeviceQueueCreateInfo queueCreateInfo;
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = queueFamilyIdx;
+    queueCreateInfo.queueCount = 1;
+    std::vector<float> queuePrio = { 1.0f };
+    queueCreateInfo.pQueuePriorities = queuePrio.data();
+    queueCreateInfo.pNext = NULL;
+    queueCreateInfo.flags = 0;
+
+    // Device creation information
+    VkDeviceCreateInfo createInfo;
+    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    createInfo.queueCreateInfoCount = 1;
+    createInfo.pQueueCreateInfos = &queueCreateInfo;
+    createInfo.ppEnabledLayerNames = layerNames.data();
+    createInfo.enabledLayerCount = static_cast<uint32_t>(layerNames.size());
+    createInfo.ppEnabledExtensionNames = devicePropertyNames.data();
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(devicePropertyNames.size());
+    createInfo.pNext = NULL;
+    createInfo.pEnabledFeatures = NULL;
+    createInfo.flags = 0;
+
+    VkDevice outDevice = {};
+    // Finally we're ready to create a new device
+    VK_OK(vkCreateDevice(physicalDevice, &createInfo, nullptr, &outDevice));
+
+    return outDevice;
+}
+
 }
 
 VulkanDevice::VulkanDevice(const DeviceConfig& config)
@@ -299,6 +366,8 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
 
     int queueFamIndex = getGraphicsComputeQueueFamilyIndex(m_vkPhysicalDevice);
     CPY_ASSERT(queueFamIndex != -1);
+
+    m_vkDevice = createVkDevice(m_vkPhysicalDevice, queueFamIndex);
 
     if (queueFamIndex == -1)
         std::cerr << "Could not find a compute queue for device selected" << std::endl;
@@ -316,6 +385,7 @@ VulkanDevice::~VulkanDevice()
     if (m_shaderDb && m_shaderDb->parentDevice() == this)
         m_shaderDb->setParentDevice(nullptr);
 
+    vkDestroyDevice(m_vkDevice, nullptr); 
     destroyVulkanInstance(m_vkInstance);    
 }
 
