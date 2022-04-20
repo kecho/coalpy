@@ -360,7 +360,8 @@ PyObject* run(PyObject* self, PyObject* args)
             if (w->uiRenderer != nullptr)
                 w->uiRenderer->render();
 
-            w->display->present();
+            if (w->display != nullptr)
+                w->display->present();
             Py_DECREF(renderArgs->window);
             renderArgs->window = nullptr;
             Py_DECREF(renderArgs->userData);

@@ -54,6 +54,8 @@ public:
 
     virtual const WindowInputState& inputState() const { return m_inputState; }
 
+    static void run(const WindowRunArgs& runArgs);
+
 private:
     void createWindow();
     void destroyWindow();

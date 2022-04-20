@@ -8,10 +8,10 @@
 #include <iostream>
 #endif
 
+#if ENABLE_WIN32_WINDOW
+
 namespace coalpy
 {
-
-#if ENABLE_WIN32_WINDOW
 
 namespace
 {
@@ -421,11 +421,8 @@ LRESULT CALLBACK Win32Window::win32WinProc(HWND hwnd, UINT message, WPARAM wPara
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
-#endif
-
-void IWindow::run(const WindowRunArgs& args)
+void Win32Window::run(const WindowRunArgs& args)
 {
-#if ENABLE_WIN32_WINDOW
     for (auto w : Win32Window::s_allWindows)
         w->setListener(args.listener);
 
@@ -447,9 +444,9 @@ void IWindow::run(const WindowRunArgs& args)
 
     for (auto w : Win32Window::s_allWindows)
         w->setListener(nullptr);
+}
+
+
+}
+
 #endif
-}
-
-
-}
-

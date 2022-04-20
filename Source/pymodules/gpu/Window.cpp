@@ -145,8 +145,11 @@ int Window::init(PyObject* self, PyObject * vargs, PyObject* kwds)
         window.display = device.createDisplay(displayConfig);
 
         window.displayTexture = moduleState.alloc<Texture>();
+        new (window.displayTexture) Texture;
         window.displayTexture->owned = false;
-        window.displayTexture->texture = window.display->texture();
+
+        if (window.display != nullptr)
+            window.displayTexture->texture = window.display->texture();
 
     }
 
