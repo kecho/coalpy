@@ -81,7 +81,7 @@ void AssertSystem::onAssert(const char* condition, const char* file, unsigned in
 
     }
 #else
-    std::raise(SIGINT);
+    std::raise(SIGTRAP);
 #endif
 
 }
