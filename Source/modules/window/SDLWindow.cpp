@@ -95,6 +95,10 @@ void SDLWindow::run(const WindowRunArgs& args)
                         it->second->close();
                         args.listener->onClose(*it->second);
                     }
+                    else if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                    {
+                        args.listener->onResize(event.window.data1, event.window.data2, *it->second);
+                    }
                 }
             }
         }
