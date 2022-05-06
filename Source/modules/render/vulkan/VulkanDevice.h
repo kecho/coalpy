@@ -51,6 +51,8 @@ private:
     VkInstance m_vkInstance;
     VkPhysicalDevice m_vkPhysicalDevice;
     VkDevice m_vkDevice;
+
+    void testMutableDescriptors();
 };
 
 

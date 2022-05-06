@@ -11,6 +11,8 @@
 #include <set>
 #include <vector>
 
+#define TEST_MUTABLE_DESCRIPTORS 0
+
 namespace coalpy
 {
 namespace render
@@ -25,11 +27,14 @@ struct VkInstanceInfo
     std::vector<std::string> layerNames;
     std::vector<std::string> extensionNames;
     VkInstance instance = {};
+    VkDebugReportCallbackEXT debugCallback = {};
     
     bool cachedGpuInfos = false;
     std::vector<DeviceInfo> gpus;
     std::vector<VkPhysicalDevice> vkGpus;
 } g_VkInstanceInfo;
+
+void destroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks* pAllocator);
 
 void destroyVulkanInstance(VkInstance instance)
 {
@@ -38,6 +43,7 @@ void destroyVulkanInstance(VkInstance instance)
     if (g_VkInstanceInfo.refCount == 0)
     {
         vkDestroyInstance(instance, nullptr);
+        destroyDebugReportCallbackEXT(instance, g_VkInstanceInfo.debugCallback, nullptr);
         g_VkInstanceInfo = {};
     }
 }
@@ -279,6 +285,8 @@ bool createVulkanInstance(VkInstance& outInstance)
         return false;
     }
 
+    setupDebugCallback(outInstance, g_VkInstanceInfo.debugCallback);
+
     ++g_VkInstanceInfo.refCount;
     cacheGPUDevices();
     return true;
@@ -342,8 +350,15 @@ VkDevice createVkDevice(
     queueCreateInfo.pNext = NULL;
     queueCreateInfo.flags = 0;
 
+#if TEST_MUTABLE_DESCRIPTORS
+    VkPhysicalDeviceMutableDescriptorTypeFeaturesVALVE valveF = {};
+    valveF.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_VALVE;
+    valveF.pNext = nullptr;
+    valveF.mutableDescriptorType = true;
+#endif
+
     // Device creation information
-    VkDeviceCreateInfo createInfo;
+    VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.queueCreateInfoCount = 1;
     createInfo.pQueueCreateInfos = &queueCreateInfo;
@@ -351,7 +366,9 @@ VkDevice createVkDevice(
     createInfo.enabledLayerCount = static_cast<uint32_t>(layerNames.size());
     createInfo.ppEnabledExtensionNames = devicePropertyNames.data();
     createInfo.enabledExtensionCount = static_cast<uint32_t>(devicePropertyNames.size());
-    createInfo.pNext = NULL;
+#if TEST_MUTABLE_DESCRIPTORS
+    createInfo.pNext = &valveF;
+#endif
     createInfo.pEnabledFeatures = NULL;
     createInfo.flags = 0;
 
@@ -363,6 +380,47 @@ VkDevice createVkDevice(
 }
 
 }
+
+void VulkanDevice::testMutableDescriptors()
+{
+#if TEST_MUTABLE_DESCRIPTORS
+    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    
+	VkDescriptorSetLayoutBinding b1 = {};
+	b1.binding = 0;
+	b1.descriptorCount = 1;
+	b1.descriptorType = VK_DESCRIPTOR_TYPE_MUTABLE_VALVE;
+	b1.stageFlags = VK_SHADER_STAGE_ALL;
+    bindings.push_back(b1);
+
+    VkDescriptorType typeList[] = { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE };
+    VkMutableDescriptorTypeListVALVE valveTypeLists[] =
+    {
+        { 1, typeList }
+    };
+    
+
+    VkMutableDescriptorTypeCreateInfoVALVE vv = {};
+    vv.sType = VK_STRUCTURE_TYPE_MUTABLE_DESCRIPTOR_TYPE_CREATE_INFO_VALVE;
+    vv.mutableDescriptorTypeListCount = 1;
+    vv.pMutableDescriptorTypeLists = valveTypeLists;
+
+    VkDescriptorSetLayoutCreateInfo setinfo = {};
+	setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	setinfo.pNext = &vv;
+
+	//we are going to have 1 binding
+	setinfo.bindingCount = bindings.size();
+	//no flags
+	setinfo.flags = 0;
+	//point to the camera buffer binding
+	setinfo.pBindings = bindings.data();
+
+    VkDescriptorSetLayout outLayout = {};
+	VK_OK(vkCreateDescriptorSetLayout(m_vkDevice, &setinfo, nullptr, &outLayout));
+#endif
+}
+
 
 VulkanDevice::VulkanDevice(const DeviceConfig& config)
 : TDevice<VulkanDevice>(config),
@@ -387,6 +445,8 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
         CPY_ASSERT_MSG(m_shaderDb->parentDevice() == nullptr, "shader database can only belong to 1 and only 1 device");
         m_shaderDb->setParentDevice(this);
     }
+
+    testMutableDescriptors();
 }
 
 VulkanDevice::~VulkanDevice()
