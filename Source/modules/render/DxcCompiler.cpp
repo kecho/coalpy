@@ -440,7 +440,7 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                 {
                     DxcResultPayload payload = {};
                     payload.resultBlob = &(*shaderOut);
-                    payload.pdbBlob = nullptr ? nullptr : &(*pdbOut);
+                    payload.pdbBlob = pdbOut == nullptr ? nullptr : &(*pdbOut);
                     payload.pdbName = pdbName == nullptr ? nullptr : &(*pdbName);
                     args.onFinished(true, payload);
                 }
