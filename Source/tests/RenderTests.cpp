@@ -92,7 +92,7 @@ namespace coalpy
         CPY_ASSERT(db == nullptr);
         CPY_ASSERT(device == nullptr);
 
-#if defined(_WIN)
+#if defined(_WIN32)
         auto platform = DevicePlat::Dx12;
 #elif defined(__linux__)
         auto platform = DevicePlat::Vulkan;
