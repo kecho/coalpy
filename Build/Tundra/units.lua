@@ -1,9 +1,10 @@
-local SourceDir = "Source";
-local ScriptsDir = "Source/scripts/coalpy";
-local ImguiDir = "Source/imgui";
-local LibJpgDir = "Source/libjpeg";
-local LibPngDir = "Source/libpng";
-local ZlibDir = "Source/zlib";
+local SourceDir = "Source"
+local ScriptsDir = "Source/scripts/coalpy"
+local ImguiDir = "Source/imgui"
+local LibJpgDir = "Source/libjpeg"
+local LibPngDir = "Source/libpng"
+local ZlibDir = "Source/zlib"
+local SpirvReflectDir = "Source/spirvreflect"
 local DxcDir = "External/dxc/v1.6.2112/"
 local DxcIncludes = DxcDir.."inc/"
 local DxcLibDir = DxcDir.."lib/x64/"
@@ -168,6 +169,22 @@ local libjpegLib = StaticLibrary {
 
 Default (libjpegLib)
 
+-- Build spirvreflect
+local spirvreflect = StaticLibrary {
+    Name = "spirvreflect",
+    Pass = "BuildCode",
+    Includes = SpirvReflectDir,
+    Sources = {
+        Glob {
+            Dir = SpirvReflectDir,
+            Extensions = { ".c", ".h" },
+            Recursive = true
+        }
+    }
+}
+
+Default (spirvreflect)
+
 -- Build libpng
 local libpngLib = StaticLibrary {
     Name = "libpng",
@@ -198,7 +215,11 @@ local CoalPyModuleTable = {
 
 -- C++ module external includes
 local CoalPyModuleIncludes = {
-    render = { DxcIncludes, ImguiDir, "Source/modules/window/" },
+    render = {
+        DxcIncludes,
+        ImguiDir,
+        SpirvReflectDir
+    },
     texture = { LibJpgDir, LibPngDir, ZlibDir,
         {
             OpenEXRDir.."include/OpenEXR",
@@ -212,7 +233,7 @@ local CoalPyModuleIncludes = {
 }
 
 local CoalPyModuleDeps = {
-    render = { imguiLib },
+    render = { imguiLib, spirvreflect },
     texture = { zlibLib, libpngLib, libjpegLib }
 }
 

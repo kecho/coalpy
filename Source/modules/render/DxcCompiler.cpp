@@ -22,6 +22,7 @@
 #endif
 
 #include <dxcapi.h>
+#include <spirv_reflect.h>
 
 namespace coalpy
 {
