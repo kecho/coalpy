@@ -87,14 +87,14 @@ void dxcCompileFunction(DxcCompiler& compiler)
     };
 
     int onFinishedReached = 0;
-    compilerArgs.onFinished = [&](bool success, IDxcBlob* blob, IDxcBlob* pdbBlob, IDxcBlobUtf16* pdbName)
+    compilerArgs.onFinished = [&](bool success, DxcResultPayload& payload)
     {
         ++onFinishedReached;
-        bool compiledSuccess = success && blob != nullptr;
+        bool compiledSuccess = success && payload.resultBlob != nullptr;
         CPY_ASSERT_MSG(compiledSuccess, "Unexpected compilation error.");
 
 #if _WIN32
-        bool pdbValid = pdbBlob != nullptr;
+        bool pdbValid = payload.pdbBlob != nullptr;
         CPY_ASSERT_MSG(pdbValid, "PDB was not generated.");
 #endif
     };

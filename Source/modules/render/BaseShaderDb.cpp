@@ -338,32 +338,32 @@ void BaseShaderDb::prepareCompileJobs(CompileState& compileState)
         return result;
     };
     
-    compileState.compileArgs.onFinished = [&compileState, this](bool success, IDxcBlob* resultBlob, IDxcBlob* pdbBlob, IDxcBlobUtf16* pdbName)
+    compileState.compileArgs.onFinished = [&compileState, this](bool success, DxcResultPayload& payload)
     {
         {
             std::unique_lock lock(m_shadersMutex);
             auto& shaderState = m_shaders[compileState.shaderHandle];
-            if (success && resultBlob)
+            if (success && payload.resultBlob)
             {
-                resultBlob->AddRef();
-                shaderState->shaderBlob = resultBlob;
+                payload.resultBlob->AddRef();
+                shaderState->shaderBlob = payload.resultBlob;
             }
             shaderState->ready = true;
             shaderState->success = success;
             compileState.success = success;
         }
 
-        if (success && pdbBlob != nullptr && pdbName != nullptr && m_pdbDirReady)
+        if (success && payload.pdbBlob != nullptr && payload.pdbName != nullptr && m_pdbDirReady)
         {
             std::stringstream ss;
             ss << s_pdbDir << "/";
-            ss << ws2s(std::wstring(pdbName->GetStringPointer()));
+            ss << ws2s(std::wstring(payload.pdbName->GetStringPointer()));
         
             FileWriteRequest req = {};
             req.doneCallback = [](FileWriteResponse& response) {};
             req.path = ss.str();
-            req.buffer = (const char*)pdbBlob->GetBufferPointer();
-            req.size = (int)pdbBlob->GetBufferSize();
+            req.buffer = (const char*)payload.pdbBlob->GetBufferPointer();
+            req.size = (int)payload.pdbBlob->GetBufferSize();
             AsyncFileHandle writeHandle = m_desc.fs->write(req);
     
             m_desc.fs->execute(writeHandle);

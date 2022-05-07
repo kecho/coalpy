@@ -437,7 +437,13 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                 }
                 else if (args.onFinished)
 #endif
-                    args.onFinished(true, &(*shaderOut), pdbOut == nullptr ? nullptr : &(*pdbOut), pdbName == nullptr ? nullptr : &(*pdbName));
+                {
+                    DxcResultPayload payload = {};
+                    payload.resultBlob = &(*shaderOut);
+                    payload.pdbBlob = nullptr ? nullptr : &(*pdbOut);
+                    payload.pdbName = pdbName == nullptr ? nullptr : &(*pdbName);
+                    args.onFinished(true, payload);
+                }
             }
             else if (args.onError)
             {
@@ -467,7 +473,8 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                 }
                 compiledSuccess = false;
             }
-            args.onFinished(false, nullptr, nullptr, nullptr);
+            DxcResultPayload payload = {};
+            args.onFinished(false, payload);
         }
 
     }

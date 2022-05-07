@@ -13,8 +13,15 @@ namespace coalpy
 
 class ByteBuffer;
 
+struct DxcResultPayload
+{
+    IDxcBlob* resultBlob;
+    IDxcBlob* pdbBlob;
+    IDxcBlobUtf16* pdbName;
+};
+
 using DxcCompilerOnError = std::function<void(const char* name, const char* errorString)>;
-using DxcCompilerOnFinished = std::function<void(bool success, IDxcBlob* resultBlob, IDxcBlob* pdbBlob, IDxcBlobUtf16* pdbName)>;
+using DxcCompilerOnFinished = std::function<void(bool success, DxcResultPayload& payload)>;
 using DxcCompilerOnInclude = std::function<bool(const char* path, ByteBuffer& buffer)>;
 
 struct DxcCompileArgs
