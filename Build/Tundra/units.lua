@@ -219,7 +219,7 @@ local CoalPyModuleIncludes = {
         DxcIncludes,
         ImguiDir,
         SpirvReflectDir,
-        "Source/window"
+        "Source/modules/window"
     },
     texture = { LibJpgDir, LibPngDir, ZlibDir,
         {
