@@ -96,6 +96,9 @@ void dxcCompileFunction(DxcCompiler& compiler)
 #if _WIN32
         bool pdbValid = payload.pdbBlob != nullptr;
         CPY_ASSERT_MSG(pdbValid, "PDB was not generated.");
+#elif __linux__
+        bool spirvReflectValid = payload.spirvReflectionData != nullptr;
+        CPY_ASSERT_MSG(spirvReflectValid, "SPIR-V Reflection data not generated");
 #endif
     };
 

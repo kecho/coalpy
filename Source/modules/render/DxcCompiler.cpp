@@ -299,6 +299,18 @@ const wchar_t** getShaderModelTargets(ShaderModel sm)
     }
 }
 
+static bool processSpirvReflectionData(IDxcBlob* spirvBlob, SpvReflectShaderModule& outModule, SpirvReflectionData& outData)
+{
+    if (spirvBlob == nullptr)
+        return false;
+
+    SpvReflectResult result = spvReflectCreateShaderModule(spirvBlob->GetBufferSize(), spirvBlob->GetBufferPointer(), &outModule);
+    if (result != SPV_REFLECT_RESULT_SUCCESS)
+        return false;
+
+    return true;
+}
+
 void DxcCompiler::compileShader(const DxcCompileArgs& args)
 {
     const wchar_t** smTargets = getShaderModelTargets(m_desc.shaderModel);
@@ -319,6 +331,12 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
 
     const wchar_t* profile = smTargets[(int)args.type];
 
+#if USE_SPIRV
+    const bool outputSpirV = true;
+#else
+    const bool outputSpirV = false;
+#endif
+
     std::vector<LPCWSTR> arguments;
     arguments.push_back(DXC_ARG_WARNINGS_ARE_ERRORS);
     arguments.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
@@ -327,9 +345,8 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
         arguments.push_back(DXC_ARG_DEBUG);
 
     std::vector<std::wstring> paths;
-#if USE_SPIRV
-    paths.push_back(L"-spirv");
-#endif
+    if (outputSpirV)
+        paths.push_back(L"-spirv");
     paths.push_back(L"-I.");
     paths.push_back(L"-Icoalpy");
 
@@ -438,11 +455,19 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                 else if (args.onFinished)
 #endif
                 {
+                    SpvReflectShaderModule module = {};
+                    SpirvReflectionData spirVReflectionData = {};
+                    bool validSpirvReflectionData = outputSpirV && processSpirvReflectionData(&(*shaderOut), module, spirVReflectionData);
+
                     DxcResultPayload payload = {};
                     payload.resultBlob = &(*shaderOut);
                     payload.pdbBlob = pdbOut == nullptr ? nullptr : &(*pdbOut);
                     payload.pdbName = pdbName == nullptr ? nullptr : &(*pdbName);
+                    payload.spirvReflectionData = validSpirvReflectionData ? &spirVReflectionData : nullptr;
                     args.onFinished(true, payload);
+
+                    if (validSpirvReflectionData)
+                        spvReflectDestroyShaderModule(&module);
                 }
             }
             else if (args.onError)
