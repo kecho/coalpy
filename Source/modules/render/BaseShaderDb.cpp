@@ -10,6 +10,7 @@
 #include <coalpy.core/String.h>
 
 #include "BaseShaderDb.h" 
+#include "SpirvReflectionData.h"
 #include <coalpy.core/ByteBuffer.h>
 
 #include <iostream>
@@ -110,10 +111,8 @@ BaseShaderDb::ShaderState& BaseShaderDb::createShaderState(ShaderHandle& outHand
         statePtr = &shaderState;
     }
 
-    shaderState.ready = false;
-    shaderState.success = false;
+    shaderState.initialize();
     shaderState.compiling = true;
-    shaderState.shaderBlob = nullptr;
     return shaderState;
 }
 
@@ -347,10 +346,16 @@ void BaseShaderDb::prepareCompileJobs(CompileState& compileState)
             {
                 payload.resultBlob->AddRef();
                 shaderState->shaderBlob = payload.resultBlob;
+                if (payload.spirvReflectionData != nullptr)
+                {
+                    payload.spirvReflectionData->AddRef();
+                    shaderState->spirVReflectionData = payload.spirvReflectionData;
+                }
             }
             shaderState->ready = true;
             shaderState->success = success;
             compileState.success = success;
+
         }
 
         if (success && payload.pdbBlob != nullptr && payload.pdbName != nullptr && m_pdbDirReady)

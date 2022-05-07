@@ -7,20 +7,12 @@
 
 struct IDxcBlob;
 struct IDxcBlobUtf16;
-struct SpvReflectShaderModule;
-struct SpvReflectDescriptorSet;
 
 namespace coalpy
 {
 
 class ByteBuffer;
-
-struct SpirvReflectionData
-{
-    unsigned int shaderStageBits; //opaque SpvReflectShaderStageFlagBits
-    SpvReflectDescriptorSet* descriptorSets;
-    int descriptorSetsCounts;
-};
+class SpirvReflectionData;
 
 struct DxcResultPayload
 {

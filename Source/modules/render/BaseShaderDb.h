@@ -57,9 +57,23 @@ protected:
         ShaderFileRecipe recipe;
         std::string debugName;
         IDxcBlob* shaderBlob;
+        SpirvReflectionData* spirVReflectionData;
         std::atomic<bool> compiling;
         CompileState* compileState;
         std::atomic<ShaderGPUPayload> payload;
+
+        void initialize()
+        {
+            ready = false;
+            success = false;
+            recipe = {};
+            debugName = {};
+            shaderBlob = nullptr;
+            spirVReflectionData = nullptr;
+            compiling = false;
+            compileState = nullptr;
+            payload = nullptr;
+        }
     };
 
     virtual void onCreateComputePayload(const ShaderHandle& handle, ShaderState& state) = 0;

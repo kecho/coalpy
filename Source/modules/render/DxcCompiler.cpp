@@ -22,7 +22,7 @@
 #endif
 
 #include <dxcapi.h>
-#include <spirv_reflect.h>
+#include "SpirvReflectionData.h"
 
 namespace coalpy
 {
@@ -299,18 +299,6 @@ const wchar_t** getShaderModelTargets(ShaderModel sm)
     }
 }
 
-static bool processSpirvReflectionData(IDxcBlob* spirvBlob, SpvReflectShaderModule& outModule, SpirvReflectionData& outData)
-{
-    if (spirvBlob == nullptr)
-        return false;
-
-    SpvReflectResult result = spvReflectCreateShaderModule(spirvBlob->GetBufferSize(), spirvBlob->GetBufferPointer(), &outModule);
-    if (result != SPV_REFLECT_RESULT_SUCCESS)
-        return false;
-
-    return true;
-}
-
 void DxcCompiler::compileShader(const DxcCompileArgs& args)
 {
     const wchar_t** smTargets = getShaderModelTargets(m_desc.shaderModel);
@@ -455,19 +443,26 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                 else if (args.onFinished)
 #endif
                 {
-                    SpvReflectShaderModule module = {};
-                    SpirvReflectionData spirVReflectionData = {};
-                    bool validSpirvReflectionData = outputSpirV && processSpirvReflectionData(&(*shaderOut), module, spirVReflectionData);
+                    SpirvReflectionData* spirVReflectionData = nullptr;
+                    if (outputSpirV)
+                    {
+                        spirVReflectionData = new SpirvReflectionData();
+                        if (!spirVReflectionData->load(shaderOut->GetBufferPointer(), shaderOut->GetBufferSize()))
+                        {
+                            spirVReflectionData->Release();
+                            spirVReflectionData = nullptr;
+                        }
+                    }
 
                     DxcResultPayload payload = {};
                     payload.resultBlob = &(*shaderOut);
                     payload.pdbBlob = pdbOut == nullptr ? nullptr : &(*pdbOut);
                     payload.pdbName = pdbName == nullptr ? nullptr : &(*pdbName);
-                    payload.spirvReflectionData = validSpirvReflectionData ? &spirVReflectionData : nullptr;
+                    payload.spirvReflectionData = spirVReflectionData;
                     args.onFinished(true, payload);
 
-                    if (validSpirvReflectionData)
-                        spvReflectDestroyShaderModule(&module);
+                    if (spirVReflectionData)
+                        spirVReflectionData->Release();
                 }
             }
             else if (args.onError)
@@ -487,7 +482,6 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                 (void**)&errorBlob,
                 nullptr));
             
-
             std::string errorStr;
             if (errorBlob != nullptr && errorBlob->GetStringLength() > 0)
             {
@@ -515,6 +509,5 @@ void DxcCompiler::setupDxc()
         loadCompilerModule(m_desc.compilerDllPath, g_dxil, g_dxilModule, g_dxilCreateInstanceFn);
 #endif
 }
-
 
 }
