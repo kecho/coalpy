@@ -18,6 +18,8 @@ class VulkanShaderDb;
 namespace render
 {
 
+class VulkanDescriptorSetCache;
+
 class VulkanDevice : public TDevice<VulkanDevice>
 {
 public:
@@ -45,12 +47,16 @@ public:
     ScheduleStatus internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle); 
 
     VkInstance vkInstance() const { return m_vkInstance; }
+
+    VulkanDescriptorSetCache& descriptorSetCache() { return *m_descriptorSetCache; }
 private:
     DeviceInfo m_info;
     VulkanShaderDb* m_shaderDb;
     VkInstance m_vkInstance;
     VkPhysicalDevice m_vkPhysicalDevice;
     VkDevice m_vkDevice;
+
+    VulkanDescriptorSetCache* m_descriptorSetCache;
 
     void testMutableDescriptors();
 };

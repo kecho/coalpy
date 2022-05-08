@@ -1,6 +1,7 @@
 #include "testsystem.h"
 #include <coalpy.core/Assert.h>
 #include <coalpy.core/ByteBuffer.h>
+#include <coalpy.core/HashStream.h>
 
 namespace coalpy
 {
@@ -24,6 +25,27 @@ void testByteBuffer(TestContext& ctx)
     }
 }
 
+void testHashStream(TestContext& ctx)
+{
+    HashStream hsA;
+    int a = 20;
+    hsA << a;
+
+    HashStream hsB;
+    int b = 21;
+    hsB << b;
+
+    HashStream hsC;
+    hsC << a << b;
+
+    CPY_ASSERT(hsA.val() != 0);
+    CPY_ASSERT(hsB.val() != 0);
+    CPY_ASSERT(hsC.val() != 0);
+    CPY_ASSERT(hsA.val() != hsB.val());
+    CPY_ASSERT(hsB.val() != hsC.val());
+    CPY_ASSERT(hsA.val() != hsC.val());
+}
+
 
 class CoreTestSuite : public TestSuite
 {
@@ -32,7 +54,8 @@ public:
     virtual const TestCase* getCases(int& caseCounts) const
     {
         static TestCase sCases[] = {
-            { "byteBuffer", testByteBuffer }
+            { "byteBuffer", testByteBuffer },
+            { "hashstream", testHashStream }
         };
 
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

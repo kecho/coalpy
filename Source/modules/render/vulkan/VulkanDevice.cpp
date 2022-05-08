@@ -7,9 +7,11 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 #endif
+#include "VulkanDescriptorSetCache.h"
 #include <iostream>
 #include <set>
 #include <vector>
+
 
 #define TEST_MUTABLE_DESCRIPTORS 0
 
@@ -446,6 +448,8 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
         m_shaderDb->setParentDevice(this);
     }
 
+    m_descriptorSetCache = new VulkanDescriptorSetCache(*this);
+    
     testMutableDescriptors();
 }
 
@@ -454,6 +458,7 @@ VulkanDevice::~VulkanDevice()
     if (m_shaderDb && m_shaderDb->parentDevice() == this)
         m_shaderDb->setParentDevice(nullptr);
 
+    delete m_descriptorSetCache;
     vkDestroyDevice(m_vkDevice, nullptr); 
     destroyVulkanInstance(m_vkInstance);    
 }
