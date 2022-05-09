@@ -10,12 +10,14 @@ bool SpirvReflectionData::load(void* spirvCode, int codeSize)
 {
     AddRef();
     if (spirvCode == nullptr || codeSize == 0)
-        return false;
+        return true;
 
     SpvReflectResult result;
     result = spvReflectCreateShaderModule(codeSize, spirvCode, &module);
     if (result != SPV_REFLECT_RESULT_SUCCESS)
+    {
         return false;
+    }
 
     uint32_t count = 0;
     result = spvReflectEnumerateDescriptorSets(&module, &count, nullptr);

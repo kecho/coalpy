@@ -9,10 +9,16 @@
 #include <shared_mutex>
 #include <atomic>
 #include <set>
+#include <vulkan/vulkan.h>
 
 
 namespace coalpy
 {
+
+struct SpirvPayload
+{
+    VkDescriptorSetLayout layout;
+};
 
 class VulkanShaderDb : public BaseShaderDb
 {

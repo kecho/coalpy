@@ -22,6 +22,39 @@ struct DxcResultPayload
     SpirvReflectionData* spirvReflectionData;
 };
 
+enum
+{
+    SpirvRegisterTypeShiftCount = 32,
+    SpirvMaxRegisterSpace = 8
+};
+
+enum class SpirvRegisterType : int
+{
+    b, t, s, u, Count
+};
+
+inline int SpirvRegisterTypeOffset(SpirvRegisterType t)
+{
+    return (int)t * (int)SpirvRegisterTypeShiftCount;
+}
+
+inline wchar_t* SpirvRegisterTypeName(SpirvRegisterType t)
+{
+    switch(t)
+    {
+    case SpirvRegisterType::t:
+        return L"t";
+    case SpirvRegisterType::b:
+        return L"b";
+    case SpirvRegisterType::u:
+        return L"u";
+    case SpirvRegisterType::s:
+        return L"s";
+    default:
+        return L"t";
+    }
+}
+
 using DxcCompilerOnError = std::function<void(const char* name, const char* errorString)>;
 using DxcCompilerOnFinished = std::function<void(bool success, DxcResultPayload& payload)>;
 using DxcCompilerOnInclude = std::function<bool(const char* path, ByteBuffer& buffer)>;

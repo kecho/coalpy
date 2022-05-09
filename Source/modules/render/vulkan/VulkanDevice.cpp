@@ -13,7 +13,10 @@
 #include <vector>
 
 
+#define DEBUG_PRINT_EXTENSIONS 0
+#define ENABLE_DEBUG_CALLBACK_EXT 1
 #define TEST_MUTABLE_DESCRIPTORS 0
+#define TEST_DESCRIPTORS_LAYOUT_COPY 0
 
 namespace coalpy
 {
@@ -44,8 +47,10 @@ void destroyVulkanInstance(VkInstance instance)
     --g_VkInstanceInfo.refCount;
     if (g_VkInstanceInfo.refCount == 0)
     {
-        vkDestroyInstance(instance, nullptr);
+#if ENABLE_DEBUG_CALLBACK_EXT
         destroyDebugReportCallbackEXT(instance, g_VkInstanceInfo.debugCallback, nullptr);
+#endif
+        vkDestroyInstance(instance, nullptr);
         g_VkInstanceInfo = {};
     }
 }
@@ -100,7 +105,9 @@ bool getAvailableVulkanExtensions(std::vector<std::string>& outExtensions)
 
 
     // Add debug display extension, we need this to relay debug messages
+#if ENABLE_DEBUG_CALLBACK_EXT
     outExtensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+#endif
 
 #if ENABLE_SDL_VULKAN
     SDL_DestroyWindow(dummyWindow);
@@ -258,7 +265,12 @@ bool createVulkanInstance(VkInstance& outInstance)
 
     std::vector<const char*> extNames;
     for (const auto& ext : g_VkInstanceInfo.extensionNames)
+    {
+#if DEBUG_PRINT_EXTENSIONS
+        std::cout << ext << std::endl;
+#endif
         extNames.emplace_back(ext.c_str());
+    }
 
     VkApplicationInfo appInfo = {};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -287,7 +299,10 @@ bool createVulkanInstance(VkInstance& outInstance)
         return false;
     }
 
+    outInstance = g_VkInstanceInfo.instance;
+#if ENABLE_DEBUG_CALLBACK_EXT
     setupDebugCallback(outInstance, g_VkInstanceInfo.debugCallback);
+#endif
 
     ++g_VkInstanceInfo.refCount;
     cacheGPUDevices();
@@ -383,43 +398,131 @@ VkDevice createVkDevice(
 
 }
 
-void VulkanDevice::testMutableDescriptors()
+void VulkanDevice::testApiFuncs()
 {
 #if TEST_MUTABLE_DESCRIPTORS
-    std::vector<VkDescriptorSetLayoutBinding> bindings;
-    
-	VkDescriptorSetLayoutBinding b1 = {};
-	b1.binding = 0;
-	b1.descriptorCount = 1;
-	b1.descriptorType = VK_DESCRIPTOR_TYPE_MUTABLE_VALVE;
-	b1.stageFlags = VK_SHADER_STAGE_ALL;
-    bindings.push_back(b1);
-
-    VkDescriptorType typeList[] = { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE };
-    VkMutableDescriptorTypeListVALVE valveTypeLists[] =
     {
-        { 1, typeList }
-    };
-    
+        std::vector<VkDescriptorSetLayoutBinding> bindings;
+        
+	    VkDescriptorSetLayoutBinding b1 = {};
+	    b1.binding = 0;
+	    b1.descriptorCount = 1;
+	    b1.descriptorType = VK_DESCRIPTOR_TYPE_MUTABLE_VALVE;
+	    b1.stageFlags = VK_SHADER_STAGE_ALL;
+        bindings.push_back(b1);
 
-    VkMutableDescriptorTypeCreateInfoVALVE vv = {};
-    vv.sType = VK_STRUCTURE_TYPE_MUTABLE_DESCRIPTOR_TYPE_CREATE_INFO_VALVE;
-    vv.mutableDescriptorTypeListCount = 1;
-    vv.pMutableDescriptorTypeLists = valveTypeLists;
+        VkDescriptorType typeList[] = { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE };
+        VkMutableDescriptorTypeListVALVE valveTypeLists[] =
+        {
+            { 1, typeList }
+        };
+        
 
-    VkDescriptorSetLayoutCreateInfo setinfo = {};
-	setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	setinfo.pNext = &vv;
+        VkMutableDescriptorTypeCreateInfoVALVE vv = {};
+        vv.sType = VK_STRUCTURE_TYPE_MUTABLE_DESCRIPTOR_TYPE_CREATE_INFO_VALVE;
+        vv.mutableDescriptorTypeListCount = 1;
+        vv.pMutableDescriptorTypeLists = valveTypeLists;
 
-	//we are going to have 1 binding
-	setinfo.bindingCount = bindings.size();
-	//no flags
-	setinfo.flags = 0;
-	//point to the camera buffer binding
-	setinfo.pBindings = bindings.data();
+        VkDescriptorSetLayoutCreateInfo setinfo = {};
+	    setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	    setinfo.pNext = &vv;
 
-    VkDescriptorSetLayout outLayout = {};
-	VK_OK(vkCreateDescriptorSetLayout(m_vkDevice, &setinfo, nullptr, &outLayout));
+	    //we are going to have 1 binding
+	    setinfo.bindingCount = bindings.size();
+	    //no flags
+	    setinfo.flags = 0;
+	    //point to the camera buffer binding
+	    setinfo.pBindings = bindings.data();
+
+        VkDescriptorSetLayout outLayout = {};
+	    VK_OK(vkCreateDescriptorSetLayout(m_vkDevice, &setinfo, nullptr, &outLayout));
+    }
+#endif
+
+#if TEST_DESCRIPTORS_LAYOUT_COPY
+    {
+        VkDescriptorSetLayout layouts[2] = {};
+        {
+            std::vector<VkDescriptorSetLayoutBinding> bindings;
+            
+	        VkDescriptorSetLayoutBinding b0 = {};
+	        b0.binding = 0;
+	        b0.descriptorCount = 1;
+	        b0.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+	        b0.stageFlags = VK_SHADER_STAGE_ALL;
+            bindings.push_back(b0);
+
+	        VkDescriptorSetLayoutBinding b1 = {};
+	        b1.binding = 1;
+	        b1.descriptorCount = 1;
+	        b1.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+	        b1.stageFlags = VK_SHADER_STAGE_ALL;
+            bindings.push_back(b1);
+
+            VkDescriptorSetLayoutCreateInfo setinfo = {};
+	        setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+
+	        setinfo.bindingCount = bindings.size();
+	        setinfo.pBindings = bindings.data();
+
+	        VK_OK(vkCreateDescriptorSetLayout(m_vkDevice, &setinfo, nullptr, &layouts[0]));
+        }
+
+        {
+            std::vector<VkDescriptorSetLayoutBinding> bindings;
+            
+	        VkDescriptorSetLayoutBinding b1 = {};
+	        b1.binding = 99;
+	        b1.descriptorCount = 1;
+	        b1.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+	        b1.stageFlags = VK_SHADER_STAGE_ALL;
+            bindings.push_back(b1);
+
+            VkDescriptorSetLayoutCreateInfo setinfo = {};
+	        setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+
+	        setinfo.bindingCount = bindings.size();
+	        setinfo.pBindings = bindings.data();
+
+	        VK_OK(vkCreateDescriptorSetLayout(m_vkDevice, &setinfo, nullptr, &layouts[1]));
+        }
+
+        std::vector<VkDescriptorPoolSize> poolSizes = {
+            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 10 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 10 },
+        };
+        VkDescriptorPoolCreateInfo poolInfo = {};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.maxSets = 16;
+        poolInfo.poolSizeCount = (int)poolSizes.size();
+        poolInfo.pPoolSizes = poolSizes.data();
+
+
+        VkDescriptorPool pool = {};
+        VK_OK(vkCreateDescriptorPool(m_vkDevice, &poolInfo, nullptr, &pool));
+
+        VkDescriptorSet sets[2];
+        VkDescriptorSetAllocateInfo allocInfo0 = {};
+        allocInfo0.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo0.descriptorPool = pool;
+        allocInfo0.descriptorSetCount = 2;
+        allocInfo0.pSetLayouts = layouts;
+
+        VK_OK(vkAllocateDescriptorSets(m_vkDevice, &allocInfo0, sets));
+
+        VkCopyDescriptorSet copySet = {};
+        copySet.sType = VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET;
+        copySet.srcSet = sets[0];
+        copySet.srcBinding = 1;
+        copySet.dstSet = sets[1];
+        copySet.dstBinding = 99;
+        copySet.descriptorCount = 1;
+        vkUpdateDescriptorSets(m_vkDevice, 0, nullptr, 1, &copySet);
+
+        vkDestroyDescriptorPool(m_vkDevice, pool, nullptr);
+        vkDestroyDescriptorSetLayout(m_vkDevice, layouts[0], nullptr);
+        vkDestroyDescriptorSetLayout(m_vkDevice, layouts[1], nullptr);
+    }
 #endif
 }
 
@@ -450,7 +553,7 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
 
     m_descriptorSetCache = new VulkanDescriptorSetCache(*this);
     
-    testMutableDescriptors();
+    testApiFuncs();
 }
 
 VulkanDevice::~VulkanDevice()

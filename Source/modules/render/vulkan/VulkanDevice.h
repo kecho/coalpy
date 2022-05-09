@@ -58,7 +58,7 @@ private:
 
     VulkanDescriptorSetCache* m_descriptorSetCache;
 
-    void testMutableDescriptors();
+    void testApiFuncs();
 };
 
 

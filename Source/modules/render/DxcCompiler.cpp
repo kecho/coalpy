@@ -299,6 +299,46 @@ const wchar_t** getShaderModelTargets(ShaderModel sm)
     }
 }
 
+thread_local bool g_registerShiftCached = false;
+thread_local std::vector<std::wstring> g_registerShiftArgs;
+void addSpirvArguments(std::vector<std::wstring>& args)
+{
+    if (!g_registerShiftCached)
+    {
+        for (int s = 0; s < (int)SpirvMaxRegisterSpace; ++s)
+        {
+            for (int t = 0; t < (int)SpirvRegisterType::Count; ++t)
+            {
+                auto regType = (SpirvRegisterType)t;
+                {
+                    std::wstringstream ss;
+                    ss << L"-fvk-" << SpirvRegisterTypeName(regType) << L"-shift";
+                    g_registerShiftArgs.push_back(ss.str());
+                }
+
+                {
+                    std::wstringstream ss;
+                    ss << SpirvRegisterTypeOffset(regType);
+                    g_registerShiftArgs.push_back(ss.str());
+                }
+
+                {
+                    std::wstringstream ss;
+                    ss << s;
+                    g_registerShiftArgs.push_back(ss.str());
+                }
+            }
+        }
+        g_registerShiftCached = true;
+    }
+
+    args.push_back(L"-spirv");
+    for (auto& s : g_registerShiftArgs)
+    {
+        args.push_back(s.c_str());
+    }
+}
+
 void DxcCompiler::compileShader(const DxcCompileArgs& args)
 {
     const wchar_t** smTargets = getShaderModelTargets(m_desc.shaderModel);
@@ -334,7 +374,8 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
 
     std::vector<std::wstring> paths;
     if (outputSpirV)
-        paths.push_back(L"-spirv");
+        addSpirvArguments(paths);
+
     paths.push_back(L"-I.");
     paths.push_back(L"-Icoalpy");
 
@@ -441,6 +482,8 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                         compiledSuccess = false;
                 }
                 else if (args.onFinished)
+#else
+                compiledSuccess = shaderOut->GetBufferPointer() != nullptr;                    
 #endif
                 {
                     SpirvReflectionData* spirVReflectionData = nullptr;
