@@ -495,6 +495,8 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                             spirVReflectionData->Release();
                             spirVReflectionData = nullptr;
                         }
+                        else
+                            spirVReflectionData->mainFn = args.mainFn;
                     }
 
                     DxcResultPayload payload = {};

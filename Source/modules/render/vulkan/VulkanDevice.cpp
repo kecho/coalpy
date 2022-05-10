@@ -62,6 +62,7 @@ const std::set<std::string>& getRequestedLayerNames()
     {
         layers.emplace("VK_LAYER_NV_optimus");
         layers.emplace("VK_LAYER_KHRONOS_validation");
+        layers.emplace("VK_LAYER_LUNARG_standard_validation");
     }
     return layers;
 }

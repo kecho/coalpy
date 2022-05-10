@@ -67,6 +67,7 @@ public:
     virtual const DeviceInfo& info() const override { return m_info; }
     virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) override;
 
+    virtual void removeShaderDb() { m_shaderDb = nullptr; }
     virtual IShaderDb* db() override { return (IShaderDb*)m_shaderDb; }
 
     void internalReleaseWorkHandle(WorkHandle handle);

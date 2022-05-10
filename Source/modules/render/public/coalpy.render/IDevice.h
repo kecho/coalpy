@@ -76,6 +76,7 @@ public:
     virtual void getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo) = 0;
 
     virtual IShaderDb* db() = 0;
+    virtual void removeShaderDb() = 0;
 };
 
 

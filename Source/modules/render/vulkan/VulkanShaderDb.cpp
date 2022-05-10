@@ -1,6 +1,8 @@
 #include <Config.h>
 #include "VulkanShaderDb.h" 
 #include "SpirvReflectionData.h"
+#include "VulkanDevice.h"
+#include <dxcapi.h>
 #include <iostream>
 
 #define DEBUG_PRINT_SPIRV_REFLECTION 0
@@ -73,11 +75,74 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
         delete oldSpirvPayload;
     }
 
+    if (m_parentDevice == nullptr)
+        return;
+
+    render::VulkanDevice& vulkanDevice = *static_cast<render::VulkanDevice*>(m_parentDevice);
+
+    
+    // Create descriptor layouts
+    std::vector<VkDescriptorSetLayout> layouts;
+    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    {
+        bindings.reserve(64);
+        auto stageFlags = (VkShaderStageFlags)shaderState.spirVReflectionData->module.shader_stage;
+        for (int i = 0; i < (int)shaderState.spirVReflectionData->descriptorSets.size(); ++i)
+        {
+            bindings.clear();
+            SpvReflectDescriptorSet* setData = shaderState.spirVReflectionData->descriptorSets[i];
+            for (int b = 0; b < (int)setData->binding_count; ++b)
+            {
+                SpvReflectDescriptorBinding& reflectionBinding = *setData->bindings[b];
+                bindings.emplace_back();
+                VkDescriptorSetLayoutBinding& binding = bindings.back();
+                binding = {};
+                binding.binding = reflectionBinding.binding;
+                binding.descriptorType = (VkDescriptorType)reflectionBinding.descriptor_type;
+                binding.descriptorCount = reflectionBinding.count;
+                binding.stageFlags = stageFlags;
+            }
+
+            VkDescriptorSetLayout layout = {};
+            VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
+            layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            layoutCreateInfo.bindingCount = (uint32_t)bindings.size();
+            layoutCreateInfo.pBindings = bindings.data();
+            VK_OK(vkCreateDescriptorSetLayout(vulkanDevice.vkDevice(), &layoutCreateInfo, nullptr, &layout));
+            layouts.push_back(layout);
+        }
+    }
+
     auto* payload = new SpirvPayload;
     shaderState.payload = payload;
+    payload->layouts = layouts;
+
+    // Create layout
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = (int)payload->layouts.size();
+    pipelineLayoutInfo.pSetLayouts = payload->layouts.data();
+    VK_OK(vkCreatePipelineLayout(vulkanDevice.vkDevice(), &pipelineLayoutInfo, nullptr, &payload->pipelineLayout));
+
+    // Shader module
+    VkShaderModuleCreateInfo shaderModuleInfo = {};
+    shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    shaderModuleInfo.codeSize = (uint32_t)shaderState.shaderBlob->GetBufferSize();
+    shaderModuleInfo.pCode = (const uint32_t*)shaderState.shaderBlob->GetBufferPointer();
+    VK_OK(vkCreateShaderModule(vulkanDevice.vkDevice(), &shaderModuleInfo, nullptr, &payload->shaderModule));
+
+    // Compute pipeline
+    VkPipelineCache cache = {};
+    VkComputePipelineCreateInfo pipelineInfo = {};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    pipelineInfo.layout = payload->pipelineLayout;
+    pipelineInfo.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    pipelineInfo.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    pipelineInfo.stage.pName = shaderState.spirVReflectionData->mainFn.c_str();
+    pipelineInfo.stage.module = payload->shaderModule;
+    VK_OK(vkCreateComputePipelines(vulkanDevice.vkDevice(), cache, 1, &pipelineInfo, nullptr, &payload->pipeline));
 
 #if DEBUG_PRINT_SPIRV_REFLECTION
-    if (shaderState.spirVReflectionData)
     {
         std::cout << "Vulkan Reflection:" << shaderState.debugName << std::endl;
         for (int i = 0; i < (int)shaderState.spirVReflectionData->descriptorSets.size(); ++i)
@@ -93,6 +158,9 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
         }
     }
 #endif
+
+    shaderState.spirVReflectionData->Release();
+    shaderState.spirVReflectionData = nullptr;
 }
 
 void VulkanShaderDb::onDestroyPayload(ShaderState& shaderState)
@@ -103,8 +171,26 @@ void VulkanShaderDb::onDestroyPayload(ShaderState& shaderState)
     if (!payload)
         return;
 
-    auto* spirvPayload = (SpirvPayload*)payload;
-    delete spirvPayload;
+    auto& spirvPayload = *(SpirvPayload*)payload;
+
+    if (m_parentDevice)
+    {
+        render::VulkanDevice& vulkanDevice = *static_cast<render::VulkanDevice*>(m_parentDevice);
+
+        if (spirvPayload.shaderModule)
+            vkDestroyShaderModule(vulkanDevice.vkDevice(), spirvPayload.shaderModule, nullptr);
+
+        if (spirvPayload.pipeline)
+            vkDestroyPipeline(vulkanDevice.vkDevice(), spirvPayload.pipeline, nullptr);
+
+        if (spirvPayload.pipelineLayout)
+            vkDestroyPipelineLayout(vulkanDevice.vkDevice(), spirvPayload.pipelineLayout, nullptr);
+
+        for (auto& setLayout : spirvPayload.layouts)
+            vkDestroyDescriptorSetLayout(vulkanDevice.vkDevice(), setLayout, nullptr);
+    }
+
+    delete &spirvPayload;
 }
 
 VulkanShaderDb::~VulkanShaderDb()

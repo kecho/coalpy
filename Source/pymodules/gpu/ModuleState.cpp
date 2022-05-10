@@ -212,9 +212,10 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
 
 void ModuleState::destroyDevice()
 {
+    m_device->removeShaderDb();
     delete m_tl;
-    delete m_device;
     delete m_db;
+    delete m_device;
 }
 
 bool ModuleState::selectAdapter(int index, int flags, ShaderModel shaderModel, bool dumpPDBs)

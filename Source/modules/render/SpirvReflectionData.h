@@ -1,6 +1,7 @@
 #pragma once
 
 #include <spirv_reflect.h>
+#include <string>
 
 namespace coalpy
 {
@@ -19,6 +20,7 @@ public:
     void AddRef();
     void Release();
 
+    std::string mainFn;
     SpvReflectShaderModule module;
     std::vector<SpvReflectDescriptorSet*> descriptorSets;
 

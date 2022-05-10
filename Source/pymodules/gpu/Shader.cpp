@@ -16,10 +16,12 @@ namespace gpu
 namespace methods
 {
     static PyObject* resolve(PyObject* self, PyObject* vargs);
+    static PyObject* isValid(PyObject* self, PyObject* vargs);
 }
 
 static PyMethodDef g_shaderMethods[] = {
     VA_FN(resolve, resolve, "Waits for shader compilation to be finished. Resolve is mostly implicitely called upon any operation requiring the shader's definition."),
+    VA_FN(is_valid, isValid, "Returns true if this is a valid shader, false otherwise."),
     FN_END
 };
 
@@ -37,7 +39,7 @@ void Shader::constructType(PyTypeObject& t)
         defines (array of str): an array of strings with defines for the shader. Utilize the = sign to set the definition inside the shader. I.e. ["HDR_LIGHTING=1"] will create the define HDR_LIGHTING inside the shader to a value of 1
         source_code (str): text file with the source. If source is set, file will be ignored and the shader will be created from source.
     )";
-    
+
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
     t.tp_init = Shader::init;
@@ -154,6 +156,15 @@ namespace methods
         auto* shader = (Shader*)self;
         shader->db->resolve(shader->handle);
         Py_RETURN_NONE;
+    }
+
+    static PyObject* isValid(PyObject* self, PyObject* vargs)
+    {
+        auto* shader = (Shader*)self;
+        if (shader->db->isValid(shader->handle))
+            Py_RETURN_TRUE;
+        else
+            Py_RETURN_FALSE;
     }
 }
 

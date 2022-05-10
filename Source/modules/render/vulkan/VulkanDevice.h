@@ -42,11 +42,14 @@ public:
     virtual void release(ResourceTable table) override;
     virtual const DeviceInfo& info() const override { return m_info; }
     virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) override;
+    virtual void removeShaderDb() { m_shaderDb = nullptr; }
     virtual IShaderDb* db() override { return (IShaderDb*)m_shaderDb; }
     void internalReleaseWorkHandle(WorkHandle handle);
     ScheduleStatus internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle); 
 
     VkInstance vkInstance() const { return m_vkInstance; }
+    VkDevice vkDevice() const { return m_vkDevice; }
+    VkPhysicalDevice vkPhysicalDevice() const { return m_vkPhysicalDevice; }
 
     VulkanDescriptorSetCache& descriptorSetCache() { return *m_descriptorSetCache; }
 private:

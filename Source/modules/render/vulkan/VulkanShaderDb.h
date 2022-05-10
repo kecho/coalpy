@@ -17,7 +17,10 @@ namespace coalpy
 
 struct SpirvPayload
 {
-    VkDescriptorSetLayout layout;
+    VkShaderModule shaderModule = {};
+    VkPipeline pipeline = {};
+    VkPipelineLayout pipelineLayout = {};
+    std::vector<VkDescriptorSetLayout> layouts;
 };
 
 class VulkanShaderDb : public BaseShaderDb
