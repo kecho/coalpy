@@ -21,7 +21,7 @@
 #endif
 
 #ifndef ENABLE_SDL_VULKAN
-#define ENABLE_SDL_VULKAN
+#define ENABLE_SDL_VULKAN 0
 #endif
 
 

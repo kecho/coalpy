@@ -52,14 +52,16 @@ public:
     VkPhysicalDevice vkPhysicalDevice() const { return m_vkPhysicalDevice; }
 
     VulkanDescriptorSetCache& descriptorSetCache() { return *m_descriptorSetCache; }
+    int graphicsFamilyQueueIndex() const { return m_queueFamIndex; }
 private:
+    void createSwapchain();
     DeviceInfo m_info;
     VulkanShaderDb* m_shaderDb;
     VkInstance m_vkInstance;
     VkPhysicalDevice m_vkPhysicalDevice;
     VkDevice m_vkDevice;
-
     VulkanDescriptorSetCache* m_descriptorSetCache;
+    int m_queueFamIndex;
 
     void testApiFuncs();
 };

@@ -8,6 +8,7 @@
 #include <SDL2/SDL_vulkan.h>
 #endif
 #include "VulkanDescriptorSetCache.h"
+#include "VulkanDisplay.h"
 #include <iostream>
 #include <set>
 #include <vector>
@@ -529,20 +530,21 @@ void VulkanDevice::testApiFuncs()
 
 
 VulkanDevice::VulkanDevice(const DeviceConfig& config)
-: TDevice<VulkanDevice>(config),
-  m_shaderDb(nullptr)
+:   TDevice<VulkanDevice>(config),
+    m_shaderDb(nullptr),
+    m_queueFamIndex(-1)
 {
     createVulkanInstance(m_vkInstance);
     int selectedDeviceIdx = std::min<int>(std::max<int>(config.index, 0), (int)g_VkInstanceInfo.vkGpus.size() - 1);
     m_info = g_VkInstanceInfo.gpus[selectedDeviceIdx];
     m_vkPhysicalDevice = g_VkInstanceInfo.vkGpus[selectedDeviceIdx];
 
-    int queueFamIndex = getGraphicsComputeQueueFamilyIndex(m_vkPhysicalDevice);
-    CPY_ASSERT(queueFamIndex != -1);
+    m_queueFamIndex = getGraphicsComputeQueueFamilyIndex(m_vkPhysicalDevice);
+    CPY_ASSERT(m_queueFamIndex != -1);
 
-    m_vkDevice = createVkDevice(m_vkPhysicalDevice, queueFamIndex);
+    m_vkDevice = createVkDevice(m_vkPhysicalDevice, m_queueFamIndex);
 
-    if (queueFamIndex == -1)
+    if (m_queueFamIndex == -1)
         std::cerr << "Could not find a compute queue for device selected" << std::endl;
 
     if (config.shaderDb)
@@ -638,7 +640,7 @@ void VulkanDevice::release(ResourceTable table)
 
 SmartPtr<IDisplay> VulkanDevice::createDisplay(const DisplayConfig& config)
 {
-    return nullptr;
+    return new VulkanDisplay(config, *this);
 }
 
 void VulkanDevice::internalReleaseWorkHandle(WorkHandle handle)
