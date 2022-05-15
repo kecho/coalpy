@@ -9,6 +9,7 @@
 #endif
 #include "VulkanDescriptorSetCache.h"
 #include "VulkanDisplay.h"
+#include "VulkanResources.h"
 #include <iostream>
 #include <set>
 #include <vector>
@@ -406,11 +407,11 @@ void VulkanDevice::testApiFuncs()
     {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
         
-	    VkDescriptorSetLayoutBinding b1 = {};
-	    b1.binding = 0;
-	    b1.descriptorCount = 1;
-	    b1.descriptorType = VK_DESCRIPTOR_TYPE_MUTABLE_VALVE;
-	    b1.stageFlags = VK_SHADER_STAGE_ALL;
+        VkDescriptorSetLayoutBinding b1 = {};
+        b1.binding = 0;
+        b1.descriptorCount = 1;
+        b1.descriptorType = VK_DESCRIPTOR_TYPE_MUTABLE_VALVE;
+        b1.stageFlags = VK_SHADER_STAGE_ALL;
         bindings.push_back(b1);
 
         VkDescriptorType typeList[] = { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE };
@@ -426,18 +427,18 @@ void VulkanDevice::testApiFuncs()
         vv.pMutableDescriptorTypeLists = valveTypeLists;
 
         VkDescriptorSetLayoutCreateInfo setinfo = {};
-	    setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	    setinfo.pNext = &vv;
+        setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        setinfo.pNext = &vv;
 
-	    //we are going to have 1 binding
-	    setinfo.bindingCount = bindings.size();
-	    //no flags
-	    setinfo.flags = 0;
-	    //point to the camera buffer binding
-	    setinfo.pBindings = bindings.data();
+        //we are going to have 1 binding
+        setinfo.bindingCount = bindings.size();
+        //no flags
+        setinfo.flags = 0;
+        //point to the camera buffer binding
+        setinfo.pBindings = bindings.data();
 
         VkDescriptorSetLayout outLayout = {};
-	    VK_OK(vkCreateDescriptorSetLayout(m_vkDevice, &setinfo, nullptr, &outLayout));
+        VK_OK(vkCreateDescriptorSetLayout(m_vkDevice, &setinfo, nullptr, &outLayout));
     }
 #endif
 
@@ -447,46 +448,46 @@ void VulkanDevice::testApiFuncs()
         {
             std::vector<VkDescriptorSetLayoutBinding> bindings;
             
-	        VkDescriptorSetLayoutBinding b0 = {};
-	        b0.binding = 0;
-	        b0.descriptorCount = 1;
-	        b0.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-	        b0.stageFlags = VK_SHADER_STAGE_ALL;
+            VkDescriptorSetLayoutBinding b0 = {};
+            b0.binding = 0;
+            b0.descriptorCount = 1;
+            b0.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            b0.stageFlags = VK_SHADER_STAGE_ALL;
             bindings.push_back(b0);
 
-	        VkDescriptorSetLayoutBinding b1 = {};
-	        b1.binding = 1;
-	        b1.descriptorCount = 1;
-	        b1.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
-	        b1.stageFlags = VK_SHADER_STAGE_ALL;
+            VkDescriptorSetLayoutBinding b1 = {};
+            b1.binding = 1;
+            b1.descriptorCount = 1;
+            b1.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+            b1.stageFlags = VK_SHADER_STAGE_ALL;
             bindings.push_back(b1);
 
             VkDescriptorSetLayoutCreateInfo setinfo = {};
-	        setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 
-	        setinfo.bindingCount = bindings.size();
-	        setinfo.pBindings = bindings.data();
+            setinfo.bindingCount = bindings.size();
+            setinfo.pBindings = bindings.data();
 
-	        VK_OK(vkCreateDescriptorSetLayout(m_vkDevice, &setinfo, nullptr, &layouts[0]));
+            VK_OK(vkCreateDescriptorSetLayout(m_vkDevice, &setinfo, nullptr, &layouts[0]));
         }
 
         {
             std::vector<VkDescriptorSetLayoutBinding> bindings;
             
-	        VkDescriptorSetLayoutBinding b1 = {};
-	        b1.binding = 99;
-	        b1.descriptorCount = 1;
-	        b1.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
-	        b1.stageFlags = VK_SHADER_STAGE_ALL;
+            VkDescriptorSetLayoutBinding b1 = {};
+            b1.binding = 99;
+            b1.descriptorCount = 1;
+            b1.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+            b1.stageFlags = VK_SHADER_STAGE_ALL;
             bindings.push_back(b1);
 
             VkDescriptorSetLayoutCreateInfo setinfo = {};
-	        setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 
-	        setinfo.bindingCount = bindings.size();
-	        setinfo.pBindings = bindings.data();
+            setinfo.bindingCount = bindings.size();
+            setinfo.pBindings = bindings.data();
 
-	        VK_OK(vkCreateDescriptorSetLayout(m_vkDevice, &setinfo, nullptr, &layouts[1]));
+            VK_OK(vkCreateDescriptorSetLayout(m_vkDevice, &setinfo, nullptr, &layouts[1]));
         }
 
         std::vector<VkDescriptorPoolSize> poolSizes = {
@@ -532,8 +533,10 @@ void VulkanDevice::testApiFuncs()
 VulkanDevice::VulkanDevice(const DeviceConfig& config)
 :   TDevice<VulkanDevice>(config),
     m_shaderDb(nullptr),
-    m_queueFamIndex(-1)
+    m_queueFamIndex(-1),
+    m_resources(nullptr)
 {
+    m_vkMemProps = {};
     createVulkanInstance(m_vkInstance);
     int selectedDeviceIdx = std::min<int>(std::max<int>(config.index, 0), (int)g_VkInstanceInfo.vkGpus.size() - 1);
     m_info = g_VkInstanceInfo.gpus[selectedDeviceIdx];
@@ -554,7 +557,10 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
         m_shaderDb->setParentDevice(this);
     }
 
+    vkGetPhysicalDeviceMemoryProperties(m_vkPhysicalDevice, &m_vkMemProps);
+
     m_descriptorSetCache = new VulkanDescriptorSetCache(*this);
+    m_resources = new VulkanResources(*this);
     
     testApiFuncs();
 }
@@ -564,6 +570,7 @@ VulkanDevice::~VulkanDevice()
     if (m_shaderDb && m_shaderDb->parentDevice() == this)
         m_shaderDb->setParentDevice(nullptr);
 
+    delete m_resources;
     delete m_descriptorSetCache;
     vkDestroyDevice(m_vkDevice, nullptr); 
     destroyVulkanInstance(m_vkInstance);    
@@ -580,19 +587,34 @@ void VulkanDevice::enumerate(std::vector<DeviceInfo>& outputList)
     outputList = g_VkInstanceInfo.gpus;
 }
 
+
+bool VulkanDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, uint32_t& memType)
+{
+    for (uint32_t i = 0; i < m_vkMemProps.memoryTypeCount; i++)
+    {
+        if ((typeFilter & (1 << i)) && (m_vkMemProps.memoryTypes[i].propertyFlags & properties) == properties)
+        {
+            memType = i;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 TextureResult VulkanDevice::createTexture(const TextureDesc& desc)
 {
-    return TextureResult();
+    return m_resources->createTexture(desc);
 }
 
 TextureResult VulkanDevice::recreateTexture(Texture texture, const TextureDesc& desc)
 {
-    return TextureResult();
+    return m_resources->recreateTexture(texture, desc);
 }
 
 BufferResult  VulkanDevice::createBuffer (const BufferDesc& config)
 {
-    return BufferResult();
+    return m_resources->createBuffer(config);
 }
 
 SamplerResult VulkanDevice::createSampler (const SamplerDesc& config)
@@ -632,6 +654,7 @@ DownloadStatus VulkanDevice::getDownloadStatus(WorkHandle bundle, ResourceHandle
 
 void VulkanDevice::release(ResourceHandle resource)
 {
+    m_resources->release(resource);
 }
 
 void VulkanDevice::release(ResourceTable table)

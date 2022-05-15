@@ -19,6 +19,7 @@ namespace render
 {
 
 class VulkanDescriptorSetCache;
+class VulkanResources;
 
 class VulkanDevice : public TDevice<VulkanDevice>
 {
@@ -53,14 +54,20 @@ public:
 
     VulkanDescriptorSetCache& descriptorSetCache() { return *m_descriptorSetCache; }
     int graphicsFamilyQueueIndex() const { return m_queueFamIndex; }
+
+    bool findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, uint32_t& outMemType);
+
+    VulkanResources& resources() { return *m_resources; }
 private:
     void createSwapchain();
     DeviceInfo m_info;
     VulkanShaderDb* m_shaderDb;
     VkInstance m_vkInstance;
     VkPhysicalDevice m_vkPhysicalDevice;
+    VkPhysicalDeviceMemoryProperties m_vkMemProps;
     VkDevice m_vkDevice;
     VulkanDescriptorSetCache* m_descriptorSetCache;
+    VulkanResources* m_resources;
     int m_queueFamIndex;
 
     void testApiFuncs();
