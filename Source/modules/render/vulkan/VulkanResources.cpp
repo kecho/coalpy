@@ -27,6 +27,7 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
     if (!handle.valid())
         return BufferResult  { ResourceResult::InvalidHandle, Buffer(), "Not enough slots." };
 
+    VkMemoryPropertyFlags memProFlags = 0u;
     VkBufferCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     createInfo.size = 64;
@@ -43,6 +44,9 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
         //in vulkan it doesnt matter, if structured or raw, always set the storage buffer bit.
         createInfo.usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
     }
+
+    memProFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
     createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; //not exposed, cant do async in coalpy yet.
     createInfo.queueFamilyIndexCount = 1;
     uint32_t desfaultQueueFam = m_device.graphicsFamilyQueueIndex();
