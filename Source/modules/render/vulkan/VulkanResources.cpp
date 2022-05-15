@@ -1,6 +1,7 @@
 #include "VulkanResources.h"
 #include "VulkanDevice.h"
 #include "Config.h"
+#include "VulkanFormats.h"
 #include <coalpy.core/Assert.h>
 #include <iostream>
 
@@ -30,7 +31,6 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
     VkMemoryPropertyFlags memProFlags = 0u;
     VkBufferCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    createInfo.size = 64;
     createInfo.usage |= desc.isConstantBuffer ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : (VkBufferUsageFlags)0u;
     if (desc.type == BufferType::Standard)
     {
@@ -38,11 +38,13 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
             createInfo.usage |= VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
         if ((desc.memFlags & MemFlag_GpuWrite) != 0)
             createInfo.usage |= VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT;
+        createInfo.size = getVkFormatStride(desc.format) * desc.elementCount;
     }
     else if (desc.type == BufferType::Structured || desc.type == BufferType::Raw)
     {
         //in vulkan it doesnt matter, if structured or raw, always set the storage buffer bit.
         createInfo.usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+        createInfo.size = desc.stride * desc.elementCount;
     }
 
     memProFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
@@ -92,6 +94,25 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
         return BufferResult  { ResourceResult::InternalApiFailure, Buffer(), "Failed to bind memory into buffer." };
     }
 
+    bufferData.vkBufferView = {};
+    if (desc.type == BufferType::Standard)
+    {
+        VkBufferViewCreateInfo bufferViewInfo = {};
+        bufferViewInfo.sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
+        bufferViewInfo.buffer = bufferData.vkBuffer;
+        bufferViewInfo.format = getVkFormat(desc.format);
+        bufferViewInfo.offset = 0u;
+        bufferViewInfo.range = createInfo.size;
+        if (vkCreateBufferView(m_device.vkDevice(), &bufferViewInfo, nullptr, &bufferData.vkBufferView) != VK_SUCCESS)
+        {
+            vkDestroyBuffer(m_device.vkDevice(), bufferData.vkBuffer, nullptr);
+            vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
+            m_container.free(handle);
+            return BufferResult  { ResourceResult::InvalidParameter, Buffer(), "Failed to create buffer view for standard buffer." };
+        }
+    }
+
+
     return BufferResult { ResourceResult::Ok, { handle.handleId } };
 }
 
@@ -121,7 +142,11 @@ void VulkanResources::release(ResourceHandle handle)
     VulkanResource& resource = m_container[handle];
 
     if (resource.isBuffer())
+    {
+        if (resource.bufferData.vkBufferView)
+            vkDestroyBufferView(m_device.vkDevice(), resource.bufferData.vkBufferView, nullptr);
         vkDestroyBuffer(m_device.vkDevice(), resource.bufferData.vkBuffer, nullptr);
+    }
     vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
 
     m_container.free(handle);

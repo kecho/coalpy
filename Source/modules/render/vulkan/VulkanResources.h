@@ -24,6 +24,7 @@ struct VulkanResource
 
     struct BufferData
     {
+        VkBufferView vkBufferView;
         VkBuffer vkBuffer;
     };
 
