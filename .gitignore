@@ -2,6 +2,7 @@
 t2-output
 *.swp
 *.swo
+.vscode
 tags
 imgui.ini
 .shader_pdb
