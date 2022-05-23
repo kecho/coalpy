@@ -672,7 +672,7 @@ void VulkanDevice::internalReleaseWorkHandle(WorkHandle handle)
 
 ScheduleStatus VulkanDevice::internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle)
 {
-    return ScheduleStatus();
+    return ScheduleStatus{ workHandle, ScheduleErrorType::Ok };
 }
 
 }
