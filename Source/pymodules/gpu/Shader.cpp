@@ -70,7 +70,13 @@ static bool parseStringList(ModuleState& state, PyObject* pyObj, std::vector<std
             return false;
         }
 
-        std::wstring wstr = (wchar_t*)PyUnicode_DATA(element);
+        //ooff is there a faster way?
+        //std::wstring wstr = (wchar_t*)PyUnicode_DATA(element);
+        Py_ssize_t strLen;
+        wchar_t* wstrRaw = PyUnicode_AsWideCharString(element, &strLen);
+        std::wstring wstr = wstrRaw;
+        if (wstrRaw)
+            PyMem_Free(wstrRaw);
         outList.push_back(ws2s(wstr));
     }
 
