@@ -271,10 +271,25 @@ DxcCompiler::~DxcCompiler()
 
 const wchar_t** getShaderModelTargets(ShaderModel sm)
 {
+    static const wchar_t* sm6_0_targets[(int)ShaderType::Count] = {
+        L"vs_6_0", //Vertex
+        L"ps_6_0", //Pixel
+        L"cs_6_0"  //Compute
+    };
     static const wchar_t* sm6_1_targets[(int)ShaderType::Count] = {
         L"vs_6_1", //Vertex
         L"ps_6_1", //Pixel
         L"cs_6_1"  //Compute
+    };
+    static const wchar_t* sm6_2_targets[(int)ShaderType::Count] = {
+        L"vs_6_2", //Vertex
+        L"ps_6_2", //Pixel
+        L"cs_6_2"  //Compute
+    };
+    static const wchar_t* sm6_3_targets[(int)ShaderType::Count] = {
+        L"vs_6_3", //Vertex
+        L"ps_6_3", //Pixel
+        L"cs_6_3"  //Compute
     };
     static const wchar_t* sm6_4_targets[(int)ShaderType::Count] = {
         L"vs_6_4", //Vertex
@@ -289,8 +304,14 @@ const wchar_t** getShaderModelTargets(ShaderModel sm)
 
     switch (sm)
     {
+    case ShaderModel::Sm6_0:
+        return sm6_0_targets;
     case ShaderModel::Sm6_1:
         return sm6_1_targets;
+    case ShaderModel::Sm6_2:
+        return sm6_2_targets;
+    case ShaderModel::Sm6_3:
+        return sm6_3_targets;
     case ShaderModel::Sm6_4:
         return sm6_4_targets;
     case ShaderModel::Sm6_5:
@@ -341,7 +362,8 @@ void addSpirvArguments(std::vector<std::wstring>& args)
 
 void DxcCompiler::compileShader(const DxcCompileArgs& args)
 {
-    const wchar_t** smTargets = getShaderModelTargets(m_desc.shaderModel);
+    CPY_ASSERT(args.shaderModel >= ShaderModel::Begin && args.shaderModel <= ShaderModel::End);
+    const wchar_t** smTargets = getShaderModelTargets(args.shaderModel);
 
     DxcCompilerScope scope;
     DxcInstanceData instanceData = scope.data();

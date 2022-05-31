@@ -17,6 +17,7 @@ struct CompileState;
 
 namespace render
 {
+    struct DeviceRuntimeInfo;
     class IDevice;
 }
 
@@ -36,7 +37,7 @@ public:
 
     void requestRecompile(ShaderHandle handle);
 
-    void setParentDevice(render::IDevice* device) { m_parentDevice = device; }
+    void setParentDevice(render::IDevice* device, const render::DeviceRuntimeInfo* runtimeInfo);
     render::IDevice* parentDevice() const { return m_parentDevice; }
 
 protected:

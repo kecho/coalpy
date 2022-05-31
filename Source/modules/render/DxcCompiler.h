@@ -62,6 +62,7 @@ using DxcCompilerOnInclude = std::function<bool(const char* path, ByteBuffer& bu
 struct DxcCompileArgs
 {
     ShaderType type;
+    ShaderModel shaderModel;
     const char* shaderName;
     const char* mainFn;
     const char* source;

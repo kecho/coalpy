@@ -5,6 +5,7 @@
 #endif
 
 #include <coalpy.render/Resources.h>
+#include <coalpy.render/ShaderDefs.h>
 #include <unordered_map>
 #include <string>
 
@@ -35,11 +36,6 @@ struct Dx12WorkInformationMap;
 class Dx12Device : public TDevice<Dx12Device>
 {
 public:
-    enum : int
-    {
-        MaxNumTables = 8
-    };
-
     enum class TableTypes : int
     {
         Srv, Uav, Cbv, Sampler, Count
@@ -65,6 +61,7 @@ public:
     virtual void release(ResourceHandle resource) override;
     virtual void release(ResourceTable table) override;
     virtual const DeviceInfo& info() const override { return m_info; }
+    virtual const DeviceRuntimeInfo& runtimeInfo() const { return m_runtimeInfo; }
     virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) override;
 
     virtual void removeShaderDb() { m_shaderDb = nullptr; }
@@ -88,8 +85,8 @@ public:
 
     int tableIndex(TableTypes type, int registerSpace) const
     {
-        CPY_ASSERT(registerSpace < (int)Dx12Device::MaxNumTables);
-        return (int)type * (int)MaxNumTables + (registerSpace & 0x7);
+        CPY_ASSERT(registerSpace < (int)m_maxResourceTables);
+        return (int)type * (int)m_maxResourceTables + (registerSpace & 0x7);
     }
 
     ScheduleStatus internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle); 
@@ -114,10 +111,14 @@ private:
     Dx12ShaderDb* m_shaderDb;
     Dx12Gc* m_gc;
     DeviceInfo m_info;
+    DeviceRuntimeInfo m_runtimeInfo;
 
     Dx12WorkInformationMap* m_dx12WorkInfos;
 
     Buffer m_countersBuffer;
+
+    ShaderModel m_supportedSM;
+    unsigned m_maxResourceTables;
 };
 
 }

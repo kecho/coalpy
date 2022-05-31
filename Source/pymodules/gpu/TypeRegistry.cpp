@@ -78,7 +78,10 @@ void constructTypes(TypeList& outTypes)
 
     {
         static EnumEntry s_ShaderModels[] = {
+            { "Sm6_0", (int)ShaderModel::Sm6_0, "Shader model 6.0 enum value." },
             { "Sm6_1", (int)ShaderModel::Sm6_1, "Shader model 6.1 enum value." },
+            { "Sm6_2", (int)ShaderModel::Sm6_2, "Shader model 6.2 enum value." },
+            { "Sm6_3", (int)ShaderModel::Sm6_3, "Shader model 6.3 enum value." },
             { "Sm6_4", (int)ShaderModel::Sm6_4, "Shader model 6.4 enum value." },
             { "Sm6_5", (int)ShaderModel::Sm6_5, "Shader model 6.5 enum value." },
             { nullptr, 0, nullptr }

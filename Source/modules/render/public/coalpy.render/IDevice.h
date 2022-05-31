@@ -3,6 +3,7 @@
 #include <coalpy.core/Os.h>
 #include <coalpy.core/SmartPtr.h>
 #include <coalpy.render/Resources.h>
+#include <coalpy.render/ShaderModels.h>
 #include <coalpy.render/IDisplay.h>
 #include <coalpy.render/CommandDefs.h>
 #include <string>
@@ -47,6 +48,11 @@ struct DeviceInfo
     std::string name;
 };
 
+struct DeviceRuntimeInfo
+{
+    ShaderModel highestShaderModel;
+};
+
 class IDevice
 {
 public:
@@ -55,6 +61,7 @@ public:
     static IDevice * create(const DeviceConfig& config);
     virtual const DeviceConfig& config() const = 0;
     virtual const DeviceInfo& info() const = 0;
+    virtual const DeviceRuntimeInfo& runtimeInfo() const = 0;
 
     virtual TextureResult createTexture(const TextureDesc& config) = 0;
     virtual BufferResult  createBuffer (const BufferDesc& config) = 0;

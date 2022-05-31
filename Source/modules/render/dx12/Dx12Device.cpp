@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <coalpy.core/SmartPtr.h>
 #include <coalpy.core/String.h>
+#include <iostream>
 #include <vector>
 
 #include "Dx12Device.h"
@@ -37,6 +38,11 @@ namespace render
 
 namespace 
 {
+
+enum : int
+{
+    Tier3MaxNumTables = 8
+};
 
 struct CardInfos
 {
@@ -107,7 +113,7 @@ void shutdownCardInfos(CardInfos& cardInfos)
         cardInfos.free();
 }
 
-ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device, const D3D12_FEATURE_DATA_D3D12_OPTIONS& featureOpts)
+ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device, const D3D12_FEATURE_DATA_D3D12_OPTIONS& featureOpts, unsigned maxResourceTables)
 {
     unsigned maxDescriptors[(int)Dx12Device::TableTypes::Count] = {};
     switch (featureOpts.ResourceBindingTier)
@@ -132,9 +138,9 @@ ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device, const D3D
         maxDescriptors[(int)Dx12Device::TableTypes::Sampler] = UINT_MAX;
     }
 
-    static const int totalNumberTables = (int)Dx12Device::MaxNumTables * (int)Dx12Device::TableTypes::Count;
-    D3D12_ROOT_PARAMETER1 rootParams[totalNumberTables];
-    D3D12_DESCRIPTOR_RANGE1 ranges[totalNumberTables];
+    unsigned totalNumberTables = maxResourceTables * (unsigned)Dx12Device::TableTypes::Count;
+    D3D12_ROOT_PARAMETER1 rootParams[(int)Tier3MaxNumTables]; //allocate max
+    D3D12_DESCRIPTOR_RANGE1 ranges[(int)Tier3MaxNumTables];//allocate max
 
     static const D3D12_DESCRIPTOR_RANGE_TYPE g_rangeTypes[(int)Dx12Device::TableTypes::Count] = {
         D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
@@ -145,10 +151,10 @@ ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device, const D3D
 
     for (int tableTypeId = 0; tableTypeId < (int)Dx12Device::TableTypes::Count; ++tableTypeId)
     {
-        for (int tableId = 0; tableId < (int)Dx12Device::MaxNumTables; ++tableId)
+        for (int tableId = 0; tableId < (int)maxResourceTables; ++tableId)
         {
             auto tableType = (Dx12Device::TableTypes)tableTypeId;
-            int tableIndex = tableTypeId * (int)Dx12Device::MaxNumTables + tableId;
+            int tableIndex = tableTypeId * (int)maxResourceTables + tableId;
             auto& rootParam = rootParams[tableIndex];
             rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 
@@ -156,7 +162,6 @@ ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device, const D3D
             {
                 auto& typeRange = ranges[tableIndex];
                 typeRange.RangeType = g_rangeTypes[tableTypeId];
-                //typeRange.NumDescriptors = 14;
                 typeRange.NumDescriptors = maxDescriptors[tableTypeId]; 
                 typeRange.BaseShaderRegister = 0;
                 typeRange.RegisterSpace = tableId;
@@ -221,6 +226,8 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
 , m_counterPool(nullptr)
 , m_readbackPool(nullptr)
 , m_gc(nullptr)
+, m_maxResourceTables(0u)
+, m_supportedSM(ShaderModel::End)
 {
     m_info = {};
     m_dx12WorkInfos = new Dx12WorkInformationMap;
@@ -269,15 +276,37 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
     D3D12_FEATURE_DATA_D3D12_OPTIONS featureOpts = {};
     DX_OK(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &featureOpts, sizeof(featureOpts)));
 
-    m_computeRootSignature = createComputeRootSignature(*m_device, featureOpts);
+    m_maxResourceTables = featureOpts.ResourceBindingTier == D3D12_RESOURCE_BINDING_TIER_3 ? Tier3MaxNumTables : 1u;
+
+    m_computeRootSignature = createComputeRootSignature(*m_device, featureOpts, m_maxResourceTables);
 
     m_indirectDispatchCommandSignature = createIndirectDispatchCommandSignature(*m_device);
+
+
+    D3D12_FEATURE_DATA_SHADER_MODEL highestSM = { D3D_SHADER_MODEL_6_5 };
+    DX_OK(m_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &highestSM, sizeof(highestSM)));
+
+    if (highestSM.HighestShaderModel < D3D_SHADER_MODEL_6_0)
+    {
+        std::cerr << "Shader model supported by this graphics card is too low. Attempting SM 6_3";
+        m_supportedSM = ShaderModel::Sm6_0;
+    }
+    else if (highestSM.HighestShaderModel > D3D_SHADER_MODEL_6_5)
+    {
+        m_supportedSM = ShaderModel::Sm6_5;
+    }
+    else
+    {
+        m_supportedSM = (ShaderModel)(highestSM.HighestShaderModel - D3D_SHADER_MODEL_6_0);
+    }
+
+    m_runtimeInfo = DeviceRuntimeInfo{ m_supportedSM };
 
     if (config.shaderDb)
     {
         m_shaderDb = static_cast<Dx12ShaderDb*>(config.shaderDb);
         CPY_ASSERT_MSG(m_shaderDb->parentDevice() == nullptr, "shader database can only belong to 1 and only 1 device");
-        m_shaderDb->setParentDevice(this);
+        m_shaderDb->setParentDevice(this, &m_runtimeInfo);
     }
 
     m_gc->start();
@@ -323,7 +352,7 @@ Dx12Device::~Dx12Device()
         m_indirectDispatchCommandSignature->Release();
 
     if (m_shaderDb && m_shaderDb->parentDevice() == this)
-        m_shaderDb->setParentDevice(nullptr);
+        m_shaderDb->setParentDevice(nullptr, nullptr);
 
     shutdownCardInfos(g_cardInfos);
 

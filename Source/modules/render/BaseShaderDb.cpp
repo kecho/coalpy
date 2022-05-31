@@ -69,6 +69,18 @@ void BaseShaderDb::preparePdbDir()
     m_createdPdbDir = true;
 }
 
+void BaseShaderDb::setParentDevice(render::IDevice* device, const render::DeviceRuntimeInfo* runtimeInfo)
+{
+    m_parentDevice = device;
+    if (runtimeInfo && (int)runtimeInfo->highestShaderModel < (int)m_desc.shaderModel)
+    {
+        std::cerr << "WARNING: shader model requested is sm6_" << (int)m_desc.shaderModel
+        << " but current graphics card only supports up to sm6_" << (int)runtimeInfo->highestShaderModel
+        << ". Forcing max graphics card supported shader model." <<  std::endl;
+        m_desc.shaderModel = runtimeInfo->highestShaderModel;
+    }
+}
+
 BaseShaderDb::~BaseShaderDb()
 {
     if (m_desc.enableLiveEditing)
@@ -126,6 +138,7 @@ ShaderHandle BaseShaderDb::requestCompile(const ShaderDesc& desc)
 
     compileState->compileArgs = {};
     compileState->compileArgs.type = desc.type;
+    compileState->compileArgs.shaderModel = m_desc.shaderModel;
     compileState->compileArgs.additionalIncludes = m_additionalPaths;
     compileState->compileArgs.defines = desc.defines;
     compileState->compileArgs.generatePdb = m_pdbDirReady;
@@ -162,6 +175,7 @@ ShaderHandle BaseShaderDb::requestCompile(const ShaderInlineDesc& desc)
     compileState->buffer.append((u8*)desc.immCode, strlen(desc.immCode) + 1);
     compileState->mainFn = desc.mainFn;
     compileState->compileArgs.type = desc.type;
+    compileState->compileArgs.shaderModel = m_desc.shaderModel;
     compileState->compileArgs.shaderName = compileState->shaderName.c_str();
     compileState->compileArgs.mainFn = compileState->mainFn.c_str();
     compileState->compileArgs.source = (const char*)compileState->buffer.data();
@@ -214,6 +228,7 @@ void BaseShaderDb::requestRecompile(ShaderHandle handle)
     compileState.shaderName = recipe.name;
     compileState.mainFn = recipe.mainFn;
     compileState.compileArgs.type = recipe.type;
+    compileState.compileArgs.shaderModel = m_desc.shaderModel;
     compileState.compileArgs.shaderName = recipe.name.c_str();
     compileState.compileArgs.mainFn = recipe.mainFn.c_str();
     compileState.compileArgs.additionalIncludes = m_additionalPaths;

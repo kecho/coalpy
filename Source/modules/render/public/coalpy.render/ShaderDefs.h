@@ -2,6 +2,7 @@
 
 #include <coalpy.core/GenericHandle.h>
 #include <coalpy.render/IDevice.h>
+#include <coalpy.render/ShaderModels.h>
 #include <functional>
 #include <vector>
 #include <string>
@@ -19,15 +20,6 @@ enum class ShaderType
     Pixel,
     Compute,
     Count
-};
-
-enum class ShaderModel
-{
-    Begin,
-    Sm6_1 = Begin,
-    Sm6_4,
-    Sm6_5,
-    End = Sm6_5
 };
 
 struct ShaderDesc

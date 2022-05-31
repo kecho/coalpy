@@ -10,6 +10,7 @@
 #include "VulkanDescriptorSetCache.h"
 #include "VulkanDisplay.h"
 #include "VulkanResources.h"
+#include <coalpy.render/ShaderDefs.h>
 #include <iostream>
 #include <set>
 #include <vector>
@@ -536,6 +537,7 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
     m_queueFamIndex(-1),
     m_resources(nullptr)
 {
+    m_runtimeInfo = { ShaderModel::End };
     m_vkMemProps = {};
     createVulkanInstance(m_vkInstance);
     int selectedDeviceIdx = std::min<int>(std::max<int>(config.index, 0), (int)g_VkInstanceInfo.vkGpus.size() - 1);
@@ -554,7 +556,8 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
     {
         m_shaderDb = static_cast<VulkanShaderDb*>(config.shaderDb);
         CPY_ASSERT_MSG(m_shaderDb->parentDevice() == nullptr, "shader database can only belong to 1 and only 1 device");
-        m_shaderDb->setParentDevice(this);
+        
+        m_shaderDb->setParentDevice(this, &m_runtimeInfo);
     }
 
     vkGetPhysicalDeviceMemoryProperties(m_vkPhysicalDevice, &m_vkMemProps);

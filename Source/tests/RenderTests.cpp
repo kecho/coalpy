@@ -113,6 +113,7 @@ namespace coalpy
             DeviceConfig config;
             config.shaderDb = db;
             config.platform = platform;
+            config.flags = DeviceFlags::EnableDebug;
             device = IDevice::create(config);
         }
     }
