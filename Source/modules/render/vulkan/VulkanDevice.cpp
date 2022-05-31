@@ -571,7 +571,7 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
 VulkanDevice::~VulkanDevice()
 {
     if (m_shaderDb && m_shaderDb->parentDevice() == this)
-        m_shaderDb->setParentDevice(nullptr);
+        m_shaderDb->setParentDevice(nullptr, nullptr);
 
     delete m_resources;
     delete m_descriptorSetCache;
