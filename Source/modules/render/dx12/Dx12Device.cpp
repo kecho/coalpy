@@ -107,8 +107,31 @@ void shutdownCardInfos(CardInfos& cardInfos)
         cardInfos.free();
 }
 
-ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device)
+ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device, const D3D12_FEATURE_DATA_D3D12_OPTIONS& featureOpts)
 {
+    unsigned maxDescriptors[(int)Dx12Device::TableTypes::Count] = {};
+    switch (featureOpts.ResourceBindingTier)
+    {
+    case D3D12_RESOURCE_BINDING_TIER_1:
+        maxDescriptors[(int)Dx12Device::TableTypes::Srv] = 128;
+        maxDescriptors[(int)Dx12Device::TableTypes::Uav] = 8;
+        maxDescriptors[(int)Dx12Device::TableTypes::Cbv] = 14;
+        maxDescriptors[(int)Dx12Device::TableTypes::Sampler] = 16;
+        break;
+    case D3D12_RESOURCE_BINDING_TIER_2:
+        maxDescriptors[(int)Dx12Device::TableTypes::Srv] = UINT_MAX;
+        maxDescriptors[(int)Dx12Device::TableTypes::Uav] = 64;
+        maxDescriptors[(int)Dx12Device::TableTypes::Cbv] = 14;
+        maxDescriptors[(int)Dx12Device::TableTypes::Sampler] = 2048;
+        break;
+    case D3D12_RESOURCE_BINDING_TIER_3:
+    default:
+        maxDescriptors[(int)Dx12Device::TableTypes::Srv] = UINT_MAX;
+        maxDescriptors[(int)Dx12Device::TableTypes::Uav] = UINT_MAX;
+        maxDescriptors[(int)Dx12Device::TableTypes::Cbv] = UINT_MAX;
+        maxDescriptors[(int)Dx12Device::TableTypes::Sampler] = UINT_MAX;
+    }
+
     static const int totalNumberTables = (int)Dx12Device::MaxNumTables * (int)Dx12Device::TableTypes::Count;
     D3D12_ROOT_PARAMETER1 rootParams[totalNumberTables];
     D3D12_DESCRIPTOR_RANGE1 ranges[totalNumberTables];
@@ -133,7 +156,8 @@ ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device)
             {
                 auto& typeRange = ranges[tableIndex];
                 typeRange.RangeType = g_rangeTypes[tableTypeId];
-                typeRange.NumDescriptors = UINT_MAX;
+                //typeRange.NumDescriptors = 14;
+                typeRange.NumDescriptors = maxDescriptors[tableTypeId]; 
                 typeRange.BaseShaderRegister = 0;
                 typeRange.RegisterSpace = tableId;
                 typeRange.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
@@ -242,7 +266,10 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
 
     m_readbackPool = new Dx12BufferPool(*this, true);
 
-    m_computeRootSignature = createComputeRootSignature(*m_device);
+    D3D12_FEATURE_DATA_D3D12_OPTIONS featureOpts = {};
+    DX_OK(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &featureOpts, sizeof(featureOpts)));
+
+    m_computeRootSignature = createComputeRootSignature(*m_device, featureOpts);
 
     m_indirectDispatchCommandSignature = createIndirectDispatchCommandSignature(*m_device);
 
