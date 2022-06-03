@@ -139,8 +139,8 @@ ID3D12RootSignature* createComputeRootSignature(ID3D12Device2& device, const D3D
     }
 
     unsigned totalNumberTables = maxResourceTables * (unsigned)Dx12Device::TableTypes::Count;
-    D3D12_ROOT_PARAMETER1 rootParams[(int)Tier3MaxNumTables]; //allocate max
-    D3D12_DESCRIPTOR_RANGE1 ranges[(int)Tier3MaxNumTables];//allocate max
+    D3D12_ROOT_PARAMETER1 rootParams[(int)Tier3MaxNumTables * (unsigned)Dx12Device::TableTypes::Count]; //allocate max
+    D3D12_DESCRIPTOR_RANGE1 ranges[(int)Tier3MaxNumTables * (unsigned)Dx12Device::TableTypes::Count];//allocate max
 
     static const D3D12_DESCRIPTOR_RANGE_TYPE g_rangeTypes[(int)Dx12Device::TableTypes::Count] = {
         D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
