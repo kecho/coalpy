@@ -22,6 +22,8 @@ struct ImguiBuilder
     PyObject_HEAD
 
     bool enabled = false;
+    int imguiConfigFlags = 0;
+    
     SmartPtr<render::IimguiRenderer> activeRenderer;
     std::set<Texture*> textureReferences;
 

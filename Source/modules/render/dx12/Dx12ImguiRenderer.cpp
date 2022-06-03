@@ -42,6 +42,7 @@ Dx12imguiRenderer::Dx12imguiRenderer(const IimguiRendererDesc& desc)
     auto oldContext = ImGui::GetCurrentContext();
     m_context = ImGui::CreateContext();
     ImGui::SetCurrentContext(m_context);
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
     m_rtv = m_device.descriptors().allocateRtv();
 
@@ -112,6 +113,13 @@ void Dx12imguiRenderer::newFrame()
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
+}
+
+void Dx12imguiRenderer::endFrame()
+{
+    activate();
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
 }
 
 void Dx12imguiRenderer::setCoalpyStyle()

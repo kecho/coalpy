@@ -31,6 +31,7 @@ public:
     virtual void newFrame() = 0;
     virtual void activate() = 0;
     virtual void render() = 0;
+    virtual void endFrame() = 0;
     virtual ImTextureID registerTexture(Texture texture) = 0;
     virtual void unregisterTexture(Texture texture) = 0;
 };

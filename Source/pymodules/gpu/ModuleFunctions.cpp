@@ -362,6 +362,10 @@ PyObject* run(PyObject* self, PyObject* args)
 
             if (w->display != nullptr)
                 w->display->present();
+
+            if (w->uiRenderer != nullptr)
+                w->uiRenderer->endFrame();
+
             Py_DECREF(renderArgs->window);
             renderArgs->window = nullptr;
             Py_DECREF(renderArgs->userData);

@@ -30,6 +30,7 @@ public:
     virtual ~Dx12imguiRenderer();
 
     virtual void newFrame() override;
+    virtual void endFrame() override;
     virtual void activate() override;
     virtual void render() override;
     ImTextureID registerTexture(Texture texture) override;
