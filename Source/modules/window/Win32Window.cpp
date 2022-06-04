@@ -430,16 +430,15 @@ void Win32Window::run(const WindowRunArgs& args)
     MSG currMsg;
     while (!finished)
     {
-        bool onMessage = PeekMessage(&currMsg, NULL, NULL, NULL, PM_REMOVE);
-        //run all windows here
-        if (args.onRender)
-            finished = !args.onRender();
-
-        if (onMessage)
+        while (::PeekMessage(&currMsg, NULL, NULL, NULL, PM_REMOVE))
         {
             TranslateMessage(&currMsg);
             DispatchMessage(&currMsg);
         }
+
+        //run all windows here
+        if (args.onRender)
+            finished = !args.onRender();
     }
 
     for (auto w : Win32Window::s_allWindows)

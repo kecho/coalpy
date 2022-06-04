@@ -16,15 +16,13 @@ namespace gpu
 
 namespace methods
 {
-#define IMGUI_FN(pyname, cppname, doc) static PyObject* cppname(PyObject* self, PyObject* vargs, PyObject* kwds);
+    #define IMGUI_FN(pyname, cppname, doc) static PyObject* cppname(PyObject* self, PyObject* vargs, PyObject* kwds);
     #include "ImguiFunctions.inl"
-#undef  IMGUI_FN
 }
 
 static PyMethodDef g_imguiMethods[] = {
-#define IMGUI_FN(pyname, cppname, doc) KW_FN(pyname, cppname, doc),
+    #define IMGUI_FN(pyname, cppname, doc) KW_FN(pyname, cppname, doc),
     #include "ImguiFunctions.inl"
-#undef  IMGUI_FN
     FN_END
 };
 
@@ -110,13 +108,23 @@ PyObject* begin(PyObject* self, PyObject* vargs, PyObject* kwds)
     CHECK_IMGUI
     char* name = nullptr;
     int is_openint = 1;
-    static char* argnames[] = { "name", "is_open", nullptr };
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|p", argnames, &name, &is_openint))
+    int is_fullscreenint = 0;
+    int flags = 0;
+    static char* argnames[] = { "name", "is_open", "is_fullscreen", "flags", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|ppi", argnames, &name, &is_openint, &is_fullscreenint, &flags))
         return nullptr;
 
     bool is_open = is_openint ? true : false;
 
-    ImGui::Begin(name, &is_open);
+    if (is_fullscreenint)
+    {
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        flags |= ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings;
+    }
+
+    ImGui::Begin(name, &is_open, flags);
     if (is_open)
         Py_RETURN_TRUE;
     else
@@ -490,6 +498,22 @@ PyObject* image(PyObject* self, PyObject* vargs, PyObject* kwds)
 
     ImGui::Image(textureID, size, uv0, uv1, tintCol, borderCol);
 
+    Py_RETURN_NONE;
+}
+
+PyObject* dockspace(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "label", nullptr };
+
+    char* label;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s", argnames, &label))
+        return nullptr;
+
+    ImGuiID dockspaceId = ImGui::GetID(label);
+    ImGui::DockSpace(dockspaceId);
     Py_RETURN_NONE;
 }
 

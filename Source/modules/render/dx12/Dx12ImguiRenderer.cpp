@@ -43,6 +43,7 @@ Dx12imguiRenderer::Dx12imguiRenderer(const IimguiRendererDesc& desc)
     m_context = ImGui::CreateContext();
     ImGui::SetCurrentContext(m_context);
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     m_rtv = m_device.descriptors().allocateRtv();
 
@@ -118,8 +119,6 @@ void Dx12imguiRenderer::newFrame()
 void Dx12imguiRenderer::endFrame()
 {
     activate();
-    ImGui::UpdatePlatformWindows();
-    ImGui::RenderPlatformWindowsDefault();
 }
 
 void Dx12imguiRenderer::setCoalpyStyle()
@@ -261,6 +260,9 @@ void Dx12imguiRenderer::render()
     m_device.queues().cmdQueue(workType).ExecuteCommandLists(1, &cmdList);
     auto fenceVal = m_device.queues().signalFence(workType);
     m_device.queues().deallocate(dx12List, fenceVal);
+
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
 }
 
 ImTextureID Dx12imguiRenderer::registerTexture(Texture texture)

@@ -1,3 +1,11 @@
+#ifndef IMGUI_FN
+#define IMGUI_FN(pyname, cppname, desc)
+#endif
+
+#ifndef IMGUI_ENUM
+#define IMGUI_ENUM(pyname, cppname, desc)
+#endif
+
 //Add here all your imgui forwarding functions. Add implementation in ImguiBuilder.cpp
 //IMGUI_FN(python name, c++ name, documentation)
 IMGUI_FN(begin, begin,R"(
@@ -8,6 +16,9 @@ IMGUI_FN(begin, begin,R"(
         name (str): Mandatory name of this interface panel.
         is_open (bool)(optional): Specifies the previous state of this panel. True for open, false otherwise.
                                   Update this state with the return value of this function.
+
+        is_fullscreen (bool)(optional): sets this window to follow the main viewport.
+        flags (int)(optional): See ImguiFlags.window_* flags
 
     Returns:
         returns a boolean, True if the X for closing this panel was pressed, False otherwise.
@@ -245,3 +256,35 @@ IMGUI_FN(image, image, R"(
         tint_col (tuple): size 4 tuple with image tint color (default (1,1,1,1)).
         border_col (tuple): size 4 tuple with background color (default (0,0,0,0)).
 )")
+
+IMGUI_FN(dockspace, dockspace, R"(
+    Creates an explicit dockspace
+
+    Parameters:
+        label (str): the docking space name
+)")
+
+IMGUI_ENUM(window_no_title_bar,               ImGuiWindowFlags_NoTitleBar                , R"(Disable title-bar)")
+IMGUI_ENUM(window_no_resize,                  ImGuiWindowFlags_NoResize                  , R"(Disable user resizing with the lower-right grip)")
+IMGUI_ENUM(window_no_move,                    ImGuiWindowFlags_NoMove                    , R"(Disable user moving the window)")
+IMGUI_ENUM(window_no_scrollbar,               ImGuiWindowFlags_NoScrollbar               , R"(Disable scrollbars (window can still scroll with mouse or programmatically))")
+IMGUI_ENUM(window_no_scrll_with_mouse,        ImGuiWindowFlags_NoScrollWithMouse         , R"(Disable user vertically scrolling with mouse wheel. On child window, mouse wheel will be forwarded to the parent unless NoScrollbar is also set.)")
+IMGUI_ENUM(window_no_collapse,                ImGuiWindowFlags_NoCollapse                , R"(Disable user collapsing window by double-clicking on it. Also referred to as Window Menu Button (e.g. within a docking node).)")
+IMGUI_ENUM(window_always_auto_resize,         ImGuiWindowFlags_AlwaysAutoResize          , R"(Resize every window to its content every frame)")
+IMGUI_ENUM(window_no_background,              ImGuiWindowFlags_NoBackground              , R"(Disable drawing background color (WindowBg, etc.) and outside border. Similar as using SetNextWindowBgAlpha(0.0f).)")
+IMGUI_ENUM(window_no_saved_settings,          ImGuiWindowFlags_NoSavedSettings           , R"(Never load/save settings in .ini file)")
+IMGUI_ENUM(window_no_mouse_inputs,            ImGuiWindowFlags_NoMouseInputs             , R"(Disable catching mouse, hovering test with pass through.)")
+IMGUI_ENUM(window_menu_bar,                   ImGuiWindowFlags_MenuBar                   , R"(Has a menu-bar)")
+IMGUI_ENUM(window_horizontal_scrollbar,       ImGuiWindowFlags_HorizontalScrollbar       , R"(Allow horizontal scrollbar to appear (off by default). You may use SetNextWindowContentSize(ImVec2(width,0.0f)); prior to calling Begin() to specify width. Read code in imgui_demo in the "Horizontal Scrolling" section.)")
+IMGUI_ENUM(window_no_focus_on_appearing,      ImGuiWindowFlags_NoFocusOnAppearing        , R"(Disable taking focus when transitioning from hidden to visible state)")
+IMGUI_ENUM(window_no_bring_to_front_on_focus, ImGuiWindowFlags_NoBringToFrontOnFocus     , R"(Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus))")
+IMGUI_ENUM(window_always_vertical_scrollbar,  ImGuiWindowFlags_AlwaysVerticalScrollbar   , R"(Always show vertical scrollbar (even if ContentSize.y < Size.y))")
+IMGUI_ENUM(window_always_horizontal_scrollbar,ImGuiWindowFlags_AlwaysHorizontalScrollbar , R"(Always show horizontal scrollbar (even if ContentSize.x < Size.x))")
+IMGUI_ENUM(window_always_use_window_padding,  ImGuiWindowFlags_AlwaysUseWindowPadding    , R"(Ensure child windows without border uses style.WindowPadding (ignored by default for non-bordered child windows, because more convenient))")
+IMGUI_ENUM(window_no_nav_inputs,              ImGuiWindowFlags_NoNavInputs               , R"(No gamepad/keyboard navigation within the window)")
+IMGUI_ENUM(window_no_nav_focus,               ImGuiWindowFlags_NoNavFocus                , R"(No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by CTRL+TAB))")
+IMGUI_ENUM(window_unsaved_document,           ImGuiWindowFlags_UnsavedDocument           , R"(Display a dot next to the title. When used in a tab/docking context, tab is selected when clicking the X + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.)")
+IMGUI_ENUM(window_no_docking,                 ImGuiWindowFlags_NoDocking                 , R"(Disable docking of this window)")
+
+#undef IMGUI_ENUM
+#undef IMGUI_FN 

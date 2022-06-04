@@ -145,6 +145,15 @@ void constructTypes(TypeList& outTypes)
     }
 
     {
+        static EnumEntry s_ImguiEnums[] = {
+            #define IMGUI_ENUM(pyname, cppname, desc) { #pyname, cppname, desc },
+            #include "ImguiFunctions.inl"
+            { nullptr, 0, nullptr }
+        };
+        outTypes.push_back(RenderEnum::constructEnumType("gpu.ImguiFlags", "ImguiFlags",  s_ImguiEnums, "Various flags for Imgui")); 
+    }
+
+    {
         static EnumEntry s_InputKeys[] = {
             #define KEY_DECL(x) { #x, (int)Keys::x, #x " key enumeration." },
             #include <coalpy.window/Keys.inl>
