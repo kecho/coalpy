@@ -15,13 +15,13 @@ namespace gpu
 
 namespace methods
 {
-    static PyObject* resolve(PyObject* self, PyObject* vargs);
-    static PyObject* isValid(PyObject* self, PyObject* vargs);
+    #include "bindings/MethodDecl.h"
+    #include "bindings/Shader.inl"
 }
 
 static PyMethodDef g_shaderMethods[] = {
-    VA_FN(resolve, resolve, "Waits for shader compilation to be finished. Resolve is mostly implicitely called upon any operation requiring the shader's definition."),
-    VA_FN(is_valid, isValid, "Returns true if this is a valid shader, false otherwise."),
+    #include "bindings/MethodDef.h"
+    #include "bindings/Shader.inl"
     FN_END
 };
 
@@ -157,14 +157,14 @@ void Shader::destroy(PyObject* self)
 
 namespace methods
 {
-    static PyObject* resolve(PyObject* self, PyObject* vargs)
+    static PyObject* resolve(PyObject* self, PyObject* kwds, PyObject* vargs)
     {
         auto* shader = (Shader*)self;
         shader->db->resolve(shader->handle);
         Py_RETURN_NONE;
     }
 
-    static PyObject* isValid(PyObject* self, PyObject* vargs)
+    static PyObject* isValid(PyObject* self, PyObject* kwds, PyObject* vargs)
     {
         auto* shader = (Shader*)self;
         if (shader->db->isValid(shader->handle))

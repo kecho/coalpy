@@ -16,13 +16,13 @@ namespace gpu
 
 namespace methods
 {
-    #define IMGUI_FN(pyname, cppname, doc) static PyObject* cppname(PyObject* self, PyObject* vargs, PyObject* kwds);
-    #include "ImguiFunctions.inl"
+    #include "bindings/MethodDecl.h"
+    #include "bindings/Imgui.inl"
 }
 
 static PyMethodDef g_imguiMethods[] = {
-    #define IMGUI_FN(pyname, cppname, doc) KW_FN(pyname, cppname, doc),
-    #include "ImguiFunctions.inl"
+    #include "bindings/MethodDef.h"
+    #include "bindings/Imgui.inl"
     FN_END
 };
 
@@ -516,6 +516,59 @@ PyObject* dockspace(PyObject* self, PyObject* vargs, PyObject* kwds)
     ImGui::DockSpace(dockspaceId);
     Py_RETURN_NONE;
 }
+
+PyObject* getMousePos (PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    ImVec2 mousePos = ImGui::GetMousePos();
+    return Py_BuildValue("(ff)", mousePos.x, mousePos.y);
+}
+
+PyObject* getWindowSize(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    ImVec2 winSize = ImGui::GetWindowSize();
+    return Py_BuildValue("(ff)", winSize.x, winSize.y);
+}
+
+PyObject* setWindowSize(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "size", nullptr };
+
+    ImVec2 sz = {};
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "(ff)", argnames, &sz.x, &sz.y))
+        return nullptr;
+
+    ImGui::SetWindowSize(sz);
+    Py_RETURN_NONE;
+}
+
+PyObject* isWindowFocused(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "flags", nullptr };
+
+    int flags = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|i", argnames, &flags))
+        return nullptr;
+
+    if (ImGui::IsWindowFocused(flags))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* setWindowFocus(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    ImGui::SetWindowFocus();
+    Py_RETURN_NONE;
+}
+
+
 
 }
 

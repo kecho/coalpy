@@ -24,73 +24,8 @@
 #include <Python.h>
 #include <moduleobject.h>
 
-namespace {
-
-PyMethodDef g_defs[] = {
-
-    KW_FN(
-        get_adapters,
-        getAdapters,
-        R"(
-        Lists all gpu graphics cards found in the system.
-
-        Returns:
-            adapters (Array of tuple): Each element in the list is a tuple of type (i : int, name : Str)
-        )"
-    ),
-
-    KW_FN(
-        get_current_adapter_info,
-        getCurrentAdapterInfo,
-        R"(
-        Gets the currently active GPU adapter, as a tuple of (i : int, name : Str).
-
-        Returns:
-            adapter (tuple): Element as tuple of type (i : int, name : str)
-        )"
-    ),
-
-    KW_FN(
-        set_current_adapter,
-        setCurrentAdapter,
-        R"(
-        Selects an active GPU adapter. For a list of GPU adapters see coalpy.gpu.get_adapters.
-
-        Parameters:
-            index (int): the desired device index. See get_adapters for a full list.
-            flags (gpu.DeviceFlags) (optional): bit mask with device flags.
-            dump_shader_pdbs (bool)(optional): if True it will dump the built shader's PDBs to the .shader_pdb folder.
-            shader_model (int)(optional):  Default is sm6_5. sets the current shader model used for shader compilation. See the enum coalpy.gpu.ShaderModel for the available models.
-        )"
-    ),
-
-    KW_FN(
-        add_data_path,
-        addDataPath,
-        R"(
-        Adds a path to load shader / texture files / shader includes from.
-        
-        Parameters:
-            path (str or Module):  If str it will be a path to be used. If a module, it will find the source folder of the module's __init__.py file, and use this source as the path.
-                                   path priorities are based on the order of how they were added.
-        )"
-    ),
-
-    KW_FN(
-        schedule,
-        schedule,
-        R"(
-        Submits an array of CommandList objects to the GPU to run shader work on.
-
-        Parameters:
-            command_lists (array of CommandList or a single CommandList object): an array of CommandList objects or a single CommandList object to run in the GPU. CommandList can be resubmitted through more calls of schedule.
-        )"
-    ),
-
-    VA_FN(run, run, "Runs window rendering callbacks. This function blocks until all the existing windows are closed. Window objects must be created and referenced prior. Use the Window object to configure / specify callbacks and this function to run all the event loops for windows."),
-
-    FN_END
-};
+namespace
+{
 
 coalpy::gpu::ModuleState& getState(PyObject* module)
 {
@@ -103,12 +38,40 @@ namespace coalpy
 {
 namespace gpu
 {
+
 namespace methods
 {
 
-PyMethodDef* get()
+#include "bindings/MethodDecl.h"
+#include "bindings/ModuleFunctions.inl"
+
+bool getModulePath(ModuleState& moduleState, PyObject* moduleObject, std::string& path)
 {
-    return g_defs;
+    const bool isModule = PyModule_Check(moduleObject);
+    CPY_ASSERT(isModule);
+    if (!isModule)
+        return false;
+
+    {
+        PyObject* filenameObj = PyModule_GetFilenameObject(moduleObject);
+        if (filenameObj == nullptr)
+        {
+            PyErr_SetString(moduleState.exObj(), "Module passed does not contain an __init__.py file or a core location that can be used to extract a path.");
+            return false;
+        }
+
+        if (PyUnicode_Check(filenameObj))
+        {
+            std::wstring wstr = (const wchar_t*)PyUnicode_AS_DATA(filenameObj);
+            std::string coreModulePath = ws2s(wstr);
+            FileUtils::getDirName(coreModulePath, path);
+        }
+
+        Py_DECREF(filenameObj);
+    }
+
+    return true;
+
 }
 
 void freeModule(void* modulePtr)
@@ -117,6 +80,23 @@ void freeModule(void* modulePtr)
     auto state = (ModuleState*)PyModule_GetState(moduleObj);
     if (state)
         state->~ModuleState();
+}
+
+
+}
+
+static PyMethodDef g_moduleFunctions[] = {
+    #include "bindings/MethodDef.h"
+    #include "bindings/ModuleFunctions.inl"
+    FN_END
+};
+
+namespace methods
+{
+
+PyMethodDef* get()
+{
+    return g_moduleFunctions;
 }
 
 PyObject* getAdapters(PyObject* self, PyObject* vargs, PyObject* kwds)
@@ -179,35 +159,6 @@ PyObject* setCurrentAdapter(PyObject* self, PyObject* args, PyObject* kwds)
         return nullptr;
     
     Py_RETURN_NONE;
-}
-
-bool getModulePath(ModuleState& moduleState, PyObject* moduleObject, std::string& path)
-{
-    const bool isModule = PyModule_Check(moduleObject);
-    CPY_ASSERT(isModule);
-    if (!isModule)
-        return false;
-
-    {
-        PyObject* filenameObj = PyModule_GetFilenameObject(moduleObject);
-        if (filenameObj == nullptr)
-        {
-            PyErr_SetString(moduleState.exObj(), "Module passed does not contain an __init__.py file or a core location that can be used to extract a path.");
-            return false;
-        }
-
-        if (PyUnicode_Check(filenameObj))
-        {
-            std::wstring wstr = (const wchar_t*)PyUnicode_AS_DATA(filenameObj);
-            std::string coreModulePath = ws2s(wstr);
-            FileUtils::getDirName(coreModulePath, path);
-        }
-
-        Py_DECREF(filenameObj);
-    }
-
-    return true;
-
 }
 
 PyObject* addDataPath(PyObject* self, PyObject* args, PyObject* kwds)
