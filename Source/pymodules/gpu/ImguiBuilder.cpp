@@ -531,6 +531,13 @@ PyObject* getWindowSize(PyObject* self, PyObject* vargs, PyObject* kwds)
     return Py_BuildValue("(ff)", winSize.x, winSize.y);
 }
 
+PyObject* getWindowPos(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    ImVec2 winPos = ImGui::GetWindowPos();
+    return Py_BuildValue("(ff)", winPos.x, winPos.y);
+}
+
 PyObject* setWindowSize(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI;

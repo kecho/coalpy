@@ -266,10 +266,17 @@ COALPY_FN(image, image, R"(
 )")
 
 COALPY_FN(get_mouse_pos, getMousePos, R"(
-    Gets the relative mouse position of the current window
+    Gets the absolute mouse position
 
     Returns:
         Mouse pos (tuple x, y)
+)")
+
+COALPY_FN(get_window_pos, getWindowPos, R"(
+    Gets the absolute window position
+
+    Returns
+        Window position (tuple x, y)
 )")
 
 COALPY_FN(get_window_size, getWindowSize, R"(
