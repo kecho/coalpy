@@ -312,6 +312,58 @@ COALPY_FN(dockspace, dockspace, R"(
 
     Parameters:
         label (str): the docking space name
+        dock_id (int)(optional): the dockspace id. If provided, dockspace name will be ignored.
+
+    Returns:
+        dockspace_id (int): id of the dockspace used.
+)")
+
+
+COALPY_FN(dockbuilder_dock_window, dockBuilderDockWindow, R"(
+    Parameters:
+        window_name (str)
+        node_id (int)
+)")
+
+COALPY_FN(dockbuilder_add_node, dockBuilderAddNode, R"(
+    Parameters:
+        node_id (int)
+        flags (int): see coalpy.gpu.ImGuiDockNodeFlags
+
+    Returns:
+        dock_id added.
+)")
+
+COALPY_FN(dockbuilder_remove_node, dockBuilderRemoveNode, R"(
+    Parameters:
+        node_id (int)
+)")
+
+COALPY_FN(dockbuilder_set_node_pos, dockBuilderSetNodePos, R"(
+    Parameters:
+        node_id (int)
+        pos (tuple 2)
+)")
+
+COALPY_FN(dockbuilder_set_node_size, dockBuilderSetNodeSize, R"(
+    Parameters:
+        node_id (int)
+        size (tuple 2)
+)")
+
+COALPY_FN(dockbuilder_split_node, dockBuilderSplitNode, R"(
+    Parameters:
+        node_id (int)
+        split_dir (int): see coalpy.gpu.ImGuiDir 
+        split_ratio (float)
+    
+    Returns:
+        tuple 2: (dock_id_at_dir, dock_id_opposite_dir)
+)")
+
+COALPY_FN(dockbuilder_finish, dockBuilderFinish, R"(
+    Parameters:
+        node_id (int)
 )")
 
 //Imgui focus flags enums
@@ -348,6 +400,25 @@ COALPY_ENUM(NoNavFocus,               ImGuiWindowFlags_NoNavFocus               
 COALPY_ENUM(UnsavedDocument,          ImGuiWindowFlags_UnsavedDocument           , R"(Display a dot next to the title. When used in a tab/docking context, tab is selected when clicking the X + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.)")
 COALPY_ENUM(NoDocking,                ImGuiWindowFlags_NoDocking                 , R"(Disable docking of this window)")
 COALPY_ENUM_END(ImGuiWindowFlags)
+
+//Imgui dir enum
+COALPY_ENUM_BEGIN(ImGuiDir, "")
+COALPY_ENUM(Left  , ImGuiDir_Left  , "")
+COALPY_ENUM(Right , ImGuiDir_Right , "")
+COALPY_ENUM(Up    , ImGuiDir_Up    , "")
+COALPY_ENUM(Down  , ImGuiDir_Down  , "")
+COALPY_ENUM(COUNT , ImGuiDir_COUNT , "")
+COALPY_ENUM_END(ImGuiDir)
+
+//Imgui dock enum
+COALPY_ENUM_BEGIN(ImGuiDockNodeFlags, "Flags for docking")
+COALPY_ENUM(KeepAliveOnly         , ImGuiDockNodeFlags_KeepAliveOnly         , "Don't display the dockspace node but keep it alive. Windows docked into this dockspace node won't be undocked.")
+COALPY_ENUM(NoDockingInCentralNode, ImGuiDockNodeFlags_NoDockingInCentralNode, "Disable docking inside the Central Node, which will be always kept empty.")
+COALPY_ENUM(PassthruCentralNode   , ImGuiDockNodeFlags_PassthruCentralNode   , "Enable passthru dockspace: 1) DockSpace() will render a ImGuiCol_WindowBg background covering everything excepted the Central Node when empty. Meaning the host window should probably use SetNextWindowBgAlpha(0.0f) prior to Begin() when using this. 2) When Central Node is empty: let inputs pass-through + won't display a DockingEmptyBg background. See demo for details.")
+COALPY_ENUM(NoSplit               , ImGuiDockNodeFlags_NoSplit               , "Disable splitting the node into smaller nodes. Useful e.g. when embedding dockspaces into a main root one (the root one may have splitting disabled to reduce confusion). Note: when turned off, existing splits will be preserved.")
+COALPY_ENUM(NoResize              , ImGuiDockNodeFlags_NoResize              , "Disable resizing node using the splitter/separators. Useful with programmatically setup dockspaces.")
+COALPY_ENUM(AutoHideTabBar        , ImGuiDockNodeFlags_AutoHideTabBar        , "Tab bar will automatically hide when there is a single window in the dock node.")
+COALPY_ENUM_END(ImGuiDockNodeFlags)
 
 #undef COALPY_ENUM_END
 #undef COALPY_ENUM_BEGIN

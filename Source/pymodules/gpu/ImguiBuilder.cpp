@@ -6,6 +6,7 @@
 #include "Resources.h"
 #include <functional>
 #include <imgui.h>
+#include <imgui_internal.h> //for docking API 
 #include <cpp/imgui_stdlib.h>
 
 namespace coalpy
@@ -501,22 +502,6 @@ PyObject* image(PyObject* self, PyObject* vargs, PyObject* kwds)
     Py_RETURN_NONE;
 }
 
-PyObject* dockspace(PyObject* self, PyObject* vargs, PyObject* kwds)
-{
-    CHECK_IMGUI
-    auto& imguiBuilder = *(ImguiBuilder*)self;
-    ModuleState& moduleState = parentModule(self);
-    static char* argnames[] = { "label", nullptr };
-
-    char* label;
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s", argnames, &label))
-        return nullptr;
-
-    ImGuiID dockspaceId = ImGui::GetID(label);
-    ImGui::DockSpace(dockspaceId);
-    Py_RETURN_NONE;
-}
-
 PyObject* getMousePos (PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI;
@@ -572,6 +557,132 @@ PyObject* setWindowFocus(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI;
     ImGui::SetWindowFocus();
+    Py_RETURN_NONE;
+}
+
+PyObject* dockspace(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "label", "dock_id", nullptr };
+
+    char* label = nullptr; 
+    int dock_id = -1;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|si", argnames, &label, &dock_id))
+        return nullptr;
+
+    ImGuiID dockspaceId = dock_id != -1 ? ImGui::GetID(label ? label : "default_dock") : dock_id;
+    dockspaceId = ImGui::DockSpace(dockspaceId);
+    return Py_BuildValue("i", dockspaceId);
+}
+
+
+PyObject* dockBuilderDockWindow(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "window_name", "node_id", nullptr };
+
+    char* window_name = nullptr; 
+    int node_id = -1;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "si", argnames, &window_name, &node_id))
+        return nullptr;
+
+    ImGui::DockBuilderDockWindow(window_name, node_id);
+    Py_RETURN_NONE;
+}
+
+PyObject* dockBuilderAddNode(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "node_id", "flags", nullptr };
+
+    int node_id = -1;
+    int flags = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i|i", argnames, &node_id, &flags))
+        return nullptr;
+
+    ImGuiID id = ImGui::DockBuilderAddNode(node_id, flags);
+    return Py_BuildValue("i", id);
+}
+
+PyObject* dockBuilderRemoveNode(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "node_id", nullptr };
+    int node_id = -1;
+    int flags = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &node_id))
+        return nullptr;
+
+    ImGui::DockBuilderRemoveNode(node_id);
+    Py_RETURN_NONE;
+}
+
+PyObject* dockBuilderSetNodePos(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "node_id", "pos", nullptr };
+    int node_id = -1;
+    ImVec2 pos = {};
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i(ff)", argnames, &node_id, &pos.x, &pos.y))
+        return nullptr;
+
+    ImGui::DockBuilderSetNodePos(node_id, pos);
+    Py_RETURN_NONE;
+}
+
+PyObject* dockBuilderSetNodeSize(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "node_id", "size", nullptr };
+    int node_id = -1;
+    ImVec2 sz = {};
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i(ff)", argnames, &node_id, &sz.x, &sz.y))
+        return nullptr;
+
+    ImGui::DockBuilderSetNodeSize(node_id, sz);
+    Py_RETURN_NONE;
+}
+
+PyObject* dockBuilderSplitNode(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "node_id", "split_dir", "split_ratio", nullptr };
+    int node_id = -1;
+    int split_dir = 0;
+    float split_ratio;
+
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "iif", argnames, &node_id, &split_dir, &split_ratio))
+        return nullptr;
+    
+    ImGuiID id_at_dir, id_at_op_dir;
+    ImGui::DockBuilderSplitNode(node_id, split_dir, split_ratio, &id_at_dir, &id_at_op_dir);
+    return Py_BuildValue("(ii)", id_at_dir, id_at_op_dir);
+}
+
+PyObject* dockBuilderFinish(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "node_id", nullptr };
+    int node_id = -1;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &node_id))
+        return nullptr;
+
+    ImGui::DockBuilderFinish(node_id);
     Py_RETURN_NONE;
 }
 
