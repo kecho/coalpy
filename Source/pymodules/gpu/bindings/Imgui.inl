@@ -265,6 +265,18 @@ COALPY_FN(image, image, R"(
         border_col (tuple): size 4 tuple with background color (default (0,0,0,0)).
 )")
 
+COALPY_FN(get_id, getID, R"(
+    Parameters:
+        name (str)
+    Returns:
+        int (id)
+)")
+
+COALPY_FN(settings_loaded, settingsLoaded, R"(
+    Returns:
+        True if the .ini settings have been loaded, False otherwise
+)")
+
 COALPY_FN(get_mouse_pos, getMousePos, R"(
     Gets the absolute mouse position
 
@@ -307,6 +319,12 @@ COALPY_FN(set_window_focus, setWindowFocus, R"(
     Sets the current windows focused.
 )")
 
+COALPY_FN(set_window_dock, setWindowDock, R"(
+    Parameters:
+        window_name (str)
+        dock_id (int)
+)")
+
 COALPY_FN(dockspace, dockspace, R"(
     Creates an explicit dockspace
 
@@ -317,7 +335,6 @@ COALPY_FN(dockspace, dockspace, R"(
     Returns:
         dockspace_id (int): id of the dockspace used.
 )")
-
 
 COALPY_FN(dockbuilder_dock_window, dockBuilderDockWindow, R"(
     Parameters:
@@ -335,6 +352,11 @@ COALPY_FN(dockbuilder_add_node, dockBuilderAddNode, R"(
 )")
 
 COALPY_FN(dockbuilder_remove_node, dockBuilderRemoveNode, R"(
+    Parameters:
+        node_id (int)
+)")
+
+COALPY_FN(dockbuilder_remove_child_nodes, dockBuilderRemoveChildNodes, R"(
     Parameters:
         node_id (int)
 )")
@@ -364,6 +386,18 @@ COALPY_FN(dockbuilder_split_node, dockBuilderSplitNode, R"(
 COALPY_FN(dockbuilder_finish, dockBuilderFinish, R"(
     Parameters:
         node_id (int)
+)")
+
+COALPY_FN(dockbuilder_node_exists, dockBuilderNodeExists, R"(
+    Tests wether a dockspace exists. Ideal to setup dock layout at init.
+    Use an id or a string.
+
+    Parameters:
+        label (str) 
+        dock_id (int)(optional) - if node_id is used, name will be ignored
+
+    Returns:
+        True if it exists, False otherwise
 )")
 
 //Imgui focus flags enums
