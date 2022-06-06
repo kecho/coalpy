@@ -117,6 +117,7 @@ void Texture::constructType(PyTypeObject& t)
         name (str): string to identify the resource with.
         mem_flags (int): see coalpy.gpu.MemFlags. Default is Gpu_Read and Gpu_Write
         type (int): dimensionality of texture, see coalpy.gpu.TextureType. Default is k2d
+        format (int): Format of texture. See coalpy.gpu.Format for available formats.
         width (int): the width of the texture in texels. Default is 1
         height (int): the height of the texture in texels. Default is 1
         depth (int): the depth of the texture if k2dArray or k3d. Default is 1.

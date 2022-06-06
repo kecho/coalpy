@@ -322,9 +322,9 @@ void Dx12imguiRenderer::unregisterTexture(Texture texture)
     if (it == m_texToGpuHandleIndex.end())
         return;
 
-    m_texToGpuHandleIndex.erase(texture);
     PendingFreeIndex pendingFreeIndex { m_graphicsFence.signal(), it->second };
     m_textureDeleteQueue.push(pendingFreeIndex);
+    m_texToGpuHandleIndex.erase(texture);
 }
 
 }
