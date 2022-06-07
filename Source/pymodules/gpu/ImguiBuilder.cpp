@@ -108,7 +108,7 @@ PyObject* begin(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI
     char* name = nullptr;
-    int is_openint = 1;
+    int is_openint = -1;
     int is_fullscreenint = 0;
     int flags = 0;
     static char* argnames[] = { "name", "is_open", "is_fullscreen", "flags", nullptr };
@@ -125,7 +125,7 @@ PyObject* begin(PyObject* self, PyObject* vargs, PyObject* kwds)
         flags |= ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus;
     }
 
-    ImGui::Begin(name, &is_open, flags);
+    ImGui::Begin(name, is_openint == -1 ? nullptr : &is_open, flags);
     if (is_open)
         Py_RETURN_TRUE;
     else
@@ -502,6 +502,89 @@ PyObject* image(PyObject* self, PyObject* vargs, PyObject* kwds)
     Py_RETURN_NONE;
 }
 
+PyObject* imageButton(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "texture", "size", "uv0", "uv1", "frame_padding", "bg_col", "tint_col", nullptr };
+    PyObject* textureObj = nullptr;
+    ImVec2 size(0.0f,0.0f);
+    ImVec2 uv0(0.0f, 0.0f);
+    ImVec2 uv1(1.0f, 1.0f);
+    int framePadding = -1;
+    ImVec4 bgCol(0.0f, 0.0f, 0.0f, 0.0f);
+    ImVec4 tintCol(1.0f, 1.0f, 1.0f, 1.0f);
+
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "O(ff)|(ff)(ff)i(ffff)(ffff)", argnames, 
+        &textureObj, &size.x, &size.y, &uv0.x, &uv0.y, &uv1.x, &uv1.y,
+        &framePadding, 
+        &bgCol.x, &bgCol.y, &bgCol.z, &bgCol.w,
+        &tintCol.x, &tintCol.y, &tintCol.z, &tintCol.w))
+        return nullptr;
+
+
+    PyTypeObject* textureType = moduleState.getType(Texture::s_typeId);
+    if (textureObj->ob_type != textureType)
+    {
+        PyErr_SetString(moduleState.exObj(), "texture must be a gpu.Texture object.");
+        return nullptr;
+    }
+
+    Texture* texture = (Texture*)textureObj;
+    ImTextureID textureID = imguiBuilder.getTextureID(texture);
+    if (textureID == nullptr)
+    {
+        PyErr_SetString(moduleState.exObj(), "Internal failure: cannot convert a gpu.Texture to internal ImTextureID.");
+        return nullptr;
+    }
+
+    if (ImGui::ImageButton(textureID, size, uv0, uv1, framePadding, bgCol, tintCol))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* getItemRectSize(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    ImVec2 sz = ImGui::GetItemRectSize();
+    return Py_BuildValue("(ff)", sz.x, sz.y);
+}
+
+PyObject* setTooltip(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "text",  nullptr };
+    char* text;
+
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s", argnames, &text))
+        return nullptr;
+
+    ImGui::SetTooltip("%s", text);
+    Py_RETURN_NONE;
+}
+
+PyObject* isItemHovered(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "flags",  nullptr };
+    int flags = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|i", argnames, &flags))
+        return nullptr;
+
+    if (ImGui::IsItemHovered(flags))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+
 PyObject* getMousePos (PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI;
@@ -538,6 +621,30 @@ PyObject* getWindowSize(PyObject* self, PyObject* vargs, PyObject* kwds)
     CHECK_IMGUI;
     ImVec2 winSize = ImGui::GetWindowSize();
     return Py_BuildValue("(ff)", winSize.x, winSize.y);
+}
+
+PyObject* getWindowWorkSize(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto* vp = ImGui::GetWindowViewport();
+    if (vp == nullptr)
+        return Py_BuildValue("(ff)", 0.0f, 0.0f);
+    ImVec2 winSize = vp->WorkSize;
+    return Py_BuildValue("(ff)", winSize.x, winSize.y);
+}
+
+PyObject* getWindowContentRegionMin(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    ImVec2 crMin = ImGui::GetWindowContentRegionMin();
+    return Py_BuildValue("(ff)", crMin.x, crMin.y);
+}
+
+PyObject* getWindowContentRegionMax(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    ImVec2 crMax = ImGui::GetWindowContentRegionMax();
+    return Py_BuildValue("(ff)", crMax.x, crMax.y);
 }
 
 PyObject* getWindowPos(PyObject* self, PyObject* vargs, PyObject* kwds)
@@ -765,10 +872,8 @@ PyObject* dockBuilderNodeExists(PyObject* self, PyObject* vargs, PyObject* kwds)
         Py_RETURN_TRUE;
 }
 
+}//methods
 
+}//gpu
 
-}
-
-}
-
-}
+}//coalpy

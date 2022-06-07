@@ -265,6 +265,57 @@ COALPY_FN(image, image, R"(
         border_col (tuple): size 4 tuple with background color (default (0,0,0,0)).
 )")
 
+COALPY_FN(image_button, imageButton, R"(
+    Draws an image button
+
+    Parameters:
+        texture (Texture): coalpy.gpu.Texture object to draw in the UI.
+        size (tuple): size of the image in pixels
+        uv0 (tuple)(optional): uv coordinate of bottom (default (0.0, 0.0))
+        uv1 (tuple)(optional): uv coordinate of top  (default (1.0, 1.0))
+        frame_padding (int)(optional): default -1. < 0 uses from style (default), 0 no framing, >0 set framing size
+        bg_col (tuple)(optional): size 4 tuple with image tint color (default (1,1,1,1)).
+        tint_col (tuple)(optional): size 4 tuple with background color (default (0,0,0,0)).
+
+    Return:
+        True if button is pressed, false otherwise
+)")
+
+COALPY_FN(get_item_rect_size, getItemRectSize, R"(
+    Get prev items rec size
+    
+    Return:
+        size (tuple 2 float)
+)")
+
+COALPY_FN(get_window_content_region_min, getWindowContentRegionMin, R"(
+    Get the remaining content region
+
+    Return:
+        region min (tuple 2 float)
+)")
+
+COALPY_FN(get_window_content_region_max, getWindowContentRegionMax, R"(
+    Get the remaining content region
+
+    Return:
+        region min (tuple 2 float)
+)")
+
+COALPY_FN(set_tooltip, setTooltip, R"(
+    Sets tooltip of prev item
+
+    Parameters:
+        text (str) text of tooltip
+)")
+
+COALPY_FN(is_item_hovered, isItemHovered, R"(
+    flags (int): see coalpy.gpu.ImGuiHoveredFlags
+
+    Returns:
+        True if is hovered, false otherwise
+ )")
+
 COALPY_FN(get_id, getID, R"(
     Parameters:
         name (str)
@@ -293,6 +344,13 @@ COALPY_FN(get_window_pos, getWindowPos, R"(
 
 COALPY_FN(get_window_size, getWindowSize, R"(
     Gets the current window size
+
+    Returns:
+        Window size (tuple x, y)
+)")
+
+COALPY_FN(get_window_work_size, getWindowWorkSize, R"(
+    Gets the current window size, minus bars and stuff
 
     Returns:
         Window size (tuple x, y)
@@ -453,6 +511,22 @@ COALPY_ENUM(NoSplit               , ImGuiDockNodeFlags_NoSplit               , "
 COALPY_ENUM(NoResize              , ImGuiDockNodeFlags_NoResize              , "Disable resizing node using the splitter/separators. Useful with programmatically setup dockspaces.")
 COALPY_ENUM(AutoHideTabBar        , ImGuiDockNodeFlags_AutoHideTabBar        , "Tab bar will automatically hide when there is a single window in the dock node.")
 COALPY_ENUM_END(ImGuiDockNodeFlags)
+
+//Imgui hovered flags
+COALPY_ENUM_BEGIN(ImGuiHoveredFlags, "Flags for IsHovered")
+COALPY_ENUM(ChildWindows                  ,ImGuiHoveredFlags_ChildWindows                  ,R"("IsWindowHovered() only: Return true if any children of the window is hovered)")
+COALPY_ENUM(RootWindow                    ,ImGuiHoveredFlags_RootWindow                    ,R"(IsWindowHovered() only: Test from root window (top most parent of the current hierarchy))")
+COALPY_ENUM(AnyWindow                     ,ImGuiHoveredFlags_AnyWindow                     ,R"(IsWindowHovered() only: Return true if any window is hovered)")
+COALPY_ENUM(NoPopupHierarchy              ,ImGuiHoveredFlags_NoPopupHierarchy              ,R"(IsWindowHovered() only: Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow))")
+COALPY_ENUM(DockHierarchy                 ,ImGuiHoveredFlags_DockHierarchy                 ,R"(IsWindowHovered() only: Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow))")
+COALPY_ENUM(AllowWhenBlockedByPopup       ,ImGuiHoveredFlags_AllowWhenBlockedByPopup       ,R"(Return true even if a popup window is normally blocking access to this item/window)")
+COALPY_ENUM(AllowWhenBlockedByActiveItem  ,ImGuiHoveredFlags_AllowWhenBlockedByActiveItem  ,R"(Return true even if an active item is blocking access to this item/window. Useful for Drag and Drop patterns.)")
+COALPY_ENUM(AllowWhenOverlapped           ,ImGuiHoveredFlags_AllowWhenOverlapped           ,R"(IsItemHovered() only: Return true even if the position is obstructed or overlapped by another window)")
+COALPY_ENUM(AllowWhenDisabled             ,ImGuiHoveredFlags_AllowWhenDisabled             ,R"(IsItemHovered() only: Return true even if the item is disabled)")
+COALPY_ENUM(NoNavOverride                 ,ImGuiHoveredFlags_NoNavOverride                 ,R"(Disable using gamepad/keyboard navigation state when active, always query mouse.)")
+COALPY_ENUM(RectOnly                      ,ImGuiHoveredFlags_RectOnly                      ,R"(ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenOverlapped)")
+COALPY_ENUM(RootAndChildWindows           ,ImGuiHoveredFlags_RootAndChildWindows           ,R"(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows)")
+COALPY_ENUM_END(ImGuiHoveredFlags)
 
 #undef COALPY_ENUM_END
 #undef COALPY_ENUM_BEGIN
