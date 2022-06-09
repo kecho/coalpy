@@ -691,6 +691,105 @@ PyObject* setWindowFocus(PyObject* self, PyObject* vargs, PyObject* kwds)
     Py_RETURN_NONE;
 }
 
+PyObject* isKeyDown(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "key", nullptr };
+
+    int key;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &key))
+        return nullptr;
+
+    if (ImGui::IsKeyDown(key))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* isKeyPressed(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "key", "repeat", nullptr };
+
+    int key;
+    int repeatInt = 1;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i|p", argnames, &key, &repeatInt))
+        return nullptr;
+
+    if (ImGui::IsKeyPressed(key, repeatInt))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* isKeyReleased(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "key", nullptr };
+
+    int key;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &key))
+        return nullptr;
+
+    if (ImGui::IsKeyReleased(key))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* getKeyPressedAmount(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "key", "repeat_delay", "rate", nullptr };
+
+    int key;
+    float repeat_delay;
+    float rate;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "iff", argnames, &key, &repeat_delay, &rate))
+        return nullptr;
+
+    int retVal = ImGui::GetKeyPressedAmount(key, repeat_delay, rate);
+    return Py_BuildValue("i", retVal);
+}
+
+PyObject* getKeyName(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "key", nullptr };
+
+    int key;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &key))
+        return nullptr;
+
+    const char* keyName = ImGui::GetKeyName(key);
+    return Py_BuildValue("s",keyName);
+}
+
+PyObject* setNextFrameWantCaptureKeyboard(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "want_capture_keyboard", nullptr };
+
+    int want_capture_keyboard;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &want_capture_keyboard))
+        return nullptr;
+
+    ImGui::SetNextFrameWantCaptureKeyboard(want_capture_keyboard);
+    Py_RETURN_NONE;
+}
+
 PyObject* setWindowDock(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI

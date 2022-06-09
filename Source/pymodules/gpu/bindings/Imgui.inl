@@ -383,6 +383,66 @@ COALPY_FN(set_window_dock, setWindowDock, R"(
         dock_id (int)
 )")
 
+COALPY_FN(is_key_down, isKeyDown, R"(
+    is key being held.
+
+    Parameters:
+        key (int): see coalpy.gpu.ImGuiKey
+
+    Returns:
+        True if pressed, False otherwise
+)")
+
+COALPY_FN(is_key_pressed, isKeyPressed, R"(
+    was key pressed (went from !Down to Down)? if repeat=true, uses io.KeyRepeatDelay / KeyRepeatRate
+
+    Parameters: 
+        key (int): see coalpy.gpu.ImGuiKey
+        repeat (bool)(optional): default is true
+
+    Returns:
+        True if pressed, False otherwise
+)")
+
+COALPY_FN(is_key_released, isKeyReleased, R"(
+    was key released (went from Down to !Down)?
+    
+    Parameters:
+        key (int): see coalpy.gpu.ImGuiKey
+
+    Returns:
+        True if released, False otherwise
+)")
+
+COALPY_FN(get_key_pressed_amount, getKeyPressedAmount, R"(
+    uses provided repeat rate/delay. return a count, most often 0 or 1 but might be >1 if RepeatRate is small enough that DeltaTime > RepeatRate
+
+    Parameters:
+        key(int): see coalpy.gpu.ImGuiKey
+        repeat_delay (float):
+        rate(float):
+
+    Returns:
+        int, see comments
+)")
+
+COALPY_FN(get_key_name, getKeyName, R"(
+    [DEBUG] returns English name of the key. Those names a provided for debugging purpose and are not meant to be saved persistently not compared.
+
+    Parameters:
+        key(int): see coalpy.gpu.ImGuiKey
+
+    Returns:
+        Gets the key name (str)
+)")
+
+COALPY_FN(set_next_frame_want_capture_keyboard, setNextFrameWantCaptureKeyboard, R"(
+    Override io.WantCaptureKeyboard flag next frame (said flag is left for your application to handle, typically when true it instructs your app to ignore inputs). e.g. force capture keyboard when your widget is being hovered. This is equivalent to setting "io.WantCaptureKeyboard = want_capture_keyboard"; after the next NewFrame() call.
+
+    Parameters:
+        want_capture_keyboard (bool)
+)")
+
 COALPY_FN(dockspace, dockspace, R"(
     Creates an explicit dockspace
 
@@ -527,6 +587,145 @@ COALPY_ENUM(NoNavOverride                 ,ImGuiHoveredFlags_NoNavOverride      
 COALPY_ENUM(RectOnly                      ,ImGuiHoveredFlags_RectOnly                      ,R"(ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenOverlapped)")
 COALPY_ENUM(RootAndChildWindows           ,ImGuiHoveredFlags_RootAndChildWindows           ,R"(ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows)")
 COALPY_ENUM_END(ImGuiHoveredFlags)
+
+//Imgui keys
+COALPY_ENUM_BEGIN(ImGuiKey, "")
+COALPY_ENUM(None, ImGuiKey_None, "")
+COALPY_ENUM(Tab, ImGuiKey_Tab, "")
+COALPY_ENUM(LeftArrow, ImGuiKey_LeftArrow, "")
+COALPY_ENUM(RightArrow, ImGuiKey_RightArrow, "")
+COALPY_ENUM(UpArrow, ImGuiKey_UpArrow, "")
+COALPY_ENUM(DownArrow, ImGuiKey_DownArrow, "")
+COALPY_ENUM(PageUp, ImGuiKey_PageUp, "")
+COALPY_ENUM(PageDown, ImGuiKey_PageDown, "")
+COALPY_ENUM(Home, ImGuiKey_Home, "")
+COALPY_ENUM(End, ImGuiKey_End, "")
+COALPY_ENUM(Insert, ImGuiKey_Insert, "")
+COALPY_ENUM(Delete, ImGuiKey_Delete, "")
+COALPY_ENUM(Backspace, ImGuiKey_Backspace, "")
+COALPY_ENUM(Space, ImGuiKey_Space, "")
+COALPY_ENUM(Enter, ImGuiKey_Enter, "")
+COALPY_ENUM(Escape, ImGuiKey_Escape, "")
+COALPY_ENUM(LeftCtrl, ImGuiKey_LeftCtrl, "")
+COALPY_ENUM(LeftShift, ImGuiKey_LeftShift, "")
+COALPY_ENUM(LeftAlt, ImGuiKey_LeftAlt, "")
+COALPY_ENUM(LeftSuper, ImGuiKey_LeftSuper, "")
+COALPY_ENUM(RightCtrl, ImGuiKey_RightCtrl, "")
+COALPY_ENUM(RightShift, ImGuiKey_RightShift, "")
+COALPY_ENUM(RightAlt, ImGuiKey_RightAlt, "")
+COALPY_ENUM(RightSuper, ImGuiKey_RightSuper, "")
+COALPY_ENUM(Menu, ImGuiKey_Menu, "")
+COALPY_ENUM(k0, ImGuiKey_0, "")
+COALPY_ENUM(k1, ImGuiKey_1, "")
+COALPY_ENUM(k2, ImGuiKey_2, "")
+COALPY_ENUM(k3, ImGuiKey_3, "")
+COALPY_ENUM(k4, ImGuiKey_4, "")
+COALPY_ENUM(k5, ImGuiKey_5, "")
+COALPY_ENUM(k6, ImGuiKey_6, "")
+COALPY_ENUM(k7, ImGuiKey_7, "")
+COALPY_ENUM(k8, ImGuiKey_8, "")
+COALPY_ENUM(k9, ImGuiKey_9, "")
+COALPY_ENUM(A, ImGuiKey_A, "")
+COALPY_ENUM(B, ImGuiKey_B, "")
+COALPY_ENUM(C, ImGuiKey_C, "")
+COALPY_ENUM(D, ImGuiKey_D, "")
+COALPY_ENUM(E, ImGuiKey_E, "")
+COALPY_ENUM(F, ImGuiKey_F, "")
+COALPY_ENUM(G, ImGuiKey_G, "")
+COALPY_ENUM(H, ImGuiKey_H, "")
+COALPY_ENUM(I, ImGuiKey_I, "")
+COALPY_ENUM(J, ImGuiKey_J, "")
+COALPY_ENUM(K, ImGuiKey_K, "")
+COALPY_ENUM(L, ImGuiKey_L, "")
+COALPY_ENUM(M, ImGuiKey_M, "")
+COALPY_ENUM(N, ImGuiKey_N, "")
+COALPY_ENUM(O, ImGuiKey_O, "")
+COALPY_ENUM(P, ImGuiKey_P, "")
+COALPY_ENUM(Q, ImGuiKey_Q, "")
+COALPY_ENUM(R, ImGuiKey_R, "")
+COALPY_ENUM(S, ImGuiKey_S, "")
+COALPY_ENUM(T, ImGuiKey_T, "")
+COALPY_ENUM(U, ImGuiKey_U, "")
+COALPY_ENUM(V, ImGuiKey_V, "")
+COALPY_ENUM(W, ImGuiKey_W, "")
+COALPY_ENUM(X, ImGuiKey_X, "")
+COALPY_ENUM(Y, ImGuiKey_Y, "")
+COALPY_ENUM(Z, ImGuiKey_Z, "")
+COALPY_ENUM(F1, ImGuiKey_F1, "")
+COALPY_ENUM(F2, ImGuiKey_F2, "")
+COALPY_ENUM(F3, ImGuiKey_F3, "")
+COALPY_ENUM(F4, ImGuiKey_F4, "")
+COALPY_ENUM(F5, ImGuiKey_F5, "")
+COALPY_ENUM(F6, ImGuiKey_F6, "")
+COALPY_ENUM(F7, ImGuiKey_F7, "")
+COALPY_ENUM(F8, ImGuiKey_F8, "")
+COALPY_ENUM(F9, ImGuiKey_F9, "")
+COALPY_ENUM(F10, ImGuiKey_F10, "")
+COALPY_ENUM(F11, ImGuiKey_F11, "")
+COALPY_ENUM(F12, ImGuiKey_F12, "")
+COALPY_ENUM(Apostrophe,         ImGuiKey_Apostrophe, "")
+COALPY_ENUM(Comma,              ImGuiKey_Comma, "")
+COALPY_ENUM(Minus,              ImGuiKey_Minus, "")
+COALPY_ENUM(Period,             ImGuiKey_Period, "")
+COALPY_ENUM(Slash,              ImGuiKey_Slash, "")
+COALPY_ENUM(Semicolon,          ImGuiKey_Semicolon, "")
+COALPY_ENUM(Equal,              ImGuiKey_Equal, "")
+COALPY_ENUM(LeftBracket,        ImGuiKey_LeftBracket, "")
+COALPY_ENUM(Backslash,          ImGuiKey_Backslash, "")
+COALPY_ENUM(RightBracket,       ImGuiKey_RightBracket, "")
+COALPY_ENUM(GraveAccent,        ImGuiKey_GraveAccent, "")
+COALPY_ENUM(CapsLock, ImGuiKey_CapsLock, "")
+COALPY_ENUM(ScrollLock, ImGuiKey_ScrollLock, "")
+COALPY_ENUM(NumLock, ImGuiKey_NumLock, "")
+COALPY_ENUM(PrintScreen, ImGuiKey_PrintScreen, "")
+COALPY_ENUM(Pause, ImGuiKey_Pause, "")
+COALPY_ENUM(Keypad0, ImGuiKey_Keypad0, "")
+COALPY_ENUM(Keypad1, ImGuiKey_Keypad1, "")
+COALPY_ENUM(Keypad2, ImGuiKey_Keypad2, "")
+COALPY_ENUM(Keypad3, ImGuiKey_Keypad3, "")
+COALPY_ENUM(Keypad4, ImGuiKey_Keypad4, "")
+COALPY_ENUM(Keypad5, ImGuiKey_Keypad5, "")
+COALPY_ENUM(Keypad6, ImGuiKey_Keypad6, "")
+COALPY_ENUM(Keypad7, ImGuiKey_Keypad7, "")
+COALPY_ENUM(Keypad8, ImGuiKey_Keypad8, "")
+COALPY_ENUM(Keypad9, ImGuiKey_Keypad9, "")
+COALPY_ENUM(KeypadDecimal, ImGuiKey_KeypadDecimal, "")
+COALPY_ENUM(KeypadDivide, ImGuiKey_KeypadDivide, "")
+COALPY_ENUM(KeypadMultiply, ImGuiKey_KeypadMultiply, "")
+COALPY_ENUM(KeypadSubtract, ImGuiKey_KeypadSubtract, "")
+COALPY_ENUM(KeypadAdd, ImGuiKey_KeypadAdd, "")
+COALPY_ENUM(KeypadEnter, ImGuiKey_KeypadEnter, "")
+COALPY_ENUM(KeypadEqual, ImGuiKey_KeypadEqual, "")
+COALPY_ENUM(GamepadStart,           ImGuiKey_GamepadStart, "")
+COALPY_ENUM(GamepadBack,            ImGuiKey_GamepadBack, "")
+COALPY_ENUM(GamepadFaceUp,          ImGuiKey_GamepadFaceUp, "")
+COALPY_ENUM(GamepadFaceDown,        ImGuiKey_GamepadFaceDown, "")
+COALPY_ENUM(GamepadFaceLeft,        ImGuiKey_GamepadFaceLeft, "")
+COALPY_ENUM(GamepadFaceRight,       ImGuiKey_GamepadFaceRight, "")
+COALPY_ENUM(GamepadDpadUp,          ImGuiKey_GamepadDpadUp, "")
+COALPY_ENUM(GamepadDpadDown,        ImGuiKey_GamepadDpadDown, "")
+COALPY_ENUM(GamepadDpadLeft,        ImGuiKey_GamepadDpadLeft, "")
+COALPY_ENUM(GamepadDpadRight,       ImGuiKey_GamepadDpadRight, "")
+COALPY_ENUM(GamepadL1,              ImGuiKey_GamepadL1, "")
+COALPY_ENUM(GamepadR1,              ImGuiKey_GamepadR1, "")
+COALPY_ENUM(GamepadL2,              ImGuiKey_GamepadL2, "")
+COALPY_ENUM(GamepadR2,              ImGuiKey_GamepadR2, "")
+COALPY_ENUM(GamepadL3,              ImGuiKey_GamepadL3, "")
+COALPY_ENUM(GamepadR3,              ImGuiKey_GamepadR3, "")
+COALPY_ENUM(GamepadLStickUp,        ImGuiKey_GamepadLStickUp, "")
+COALPY_ENUM(GamepadLStickDown,      ImGuiKey_GamepadLStickDown, "")
+COALPY_ENUM(GamepadLStickLeft,      ImGuiKey_GamepadLStickLeft, "")
+COALPY_ENUM(GamepadLStickRight,     ImGuiKey_GamepadLStickRight, "")
+COALPY_ENUM(GamepadRStickUp,        ImGuiKey_GamepadRStickUp, "")
+COALPY_ENUM(GamepadRStickDown,      ImGuiKey_GamepadRStickDown, "")
+COALPY_ENUM(GamepadRStickLeft,      ImGuiKey_GamepadRStickLeft, "")
+COALPY_ENUM(GamepadRStickRight,     ImGuiKey_GamepadRStickRight, "")
+COALPY_ENUM(ModCtrl, ImGuiKey_ModCtrl, "")
+COALPY_ENUM(ModShift, ImGuiKey_ModShift, "")
+COALPY_ENUM(ModAlt, ImGuiKey_ModAlt, "")
+COALPY_ENUM(ModSuper, ImGuiKey_ModSuper, "")
+COALPY_ENUM(COUNT, ImGuiKey_COUNT, "")
+COALPY_ENUM_END(ImGuiKey)
 
 #undef COALPY_ENUM_END
 #undef COALPY_ENUM_BEGIN
