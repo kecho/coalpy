@@ -59,9 +59,48 @@ void ImplotBuilder::destroy(PyObject* self)
 namespace methods
 {
 
+bool CheckImplot(PyObject* builder)
+{
+    auto& implotBuilder = *(ImplotBuilder*)builder;
+    if (implotBuilder.enabled)
+        return true;
+
+    ModuleState& moduleState = parentModule(builder);
+    PyErr_SetString(moduleState.exObj(), "Cannot use the imgui object outside of a on_render callback. Ensure you create a window, and use the imgui object provided from the renderArgs.");
+    return false;
+}
+
+#define CHECK_IMPLOT \
+    if (!CheckImplot(self))\
+        return nullptr;
+
+
 PyObject* showDemoWindow(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
+    CHECK_IMPLOT
     ImPlot::ShowDemoWindow();
+    Py_RETURN_NONE;
+}
+
+PyObject* beginPlot(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMPLOT
+    char* name = nullptr;
+    ImVec2 size = ImVec2(-1, 0);
+    int flags = 0;
+    static char* argnames[] = { "name", "size", "flags", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|(ff)i", argnames, &name, &size, &flags))
+        return nullptr;
+    if (ImPlot::BeginPlot(name, size, flags))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* endPlot(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMPLOT
+    ImPlot::EndPlot();
     Py_RETURN_NONE;
 }
 
