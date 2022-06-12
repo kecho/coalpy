@@ -5,6 +5,7 @@
 #include <coalpy.render/Resources.h>
 #include "Dx12DescriptorPool.h" 
 #include <imgui.h>
+#include <implot.h>
 #include <vector>
 #include <queue>
 #include <unordered_map>
@@ -71,6 +72,7 @@ private:
 
     std::vector<int> m_freeGpuHandleIndex;
     ImGuiContext* m_context;
+    ImPlotContext* m_plotContext;
 
     std::queue<PendingFreeIndex> m_textureDeleteQueue;
 };

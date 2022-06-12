@@ -16,6 +16,7 @@ static PyMemberDef g_renderArgMemembers[] = {
     { "width",  T_INT, offsetof(RenderArgs, width), READONLY, "The current width of this window." },
     { "height", T_INT, offsetof(RenderArgs, height), READONLY, "The current height of this window." },
     { "imgui", T_OBJECT, offsetof(RenderArgs, imguiBuilder), READONLY, "The ImguiBuilder object, used to build a Dear Imgui. For more info read on Window constructor,  ImguiBuilder and its methods." },
+    { "implot", T_OBJECT, offsetof(RenderArgs, implotBuilder), READONLY, "The ImplotBuilder object, used to build a Dear Implot. For more info read on Window constructor,  ImplotBuilder and its methods." },
     { nullptr }
 };
 

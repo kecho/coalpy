@@ -19,6 +19,7 @@ enum class TypeId : int
     SamplerTable,
     ResourceDownloadRequest,
     ImguiBuilder,
+    ImplotBuilder,
     Counts,
 
     //special type, reserved for enums

@@ -1,6 +1,7 @@
 local SourceDir = "Source"
 local ScriptsDir = "Source/scripts/coalpy"
 local ImguiDir = "Source/imgui"
+local ImplotDir = "Source/implot"
 local LibJpgDir = "Source/libjpeg"
 local LibPngDir = "Source/libpng"
 local ZlibDir = "Source/zlib"
@@ -28,6 +29,7 @@ local LibIncludes = {
         Config = "linux-*-*"
     },
     ImguiDir,
+    ImplotDir,
     LibJpgDir,
     LibPngDir,
 }
@@ -152,6 +154,25 @@ local imguiLib = StaticLibrary {
 
 Default(imguiLib)
 
+-- Build imgui
+local implotLib = StaticLibrary {
+    Name = "implot",
+    Pass = "BuildCode",
+    Includes = {
+        ImguiDir
+    },
+    Sources = {
+        Glob {
+            Dir = ImplotDir,
+            Extensions = { ".cpp", ".h", ".hpp" },
+            Recursive = true
+        },
+    },
+    IdeGenerationHints = _G.GenRootIdeHints("implot");
+}
+
+Default(implotLib)
+
 -- Build libjpeg
 local libjpegLib = StaticLibrary {
     Name = "libjpeg",
@@ -219,6 +240,7 @@ local CoalPyModuleIncludes = {
     render = {
         DxcIncludes,
         ImguiDir,
+        ImplotDir,
         SpirvReflectDir,
         "Source/modules/window"
     },
@@ -235,7 +257,7 @@ local CoalPyModuleIncludes = {
 }
 
 local CoalPyModuleDeps = {
-    render = { imguiLib, spirvreflect },
+    render = { imguiLib, implotLib, spirvreflect },
     texture = { zlibLib, libpngLib, libjpegLib }
 }
 

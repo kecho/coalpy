@@ -20,6 +20,7 @@ struct RenderArgs
     double deltaTime = 0.0;
     Window* window = nullptr;
     PyObject* imguiBuilder = nullptr;
+    PyObject* implotBuilder = nullptr;
     PyObject* userData = nullptr;
     int width = 0;
     int height = 0;

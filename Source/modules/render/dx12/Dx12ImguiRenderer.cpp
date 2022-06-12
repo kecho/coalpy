@@ -14,7 +14,6 @@
 #include "Dx12Queues.h"
 #include "Dx12PixApi.h"
 #include "WorkBundleDb.h"
-#include <imgui.h>
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_dx12.h>
 
@@ -40,8 +39,11 @@ Dx12imguiRenderer::Dx12imguiRenderer(const IimguiRendererDesc& desc)
 , m_graphicsFence(((Dx12Device*)desc.device)->queues().getFence(WorkType::Graphics))
 {
     auto oldContext = ImGui::GetCurrentContext();
+    auto oldPlotContext = ImPlot::GetCurrentContext();
     m_context = ImGui::CreateContext();
+    m_plotContext = ImPlot::CreateContext();
     ImGui::SetCurrentContext(m_context);
+    ImPlot::SetCurrentContext(m_plotContext);
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
@@ -78,6 +80,7 @@ Dx12imguiRenderer::Dx12imguiRenderer(const IimguiRendererDesc& desc)
     setCoalpyStyle();
 
     ImGui::SetCurrentContext(oldContext);
+    ImPlot::SetCurrentContext(oldPlotContext);
 
     UINT descriptorIncrSize = m_device.device().GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
@@ -98,14 +101,17 @@ Dx12imguiRenderer::~Dx12imguiRenderer()
     m_device.descriptors().release(m_rtv);
 
     ImGui::SetCurrentContext(m_context);
+    ImPlot::SetCurrentContext(m_plotContext);
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
 }
 
 void Dx12imguiRenderer::activate()
 {
     ImGui::SetCurrentContext(m_context);
+    ImPlot::SetCurrentContext(m_plotContext);
 }
 
 void Dx12imguiRenderer::newFrame()

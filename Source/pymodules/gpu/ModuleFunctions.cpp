@@ -7,6 +7,7 @@
 #include "Shader.h"
 #include "RenderArgs.h"
 #include "ImguiBuilder.h"
+#include "ImplotBuilder.h"
 #include "Resources.h"
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/IWindow.h>
@@ -246,16 +247,20 @@ PyObject* run(PyObject* self, PyObject* args)
     new (renderArgs) RenderArgs;
     renderArgs->imguiBuilder = Py_None;
     Py_INCREF(Py_None);
+    renderArgs->implotBuilder = Py_None;
+    Py_INCREF(Py_None);
 
     ImguiBuilder* imguiBuilder = state.alloc<ImguiBuilder>();
     new (imguiBuilder) ImguiBuilder;
+    ImplotBuilder* implotBuilder = state.alloc<ImplotBuilder>();
+    new (implotBuilder) ImplotBuilder;
     
     WindowRunArgs runArgs = {};
     bool raiseException = false;
 
     Stopwatch stopwatch;
 
-    runArgs.onRender = [&state, &raiseException, renderArgs, &stopwatch, imguiBuilder]()
+    runArgs.onRender = [&state, &raiseException, renderArgs, &stopwatch, imguiBuilder, implotBuilder]()
     {
         state.tl().processTextures();
 
@@ -281,6 +286,10 @@ PyObject* run(PyObject* self, PyObject* args)
                 renderArgs->imguiBuilder = (PyObject*)imguiBuilder;
                 imguiBuilder->enabled = true;
                 imguiBuilder->activeRenderer = w->uiRenderer;
+
+                renderArgs->implotBuilder = (PyObject*)implotBuilder;
+                implotBuilder->enabled = true;
+                implotBuilder->activeRenderer = w->uiRenderer;
                 w->uiRenderer->newFrame();
                 state.setTextureDestructionCallback([&windowsPtrs](Texture& t) { unregisterAllImguiTextures(windowsPtrs, t); } );
             }
@@ -319,10 +328,14 @@ PyObject* run(PyObject* self, PyObject* args)
             Py_DECREF(renderArgs->userData);
             renderArgs->userData = nullptr;
             renderArgs->imguiBuilder = Py_None;
+            renderArgs->implotBuilder = Py_None;
             imguiBuilder->enabled = false;
             imguiBuilder->activeRenderer = nullptr;
             imguiBuilder->clearTextureReferences();
             state.setTextureDestructionCallback(nullptr);
+
+            implotBuilder->enabled = false;
+            implotBuilder->activeRenderer = nullptr;
         }
 
         return openedWindows != 0;

@@ -9,6 +9,7 @@
 #include "ResourceDownloadRequest.h"
 #include "CoalpyTypeObject.h"
 #include "ImguiBuilder.h"
+#include "ImplotBuilder.h"
 #include <coalpy.render/IDevice.h>
 #include <coalpy.render/ShaderDefs.h>
 #include <coalpy.core/Formats.h>
@@ -69,6 +70,7 @@ void constructTypes(TypeList& outTypes)
     RegisterType(ResourceDownloadRequest, outTypes);
     RegisterType(SamplerTable,            outTypes);
     RegisterType(ImguiBuilder,            outTypes);
+    RegisterType(ImplotBuilder,           outTypes);
     
     //** Register Enums **//
     {
@@ -79,6 +81,11 @@ void constructTypes(TypeList& outTypes)
     {
         #include "bindings/EnumDef.h"
         #include "bindings/Imgui.inl"
+    }
+
+    {
+        #include "bindings/EnumDef.h"
+        #include "bindings/Implot.inl"
     }
 
     outTypes.push_back(registerKeys());

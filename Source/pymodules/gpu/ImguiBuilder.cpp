@@ -5,7 +5,6 @@
 #include "CoalpyTypeObject.h"
 #include "Resources.h"
 #include <functional>
-#include <imgui.h>
 #include <imgui_internal.h> //for docking API 
 #include <cpp/imgui_stdlib.h>
 
