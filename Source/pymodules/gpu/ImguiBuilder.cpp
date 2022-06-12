@@ -591,6 +591,75 @@ PyObject* getMousePos (PyObject* self, PyObject* vargs, PyObject* kwds)
     return Py_BuildValue("(ff)", mousePos.x, mousePos.y);
 }
 
+PyObject* isMouseDown (PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "key",  nullptr };
+    int key = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &key))
+        return nullptr;
+
+    if (ImGui::IsMouseDown(key))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* isMouseClicked (PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "key",  nullptr };
+    int key = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &key))
+        return nullptr;
+
+    if (ImGui::IsMouseClicked(key))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* isMouseReleased (PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "key",  nullptr };
+    int key = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &key))
+        return nullptr;
+
+    if (ImGui::IsMouseReleased(key))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* isMouseDoubleClicked (PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "key",  nullptr };
+    int key = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &key))
+        return nullptr;
+
+    if (ImGui::IsMouseDoubleClicked(key))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+
 PyObject* getID(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI;

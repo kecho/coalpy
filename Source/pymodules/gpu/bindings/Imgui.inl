@@ -335,11 +335,44 @@ COALPY_FN(get_mouse_pos, getMousePos, R"(
         Mouse pos (tuple x, y)
 )")
 
-COALPY_FN(get_window_pos, getWindowPos, R"(
-    Gets the absolute window position
+COALPY_FN(is_mouse_down, isMouseDown, R"(
+    Get mouse button state down
 
-    Returns
-        Window position (tuple x, y)
+    Parameters:
+        key (int): see (g.ImGuiMouseButton)
+
+    Returns:
+        True if button is down, False otherwise
+)")
+
+COALPY_FN(is_mouse_clicked, isMouseClicked, R"(
+    Get mouse button state clicked
+
+    Parameters:
+        key (int): see (g.ImGuiMouseButton)
+
+    Returns:
+        True if button is clicked, False otherwise
+)")
+
+COALPY_FN(is_mouse_released, isMouseReleased, R"(
+    Get mouse button state released
+
+    Parameters:
+        key (int): see (g.ImGuiMouseButton)
+
+    Returns:
+        True if button is released, False otherwise
+)")
+
+COALPY_FN(is_mouse_double_clicked, isMouseDoubleClicked, R"(
+    Get mouse button state double clicked
+
+    Parameters:
+        key (int): see (g.ImGuiMouseButton)
+
+    Returns:
+        True if button is double clicked, False otherwise
 )")
 
 COALPY_FN(get_window_size, getWindowSize, R"(
@@ -347,6 +380,13 @@ COALPY_FN(get_window_size, getWindowSize, R"(
 
     Returns:
         Window size (tuple x, y)
+)")
+
+COALPY_FN(get_window_pos, getWindowSize, R"(
+    Gets the current window pos 
+
+    Returns:
+        Window pos (tuple x, y)
 )")
 
 COALPY_FN(get_window_work_size, getWindowWorkSize, R"(
@@ -726,6 +766,13 @@ COALPY_ENUM(ModAlt, ImGuiKey_ModAlt, "")
 COALPY_ENUM(ModSuper, ImGuiKey_ModSuper, "")
 COALPY_ENUM(COUNT, ImGuiKey_COUNT, "")
 COALPY_ENUM_END(ImGuiKey)
+
+COALPY_ENUM_BEGIN(ImGuiMouseButton, "")
+COALPY_ENUM(Left   , ImGuiMouseButton_Left ,"")
+COALPY_ENUM(Right  , ImGuiMouseButton_Right, "") 
+COALPY_ENUM(Middle , ImGuiMouseButton_Middle , "")
+COALPY_ENUM(COUNT  , ImGuiMouseButton_COUNT , "")
+COALPY_ENUM_END(ImGuiMouseButton)
 
 #undef COALPY_ENUM_END
 #undef COALPY_ENUM_BEGIN
