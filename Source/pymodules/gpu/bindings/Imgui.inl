@@ -91,7 +91,8 @@ COALPY_FN(collapsing_header, collapsingHeader, R"(
     Returns the state of a header label (collapsed or non collapsed).
 
     Parameters:
-        (label) str : label of this item.
+        label (str) : label of this item.
+        flags (int)(optional) : see coalpy.gpu.ImGuiTreeNodeFlags
 
     Returns:
         True if open, False otherwise.
@@ -335,6 +336,20 @@ COALPY_FN(get_mouse_pos, getMousePos, R"(
         Mouse pos (tuple x, y)
 )")
 
+COALPY_FN(get_cursor_pos, getCursorPos, R"(
+    Cursor position in window coordinates (relative to window position)
+
+    Returns:
+        Mouse pos (tuple x, y)
+)")
+
+COALPY_FN(get_cursor_screen_pos, getCursorScreenPos, R"(
+    Cursor position in OS coordinates (absolute to OS)
+
+    Returns:
+        Mouse pos (tuple x, y)
+)")
+
 COALPY_FN(is_mouse_down, isMouseDown, R"(
     Get mouse button state down
 
@@ -389,11 +404,18 @@ COALPY_FN(get_window_pos, getWindowSize, R"(
         Window pos (tuple x, y)
 )")
 
-COALPY_FN(get_window_work_size, getWindowWorkSize, R"(
-    Gets the current window size, minus bars and stuff
+COALPY_FN(get_viewport_work_size, getViewportWorkSize, R"(
+    Work Area: Size of the viewport minus task bars, menu bars, status bars (<= Size)
 
     Returns:
-        Window size (tuple x, y)
+        tuple (x, y)
+)")
+
+COALPY_FN(get_viewport_work_pos, getViewportWorkPos, R"(
+    Work Area: Position of the viewport minus task bars, menus bars, status bars (>= Pos)
+
+    Returns:
+        tuple (x, y)
 )")
 
 COALPY_FN(set_window_size, setWindowSize, R"(
@@ -411,6 +433,16 @@ COALPY_FN(is_window_focused, isWindowFocused, R"(
 
     Returns:
         True if window is focused, false otherwise
+)")
+
+COALPY_FN(is_window_hovered, isWindowHovered, R"(
+    Returns boolean with current window hovered status.
+
+    Parameters:
+        flags (int)(optional): see coalpy.gpu.ImGuiHoveredFlags
+
+    Returns:
+        True if window is hovered, false otherwise
 )")
 
 COALPY_FN(set_window_focus, setWindowFocus, R"(
@@ -773,6 +805,24 @@ COALPY_ENUM(Right  , ImGuiMouseButton_Right, "")
 COALPY_ENUM(Middle , ImGuiMouseButton_Middle , "")
 COALPY_ENUM(COUNT  , ImGuiMouseButton_COUNT , "")
 COALPY_ENUM_END(ImGuiMouseButton)
+
+COALPY_ENUM_BEGIN(ImGuiTreeNodeFlags, "")
+COALPY_ENUM(Selected, ImGuiTreeNodeFlags_Selected, R"(Draw as selected)")
+COALPY_ENUM(Framed, ImGuiTreeNodeFlags_Framed, R"(Draw frame with background (e.g. for CollapsingHeader))")
+COALPY_ENUM(AllowItemOverlap, ImGuiTreeNodeFlags_AllowItemOverlap, R"(Hit testing to allow subsequent widgets to overlap this one)")
+COALPY_ENUM(NoTreePushOnOpen, ImGuiTreeNodeFlags_NoTreePushOnOpen, R"(Don't do a TreePush() when open (e.g. for CollapsingHeader) = no extra indent nor pushing on ID stack)")
+COALPY_ENUM(NoAutoOpenOnLog, ImGuiTreeNodeFlags_NoAutoOpenOnLog, R"(Don't automatically and temporarily open node when Logging is active (by default logging will automatically open tree nodes))")
+COALPY_ENUM(DefaultOpen, ImGuiTreeNodeFlags_DefaultOpen, R"(Default node to be open)")
+COALPY_ENUM(OpenOnDoubleClick, ImGuiTreeNodeFlags_OpenOnDoubleClick, R"(Need double-click to open node)")
+COALPY_ENUM(OpenOnArrow, ImGuiTreeNodeFlags_OpenOnArrow, R"(Only open when clicking on the arrow part. If ImGuiTreeNodeFlags_OpenOnDoubleClick is also set, single-click arrow or double-click all box to open.)")
+COALPY_ENUM(Leaf, ImGuiTreeNodeFlags_Leaf, R"(No collapsing, no arrow (use as a convenience for leaf nodes).)")
+COALPY_ENUM(Bullet, ImGuiTreeNodeFlags_Bullet, R"(Display a bullet instead of arrow)")
+COALPY_ENUM(FramePadding, ImGuiTreeNodeFlags_FramePadding, R"(// Use FramePadding (even for an unframed text node) to vertically align text baseline to regular widget height. Equivalent to calling AlignTextToFramePadding().)")
+COALPY_ENUM(SpanAvailWidth, ImGuiTreeNodeFlags_SpanAvailWidth, R"(// Extend hit box to the right-most edge, even if not framed. This is not the default in order to allow adding other items on the same line. In the future we may refactor the hit system to be front-to-back, allowing natural overlaps and then this can become the default.)")
+COALPY_ENUM(SpanFullWidth, ImGuiTreeNodeFlags_SpanFullWidth, R"(// Extend hit box to the left-most and right-most edges (bypass the indented area).)")
+COALPY_ENUM(NavLeftJumpsBackHere, ImGuiTreeNodeFlags_NavLeftJumpsBackHere, R"(// (WIP) Nav: left direction may move to this TreeNode() from any of its child (items submitted between TreeNode and TreePop))")
+COALPY_ENUM(CollapsingHeader, ImGuiTreeNodeFlags_CollapsingHeader, R"(ImGuiTreeNodeFlags_NoAutoOpenOnLog)")
+COALPY_ENUM_END(ImGuiTreeNodeFlags)
 
 #undef COALPY_ENUM_END
 #undef COALPY_ENUM_BEGIN

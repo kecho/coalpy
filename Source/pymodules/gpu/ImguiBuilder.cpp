@@ -293,11 +293,12 @@ PyObject* collapsingHeader(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI
     char* label;
-    static char* argnames[] = { "label", nullptr };
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s", argnames, &label))
+    int flags = 0;
+    static char* argnames[] = { "label", "flags", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|i", argnames, &label, &flags))
         return nullptr;
 
-    bool ret = ImGui::CollapsingHeader(label);
+    bool ret = ImGui::CollapsingHeader(label, flags);
     if (ret)
         Py_RETURN_TRUE;
     else
@@ -591,6 +592,20 @@ PyObject* getMousePos (PyObject* self, PyObject* vargs, PyObject* kwds)
     return Py_BuildValue("(ff)", mousePos.x, mousePos.y);
 }
 
+PyObject* getCursorPos (PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    ImVec2 cursorPos = ImGui::GetCursorPos();
+    return Py_BuildValue("(ff)", cursorPos.x, cursorPos.y);
+}
+
+PyObject* getCursorScreenPos (PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+    return Py_BuildValue("(ff)", cursorPos.x, cursorPos.y);
+}
+
 PyObject* isMouseDown (PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI;
@@ -691,7 +706,7 @@ PyObject* getWindowSize(PyObject* self, PyObject* vargs, PyObject* kwds)
     return Py_BuildValue("(ff)", winSize.x, winSize.y);
 }
 
-PyObject* getWindowWorkSize(PyObject* self, PyObject* vargs, PyObject* kwds)
+PyObject* getViewportWorkSize(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI;
     auto* vp = ImGui::GetWindowViewport();
@@ -699,6 +714,16 @@ PyObject* getWindowWorkSize(PyObject* self, PyObject* vargs, PyObject* kwds)
         return Py_BuildValue("(ff)", 0.0f, 0.0f);
     ImVec2 winSize = vp->WorkSize;
     return Py_BuildValue("(ff)", winSize.x, winSize.y);
+}
+
+PyObject* getViewportWorkPos(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto* vp = ImGui::GetWindowViewport();
+    if (vp == nullptr)
+        return Py_BuildValue("(ff)", 0.0f, 0.0f);
+    ImVec2 pos = vp->WorkPos;
+    return Py_BuildValue("(ff)", pos.x, pos.y);
 }
 
 PyObject* getWindowContentRegionMin(PyObject* self, PyObject* vargs, PyObject* kwds)
@@ -747,6 +772,22 @@ PyObject* isWindowFocused(PyObject* self, PyObject* vargs, PyObject* kwds)
         return nullptr;
 
     if (ImGui::IsWindowFocused(flags))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* isWindowHovered(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "flags", nullptr };
+
+    int flags = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|i", argnames, &flags))
+        return nullptr;
+
+    if (ImGui::IsWindowHovered(flags))
         Py_RETURN_TRUE;
     else
         Py_RETURN_FALSE;
