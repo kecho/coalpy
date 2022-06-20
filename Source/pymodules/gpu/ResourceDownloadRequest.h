@@ -11,6 +11,7 @@ namespace coalpy
 namespace gpu
 {
 
+struct CoalpyTypeObject;
 struct ResourceDownloadRequest
 {
     //Data
@@ -28,7 +29,7 @@ struct ResourceDownloadRequest
 
     //Functions
     static const TypeId s_typeId = TypeId::ResourceDownloadRequest;
-    static void constructType(PyTypeObject& t);
+    static void constructType(CoalpyTypeObject& t);
     static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
     static void destroy(PyObject* self);
 };

@@ -26,8 +26,9 @@ static PyMethodDef g_imguiMethods[] = {
     FN_END
 };
 
-void ImguiBuilder::constructType(PyTypeObject& t)
+void ImguiBuilder::constructType(CoalpyTypeObject& o)
 {
+    auto& t = o.pyObj;
     t.tp_name = "gpu.ImguiBuilder";
     t.tp_basicsize = sizeof(ImguiBuilder);
     t.tp_doc   = R"(

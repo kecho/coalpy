@@ -137,6 +137,15 @@ PyMODINIT_FUNC PyInit_gpu(void)
             Py_DECREF(moduleObj);
             return nullptr;
         }
+
+        for (auto& childObj : t->children)
+        {
+            if (PyType_Ready(childObj.pyObj) < 0)
+                return nullptr;
+
+            if (PyDict_SetItemString(t->pyObj.tp_dict, childObj.name, (PyObject*)childObj.pyObj) < 0)
+                return nullptr;
+        }
     }
 
     auto state = (coalpy::gpu::ModuleState*)PyModule_GetState(moduleObj);

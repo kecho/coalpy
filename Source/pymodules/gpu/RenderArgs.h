@@ -10,6 +10,7 @@ namespace coalpy
 namespace gpu
 {
 
+struct CoalpyTypeObject;
 struct Window;
 
 struct RenderArgs
@@ -27,7 +28,7 @@ struct RenderArgs
 
     //Functions
     static const TypeId s_typeId = TypeId::RenderArgs;
-    static void constructType(PyTypeObject& t);
+    static void constructType(CoalpyTypeObject& o);
 };
 
 

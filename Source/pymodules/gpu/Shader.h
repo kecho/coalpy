@@ -13,6 +13,8 @@ class IShaderDb;
 namespace gpu
 {
 
+struct CoalpyTypeObject;
+
 struct Shader
 {
     //Data
@@ -22,7 +24,7 @@ struct Shader
 
     //Functions
     static const TypeId s_typeId = TypeId::Shader;
-    static void constructType(PyTypeObject& t);
+    static void constructType(CoalpyTypeObject& t);
     static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
     static void destroy(PyObject* self);
 };

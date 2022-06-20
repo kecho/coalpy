@@ -25,8 +25,9 @@ static PyMethodDef g_shaderMethods[] = {
     FN_END
 };
 
-void Shader::constructType(PyTypeObject& t)
+void Shader::constructType(CoalpyTypeObject& o)
 {
+    auto& t = o.pyObj;
     t.tp_name = "gpu.Shader";
     t.tp_basicsize = sizeof(Shader);
     t.tp_doc   = R"(

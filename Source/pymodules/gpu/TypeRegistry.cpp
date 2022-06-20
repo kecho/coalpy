@@ -10,6 +10,7 @@
 #include "CoalpyTypeObject.h"
 #include "ImguiBuilder.h"
 #include "ImplotBuilder.h"
+#include "TinyObjLoader.h"
 #include <coalpy.render/IDevice.h>
 #include <coalpy.render/ShaderDefs.h>
 #include <coalpy.core/Formats.h>
@@ -71,6 +72,7 @@ void constructTypes(TypeList& outTypes)
     RegisterType(SamplerTable,            outTypes);
     RegisterType(ImguiBuilder,            outTypes);
     RegisterType(ImplotBuilder,           outTypes);
+    RegisterType(TinyObjLoader,           outTypes);
     
     //** Register Enums **//
     {

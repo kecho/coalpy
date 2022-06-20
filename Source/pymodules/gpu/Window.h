@@ -21,6 +21,7 @@ class IWindow;
 namespace gpu
 {
 
+struct CoalpyTypeObject;
 class ModuleState;
 class Texture;
 
@@ -37,7 +38,7 @@ struct Window
 
     //Functions
     static const TypeId s_typeId = TypeId::Window;
-    static void constructType(PyTypeObject& t);
+    static void constructType(CoalpyTypeObject& t);
     static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
     static void close(PyObject* self);
     static void destroy(PyObject* self);

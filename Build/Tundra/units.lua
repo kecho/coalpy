@@ -5,6 +5,7 @@ local ImplotDir = "Source/implot"
 local LibJpgDir = "Source/libjpeg"
 local LibPngDir = "Source/libpng"
 local ZlibDir = "Source/zlib"
+local TinyObjLoaderDir = "Source/tinyobjloader"
 local SpirvReflectDir = "Source/spirvreflect"
 local DxcDir = "External/dxc/v1.6.2112/"
 local DxcIncludes = DxcDir.."inc/"
@@ -32,6 +33,7 @@ local LibIncludes = {
     ImplotDir,
     LibJpgDir,
     LibPngDir,
+    TinyObjLoaderDir
 }
 
 local Libraries = {
@@ -225,6 +227,21 @@ local libpngLib = StaticLibrary {
 
 Default (libpngLib)
 
+-- Build tinyobjloader
+local tinyobjloader = StaticLibrary {
+    Name = "tinyobjloader",
+    Pass = "BuildCode",
+    Includes = { TinyObjLoaderDir },
+    Sources = {
+        Glob {
+            Dir = TinyObjLoaderDir,
+            Extensions = { ".cc", ".h" },
+            Recursive =  true
+        }
+    },
+    IdeGenerationHints = _G.GenRootIdeHints("tinyobjloader");
+}
+
 -- C++ module table-> module name with its dependencies
 local CoalPyModuleTable = {
     core    = {},
@@ -257,7 +274,7 @@ local CoalPyModuleIncludes = {
 }
 
 local CoalPyModuleDeps = {
-    render = { imguiLib, implotLib, spirvreflect },
+    render = { imguiLib, implotLib, spirvreflect, tinyobjloader },
     texture = { zlibLib, libpngLib, libjpegLib }
 }
 

@@ -36,8 +36,9 @@ static PyMethodDef g_windowMethods[] = {
     FN_END
 };
 
-void Window::constructType(PyTypeObject& t)
+void Window::constructType(CoalpyTypeObject& o)
 {
+    auto& t = o.pyObj;
     t.tp_name = "gpu.Window";
     t.tp_basicsize = sizeof(Window);
     t.tp_doc   = R"(

@@ -14,6 +14,7 @@ namespace coalpy
 namespace gpu
 {
 
+struct CoalpyTypeObject;
 struct Texture;
 
 struct ImguiBuilder
@@ -29,7 +30,7 @@ struct ImguiBuilder
 
     //Functions
     static const TypeId s_typeId = TypeId::ImguiBuilder;
-    static void constructType(PyTypeObject& t);
+    static void constructType(CoalpyTypeObject& o);
     static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
     static void destroy(PyObject* self);
 

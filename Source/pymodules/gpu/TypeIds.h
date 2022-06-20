@@ -20,6 +20,7 @@ enum class TypeId : int
     ResourceDownloadRequest,
     ImguiBuilder,
     ImplotBuilder,
+    TinyObjLoader,
     Counts,
 
     //special type, reserved for enums

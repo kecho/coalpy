@@ -10,6 +10,8 @@ namespace coalpy
 namespace gpu
 {
 
+struct CoalpyTypeObject;
+
 struct Texture
 {
     //Data
@@ -21,7 +23,7 @@ struct Texture
 
     //Functions
     static const TypeId s_typeId = TypeId::Texture;
-    static void constructType(PyTypeObject& t);
+    static void constructType(CoalpyTypeObject& t);
     static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
     static void destroy(PyObject* self);
 };
@@ -35,7 +37,7 @@ struct Buffer
 
     //Functions
     static const TypeId s_typeId = TypeId::Buffer;
-    static void constructType(PyTypeObject& t);
+    static void constructType(CoalpyTypeObject& t);
     static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
     static void destroy(PyObject* self);
 };
@@ -48,7 +50,7 @@ struct Sampler
 
     //Functions
     static const TypeId s_typeId = TypeId::Sampler;
-    static void constructType(PyTypeObject& t);
+    static void constructType(CoalpyTypeObject& t);
     static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
     static void destroy(PyObject* self);
 };
@@ -61,7 +63,7 @@ struct InResourceTable
 
     //Functions
     static const TypeId s_typeId = TypeId::InResourceTable;
-    static void constructType(PyTypeObject& t);
+    static void constructType(CoalpyTypeObject& t);
     static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
     static void destroy(PyObject* self);
 };
@@ -74,7 +76,7 @@ struct OutResourceTable
 
     //Functions
     static const TypeId s_typeId = TypeId::OutResourceTable;
-    static void constructType(PyTypeObject& t);
+    static void constructType(CoalpyTypeObject& t);
     static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
     static void destroy(PyObject* self);
 };
@@ -87,7 +89,7 @@ struct SamplerTable
 
     //Functions
     static const TypeId s_typeId = TypeId::SamplerTable;
-    static void constructType(PyTypeObject& t);
+    static void constructType(CoalpyTypeObject& t);
     static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
     static void destroy(PyObject* self);
 };

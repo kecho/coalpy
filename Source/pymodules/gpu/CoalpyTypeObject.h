@@ -20,11 +20,18 @@ struct EnumEntry
     const char* docs;
 };
 
+struct ChildTypeObject
+{
+    const char* name;
+    PyTypeObject* pyObj;
+};
+
 struct CoalpyTypeObject
 {
     //Must be the first member, offset 0
-    PyTypeObject pyObj;
-    ModuleState* moduleState;
+    PyTypeObject pyObj = { PyVarObject_HEAD_INIT(NULL, 0) };
+    ModuleState* moduleState = nullptr;
+    std::vector<ChildTypeObject> children;
     TypeId typeId;
 }; 
 

@@ -25,8 +25,9 @@ static PyMethodDef g_implotMethods[] = {
     FN_END
 };
 
-void ImplotBuilder::constructType(PyTypeObject& t)
+void ImplotBuilder::constructType(CoalpyTypeObject& o)
 {
+    auto& t = o.pyObj;
     t.tp_name = "gpu.ImplotBuilder";
     t.tp_basicsize = sizeof(ImplotBuilder);
     t.tp_doc   = R"(

@@ -29,6 +29,8 @@ struct CommandListReferences
     }
 };
 
+struct CoalpyTypeObject;
+
 struct CommandList
 {
     //Data
@@ -39,7 +41,7 @@ struct CommandList
 
     //Functions
     static const TypeId s_typeId = TypeId::CommandList;
-    static void constructType(PyTypeObject& t);
+    static void constructType(CoalpyTypeObject& o);
     static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
     static void destroy(PyObject* self);
 };

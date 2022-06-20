@@ -28,8 +28,9 @@ static PyMethodDef g_cmdListMethods[] = {
     FN_END
 };
 
-void CommandList::constructType(PyTypeObject& t)
+void CommandList::constructType(CoalpyTypeObject& o)
 {
+    auto& t = o.pyObj;
     t.tp_name = "gpu.CommandList";
     t.tp_basicsize = sizeof(CommandList);
     t.tp_doc   = "Class that represents a stream of commands. "

@@ -20,8 +20,9 @@ static PyMemberDef g_renderArgMemembers[] = {
     { nullptr }
 };
 
-void RenderArgs::constructType(PyTypeObject& t)
+void RenderArgs::constructType(CoalpyTypeObject& o)
 {
+    auto& t = o.pyObj;
     t.tp_name = "gpu.RenderArgs";
     t.tp_basicsize = sizeof(RenderArgs);
     t.tp_doc   = "Parameters passed in the on_render function of a window.\n";

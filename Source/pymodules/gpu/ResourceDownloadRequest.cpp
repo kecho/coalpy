@@ -23,8 +23,9 @@ static PyMethodDef g_resourceDownloadMethods[] = {
     FN_END
 };
 
-void ResourceDownloadRequest::constructType(PyTypeObject& t)
+void ResourceDownloadRequest::constructType(CoalpyTypeObject& o)
 {
+    auto& t = o.pyObj;
     t.tp_name = "gpu.ResourceDownloadRequest";
     t.tp_basicsize = sizeof(ResourceDownloadRequest);
     t.tp_doc = R"(

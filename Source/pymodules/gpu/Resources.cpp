@@ -23,8 +23,9 @@ bool validateEnum(ModuleState& state, int value, int count, const char* name, co
     return true;
 }
 
-void Buffer::constructType(PyTypeObject& t)
+void Buffer::constructType(CoalpyTypeObject& o)
 {
+    auto& t = o.pyObj;
     t.tp_name = "gpu.Buffer";
     t.tp_basicsize = sizeof(Buffer);
     t.tp_doc   = R"(
@@ -106,8 +107,9 @@ void Buffer::destroy(PyObject* self)
     Py_TYPE(self)->tp_free(self);
 }
 
-void Texture::constructType(PyTypeObject& t)
+void Texture::constructType(CoalpyTypeObject& o)
 {
+    auto& t = o.pyObj;
     t.tp_name = "gpu.Texture";
     t.tp_basicsize = sizeof(Texture);
     t.tp_doc   = R"(
@@ -194,8 +196,9 @@ void Texture::destroy(PyObject* self)
     Py_TYPE(self)->tp_free(self);
 }
 
-void Sampler::constructType(PyTypeObject& t)
+void Sampler::constructType(CoalpyTypeObject& o)
 {
+    auto& t = o.pyObj;
     t.tp_name = "gpu.Sampler";
     t.tp_basicsize = sizeof(Sampler);
     t.tp_doc   = R"(
@@ -286,8 +289,9 @@ void Sampler::destroy(PyObject* self)
     Py_TYPE(self)->tp_free(self);
 }
 
-void InResourceTable::constructType(PyTypeObject& t)
+void InResourceTable::constructType(CoalpyTypeObject& o)
 {
+    auto& t = o.pyObj;
     t.tp_name = "gpu.InResourceTable";
     t.tp_basicsize = sizeof(InResourceTable);
     t.tp_doc   = R"(
@@ -412,8 +416,9 @@ void InResourceTable::destroy(PyObject* self)
     Py_TYPE(self)->tp_free(self);
 }
 
-void OutResourceTable::constructType(PyTypeObject& t)
+void OutResourceTable::constructType(CoalpyTypeObject& o)
 {
+    auto& t = o.pyObj;
     t.tp_name = "gpu.OutResourceTable";
     t.tp_basicsize = sizeof(OutResourceTable);
     t.tp_doc   = R"(
@@ -482,8 +487,9 @@ void OutResourceTable::destroy(PyObject* self)
     Py_TYPE(self)->tp_free(self);
 }
 
-void SamplerTable::constructType(PyTypeObject& t)
+void SamplerTable::constructType(CoalpyTypeObject& o)
 {
+    auto& t = o.pyObj;
     t.tp_name = "gpu.SamplerTable";
     t.tp_basicsize = sizeof(SamplerTable);
     t.tp_doc   = R"(
