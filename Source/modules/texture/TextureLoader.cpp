@@ -182,7 +182,7 @@ void TextureLoader::cleanState(LoadingState& state, bool sync)
         freeLoadState(&state);
 }
 
-void TextureLoader::processTextures()
+void TextureLoader::processTextures(TextureReloadCallback reloadCb)
 {
     std::vector<LoadingState*> acquiredStates;
     {
@@ -215,6 +215,8 @@ void TextureLoader::processTextures()
             CPY_ASSERT_MSG(texResult.success(), texResult.message.c_str()); //TODO: handle this failure
             if (texResult.success())
                 lists.push_back(&imageLoader->cmdList());
+            if (reloadCb != nullptr)
+                reloadCb(state->texture);
         }
         else
         {

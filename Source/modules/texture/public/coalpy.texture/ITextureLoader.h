@@ -2,6 +2,7 @@
 
 #include <coalpy.render/Resources.h>
 #include <string>
+#include <functional>
 
 namespace coalpy
 {
@@ -43,6 +44,8 @@ struct TextureLoaderDesc
     IFileWatcher* fw = nullptr;
 };
 
+using TextureReloadCallback = std::function<void(render::Texture texture)>;
+
 class ITextureLoader
 {
 public:
@@ -53,7 +56,7 @@ public:
     virtual void addPath(const char* path) = 0;
     virtual TextureLoadResult loadTexture(const char* fileName) = 0;
     virtual void unloadTexture(render::Texture texture) = 0;
-    virtual void processTextures() = 0;
+    virtual void processTextures(TextureReloadCallback cb) = 0;
 };
 
 }

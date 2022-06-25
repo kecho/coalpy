@@ -62,7 +62,7 @@ public:
     virtual void addPath(const char* path) override;
     virtual TextureLoadResult loadTexture(const char* fileName) override;
     virtual void unloadTexture(render::Texture texture) override;
-    virtual void processTextures() override;
+    virtual void processTextures(TextureReloadCallback cb) override;
     virtual void onFilesChanged(const std::set<std::string>& filesChanged) override;
 
 private:

@@ -321,6 +321,11 @@ void Dx12imguiRenderer::flushPendingDeleteIndices()
     }
 }
 
+bool Dx12imguiRenderer::isTextureRegistered(Texture texture) const
+{
+    return m_texToGpuHandleIndex.find(texture) != m_texToGpuHandleIndex.end();
+}
+
 void Dx12imguiRenderer::unregisterTexture(Texture texture)
 {
     auto it = m_texToGpuHandleIndex.find(texture);

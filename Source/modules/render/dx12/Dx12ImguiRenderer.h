@@ -36,6 +36,7 @@ public:
     virtual void render() override;
     ImTextureID registerTexture(Texture texture) override;
     void unregisterTexture(Texture texture) override;
+    bool isTextureRegistered(Texture texture) const override;
 
 private:
     enum 

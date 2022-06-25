@@ -260,9 +260,26 @@ PyObject* run(PyObject* self, PyObject* args)
 
     Stopwatch stopwatch;
 
-    runArgs.onRender = [&state, &raiseException, renderArgs, &stopwatch, imguiBuilder, implotBuilder]()
+    auto realoadUITexturesCb = [&state](render::Texture texture)
     {
-        state.tl().processTextures();
+        std::set<Window*> windowsPtrs;
+        state.getWindows(windowsPtrs);
+        for (Window* w : windowsPtrs)
+        {
+            if (w->uiRenderer == nullptr)
+                continue;
+
+            if (!w->uiRenderer->isTextureRegistered(texture))
+                continue;
+        
+            w->uiRenderer->unregisterTexture(texture);
+            w->uiRenderer->registerTexture(texture); //re-register
+        }
+    };
+
+    runArgs.onRender = [&realoadUITexturesCb, &state, &raiseException, renderArgs, &stopwatch, imguiBuilder, implotBuilder]()
+    {
+        state.tl().processTextures(realoadUITexturesCb);
 
         unsigned long long mst = stopwatch.timeMicroSecondsLong();
         double newRenderTime = (double)mst / 1000.0;

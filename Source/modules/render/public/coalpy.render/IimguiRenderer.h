@@ -34,6 +34,7 @@ public:
     virtual void endFrame() = 0;
     virtual ImTextureID registerTexture(Texture texture) = 0;
     virtual void unregisterTexture(Texture texture) = 0;
+    virtual bool isTextureRegistered(Texture texture) const = 0;
 };
 
 }
