@@ -70,6 +70,7 @@ void constructTypes(TypeList& outTypes)
     RegisterType(OutResourceTable,        outTypes);
     RegisterType(ResourceDownloadRequest, outTypes);
     RegisterType(SamplerTable,            outTypes);
+    RegisterType(MarkerResults,           outTypes);
     RegisterType(ImguiBuilder,            outTypes);
     RegisterType(ImplotBuilder,           outTypes);
     RegisterType(TinyObjLoader,           outTypes);

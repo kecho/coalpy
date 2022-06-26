@@ -18,6 +18,7 @@ enum class TypeId : int
     OutResourceTable,
     SamplerTable,
     ResourceDownloadRequest,
+    MarkerResults,
     ImguiBuilder,
     ImplotBuilder,
     TinyObjLoader,

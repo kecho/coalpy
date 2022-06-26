@@ -49,6 +49,30 @@ COALPY_FN(schedule, schedule,
     )"
 )
 
+COALPY_FN(begin_collect_markers, beginCollectMarkers,
+    R"(
+    Call this surrounding all your schedules to define a 'frame'.
+    Once you call end_collect_markers you can extract the results for further processing.
+
+    gpu.begin_collect_markers()
+    ...
+    gpu.schedule([]) #perform all your schedules
+    marker_data = gpu.end_collect_markers()
+
+    Parameters:
+        max_query_bytes (int)(optional): default value 56kb. Maximum amount of marker data to obtain.   
+    )"
+)
+
+COALPY_FN(end_collect_markers, endCollectMarkers,
+    R"(
+    Ends marker collection. See gpu.begin_collect_markers
+
+    Returns:
+        marker_results (see g.MarkerResults)
+    )"
+)
+
 COALPY_FN(run, run, "Runs window rendering callbacks. This function blocks until all the existing windows are closed. Window objects must be created and referenced prior. Use the Window object to configure / specify callbacks and this function to run all the event loops for windows.")
 
 #undef COALPY_FN

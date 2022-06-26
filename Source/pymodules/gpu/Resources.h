@@ -95,6 +95,21 @@ struct SamplerTable
     static void destroy(PyObject* self);
 };
 
+struct MarkerResults
+{
+    //Data
+    PyObject_HEAD
+    PyObject* markers = nullptr;
+    Buffer* timestampBuffer = nullptr;
+    uint64_t timestampFrequency = 0ull;
+
+    //Functions
+    static const TypeId s_typeId = TypeId::MarkerResults;
+    static void constructType(CoalpyTypeObject& t);
+    static int  init(PyObject* self, PyObject * vargs, PyObject* kwds);
+    static void destroy(PyObject* self);
+};
+
 }
 }
 

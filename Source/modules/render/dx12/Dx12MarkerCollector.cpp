@@ -21,7 +21,7 @@ Dx12MarkerCollector::~Dx12MarkerCollector()
 
 void Dx12MarkerCollector::beginCollection(int byteCount)
 {
-    if (byteCount >= m_queryHeapBytes)
+    if (byteCount > m_queryHeapBytes)
     {
         if (m_queryHeap != nullptr)
         {

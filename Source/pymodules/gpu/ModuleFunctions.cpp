@@ -20,6 +20,7 @@
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/Utils.h>
 #include <coalpy.texture/ITextureLoader.h>
+#include <iostream>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -430,6 +431,66 @@ PyObject* schedule(PyObject* self, PyObject* vargs, PyObject* kwds)
     }
 
     Py_RETURN_NONE;
+}
+
+PyObject* beginCollectMarkers(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    ModuleState& moduleState = getState(self);
+    if (!moduleState.checkValidDevice())
+    {
+        PyErr_SetString(moduleState.exObj(), "Cant schedule, current device is invalid.");
+        return nullptr;
+    }
+
+    int maxQueryBytes = 56 * 1024;
+    char* arguments[] = { "max_query_bytes", nullptr };
+    PyObject* cmdListsArg = nullptr;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|i", arguments, &maxQueryBytes))
+        return nullptr;
+
+    moduleState.device().beginCollectMarkers(maxQueryBytes);
+    Py_RETURN_NONE;
+}
+
+PyObject* endCollectMarkers(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    ModuleState& moduleState = getState(self);
+    if (!moduleState.checkValidDevice())
+    {
+        PyErr_SetString(moduleState.exObj(), "Cant schedule, current device is invalid.");
+        return nullptr;
+    }
+
+    render::MarkerResults results = moduleState.device().endCollectMarkers();
+    if (!results.timestampBuffer.success())
+    {
+        PyErr_SetString(moduleState.exObj(), "Failed to extract gpu results for markers.");
+        return nullptr;
+    }
+
+    auto* markerResultObj = moduleState.alloc<MarkerResults>();
+    new (markerResultObj) MarkerResults;
+
+    {
+        auto* bufferResult = moduleState.alloc<Buffer>();
+        new (bufferResult) Buffer;
+        bufferResult->owned = false;
+        bufferResult->buffer = results.timestampBuffer;
+        markerResultObj->timestampBuffer = bufferResult;
+    }
+
+    markerResultObj->markers = PyList_New(results.markerCount);
+    for (int i = 0; i < results.markerCount; ++i)
+    {
+        const render::MarkerTimestamp& m = results.markers[i];
+        PyList_SetItem(
+            markerResultObj->markers, i,
+            Py_BuildValue("(siii)", m.name.c_str(), m.parentMarkerIndex, m.beginTimestampIndex, m.endTimestampIndex));
+    }
+    
+    markerResultObj->timestampFrequency = results.timestampFrequency;
+    
+    return (PyObject*)markerResultObj;
 }
 
 }

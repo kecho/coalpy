@@ -2,6 +2,7 @@
 #include "ModuleState.h"
 #include "CoalpyTypeObject.h"
 #include "PyUtils.h"
+#include "structmember.h"
 #include <coalpy.render/IDevice.h>
 #include <coalpy.texture/ITextureLoader.h>
 
@@ -560,6 +561,51 @@ void SamplerTable::destroy(PyObject* self)
     ModuleState& moduleState = parentModule(self);
     moduleState.device().release(table->table);
     table->~SamplerTable();
+    Py_TYPE(self)->tp_free(self);
+}
+
+static PyMemberDef g_markerResultsMembers [] = {
+    { "markers", T_OBJECT, offsetof(MarkerResults, markers),  READONLY,
+           R"(
+        List of marker tuples. Each tuple has (name, parent_marker_index, begin_timestamp_index, end_timestamp_index).
+        Time stamp are measured in ticks and stored in the GPU buffer member timestamp_buffer.
+        A common practice is to store this result, along with the buffer, and poll it using a DownloadResourceRequest object.
+        Once timestamps are available on CPU, divide timestamp by timestamp_frequency member to obtain time in seconds.)" },
+
+    { "timestamp_buffer", T_OBJECT, offsetof(MarkerResults, timestampBuffer), READONLY, "GPU buffer (uin64 elements) with time stamp ticks."},
+    { "timestamp_frequency", T_LONGLONG, offsetof(MarkerResults, timestampFrequency), READONLY, "Frequency in ticks/secs. Divide timestamp ticks by frequency to obtain time in seconds."},
+    { nullptr }
+};
+
+void MarkerResults::constructType(CoalpyTypeObject& o)
+{
+    auto& t = o.pyObj;
+    t.tp_name = "gpu.MarkerResults";
+    t.tp_basicsize = sizeof(MarkerResults);
+    t.tp_doc   = R"(
+        Result object with GPU marker data.
+    )";
+
+    t.tp_flags = Py_TPFLAGS_DEFAULT;
+    t.tp_new = PyType_GenericNew;
+    t.tp_init = MarkerResults::init;
+    t.tp_dealloc = MarkerResults::destroy;
+    t.tp_members = g_markerResultsMembers;
+}
+
+int MarkerResults::init(PyObject* self, PyObject * vargs, PyObject* kwds)
+{
+    ModuleState& moduleState = parentModule(self);
+    PyErr_SetString(moduleState.exObj(), "Cannot instantiate the type of MarkerResults. Use the begin_collect_markers/end_collect_markers API.");
+    return -1;
+}
+
+void MarkerResults::destroy(PyObject* self)
+{
+    auto* results = (MarkerResults*)self;
+    Py_XDECREF(results->markers);
+    Py_XDECREF(results->timestampBuffer);
+    results->~MarkerResults();
     Py_TYPE(self)->tp_free(self);
 }
 
