@@ -147,6 +147,7 @@ struct MarkerResults
 {
     BufferResult timestampBuffer;
     const MarkerTimestamp* markers;
+    uint64_t timestampFrequency;
     int markerCount;
 };
 

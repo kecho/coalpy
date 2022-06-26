@@ -89,6 +89,8 @@ MarkerResults Dx12MarkerCollector::endCollection()
         m_device.queues().deallocate(dx12List, fenceVal);
     }
 
+    DX_OK(m_device.queues().cmdQueue(workType).GetTimestampFrequency(&results.timestampFrequency));
+
     results.timestampBuffer = BufferResult { ResourceResult::Ok, m_timestampBuffer };
     results.markers = m_markerTimestamps.data();
     results.markerCount = (int)m_markerTimestamps.size();
