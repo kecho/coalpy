@@ -83,6 +83,7 @@ void BaseShaderDb::setParentDevice(render::IDevice* device, const render::Device
 
 BaseShaderDb::~BaseShaderDb()
 {
+    m_destroying = true;
     if (m_desc.enableLiveEditing)
         stopLiveEdit();
 
@@ -455,7 +456,7 @@ void BaseShaderDb::resolve(ShaderHandle handle)
         {
             std::shared_lock lock(m_shadersMutex);
             
-            if (m_parentDevice != nullptr && shaderState->recipe.type == ShaderType::Compute && compileState->success)
+            if (m_parentDevice != nullptr && shaderState->recipe.type == ShaderType::Compute && compileState->success && !m_destroying)
                 onCreateComputePayload(handle, *shaderState);
 
             delete compileState;

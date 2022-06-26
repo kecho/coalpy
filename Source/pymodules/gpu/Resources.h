@@ -33,6 +33,7 @@ struct Buffer
     //Data
     PyObject_HEAD
     bool isAppendConsume = false;
+    bool owned = true;
     render::Buffer buffer;
 
     //Functions

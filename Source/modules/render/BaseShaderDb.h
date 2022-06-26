@@ -106,6 +106,7 @@ private:
 
     bool m_pdbDirReady = false;
     bool m_createdPdbDir = false;
+    bool m_destroying = false;
 
 };
 

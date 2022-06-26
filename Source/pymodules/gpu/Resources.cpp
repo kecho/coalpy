@@ -102,7 +102,9 @@ void Buffer::destroy(PyObject* self)
 
     ModuleState& moduleState = parentModule(self);
 
-    moduleState.device().release(buffer->buffer);
+    if (buffer->owned)
+        moduleState.device().release(buffer->buffer);
+
     buffer->~Buffer();
     Py_TYPE(self)->tp_free(self);
 }
@@ -182,16 +184,19 @@ int Texture::init(PyObject* self, PyObject * vargs, PyObject* kwds)
 void Texture::destroy(PyObject* self)
 {
     auto* texture = (Texture*)self;
-    if (!texture->texture.valid() || !texture->owned)
+    if (!texture->texture.valid())
         return;
 
     ModuleState& moduleState = parentModule(self);
     moduleState.onDestroyTexture(*texture);
 
-    if (texture->isFile)
-        moduleState.tl().unloadTexture(texture->texture);
-    else
-        moduleState.device().release(texture->texture);
+    if (texture->owned)
+    {
+        if (texture->isFile)
+            moduleState.tl().unloadTexture(texture->texture);
+        else
+            moduleState.device().release(texture->texture);
+    }
     texture->~Texture();
     Py_TYPE(self)->tp_free(self);
 }
