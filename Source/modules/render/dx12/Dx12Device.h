@@ -7,6 +7,7 @@
 #include <coalpy.render/Resources.h>
 #include <coalpy.render/ShaderDefs.h>
 #include <unordered_map>
+#include <d3d12.h>
 #include <string>
 
 struct IDXGIFactory2;
@@ -29,6 +30,7 @@ class Dx12DescriptorPool;
 class Dx12ResourceCollection;
 class Dx12BufferPool;
 class Dx12CounterPool;
+class Dx12MarkerCollector;
 class Dx12Gc;
 class Dx12PixApi;
 struct Dx12WorkInformationMap;
@@ -69,6 +71,12 @@ public:
 
     void internalReleaseWorkHandle(WorkHandle handle);
 
+    virtual void beginCollectMarkers(int maxQueryBytes) override;
+    virtual MarkerResults endCollectMarkers() override;
+
+    //utility for internal transitioning.
+    void transitionResourceState(ResourceHandle resource, D3D12_RESOURCE_STATES newState, std::vector<D3D12_RESOURCE_BARRIER>& outBarriers);
+
     ID3D12Device2& device() { return *m_device; }
     Dx12Queues& queues() { return *m_queues; }
     Dx12ResourceCollection& resources() { return *m_resources; }
@@ -76,6 +84,7 @@ public:
     Dx12DescriptorPool& descriptors() { return *m_descriptors; }
     Dx12ShaderDb& shaderDb() { return *m_shaderDb; }
     Dx12BufferPool& readbackPool() { return *m_readbackPool; }
+    Dx12MarkerCollector& markerCollector() { return *m_markerCollector; }
     Dx12Gc& gc() { return *m_gc; }
     WorkBundleDb& workDb() { return m_workDb; } 
 
@@ -109,6 +118,7 @@ private:
     Dx12Queues* m_queues;
     Dx12BufferPool* m_readbackPool;
     Dx12ShaderDb* m_shaderDb;
+    Dx12MarkerCollector* m_markerCollector;
     Dx12Gc* m_gc;
     DeviceInfo m_info;
     DeviceRuntimeInfo m_runtimeInfo;

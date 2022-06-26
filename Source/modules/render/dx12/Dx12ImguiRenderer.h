@@ -47,7 +47,6 @@ private:
     void setCoalpyStyle();
     void setupSwapChain();
     void flushPendingDeleteIndices();
-    void transitionResourceState(ResourceHandle resource, D3D12_RESOURCE_STATES newState, std::vector<D3D12_RESOURCE_BARRIER>& outBarriers);
 
     Dx12Fence& m_graphicsFence;
     Dx12Device& m_device;

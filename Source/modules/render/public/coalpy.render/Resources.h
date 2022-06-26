@@ -135,6 +135,21 @@ using InResourceTableResult  = TemplateResourceResult<InResourceTable>;
 using OutResourceTableResult = TemplateResourceResult<OutResourceTable>;
 using SamplerTableResult  = TemplateResourceResult<SamplerTable>;
 
+struct MarkerTimestamp
+{
+    std::string name;
+    int parentMarkerIndex = -1;
+    int beginTimestampIndex = -1;
+    int endTimestampIndex = -1;
+};
+
+struct MarkerResults
+{
+    BufferResult timestampBuffer;
+    const MarkerTimestamp* markers;
+    int markerCount;
+};
+
 }
 
 }

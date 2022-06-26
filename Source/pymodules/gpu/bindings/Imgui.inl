@@ -232,7 +232,7 @@ COALPY_FN(selectable, selectable, R"(
 
     Parameters:
         label (str): the label name for this selectable.
-        selected (str): the state if this value is selected. 
+        selected (bool): the state if this value is selected. 
 
     Returns:
         True if item is selected, false otherwise.

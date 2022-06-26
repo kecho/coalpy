@@ -206,24 +206,6 @@ void Dx12imguiRenderer::setupSwapChain()
     m_cachedSwapVersion = m_display.version();
 }
 
-void Dx12imguiRenderer::transitionResourceState(ResourceHandle resource, D3D12_RESOURCE_STATES newState, std::vector<D3D12_RESOURCE_BARRIER>& outBarriers)
-{
-    auto& workDb = m_device.workDb();
-    WorkResourceInfo& resourceInfo = workDb.resourceInfos()[resource];
-    auto stateBefore = getDx12GpuState(resourceInfo.gpuState);
-    if (stateBefore == newState)
-        return;
-
-    outBarriers.emplace_back();
-    D3D12_RESOURCE_BARRIER& b = outBarriers.back();
-    b.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    b.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    b.Transition.pResource = &m_device.resources().unsafeGetResource(resource).d3dResource();
-    b.Transition.StateBefore = getDx12GpuState(resourceInfo.gpuState);
-    b.Transition.StateAfter = newState;
-    resourceInfo.gpuState = getGpuState(newState);
-}
-
 void Dx12imguiRenderer::render()
 {
     flushPendingDeleteIndices();
@@ -244,10 +226,11 @@ void Dx12imguiRenderer::render()
     {
         barriers.reserve(1 + m_texToGpuHandleIndex.size());
         Texture targetTexture = m_display.texture();
-        transitionResourceState(targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, barriers);
+        
+        m_device.transitionResourceState(targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, barriers);
 
         for (auto it : m_texToGpuHandleIndex)
-            transitionResourceState(it.first, getDx12GpuState(ResourceGpuState::Srv), barriers);
+            m_device.transitionResourceState(it.first, getDx12GpuState(ResourceGpuState::Srv), barriers);
     }
 
     dx12List.list->ResourceBarrier((UINT)barriers.size(), barriers.data());

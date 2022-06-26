@@ -29,6 +29,7 @@
 #include "Dx12CounterPool.h"
 #include "Dx12Fence.h"
 #include "Dx12PixApi.h"
+#include "Dx12MarkerCollector.h"
 #include "Dx12Gc.h"
 
 namespace coalpy
@@ -319,10 +320,13 @@ Dx12Device::Dx12Device(const DeviceConfig& config)
         bufferDesc.memFlags = (MemFlags)0u;
         m_countersBuffer = m_resources->createBuffer(bufferDesc, &m_counterPool->resource());
     }
+
+    m_markerCollector = new Dx12MarkerCollector(*this);
 }
 
 Dx12Device::~Dx12Device()
 {
+    delete m_markerCollector;
     release(m_countersBuffer);
 
     m_gc->stop();
@@ -536,6 +540,33 @@ SmartPtr<IDisplay> Dx12Device::createDisplay(const DisplayConfig& config)
 {
     IDisplay * display = new Dx12Display(config, *this);
     return SmartPtr<IDisplay>(display);
+}
+
+void Dx12Device::beginCollectMarkers(int maxQueryBytes)
+{
+    m_markerCollector->beginCollection(maxQueryBytes);
+}
+
+MarkerResults Dx12Device::endCollectMarkers() 
+{
+    return m_markerCollector->endCollection();
+}
+
+void Dx12Device::transitionResourceState(ResourceHandle resource, D3D12_RESOURCE_STATES newState, std::vector<D3D12_RESOURCE_BARRIER>& outBarriers)
+{
+    WorkResourceInfo& resourceInfo = m_workDb.resourceInfos()[resource];
+    auto stateBefore = getDx12GpuState(resourceInfo.gpuState);
+    if (stateBefore == newState)
+        return;
+
+    outBarriers.emplace_back();
+    D3D12_RESOURCE_BARRIER& b = outBarriers.back();
+    b.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    b.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    b.Transition.pResource = &resources().unsafeGetResource(resource).d3dResource();
+    b.Transition.StateBefore = getDx12GpuState(resourceInfo.gpuState);
+    b.Transition.StateAfter = newState;
+    resourceInfo.gpuState = getGpuState(newState);
 }
 
 Dx12PixApi* Dx12Device::getPixApi() const

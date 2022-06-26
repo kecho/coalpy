@@ -82,6 +82,9 @@ public:
     virtual DownloadStatus getDownloadStatus(WorkHandle workHandle, ResourceHandle handle, int mipLevel = 0, int arraySlice = 0) = 0;
     virtual void getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo) = 0;
 
+    virtual void beginCollectMarkers(int maxQueryBytes = 1024 * 56 /*56kb, round 7k timestamps, 3.5k markers*/) = 0;
+    virtual MarkerResults endCollectMarkers() = 0;
+
     virtual IShaderDb* db() = 0;
     virtual void removeShaderDb() = 0;
 };

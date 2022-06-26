@@ -1846,6 +1846,70 @@ namespace coalpy
         renderTestCtx.end();
     }
 
+    void testCollectGpuMarkers(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+
+        CommandList cmdList;
+
+        cmdList.beginMarker("Parent0");
+            cmdList.beginMarker("Child0");
+                cmdList.beginMarker("Child1");
+                cmdList.endMarker();
+            cmdList.endMarker();
+            cmdList.beginMarker("Child2");
+            cmdList.endMarker();
+        cmdList.endMarker();
+
+        cmdList.finalize();
+        
+        device.beginCollectMarkers();
+        {
+            CommandList* cmdListPtr = &cmdList;
+            device.schedule(&cmdListPtr, 1);
+        }
+        MarkerResults results = device.endCollectMarkers();
+        CPY_ASSERT(results.timestampBuffer.success());
+        CPY_ASSERT(results.markerCount == 4);
+        CPY_ASSERT(results.markers != nullptr);
+
+        //download and test data
+        {
+            CommandList downloadList;        
+            DownloadCommand downloadCmd;
+            downloadCmd.setData(results.timestampBuffer);
+            downloadList.writeCommand(downloadCmd);
+            downloadList.finalize();
+            {
+                CommandList* cmdListPtr = &downloadList;
+                ScheduleStatus scheduleStatus = device.schedule(&cmdListPtr, 1, ScheduleFlags_GetWorkHandle);
+                CPY_ASSERT_MSG(scheduleStatus.success(), scheduleStatus.message.c_str());
+
+                WaitStatus waitStatus = device.waitOnCpu(scheduleStatus.workHandle, -1);
+                CPY_ASSERT(waitStatus.success());
+
+                //Verify simple copy
+                DownloadStatus downloadStatus = device.getDownloadStatus(scheduleStatus.workHandle, results.timestampBuffer);
+                CPY_ASSERT(downloadStatus.success());
+
+                uint64_t* timestamps = (uint64_t*)downloadStatus.downloadPtr;
+                for (int i = 0; i < results.markerCount; ++i)
+                {
+                    const MarkerTimestamp& markerData = results.markers[i];
+                    auto b = timestamps[markerData.beginTimestampIndex];
+                    auto e = timestamps[markerData.endTimestampIndex];
+                    CPY_ASSERT(e >= b);
+                    CPY_ASSERT(e != 0);
+                    CPY_ASSERT(b != 0);
+                }
+            }
+        }
+
+        renderTestCtx.end();
+    }
+
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
     {
         static TestCase sCases[] = {
@@ -1870,6 +1934,7 @@ namespace coalpy
             { "copyBuffer",  testCopyBuffer },
             { "copyTexture",  testCopyTexture },
             { "copyTextureArrayAndMips",  testCopyTextureArrayAndMips },
+            { "collectGpuMarkers",  testCollectGpuMarkers },
         };
     
         caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));

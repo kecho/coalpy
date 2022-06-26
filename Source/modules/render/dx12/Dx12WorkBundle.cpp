@@ -6,6 +6,7 @@
 #include "Dx12Utils.h"
 #include "Dx12Formats.h"
 #include "Dx12CounterPool.h"
+#include "Dx12MarkerCollector.h"
 #include "Dx12PixApi.h"
 
 namespace coalpy
@@ -560,6 +561,13 @@ void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList,
                     const char* str = abiCmd->str.data(listData);
                     pixApi->pixBeginEventOnCommandList(&outList, 0xffff00ff, str);
                 }
+
+                Dx12MarkerCollector& markerCollector = m_device.markerCollector();
+                if (markerCollector.isActive())
+                {
+                    const char* str = abiCmd->str.data(listData);
+                    markerCollector.beginMarker(outList, str);
+                }
             }
             break;
         case AbiCmdTypes::EndMarker:
@@ -567,6 +575,10 @@ void Dx12WorkBundle::buildCommandList(int listIndex, const CommandList* cmdList,
                 Dx12PixApi* pixApi = m_device.getPixApi();
                 if (pixApi)
                     pixApi->pixEndEventOnCommandList(&outList);
+
+                Dx12MarkerCollector& markerCollector = m_device.markerCollector();
+                if (markerCollector.isActive())
+                    markerCollector.endMarker(outList);
             }
             break;
         default:
