@@ -25,9 +25,9 @@ void Dx12MarkerCollector::beginCollection(int byteCount)
     {
         if (m_queryHeap != nullptr)
         {
-            m_queryHeap->Release();
-            m_queryHeap = nullptr;
+            m_device.deferRelease(*m_queryHeap);
             m_device.release(m_timestampBuffer);
+            m_queryHeap = nullptr;
             m_timestampBuffer = Buffer();
         }
         
