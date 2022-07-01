@@ -1081,6 +1081,88 @@ PyObject* dockBuilderNodeExists(PyObject* self, PyObject* vargs, PyObject* kwds)
         Py_RETURN_TRUE;
 }
 
+PyObject* beginTabBar(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "id", "flags", nullptr };
+    char* id = nullptr;
+    int flags = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|i", argnames, &id, &flags))
+        return nullptr;
+
+    if (ImGui::BeginTabBar(id, flags))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* endTabBar(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    ImGui::EndTabBar();
+    Py_RETURN_NONE;
+}
+
+PyObject* beginTabItem(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "label", "open", "flags", nullptr };
+    char* label = nullptr;
+    int openInt = -1;
+    int flags = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|qi", argnames, &label, &openInt, &flags))
+        return nullptr;
+
+    bool openValue = openInt == 1;
+    if (ImGui::BeginTabItem(label, openInt == -1 ? nullptr : &openValue, flags))
+        Py_RETURN_TRUE; 
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* endTabItem(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    ImGui::EndTabItem();
+    Py_RETURN_NONE;
+}
+
+PyObject* tabItemButton(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "label", "flags", nullptr };
+    char* label = nullptr;
+    int flags = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|i", argnames, &label, &flags))
+        return nullptr;
+
+    if (ImGui::TabItemButton(label, flags))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* setTabItemClosed(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "label", nullptr };
+    char* label = nullptr;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s", argnames, &label))
+        return nullptr;
+
+    ImGui::SetTabItemClosed(label);
+    Py_RETURN_NONE;
+}
+
+
 }//methods
 
 }//gpu

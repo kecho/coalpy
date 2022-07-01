@@ -590,22 +590,22 @@ COALPY_FN(dockbuilder_node_exists, dockBuilderNodeExists, R"(
         True if it exists, False otherwise
 )")
 
-COALPY_FN(begin_tab_bar, BeginTabBar, R"(
+COALPY_FN(begin_tab_bar, beginTabBar, R"(
     create and append into a TabBar
     
     Parameters:
         id (str): id of tab bar
-        flags (int): Flags, see coalpy.gpu.ImGuiTabBarFlags
+        flags (int)(optional): Flags, see coalpy.gpu.ImGuiTabBarFlags
 
     Return:
         bool
 )")
 
-COALPY_FN(end_tab_bar, EndTabBar, R"(
+COALPY_FN(end_tab_bar, endTabBar, R"(
     only call EndTabBar() if BeginTabBar() returns true!
 )")
 
-COALPY_FN(begin_tab_item, BeginTabItem, R"(
+COALPY_FN(begin_tab_item, beginTabItem, R"(
     create a Tab. Returns true if the Tab is selected.
     
     Parameters:
@@ -617,19 +617,25 @@ COALPY_FN(begin_tab_item, BeginTabItem, R"(
         bool
 )")
 
-COALPY_FN(end_tab_item, EndTabItem, R"(
+COALPY_FN(end_tab_item, endTabItem, R"(
     only call EndTabItem() if BeginTabItem() returns true!
 )")
 
-COALPY_FN(tab_item_button, TabItemButton, R"(
+COALPY_FN(tab_item_button, tabItemButton, R"(
     create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
 
     label (str): name
-    
+    flags (int): See coalpy.gpu.ImGuiTabItemFlags
+
+    Return:
+        bool
 )")
 
-COALPY_FN(set_tab_item_closed, SetTabItemClosed,  R"(
+COALPY_FN(set_tab_item_closed, setTabItemClosed,  R"(
     notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.
+
+    Parameters:
+        label (str): tab or docked window label
 )")
 
 
@@ -866,6 +872,30 @@ COALPY_ENUM(SpanFullWidth, ImGuiTreeNodeFlags_SpanFullWidth, R"(// Extend hit bo
 COALPY_ENUM(NavLeftJumpsBackHere, ImGuiTreeNodeFlags_NavLeftJumpsBackHere, R"(// (WIP) Nav: left direction may move to this TreeNode() from any of its child (items submitted between TreeNode and TreePop))")
 COALPY_ENUM(CollapsingHeader, ImGuiTreeNodeFlags_CollapsingHeader, R"(ImGuiTreeNodeFlags_NoAutoOpenOnLog)")
 COALPY_ENUM_END(ImGuiTreeNodeFlags)
+
+COALPY_ENUM_BEGIN(ImGuiTabBarFlags, "")
+COALPY_ENUM(Reorderable,                  ImGuiTabBarFlags_Reorderable, R"(Allow manually dragging tabs to re-order them + New tabs are appended at the end of list)")
+COALPY_ENUM(AutoSelectNewTabs,            ImGuiTabBarFlags_AutoSelectNewTabs, R"(Automatically select new tabs when they appear)")
+COALPY_ENUM(TabListPopupButton,           ImGuiTabBarFlags_TabListPopupButton, R"(Disable buttons to open the tab list popup)")
+COALPY_ENUM(NoCloseWithMiddleMouseButton, ImGuiTabBarFlags_NoCloseWithMiddleMouseButton, R"(Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.)")
+COALPY_ENUM(NoTabListScrollingButtons,    ImGuiTabBarFlags_NoTabListScrollingButtons, R"(Disable scrolling buttons (apply when fitting policy is ImGuiTabBarFlags_FittingPolicyScroll))")
+COALPY_ENUM(NoTooltip,                    ImGuiTabBarFlags_NoTooltip, R"(Disable tooltips when hovering a tab)")
+COALPY_ENUM(FittingPolicyResizeDown,      ImGuiTabBarFlags_FittingPolicyResizeDown, R"(Resize tabs when they don't fit)")
+COALPY_ENUM(FittingPolicyScroll,          ImGuiTabBarFlags_FittingPolicyScroll, R"(Add scroll buttons when tabs don't fit)")
+COALPY_ENUM(FittingPolicyMask_,           ImGuiTabBarFlags_FittingPolicyMask_ , "")
+COALPY_ENUM(FittingPolicyDefault_,        ImGuiTabBarFlags_FittingPolicyDefault_, "") 
+COALPY_ENUM_END(ImGuiTabBarFlags)
+
+COALPY_ENUM_BEGIN(ImGuiTabItemFlags, "")
+COALPY_ENUM(UnsavedDocument, ImGuiTabItemFlags_UnsavedDocument, R"(Display a dot next to the title + tab is selected when clicking the X + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.)")
+COALPY_ENUM(SetSelected,     ImGuiTabItemFlags_SetSelected, R"(Trigger flag to programmatically make the tab selected when calling BeginTabItem())")
+COALPY_ENUM(NoCloseWithMiddleMouseButton, ImGuiTabItemFlags_NoCloseWithMiddleMouseButton, R"(Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.)")
+COALPY_ENUM(NoPushId,                     ImGuiTabItemFlags_NoPushId, R"(Don't call PushID(tab->ID)/PopID() on BeginTabItem()/EndTabItem())")
+COALPY_ENUM(NoTooltip,                    ImGuiTabItemFlags_NoTooltip, R"(Disable tooltip for the given tab)")
+COALPY_ENUM(NoReorder,                    ImGuiTabItemFlags_NoReorder, R"(Disable reordering this tab or having another tab cross over this tab)")
+COALPY_ENUM(Leading,                      ImGuiTabItemFlags_Leading, R"(Enforce the tab position to the left of the tab bar (after the tab list popup button))")
+COALPY_ENUM(Trailing,                     ImGuiTabItemFlags_Trailing, R"(the tab position to the right of the tab bar (before the scrolling buttons))")
+COALPY_ENUM_END(ImGuiTabItemFlags)
 
 #undef COALPY_ENUM_END
 #undef COALPY_ENUM_BEGIN
