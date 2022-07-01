@@ -638,6 +638,29 @@ COALPY_FN(set_tab_item_closed, setTabItemClosed,  R"(
         label (str): tab or docked window label
 )")
 
+COALPY_FN(tree_node, treeNode, R"(
+    Parameters:
+        label (str): label of tree node
+        flags (int) see coalpy.gpu.ImGuiTreeNodeFlags
+
+    Return:
+        bool - Note: must call tree_pop if return is True
+)")
+
+COALPY_FN(tree_node_with_id, treeNodeWithId, R"(
+    Parameters:
+        id (int): int identifier
+        text (str): text of node
+        flags (int) see coalpy.gpu.ImGuiTreeNodeFlags
+
+    Return:
+        bool - Note: must call tree_pop if return is True
+)")
+
+COALPY_FN(tree_pop, treePop, R"(
+    Must be called if tree_node returns True.
+)")
+
 
 //Imgui focus flags enums
 COALPY_ENUM_BEGIN(ImGuiFocusedFlags, "ImGUI Focused flags")

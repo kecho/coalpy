@@ -1162,6 +1162,47 @@ PyObject* setTabItemClosed(PyObject* self, PyObject* vargs, PyObject* kwds)
     Py_RETURN_NONE;
 }
 
+PyObject* treeNode(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "label", "flags", nullptr };
+    char* label = nullptr;
+    int flags = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s|i", argnames, &label, &flags))
+        return nullptr;
+
+    if (ImGui::TreeNodeEx(label, flags))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* treeNodeWithId(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "id", "text", "flags", nullptr };
+    int id = 0;
+    char* text = nullptr;
+    int flags = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "is|i", argnames, &id, &text, &flags))
+        return nullptr;
+
+    if (ImGui::TreeNodeEx((void*)(uintptr_t)id, flags, text))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* treePop(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    ImGui::TreePop();
+    Py_RETURN_NONE;
+}
 
 }//methods
 
