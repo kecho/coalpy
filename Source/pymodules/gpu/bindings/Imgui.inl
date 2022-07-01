@@ -590,6 +590,49 @@ COALPY_FN(dockbuilder_node_exists, dockBuilderNodeExists, R"(
         True if it exists, False otherwise
 )")
 
+COALPY_FN(begin_tab_bar, BeginTabBar, R"(
+    create and append into a TabBar
+    
+    Parameters:
+        id (str): id of tab bar
+        flags (int): Flags, see coalpy.gpu.ImGuiTabBarFlags
+
+    Return:
+        bool
+)")
+
+COALPY_FN(end_tab_bar, EndTabBar, R"(
+    only call EndTabBar() if BeginTabBar() returns true!
+)")
+
+COALPY_FN(begin_tab_item, BeginTabItem, R"(
+    create a Tab. Returns true if the Tab is selected.
+    
+    Parameters:
+        label (str): label of tab item
+        open (bool): Pass true if its open / selected false otherwise
+        flags (int): see coalpy.gpu.ImGuiTabItemFlags
+        
+    Return:
+        bool
+)")
+
+COALPY_FN(end_tab_item, EndTabItem, R"(
+    only call EndTabItem() if BeginTabItem() returns true!
+)")
+
+COALPY_FN(tab_item_button, TabItemButton, R"(
+    create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
+
+    label (str): name
+    
+)")
+
+COALPY_FN(set_tab_item_closed, SetTabItemClosed,  R"(
+    notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.
+)")
+
+
 //Imgui focus flags enums
 COALPY_ENUM_BEGIN(ImGuiFocusedFlags, "ImGUI Focused flags")
 COALPY_ENUM(ChildWindows,             ImGuiFocusedFlags_ChildWindows                  , R"(Return true if any children of the window is focused)")
