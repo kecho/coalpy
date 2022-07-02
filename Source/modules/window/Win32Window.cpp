@@ -160,6 +160,11 @@ bool Win32Window::isClosed()
     return (m_state.windowHandle == nullptr);
 }
 
+bool Win32Window::shouldRender()
+{
+    return (m_state.windowHandle != nullptr) && !IsIconic(m_state.windowHandle);
+}
+
 void Win32Window::open()
 {
     if (isClosed())

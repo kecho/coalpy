@@ -28,6 +28,7 @@ public:
     virtual WindowOsHandle getHandle() const override;
     virtual void open() override;
     virtual bool isClosed() override;
+    virtual bool shouldRender() override;
     virtual void dimensions(int& w, int& h) const override;
     virtual ~Win32Window();
 
