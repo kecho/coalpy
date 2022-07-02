@@ -290,6 +290,7 @@ PyObject* run(PyObject* self, PyObject* args)
         std::set<Window*> windowsPtrs;
         state.getWindows(windowsPtrs);
         int openedWindows = 0;
+        int renderedWindows = 0;
         for (Window* w : windowsPtrs)
         {
             CPY_ASSERT(w != nullptr);
@@ -298,6 +299,11 @@ PyObject* run(PyObject* self, PyObject* args)
 
             if (w->object->isClosed())
                 continue;
+            ++openedWindows;
+            
+            if (!w->object->shouldRender())
+                continue;
+            ++renderedWindows;
 
             if (w->uiRenderer != nullptr)
             {
@@ -318,7 +324,7 @@ PyObject* run(PyObject* self, PyObject* args)
             Py_INCREF(w->userData);
 
             w->object->dimensions(renderArgs->width, renderArgs->height);
-            ++openedWindows;
+            
             if (w && w->onRenderCallback != nullptr)
             {
                 PyObject* retObj = PyObject_CallOneArg(w->onRenderCallback, (PyObject*)renderArgs);
