@@ -139,6 +139,35 @@ PyObject* setupAxisLimits(PyObject* self, PyObject* vargs, PyObject* kwds)
     Py_RETURN_NONE;
 }
 
+static bool openVec2Buffer(ModuleState& moduleState, PyObject* values, int offset, int count, Py_buffer& valuesView)
+{
+    valuesView = {};
+    if (PyObject_GetBuffer(values, &valuesView, 0) == -1)
+    {
+        PyErr_SetString(moduleState.exObj(), "Failed retrieving buffer contents of buffer object values.");
+        return false;
+    }
+
+    if (valuesView.itemsize != sizeof(float) && valuesView.itemsize != sizeof(double))
+    {
+        PyBuffer_Release(&valuesView);
+        PyErr_SetString(moduleState.exObj(), "Values array object passed to plot line must be internally contiguous float or double.");
+        return false;
+    }
+
+    int elementCount = (valuesView.len / valuesView.itemsize);
+    if (elementCount < 2 * count || offset * 2 > elementCount)
+    {
+        int itemOffset = offset * 2;
+        int itemCount = count * 2;
+        PyErr_Format(moduleState.exObj(), "Trying to access values array out of bounds. Max count is %d, accessing with offset %d and count %d", elementCount, itemOffset, itemCount);
+        PyBuffer_Release(&valuesView);
+        return false;
+    }
+
+    return true;
+}
+
 PyObject* plotLine(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMPLOT
@@ -152,35 +181,9 @@ PyObject* plotLine(PyObject* self, PyObject* vargs, PyObject* kwds)
         return nullptr;
 
     ModuleState& moduleState = parentModule(self);
-    if (!PyObject_CheckBuffer(values))
-    {
-        PyErr_SetString(moduleState.exObj(), "values argument of plot_line must implement buffer protocol object, it must contain 2 floating point values contiguous in memory for each point.");
-        return nullptr;
-    }
-
     Py_buffer valuesView = {};
-    if (PyObject_GetBuffer(values, &valuesView, 0) == -1)
-    {
-        PyErr_SetString(moduleState.exObj(), "Failed retrieving buffer contents of buffer object values.");
+    if (!openVec2Buffer(moduleState, values, offset, count, valuesView))
         return nullptr;
-    }
-
-    if (valuesView.itemsize != sizeof(float) && valuesView.itemsize != sizeof(double))
-    {
-        PyBuffer_Release(&valuesView);
-        PyErr_SetString(moduleState.exObj(), "Values array object passed to plot line must be internally contiguous float or double.");
-        return nullptr;
-    }
-
-    int elementCount = (valuesView.len / valuesView.itemsize);
-    if (elementCount < 2 * count || offset * 2 > elementCount)
-    {
-        int itemOffset = offset * 2;
-        int itemCount = count * 2;
-        PyErr_Format(moduleState.exObj(), "Trying to access values array out of bounds. Max count is %d, accessing with offset %d and count %d", elementCount, itemOffset, itemCount);
-        PyBuffer_Release(&valuesView);
-        return nullptr;
-    }
 
     if (valuesView.itemsize == sizeof(float))
     {
@@ -191,6 +194,39 @@ PyObject* plotLine(PyObject* self, PyObject* vargs, PyObject* kwds)
     {
         double* values = (double*)valuesView.buf;
         ImPlot::PlotLine(label, values, values + 1, count, offset, 2 * sizeof(double));
+    }
+
+    PyBuffer_Release(&valuesView);
+    Py_RETURN_NONE;
+}
+
+PyObject* plotShaded(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMPLOT
+    char* label = nullptr;
+    PyObject* values = nullptr;
+    float yref;
+    int count = 0;
+    int offset = 0;
+
+    static char* argnames[] = { "label", "values", "count", "yref", "offset", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "sOifi", argnames, &label, &values, &count, &yref, &offset))
+        return nullptr;
+
+    ModuleState& moduleState = parentModule(self);
+    Py_buffer valuesView = {};
+    if (!openVec2Buffer(moduleState, values, offset, count, valuesView))
+        return nullptr;
+
+    if (valuesView.itemsize == sizeof(float))
+    {
+        float* values = (float*)valuesView.buf;
+        ImPlot::PlotShaded(label, values, values + 1, count, yref, offset, 2 * sizeof(float));
+    }
+    else if (valuesView.itemsize == sizeof(double))
+    {
+        double* values = (double*)valuesView.buf;
+        ImPlot::PlotShaded(label, values, values + 1, count, (double)yref, offset, 2 * sizeof(double));
     }
 
     PyBuffer_Release(&valuesView);

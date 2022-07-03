@@ -74,7 +74,19 @@ COALPY_FN(plot_line, plotLine, R"(
         offset: offset of points.
 
     Note:
-        array is treated as a circular buffer, that is, elements are read in order from offset to count using modulus index.
+        value is treated as a circular buffer, that is, elements are read in order from offset to count using modulus index.
+)")
+
+COALPY_FN(plot_shaded, plotShaded, R"(
+    Parameters:
+        label (str)
+        values (byte object, or numpy array): array must be contiguous floating point values (x, y) laid down in memory. object must implement buffer protocol.
+        count: the number of points
+        yref (float): can be +/-float('inf')
+        offset: offset of points.
+
+    Note:
+        value is treated as a circular buffer, that is, elements are read in order from offset to count using modulus index.
 )")
 
 /*
