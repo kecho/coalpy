@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="coalpy.html"><font color="#ffffff">coalpy</font></a>.gpu</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cusers%5Ckleber%5Cprojects%5Ccoalpy%5Ct2-output%5Cwin64-msvc-debug-default%5Ccoalpy%5Cgpu.pyd">c:\users\kleber\projects\coalpy\t2-output\win64-msvc-debug-default\coalpy\gpu.pyd</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccoalpy%5Ct2-output%5Cwin64-msvc-debug-default%5Ccoalpy%5Cgpu.pyd">c:\dev\coalpy\t2-output\win64-msvc-debug-default\coalpy\gpu.pyd</a></font></td></tr></table>
     <p><tt>&lt;&lt;&nbsp;coalpy&nbsp;&gt;&gt;&nbsp;Compute&nbsp;Abstraction&nbsp;Layer&nbsp;for&nbsp;Python&nbsp;<br>
 &nbsp;by&nbsp;Kleber&nbsp;A&nbsp;Garcia&nbsp;2021&nbsp;(c).&nbsp;<br>
 coalpy&nbsp;is&nbsp;a&nbsp;compute&nbsp;abstraction&nbsp;layer&nbsp;for&nbsp;python.&nbsp;It&nbsp;brings<br>
@@ -39,13 +39,19 @@ and&nbsp;start&nbsp;using&nbsp;your&nbsp;GPU!</tt></p>
 </font></dt><dt><font face="helvetica, arial">gpu.EnumDeviceFlags
 </font></dt><dt><font face="helvetica, arial">gpu.EnumFilterType
 </font></dt><dt><font face="helvetica, arial">gpu.EnumFormat
+</font></dt><dt><font face="helvetica, arial">gpu.EnumImAxis
 </font></dt><dt><font face="helvetica, arial">gpu.EnumImGuiDir
 </font></dt><dt><font face="helvetica, arial">gpu.EnumImGuiDockNodeFlags
 </font></dt><dt><font face="helvetica, arial">gpu.EnumImGuiFocusedFlags
 </font></dt><dt><font face="helvetica, arial">gpu.EnumImGuiHoveredFlags
 </font></dt><dt><font face="helvetica, arial">gpu.EnumImGuiKey
 </font></dt><dt><font face="helvetica, arial">gpu.EnumImGuiMouseButton
+</font></dt><dt><font face="helvetica, arial">gpu.EnumImGuiTabBarFlags
+</font></dt><dt><font face="helvetica, arial">gpu.EnumImGuiTabItemFlags
+</font></dt><dt><font face="helvetica, arial">gpu.EnumImGuiTreeNodeFlags
 </font></dt><dt><font face="helvetica, arial">gpu.EnumImGuiWindowFlags
+</font></dt><dt><font face="helvetica, arial">gpu.EnumImPlotAxisFlags
+</font></dt><dt><font face="helvetica, arial">gpu.EnumImPlotCond
 </font></dt><dt><font face="helvetica, arial">gpu.EnumImPlotFlags
 </font></dt><dt><font face="helvetica, arial">gpu.EnumKeys
 </font></dt><dt><font face="helvetica, arial">gpu.EnumMemFlags
@@ -55,6 +61,7 @@ and&nbsp;start&nbsp;using&nbsp;your&nbsp;GPU!</tt></p>
 </font></dt><dt><font face="helvetica, arial">gpu.ImguiBuilder
 </font></dt><dt><font face="helvetica, arial">gpu.ImplotBuilder
 </font></dt><dt><font face="helvetica, arial">gpu.InResourceTable
+</font></dt><dt><font face="helvetica, arial">gpu.MarkerResults
 </font></dt><dt><font face="helvetica, arial">gpu.OutResourceTable
 </font></dt><dt><font face="helvetica, arial">gpu.RenderArgs
 </font></dt><dt><font face="helvetica, arial">gpu.ResourceDownloadRequest
@@ -62,6 +69,7 @@ and&nbsp;start&nbsp;using&nbsp;your&nbsp;GPU!</tt></p>
 </font></dt><dt><font face="helvetica, arial">gpu.SamplerTable
 </font></dt><dt><font face="helvetica, arial">gpu.Shader
 </font></dt><dt><font face="helvetica, arial">gpu.Texture
+</font></dt><dt><font face="helvetica, arial">gpu.TinyObjLoader
 </font></dt><dt><font face="helvetica, arial">gpu.Window
 </font></dt></dl>
 </dd>
@@ -371,6 +379,42 @@ Data descriptors defined here:<br>
 <dl><dt><strong>RG_32_TYPELESS</strong></dt>
 </dl>
 <dl><dt><strong>RG_32_UINT</strong></dt>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumImAxis">class <strong>EnumImAxis</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumImAxis-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumImAxis-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>COUNT</strong></dt>
+</dl>
+<dl><dt><strong>X1</strong></dt>
+<dd><tt>enabled&nbsp;by&nbsp;default</tt></dd>
+</dl>
+<dl><dt><strong>X2</strong></dt>
+<dd><tt>disabled&nbsp;by&nbsp;default</tt></dd>
+</dl>
+<dl><dt><strong>X3</strong></dt>
+<dd><tt>disabled&nbsp;by&nbsp;default</tt></dd>
+</dl>
+<dl><dt><strong>Y1</strong></dt>
+<dd><tt>enabled&nbsp;by&nbsp;default</tt></dd>
+</dl>
+<dl><dt><strong>Y2</strong></dt>
+<dd><tt>disabled&nbsp;by&nbsp;default</tt></dd>
+</dl>
+<dl><dt><strong>Y3</strong></dt>
+<dd><tt>disabled&nbsp;by&nbsp;default</tt></dd>
 </dl>
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -838,6 +882,151 @@ Data descriptors defined here:<br>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
 <td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumImGuiTabBarFlags">class <strong>EnumImGuiTabBarFlags</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumImGuiTabBarFlags-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumImGuiTabBarFlags-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>AutoSelectNewTabs</strong></dt>
+<dd><tt>Automatically&nbsp;select&nbsp;new&nbsp;tabs&nbsp;when&nbsp;they&nbsp;appear</tt></dd>
+</dl>
+<dl><dt><strong>FittingPolicyDefault_</strong></dt>
+</dl>
+<dl><dt><strong>FittingPolicyMask_</strong></dt>
+</dl>
+<dl><dt><strong>FittingPolicyResizeDown</strong></dt>
+<dd><tt>Resize&nbsp;tabs&nbsp;when&nbsp;they&nbsp;don't&nbsp;fit</tt></dd>
+</dl>
+<dl><dt><strong>FittingPolicyScroll</strong></dt>
+<dd><tt>Add&nbsp;scroll&nbsp;buttons&nbsp;when&nbsp;tabs&nbsp;don't&nbsp;fit</tt></dd>
+</dl>
+<dl><dt><strong>NoCloseWithMiddleMouseButton</strong></dt>
+<dd><tt>Disable&nbsp;behavior&nbsp;of&nbsp;closing&nbsp;tabs&nbsp;(that&nbsp;are&nbsp;submitted&nbsp;with&nbsp;p_open&nbsp;!=&nbsp;NULL)&nbsp;with&nbsp;middle&nbsp;mouse&nbsp;button.&nbsp;You&nbsp;can&nbsp;still&nbsp;repro&nbsp;this&nbsp;behavior&nbsp;on&nbsp;user's&nbsp;side&nbsp;with&nbsp;if&nbsp;(IsItemHovered()&nbsp;&amp;&amp;&nbsp;IsMouseClicked(2))&nbsp;*p_open&nbsp;=&nbsp;false.</tt></dd>
+</dl>
+<dl><dt><strong>NoTabListScrollingButtons</strong></dt>
+<dd><tt>Disable&nbsp;scrolling&nbsp;buttons&nbsp;(apply&nbsp;when&nbsp;fitting&nbsp;policy&nbsp;is&nbsp;ImGuiTabBarFlags_FittingPolicyScroll)</tt></dd>
+</dl>
+<dl><dt><strong>NoTooltip</strong></dt>
+<dd><tt>Disable&nbsp;tooltips&nbsp;when&nbsp;hovering&nbsp;a&nbsp;tab</tt></dd>
+</dl>
+<dl><dt><strong>Reorderable</strong></dt>
+<dd><tt>Allow&nbsp;manually&nbsp;dragging&nbsp;tabs&nbsp;to&nbsp;re-order&nbsp;them&nbsp;+&nbsp;New&nbsp;tabs&nbsp;are&nbsp;appended&nbsp;at&nbsp;the&nbsp;end&nbsp;of&nbsp;list</tt></dd>
+</dl>
+<dl><dt><strong>TabListPopupButton</strong></dt>
+<dd><tt>Disable&nbsp;buttons&nbsp;to&nbsp;open&nbsp;the&nbsp;tab&nbsp;list&nbsp;popup</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumImGuiTabItemFlags">class <strong>EnumImGuiTabItemFlags</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumImGuiTabItemFlags-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumImGuiTabItemFlags-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>Leading</strong></dt>
+<dd><tt>Enforce&nbsp;the&nbsp;tab&nbsp;position&nbsp;to&nbsp;the&nbsp;left&nbsp;of&nbsp;the&nbsp;tab&nbsp;bar&nbsp;(after&nbsp;the&nbsp;tab&nbsp;list&nbsp;popup&nbsp;button)</tt></dd>
+</dl>
+<dl><dt><strong>NoCloseWithMiddleMouseButton</strong></dt>
+<dd><tt>Disable&nbsp;behavior&nbsp;of&nbsp;closing&nbsp;tabs&nbsp;(that&nbsp;are&nbsp;submitted&nbsp;with&nbsp;p_open&nbsp;!=&nbsp;NULL)&nbsp;with&nbsp;middle&nbsp;mouse&nbsp;button.&nbsp;You&nbsp;can&nbsp;still&nbsp;repro&nbsp;this&nbsp;behavior&nbsp;on&nbsp;user's&nbsp;side&nbsp;with&nbsp;if&nbsp;(IsItemHovered()&nbsp;&amp;&amp;&nbsp;IsMouseClicked(2))&nbsp;*p_open&nbsp;=&nbsp;false.</tt></dd>
+</dl>
+<dl><dt><strong>NoPushId</strong></dt>
+<dd><tt>Don't&nbsp;call&nbsp;PushID(tab-&gt;ID)/PopID()&nbsp;on&nbsp;BeginTabItem()/EndTabItem()</tt></dd>
+</dl>
+<dl><dt><strong>NoReorder</strong></dt>
+<dd><tt>Disable&nbsp;reordering&nbsp;this&nbsp;tab&nbsp;or&nbsp;having&nbsp;another&nbsp;tab&nbsp;cross&nbsp;over&nbsp;this&nbsp;tab</tt></dd>
+</dl>
+<dl><dt><strong>NoTooltip</strong></dt>
+<dd><tt>Disable&nbsp;tooltip&nbsp;for&nbsp;the&nbsp;given&nbsp;tab</tt></dd>
+</dl>
+<dl><dt><strong>SetSelected</strong></dt>
+<dd><tt>Trigger&nbsp;flag&nbsp;to&nbsp;programmatically&nbsp;make&nbsp;the&nbsp;tab&nbsp;selected&nbsp;when&nbsp;calling&nbsp;BeginTabItem()</tt></dd>
+</dl>
+<dl><dt><strong>Trailing</strong></dt>
+<dd><tt>the&nbsp;tab&nbsp;position&nbsp;to&nbsp;the&nbsp;right&nbsp;of&nbsp;the&nbsp;tab&nbsp;bar&nbsp;(before&nbsp;the&nbsp;scrolling&nbsp;buttons)</tt></dd>
+</dl>
+<dl><dt><strong>UnsavedDocument</strong></dt>
+<dd><tt>Display&nbsp;a&nbsp;dot&nbsp;next&nbsp;to&nbsp;the&nbsp;title&nbsp;+&nbsp;tab&nbsp;is&nbsp;selected&nbsp;when&nbsp;clicking&nbsp;the&nbsp;X&nbsp;+&nbsp;closure&nbsp;is&nbsp;not&nbsp;assumed&nbsp;(will&nbsp;wait&nbsp;for&nbsp;user&nbsp;to&nbsp;stop&nbsp;submitting&nbsp;the&nbsp;tab).&nbsp;Otherwise&nbsp;closure&nbsp;is&nbsp;assumed&nbsp;when&nbsp;pressing&nbsp;the&nbsp;X,&nbsp;so&nbsp;if&nbsp;you&nbsp;keep&nbsp;submitting&nbsp;the&nbsp;tab&nbsp;may&nbsp;reappear&nbsp;at&nbsp;end&nbsp;of&nbsp;tab&nbsp;bar.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumImGuiTreeNodeFlags">class <strong>EnumImGuiTreeNodeFlags</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumImGuiTreeNodeFlags-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumImGuiTreeNodeFlags-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>AllowItemOverlap</strong></dt>
+<dd><tt>Hit&nbsp;testing&nbsp;to&nbsp;allow&nbsp;subsequent&nbsp;widgets&nbsp;to&nbsp;overlap&nbsp;this&nbsp;one</tt></dd>
+</dl>
+<dl><dt><strong>Bullet</strong></dt>
+<dd><tt>Display&nbsp;a&nbsp;bullet&nbsp;instead&nbsp;of&nbsp;arrow</tt></dd>
+</dl>
+<dl><dt><strong>CollapsingHeader</strong></dt>
+<dd><tt>ImGuiTreeNodeFlags_NoAutoOpenOnLog</tt></dd>
+</dl>
+<dl><dt><strong>DefaultOpen</strong></dt>
+<dd><tt>Default&nbsp;node&nbsp;to&nbsp;be&nbsp;open</tt></dd>
+</dl>
+<dl><dt><strong>FramePadding</strong></dt>
+<dd><tt>//&nbsp;Use&nbsp;FramePadding&nbsp;(even&nbsp;for&nbsp;an&nbsp;unframed&nbsp;text&nbsp;node)&nbsp;to&nbsp;vertically&nbsp;align&nbsp;text&nbsp;baseline&nbsp;to&nbsp;regular&nbsp;widget&nbsp;height.&nbsp;Equivalent&nbsp;to&nbsp;calling&nbsp;AlignTextToFramePadding().</tt></dd>
+</dl>
+<dl><dt><strong>Framed</strong></dt>
+<dd><tt>Draw&nbsp;frame&nbsp;with&nbsp;background&nbsp;(e.g.&nbsp;for&nbsp;CollapsingHeader)</tt></dd>
+</dl>
+<dl><dt><strong>Leaf</strong></dt>
+<dd><tt>No&nbsp;collapsing,&nbsp;no&nbsp;arrow&nbsp;(use&nbsp;as&nbsp;a&nbsp;convenience&nbsp;for&nbsp;leaf&nbsp;nodes).</tt></dd>
+</dl>
+<dl><dt><strong>NavLeftJumpsBackHere</strong></dt>
+<dd><tt>//&nbsp;(WIP)&nbsp;Nav:&nbsp;left&nbsp;direction&nbsp;may&nbsp;move&nbsp;to&nbsp;this&nbsp;TreeNode()&nbsp;from&nbsp;any&nbsp;of&nbsp;its&nbsp;child&nbsp;(items&nbsp;submitted&nbsp;between&nbsp;TreeNode&nbsp;and&nbsp;TreePop)</tt></dd>
+</dl>
+<dl><dt><strong>NoAutoOpenOnLog</strong></dt>
+<dd><tt>Don't&nbsp;automatically&nbsp;and&nbsp;temporarily&nbsp;open&nbsp;node&nbsp;when&nbsp;Logging&nbsp;is&nbsp;active&nbsp;(by&nbsp;default&nbsp;logging&nbsp;will&nbsp;automatically&nbsp;open&nbsp;tree&nbsp;nodes)</tt></dd>
+</dl>
+<dl><dt><strong>NoTreePushOnOpen</strong></dt>
+<dd><tt>Don't&nbsp;do&nbsp;a&nbsp;TreePush()&nbsp;when&nbsp;open&nbsp;(e.g.&nbsp;for&nbsp;CollapsingHeader)&nbsp;=&nbsp;no&nbsp;extra&nbsp;indent&nbsp;nor&nbsp;pushing&nbsp;on&nbsp;ID&nbsp;stack</tt></dd>
+</dl>
+<dl><dt><strong>OpenOnArrow</strong></dt>
+<dd><tt>Only&nbsp;open&nbsp;when&nbsp;clicking&nbsp;on&nbsp;the&nbsp;arrow&nbsp;part.&nbsp;If&nbsp;ImGuiTreeNodeFlags_OpenOnDoubleClick&nbsp;is&nbsp;also&nbsp;set,&nbsp;single-click&nbsp;arrow&nbsp;or&nbsp;double-click&nbsp;all&nbsp;box&nbsp;to&nbsp;open.</tt></dd>
+</dl>
+<dl><dt><strong>OpenOnDoubleClick</strong></dt>
+<dd><tt>Need&nbsp;double-click&nbsp;to&nbsp;open&nbsp;node</tt></dd>
+</dl>
+<dl><dt><strong>Selected</strong></dt>
+<dd><tt>Draw&nbsp;as&nbsp;selected</tt></dd>
+</dl>
+<dl><dt><strong>SpanAvailWidth</strong></dt>
+<dd><tt>//&nbsp;Extend&nbsp;hit&nbsp;box&nbsp;to&nbsp;the&nbsp;right-most&nbsp;edge,&nbsp;even&nbsp;if&nbsp;not&nbsp;framed.&nbsp;This&nbsp;is&nbsp;not&nbsp;the&nbsp;default&nbsp;in&nbsp;order&nbsp;to&nbsp;allow&nbsp;adding&nbsp;other&nbsp;items&nbsp;on&nbsp;the&nbsp;same&nbsp;line.&nbsp;In&nbsp;the&nbsp;future&nbsp;we&nbsp;may&nbsp;refactor&nbsp;the&nbsp;hit&nbsp;system&nbsp;to&nbsp;be&nbsp;front-to-back,&nbsp;allowing&nbsp;natural&nbsp;overlaps&nbsp;and&nbsp;then&nbsp;this&nbsp;can&nbsp;become&nbsp;the&nbsp;default.</tt></dd>
+</dl>
+<dl><dt><strong>SpanFullWidth</strong></dt>
+<dd><tt>//&nbsp;Extend&nbsp;hit&nbsp;box&nbsp;to&nbsp;the&nbsp;left-most&nbsp;and&nbsp;right-most&nbsp;edges&nbsp;(bypass&nbsp;the&nbsp;indented&nbsp;area).</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="EnumImGuiWindowFlags">class <strong>EnumImGuiWindowFlags</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
@@ -914,6 +1103,98 @@ Data descriptors defined here:<br>
 </dl>
 <dl><dt><strong>UnsavedDocument</strong></dt>
 <dd><tt>Display&nbsp;a&nbsp;dot&nbsp;next&nbsp;to&nbsp;the&nbsp;title.&nbsp;When&nbsp;used&nbsp;in&nbsp;a&nbsp;tab/docking&nbsp;context,&nbsp;tab&nbsp;is&nbsp;selected&nbsp;when&nbsp;clicking&nbsp;the&nbsp;X&nbsp;+&nbsp;closure&nbsp;is&nbsp;not&nbsp;assumed&nbsp;(will&nbsp;wait&nbsp;for&nbsp;user&nbsp;to&nbsp;stop&nbsp;submitting&nbsp;the&nbsp;tab).&nbsp;Otherwise&nbsp;closure&nbsp;is&nbsp;assumed&nbsp;when&nbsp;pressing&nbsp;the&nbsp;X,&nbsp;so&nbsp;if&nbsp;you&nbsp;keep&nbsp;submitting&nbsp;the&nbsp;tab&nbsp;may&nbsp;reappear&nbsp;at&nbsp;end&nbsp;of&nbsp;tab&nbsp;bar.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumImPlotAxisFlags">class <strong>EnumImPlotAxisFlags</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumImPlotAxisFlags-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumImPlotAxisFlags-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>AutoFit</strong></dt>
+<dd><tt>axis&nbsp;will&nbsp;be&nbsp;auto-fitting&nbsp;to&nbsp;data&nbsp;extents</tt></dd>
+</dl>
+<dl><dt><strong>AuxDefault</strong></dt>
+</dl>
+<dl><dt><strong>Foreground</strong></dt>
+<dd><tt>d&nbsp;lines&nbsp;will&nbsp;be&nbsp;displayed&nbsp;in&nbsp;the&nbsp;foreground&nbsp;(i.e.&nbsp;on&nbsp;top&nbsp;of&nbsp;data)&nbsp;in&nbsp;stead&nbsp;of&nbsp;the&nbsp;background</tt></dd>
+</dl>
+<dl><dt><strong>Invert</strong></dt>
+<dd><tt>the&nbsp;axis&nbsp;will&nbsp;be&nbsp;inverted</tt></dd>
+</dl>
+<dl><dt><strong>Lock</strong></dt>
+</dl>
+<dl><dt><strong>LockMax</strong></dt>
+<dd><tt>the&nbsp;axis&nbsp;maximum&nbsp;value&nbsp;will&nbsp;be&nbsp;locked&nbsp;when&nbsp;panning/zooming</tt></dd>
+</dl>
+<dl><dt><strong>LockMin</strong></dt>
+<dd><tt>the&nbsp;axis&nbsp;minimum&nbsp;value&nbsp;will&nbsp;be&nbsp;locked&nbsp;when&nbsp;panning/zooming</tt></dd>
+</dl>
+<dl><dt><strong>LogScale</strong></dt>
+<dd><tt>logartithmic&nbsp;(base&nbsp;10)&nbsp;axis&nbsp;scale&nbsp;will&nbsp;be&nbsp;used&nbsp;(mutually&nbsp;exclusive&nbsp;with&nbsp;ImPlotAxisFlags_Time</tt></dd>
+</dl>
+<dl><dt><strong>NoDeforations</strong></dt>
+</dl>
+<dl><dt><strong>NoGridLines</strong></dt>
+<dd><tt>rid&nbsp;lines&nbsp;will&nbsp;be&nbsp;displayed</tt></dd>
+</dl>
+<dl><dt><strong>NoInitialFit</strong></dt>
+<dd><tt>will&nbsp;not&nbsp;be&nbsp;initially&nbsp;fit&nbsp;to&nbsp;data&nbsp;extents&nbsp;on&nbsp;the&nbsp;first&nbsp;rendered&nbsp;frame</tt></dd>
+</dl>
+<dl><dt><strong>NoLabel</strong></dt>
+<dd><tt>the&nbsp;axis&nbsp;label&nbsp;will&nbsp;not&nbsp;be&nbsp;displayed&nbsp;(axis&nbsp;labels&nbsp;also&nbsp;hidden&nbsp;if&nbsp;the&nbsp;supplied&nbsp;string&nbsp;name&nbsp;is&nbsp;NULL</tt></dd>
+</dl>
+<dl><dt><strong>NoMenus</strong></dt>
+<dd><tt>the&nbsp;user&nbsp;will&nbsp;not&nbsp;be&nbsp;able&nbsp;to&nbsp;open&nbsp;context&nbsp;menus&nbsp;with&nbsp;right-click</tt></dd>
+</dl>
+<dl><dt><strong>NoTickLabels</strong></dt>
+<dd><tt>xt&nbsp;labels&nbsp;will&nbsp;be&nbsp;displayed</tt></dd>
+</dl>
+<dl><dt><strong>NoTickMarks</strong></dt>
+<dd><tt>ick&nbsp;marks&nbsp;will&nbsp;be&nbsp;displayed</tt></dd>
+</dl>
+<dl><dt><strong>Opposite</strong></dt>
+<dd><tt>xis&nbsp;ticks&nbsp;and&nbsp;labels&nbsp;will&nbsp;be&nbsp;rendered&nbsp;on&nbsp;conventionally&nbsp;opposite&nbsp;side&nbsp;(i.e,&nbsp;right&nbsp;or&nbsp;top</tt></dd>
+</dl>
+<dl><dt><strong>RangeFit</strong></dt>
+<dd><tt>xis&nbsp;will&nbsp;only&nbsp;fit&nbsp;points&nbsp;if&nbsp;the&nbsp;point&nbsp;is&nbsp;in&nbsp;the&nbsp;visible&nbsp;range&nbsp;of&nbsp;the&nbsp;**orthogonal**&nbsp;axis</tt></dd>
+</dl>
+<dl><dt><strong>Time</strong></dt>
+<dd><tt>axis&nbsp;will&nbsp;display&nbsp;date/time&nbsp;formatted&nbsp;labels&nbsp;(mutually&nbsp;exclusive&nbsp;with&nbsp;ImPlotAxisFlags_LogScale</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="EnumImPlotCond">class <strong>EnumImPlotCond</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="EnumImPlotCond-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="EnumImPlotCond-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>Always</strong></dt>
+<dd><tt>No&nbsp;condition&nbsp;(always&nbsp;set&nbsp;the&nbsp;variable)</tt></dd>
+</dl>
+<dl><dt><strong>None</strong></dt>
+<dd><tt>No&nbsp;condition&nbsp;(always&nbsp;set&nbsp;the&nbsp;variable),&nbsp;same&nbsp;as&nbsp;_Always</tt></dd>
+</dl>
+<dl><dt><strong>Once</strong></dt>
+<dd><tt>Set&nbsp;the&nbsp;variable&nbsp;once&nbsp;per&nbsp;runtime&nbsp;session&nbsp;(only&nbsp;the&nbsp;first&nbsp;call&nbsp;will&nbsp;succeed)</tt></dd>
 </dl>
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -1382,6 +1663,25 @@ Parameters:<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;returns&nbsp;true,&nbsp;call&nbsp;end_menu.&nbsp;If&nbsp;returns&nbsp;false&nbsp;means&nbsp;its&nbsp;not&nbsp;rendered.</tt></dd></dl>
 
+<dl><dt><a name="ImguiBuilder-begin_tab_bar"><strong>begin_tab_bar</strong></a>(...)</dt><dd><tt>create&nbsp;and&nbsp;append&nbsp;into&nbsp;a&nbsp;TabBar<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;id&nbsp;(str):&nbsp;id&nbsp;of&nbsp;tab&nbsp;bar<br>
+&nbsp;&nbsp;&nbsp;&nbsp;flags&nbsp;(int)(optional):&nbsp;Flags,&nbsp;see&nbsp;coalpy.gpu.ImGuiTabBarFlags<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bool</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-begin_tab_item"><strong>begin_tab_item</strong></a>(...)</dt><dd><tt>create&nbsp;a&nbsp;Tab.&nbsp;Returns&nbsp;true&nbsp;if&nbsp;the&nbsp;Tab&nbsp;is&nbsp;selected.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;label&nbsp;of&nbsp;tab&nbsp;item<br>
+&nbsp;&nbsp;&nbsp;&nbsp;open&nbsp;(bool):&nbsp;Pass&nbsp;true&nbsp;if&nbsp;its&nbsp;open&nbsp;/&nbsp;selected&nbsp;false&nbsp;otherwise<br>
+&nbsp;&nbsp;&nbsp;&nbsp;flags&nbsp;(int):&nbsp;see&nbsp;coalpy.gpu.ImGuiTabItemFlags<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bool</tt></dd></dl>
+
 <dl><dt><a name="ImguiBuilder-button"><strong>button</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;button.<br>
 &nbsp;<br>
 Parameters:<br>
@@ -1402,7 +1702,8 @@ Returns:<br>
 <dl><dt><a name="ImguiBuilder-collapsing_header"><strong>collapsing_header</strong></a>(...)</dt><dd><tt>Returns&nbsp;the&nbsp;state&nbsp;of&nbsp;a&nbsp;header&nbsp;label&nbsp;(collapsed&nbsp;or&nbsp;non&nbsp;collapsed).<br>
 &nbsp;<br>
 Parameters:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;(label)&nbsp;str&nbsp;:&nbsp;label&nbsp;of&nbsp;this&nbsp;item.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str)&nbsp;:&nbsp;label&nbsp;of&nbsp;this&nbsp;item.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;flags&nbsp;(int)(optional)&nbsp;:&nbsp;see&nbsp;coalpy.gpu.ImGuiTreeNodeFlags<br>
 &nbsp;<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;open,&nbsp;False&nbsp;otherwise.</tt></dd></dl>
@@ -1473,6 +1774,20 @@ Only&nbsp;call&nbsp;this&nbsp;if&nbsp;begin_main_menu_bar&nbsp;returns&nbsp;true
 <dl><dt><a name="ImguiBuilder-end_menu"><strong>end_menu</strong></a>(...)</dt><dd><tt>End&nbsp;method&nbsp;for&nbsp;menu&nbsp;item.&nbsp;Must&nbsp;be&nbsp;paired&nbsp;with&nbsp;a&nbsp;begin_menu&nbsp;method.<br>
 Only&nbsp;call&nbsp;this&nbsp;if&nbsp;begin_menu&nbsp;returns&nbsp;true.</tt></dd></dl>
 
+<dl><dt><a name="ImguiBuilder-end_tab_bar"><strong>end_tab_bar</strong></a>(...)</dt><dd><tt>only&nbsp;call&nbsp;EndTabBar()&nbsp;if&nbsp;BeginTabBar()&nbsp;returns&nbsp;true!</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-end_tab_item"><strong>end_tab_item</strong></a>(...)</dt><dd><tt>only&nbsp;call&nbsp;EndTabItem()&nbsp;if&nbsp;BeginTabItem()&nbsp;returns&nbsp;true!</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-get_cursor_pos"><strong>get_cursor_pos</strong></a>(...)</dt><dd><tt>Cursor&nbsp;position&nbsp;in&nbsp;window&nbsp;coordinates&nbsp;(relative&nbsp;to&nbsp;window&nbsp;position)<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Mouse&nbsp;pos&nbsp;(tuple&nbsp;x,&nbsp;y)</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-get_cursor_screen_pos"><strong>get_cursor_screen_pos</strong></a>(...)</dt><dd><tt>Cursor&nbsp;position&nbsp;in&nbsp;OS&nbsp;coordinates&nbsp;(absolute&nbsp;to&nbsp;OS)<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Mouse&nbsp;pos&nbsp;(tuple&nbsp;x,&nbsp;y)</tt></dd></dl>
+
 <dl><dt><a name="ImguiBuilder-get_id"><strong>get_id</strong></a>(...)</dt><dd><tt>Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;(str)<br>
 Returns:<br>
@@ -1506,6 +1821,16 @@ Returns:<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;Mouse&nbsp;pos&nbsp;(tuple&nbsp;x,&nbsp;y)</tt></dd></dl>
 
+<dl><dt><a name="ImguiBuilder-get_viewport_work_pos"><strong>get_viewport_work_pos</strong></a>(...)</dt><dd><tt>Work&nbsp;Area:&nbsp;Position&nbsp;of&nbsp;the&nbsp;viewport&nbsp;minus&nbsp;task&nbsp;bars,&nbsp;menus&nbsp;bars,&nbsp;status&nbsp;bars&nbsp;(&gt;=&nbsp;Pos)<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;tuple&nbsp;(x,&nbsp;y)</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-get_viewport_work_size"><strong>get_viewport_work_size</strong></a>(...)</dt><dd><tt>Work&nbsp;Area:&nbsp;Size&nbsp;of&nbsp;the&nbsp;viewport&nbsp;minus&nbsp;task&nbsp;bars,&nbsp;menu&nbsp;bars,&nbsp;status&nbsp;bars&nbsp;(&lt;=&nbsp;Size)<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;tuple&nbsp;(x,&nbsp;y)</tt></dd></dl>
+
 <dl><dt><a name="ImguiBuilder-get_window_content_region_max"><strong>get_window_content_region_max</strong></a>(...)</dt><dd><tt>Get&nbsp;the&nbsp;remaining&nbsp;content&nbsp;region<br>
 &nbsp;<br>
 Return:<br>
@@ -1522,11 +1847,6 @@ Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#Window">Window</a>&nbsp;pos&nbsp;(tuple&nbsp;x,&nbsp;y)</tt></dd></dl>
 
 <dl><dt><a name="ImguiBuilder-get_window_size"><strong>get_window_size</strong></a>(...)</dt><dd><tt>Gets&nbsp;the&nbsp;current&nbsp;window&nbsp;size<br>
-&nbsp;<br>
-Returns:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Window">Window</a>&nbsp;size&nbsp;(tuple&nbsp;x,&nbsp;y)</tt></dd></dl>
-
-<dl><dt><a name="ImguiBuilder-get_window_work_size"><strong>get_window_work_size</strong></a>(...)</dt><dd><tt>Gets&nbsp;the&nbsp;current&nbsp;window&nbsp;size,&nbsp;minus&nbsp;bars&nbsp;and&nbsp;stuff<br>
 &nbsp;<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="#Window">Window</a>&nbsp;size&nbsp;(tuple&nbsp;x,&nbsp;y)</tt></dd></dl>
@@ -1670,6 +1990,14 @@ Parameters:<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;window&nbsp;is&nbsp;focused,&nbsp;false&nbsp;otherwise</tt></dd></dl>
 
+<dl><dt><a name="ImguiBuilder-is_window_hovered"><strong>is_window_hovered</strong></a>(...)</dt><dd><tt>Returns&nbsp;boolean&nbsp;with&nbsp;current&nbsp;window&nbsp;hovered&nbsp;status.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;flags&nbsp;(int)(optional):&nbsp;see&nbsp;coalpy.gpu.ImGuiHoveredFlags<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;window&nbsp;is&nbsp;hovered,&nbsp;false&nbsp;otherwise</tt></dd></dl>
+
 <dl><dt><a name="ImguiBuilder-menu_item"><strong>menu_item</strong></a>(...)</dt><dd><tt>Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str)&nbsp;:&nbsp;label&nbsp;of&nbsp;this&nbsp;menu&nbsp;item.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;shortcut&nbsp;(str):&nbsp;short&nbsp;cut&nbsp;key&nbsp;for&nbsp;this&nbsp;menu&nbsp;item.<br>
@@ -1699,7 +2027,7 @@ Parameters:<br>
 &nbsp;<br>
 Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;the&nbsp;label&nbsp;name&nbsp;for&nbsp;this&nbsp;selectable.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;selected&nbsp;(str):&nbsp;the&nbsp;state&nbsp;if&nbsp;this&nbsp;value&nbsp;is&nbsp;selected.&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;selected&nbsp;(bool):&nbsp;the&nbsp;state&nbsp;if&nbsp;this&nbsp;value&nbsp;is&nbsp;selected.&nbsp;<br>
 &nbsp;<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;item&nbsp;is&nbsp;selected,&nbsp;false&nbsp;otherwise.</tt></dd></dl>
@@ -1710,6 +2038,11 @@ Returns:<br>
 &nbsp;<br>
 Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;want_capture_keyboard&nbsp;(bool)</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-set_tab_item_closed"><strong>set_tab_item_closed</strong></a>(...)</dt><dd><tt>notify&nbsp;TabBar&nbsp;or&nbsp;Docking&nbsp;system&nbsp;of&nbsp;a&nbsp;closed&nbsp;tab/window&nbsp;ahead&nbsp;(useful&nbsp;to&nbsp;reduce&nbsp;visual&nbsp;flicker&nbsp;on&nbsp;reorderable&nbsp;tab&nbsp;bars).&nbsp;For&nbsp;tab-bar:&nbsp;call&nbsp;after&nbsp;BeginTabBar()&nbsp;and&nbsp;before&nbsp;Tab&nbsp;submissions.&nbsp;Otherwise&nbsp;call&nbsp;with&nbsp;a&nbsp;window&nbsp;name.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;tab&nbsp;or&nbsp;docked&nbsp;window&nbsp;label</tt></dd></dl>
 
 <dl><dt><a name="ImguiBuilder-set_tooltip"><strong>set_tooltip</strong></a>(...)</dt><dd><tt>Sets&nbsp;tooltip&nbsp;of&nbsp;prev&nbsp;item<br>
 &nbsp;<br>
@@ -1744,10 +2077,35 @@ Parameters:<br>
 Returns:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;new&nbsp;float&nbsp;value&nbsp;that&nbsp;the&nbsp;user&nbsp;set.&nbsp;Feed&nbsp;this&nbsp;value&nbsp;back&nbsp;on&nbsp;v&nbsp;on&nbsp;the&nbsp;next&nbsp;call&nbsp;to&nbsp;see&nbsp;a&nbsp;proper&nbsp;state&nbsp;update.</tt></dd></dl>
 
+<dl><dt><a name="ImguiBuilder-tab_item_button"><strong>tab_item_button</strong></a>(...)</dt><dd><tt>create&nbsp;a&nbsp;Tab&nbsp;behaving&nbsp;like&nbsp;a&nbsp;button.&nbsp;return&nbsp;true&nbsp;when&nbsp;clicked.&nbsp;cannot&nbsp;be&nbsp;selected&nbsp;in&nbsp;the&nbsp;tab&nbsp;bar.<br>
+&nbsp;<br>
+label&nbsp;(str):&nbsp;name<br>
+flags&nbsp;(int):&nbsp;See&nbsp;coalpy.gpu.ImGuiTabItemFlags<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bool</tt></dd></dl>
+
 <dl><dt><a name="ImguiBuilder-text"><strong>text</strong></a>(...)</dt><dd><tt>Draws&nbsp;a&nbsp;box&nbsp;with&nbsp;solid&nbsp;text.<br>
 &nbsp;<br>
 Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;text&nbsp;(str):&nbsp;the&nbsp;label&nbsp;value&nbsp;to&nbsp;display</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-tree_node"><strong>tree_node</strong></a>(...)</dt><dd><tt>Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str):&nbsp;label&nbsp;of&nbsp;tree&nbsp;node<br>
+&nbsp;&nbsp;&nbsp;&nbsp;flags&nbsp;(int)&nbsp;see&nbsp;coalpy.gpu.ImGuiTreeNodeFlags<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bool&nbsp;-&nbsp;Note:&nbsp;must&nbsp;call&nbsp;tree_pop&nbsp;if&nbsp;return&nbsp;is&nbsp;True</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-tree_node_with_id"><strong>tree_node_with_id</strong></a>(...)</dt><dd><tt>Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;id&nbsp;(int):&nbsp;int&nbsp;identifier<br>
+&nbsp;&nbsp;&nbsp;&nbsp;text&nbsp;(str):&nbsp;text&nbsp;of&nbsp;node<br>
+&nbsp;&nbsp;&nbsp;&nbsp;flags&nbsp;(int)&nbsp;see&nbsp;coalpy.gpu.ImGuiTreeNodeFlags<br>
+&nbsp;<br>
+Return:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bool&nbsp;-&nbsp;Note:&nbsp;must&nbsp;call&nbsp;tree_pop&nbsp;if&nbsp;return&nbsp;is&nbsp;True</tt></dd></dl>
+
+<dl><dt><a name="ImguiBuilder-tree_pop"><strong>tree_pop</strong></a>(...)</dt><dd><tt>Must&nbsp;be&nbsp;called&nbsp;if&nbsp;tree_node&nbsp;returns&nbsp;True.</tt></dd></dl>
 
 <hr>
 Static methods defined here:<br>
@@ -1792,6 +2150,29 @@ Returns:<br>
 <dl><dt><a name="ImplotBuilder-end_plot"><strong>end_plot</strong></a>(...)</dt><dd><tt>Only&nbsp;call&nbsp;EndPlot()&nbsp;if&nbsp;BeginPlot()&nbsp;returns&nbsp;true!&nbsp;Typically&nbsp;called&nbsp;at&nbsp;the&nbsp;end<br>
 of&nbsp;an&nbsp;if&nbsp;statement&nbsp;conditioned&nbsp;on&nbsp;BeginPlot().&nbsp;See&nbsp;example&nbsp;above.</tt></dd></dl>
 
+<dl><dt><a name="ImplotBuilder-plot_line"><strong>plot_line</strong></a>(...)</dt><dd><tt>Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;values&nbsp;(byte&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;numpy&nbsp;array):&nbsp;array&nbsp;must&nbsp;be&nbsp;contiguous&nbsp;floating&nbsp;point&nbsp;values&nbsp;(x,&nbsp;y)&nbsp;laid&nbsp;down&nbsp;in&nbsp;memory.&nbsp;<a href="builtins.html#object">object</a>&nbsp;must&nbsp;implement&nbsp;buffer&nbsp;protocol.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;count:&nbsp;the&nbsp;number&nbsp;of&nbsp;points<br>
+&nbsp;&nbsp;&nbsp;&nbsp;offset:&nbsp;offset&nbsp;of&nbsp;points.<br>
+&nbsp;<br>
+Note:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;array&nbsp;is&nbsp;treated&nbsp;as&nbsp;a&nbsp;circular&nbsp;buffer,&nbsp;that&nbsp;is,&nbsp;elements&nbsp;are&nbsp;read&nbsp;in&nbsp;order&nbsp;from&nbsp;offset&nbsp;to&nbsp;count&nbsp;using&nbsp;modulus&nbsp;index.</tt></dd></dl>
+
+<dl><dt><a name="ImplotBuilder-setup_axes"><strong>setup_axes</strong></a>(...)</dt><dd><tt>Sets&nbsp;the&nbsp;label&nbsp;and/or&nbsp;flags&nbsp;for&nbsp;primary&nbsp;X&nbsp;and&nbsp;Y&nbsp;axes&nbsp;(shorthand&nbsp;for&nbsp;two&nbsp;calls&nbsp;to&nbsp;SetupAxis).<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x_label&nbsp;(str)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;y_label&nbsp;(str)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x_flags&nbsp;(int)(optional):&nbsp;see&nbsp;coalpy.gpu.ImPlotAxisFlags&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;y_flags&nbsp;(int)(optional):&nbsp;see&nbsp;coalpy.gpu.ImPlotAxisFlags</tt></dd></dl>
+
+<dl><dt><a name="ImplotBuilder-setup_axis_limits"><strong>setup_axis_limits</strong></a>(...)</dt><dd><tt>Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;axis&nbsp;(int):&nbsp;see&nbsp;coalpy.gpu.ImAxis&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;v_min&nbsp;(float)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;v_max&nbsp;(float)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;cond&nbsp;(int)(optional):&nbsp;see&nbsp;coalpy.gpu.ImPlotCond&nbsp;,&nbsp;default&nbsp;is&nbsp;Once</tt></dd></dl>
+
 <dl><dt><a name="ImplotBuilder-show_demo_window"><strong>show_demo_window</strong></a>(...)</dt><dd><tt>Shows&nbsp;the&nbsp;demo&nbsp;window.</tt></dd></dl>
 
 <hr>
@@ -1818,6 +2199,36 @@ Constructor:<br>
 Static methods defined here:<br>
 <dl><dt><a name="InResourceTable-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
 
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="MarkerResults">class <strong>MarkerResults</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Result&nbsp;<a href="builtins.html#object">object</a>&nbsp;with&nbsp;GPU&nbsp;marker&nbsp;data.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="MarkerResults-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="MarkerResults-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>markers</strong></dt>
+<dd><tt>List&nbsp;of&nbsp;marker&nbsp;tuples.&nbsp;Each&nbsp;tuple&nbsp;has&nbsp;(name,&nbsp;parent_marker_index,&nbsp;begin_timestamp_index,&nbsp;end_timestamp_index).<br>
+Time&nbsp;stamp&nbsp;are&nbsp;measured&nbsp;in&nbsp;ticks&nbsp;and&nbsp;stored&nbsp;in&nbsp;the&nbsp;GPU&nbsp;buffer&nbsp;member&nbsp;timestamp_buffer.<br>
+A&nbsp;common&nbsp;practice&nbsp;is&nbsp;to&nbsp;store&nbsp;this&nbsp;result,&nbsp;along&nbsp;with&nbsp;the&nbsp;buffer,&nbsp;and&nbsp;poll&nbsp;it&nbsp;using&nbsp;a&nbsp;DownloadResourceRequest&nbsp;object.<br>
+Once&nbsp;timestamps&nbsp;are&nbsp;available&nbsp;on&nbsp;CPU,&nbsp;divide&nbsp;timestamp&nbsp;by&nbsp;timestamp_frequency&nbsp;member&nbsp;to&nbsp;obtain&nbsp;time&nbsp;in&nbsp;seconds.</tt></dd>
+</dl>
+<dl><dt><strong>timestamp_buffer</strong></dt>
+<dd><tt>GPU&nbsp;buffer&nbsp;(uin64&nbsp;elements)&nbsp;with&nbsp;time&nbsp;stamp&nbsp;ticks.</tt></dd>
+</dl>
+<dl><dt><strong>timestamp_frequency</strong></dt>
+<dd><tt>Frequency&nbsp;in&nbsp;ticks/secs.&nbsp;Divide&nbsp;timestamp&nbsp;ticks&nbsp;by&nbsp;frequency&nbsp;to&nbsp;obtain&nbsp;time&nbsp;in&nbsp;seconds.</tt></dd>
+</dl>
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
@@ -2010,6 +2421,26 @@ Static methods defined here:<br>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
 <td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TinyObjLoader">class <strong>TinyObjLoader</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="TinyObjLoader-__init__"><strong>__init__</strong></a>(self, /, *args, **kwargs)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Static methods defined here:<br>
+<dl><dt><a name="TinyObjLoader-__new__"><strong>__new__</strong></a>(*args, **kwargs)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt><dd><tt>Create&nbsp;and&nbsp;return&nbsp;a&nbsp;new&nbsp;<a href="builtins.html#object">object</a>.&nbsp;&nbsp;See&nbsp;help(type)&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>ObjReader</strong> = &lt;class 'gpu.TinyObjLoader.ObjReader'&gt;</dl>
+
+<dl><dt><strong>ObjReaderConfig</strong> = &lt;class 'gpu.TinyObjLoader.ObjReaderConfig'&gt;</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="Window">class <strong>Window</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
@@ -2130,6 +2561,20 @@ Data descriptors inherited from <a href="builtins.html#BaseException">builtins.B
 Parameters:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;path&nbsp;(str&nbsp;or&nbsp;Module):&nbsp;&nbsp;If&nbsp;str&nbsp;it&nbsp;will&nbsp;be&nbsp;a&nbsp;path&nbsp;to&nbsp;be&nbsp;used.&nbsp;If&nbsp;a&nbsp;module,&nbsp;it&nbsp;will&nbsp;find&nbsp;the&nbsp;source&nbsp;folder&nbsp;of&nbsp;the&nbsp;module's&nbsp;__init__.py&nbsp;file,&nbsp;and&nbsp;use&nbsp;this&nbsp;source&nbsp;as&nbsp;the&nbsp;path.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;path&nbsp;priorities&nbsp;are&nbsp;based&nbsp;on&nbsp;the&nbsp;order&nbsp;of&nbsp;how&nbsp;they&nbsp;were&nbsp;added.</tt></dd></dl>
+ <dl><dt><a name="-begin_collect_markers"><strong>begin_collect_markers</strong></a>(...)</dt><dd><tt>Call&nbsp;this&nbsp;surrounding&nbsp;all&nbsp;your&nbsp;schedules&nbsp;to&nbsp;define&nbsp;a&nbsp;'frame'.<br>
+Once&nbsp;you&nbsp;call&nbsp;end_collect_markers&nbsp;you&nbsp;can&nbsp;extract&nbsp;the&nbsp;results&nbsp;for&nbsp;further&nbsp;processing.<br>
+&nbsp;<br>
+gpu.<a href="#-begin_collect_markers">begin_collect_markers</a>()<br>
+...<br>
+gpu.<a href="#-schedule">schedule</a>([])&nbsp;#perform&nbsp;all&nbsp;your&nbsp;schedules<br>
+marker_data&nbsp;=&nbsp;gpu.<a href="#-end_collect_markers">end_collect_markers</a>()<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_query_bytes&nbsp;(int)(optional):&nbsp;default&nbsp;value&nbsp;56kb.&nbsp;Maximum&nbsp;amount&nbsp;of&nbsp;marker&nbsp;data&nbsp;to&nbsp;obtain.</tt></dd></dl>
+ <dl><dt><a name="-end_collect_markers"><strong>end_collect_markers</strong></a>(...)</dt><dd><tt>Ends&nbsp;marker&nbsp;collection.&nbsp;See&nbsp;gpu.begin_collect_markers<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;marker_results&nbsp;(see&nbsp;g.<a href="#MarkerResults">MarkerResults</a>)</tt></dd></dl>
  <dl><dt><a name="-get_adapters"><strong>get_adapters</strong></a>(...)</dt><dd><tt>Lists&nbsp;all&nbsp;gpu&nbsp;graphics&nbsp;cards&nbsp;found&nbsp;in&nbsp;the&nbsp;system.<br>
 &nbsp;<br>
 Returns:<br>
@@ -2161,13 +2606,19 @@ Parameters:<br>
 <strong>DeviceFlags</strong> = &lt;gpu.EnumDeviceFlags object&gt;<br>
 <strong>FilterType</strong> = &lt;gpu.EnumFilterType object&gt;<br>
 <strong>Format</strong> = &lt;gpu.EnumFormat object&gt;<br>
+<strong>ImAxis</strong> = &lt;gpu.EnumImAxis object&gt;<br>
 <strong>ImGuiDir</strong> = &lt;gpu.EnumImGuiDir object&gt;<br>
 <strong>ImGuiDockNodeFlags</strong> = &lt;gpu.EnumImGuiDockNodeFlags object&gt;<br>
 <strong>ImGuiFocusedFlags</strong> = &lt;gpu.EnumImGuiFocusedFlags object&gt;<br>
 <strong>ImGuiHoveredFlags</strong> = &lt;gpu.EnumImGuiHoveredFlags object&gt;<br>
 <strong>ImGuiKey</strong> = &lt;gpu.EnumImGuiKey object&gt;<br>
 <strong>ImGuiMouseButton</strong> = &lt;gpu.EnumImGuiMouseButton object&gt;<br>
+<strong>ImGuiTabBarFlags</strong> = &lt;gpu.EnumImGuiTabBarFlags object&gt;<br>
+<strong>ImGuiTabItemFlags</strong> = &lt;gpu.EnumImGuiTabItemFlags object&gt;<br>
+<strong>ImGuiTreeNodeFlags</strong> = &lt;gpu.EnumImGuiTreeNodeFlags object&gt;<br>
 <strong>ImGuiWindowFlags</strong> = &lt;gpu.EnumImGuiWindowFlags object&gt;<br>
+<strong>ImPlotAxisFlags</strong> = &lt;gpu.EnumImPlotAxisFlags object&gt;<br>
+<strong>ImPlotCond</strong> = &lt;gpu.EnumImPlotCond object&gt;<br>
 <strong>ImPlotFlags</strong> = &lt;gpu.EnumImPlotFlags object&gt;<br>
 <strong>Keys</strong> = &lt;gpu.EnumKeys object&gt;<br>
 <strong>MemFlags</strong> = &lt;gpu.EnumMemFlags object&gt;<br>
