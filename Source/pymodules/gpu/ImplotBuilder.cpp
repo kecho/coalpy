@@ -6,6 +6,7 @@
 #include "Resources.h"
 #include <functional>
 #include <cpp/imgui_stdlib.h>
+#include <iostream>
 
 namespace coalpy
 {
@@ -105,7 +106,97 @@ PyObject* endPlot(PyObject* self, PyObject* vargs, PyObject* kwds)
     Py_RETURN_NONE;
 }
 
+
+PyObject* setupAxes(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMPLOT
+    char* x_label = nullptr;
+    char* y_label = nullptr;
+    int x_flags = 0;
+    int y_flags = 0;
+    static char* argnames[] = { "x_label", "y_label", "x_flags", "y_flags", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "ss|ii", argnames, &x_label, &y_label, &x_flags, &y_flags))
+        return nullptr;
+
+    ImPlot::SetupAxes(x_label, y_label, x_flags, y_flags);
+
+    Py_RETURN_NONE;
 }
 
+PyObject* setupAxisLimits(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMPLOT
+    int axis = 0;
+    double v_min = 0.0;
+    double v_max = 0.0;
+    int cond = ImPlotCond_Once;
+
+    static char* argnames[] = { "axis", "v_min", "v_max", "cond", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "iddi", argnames, &axis, &v_min, &v_max, &cond))
+        return nullptr;
+
+    ImPlot::SetupAxisLimits(axis, v_min, v_max, cond);
+    Py_RETURN_NONE;
+}
+
+PyObject* plotLine(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMPLOT
+    char* label = nullptr;
+    PyObject* values = nullptr;
+    int count = 0;
+    int offset = 0;
+
+    static char* argnames[] = { "label", "values", "count", "offset", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "sOii", argnames, &label, &values, &count, &offset))
+        return nullptr;
+
+    ModuleState& moduleState = parentModule(self);
+    if (!PyObject_CheckBuffer(values))
+    {
+        PyErr_SetString(moduleState.exObj(), "values argument of plot_line must implement buffer protocol object, it must contain 2 floating point values contiguous in memory for each point.");
+        return nullptr;
+    }
+
+    Py_buffer valuesView = {};
+    if (PyObject_GetBuffer(values, &valuesView, 0) == -1)
+    {
+        PyErr_SetString(moduleState.exObj(), "Failed retrieving buffer contents of buffer object values.");
+        return nullptr;
+    }
+
+    if (valuesView.itemsize != sizeof(float) && valuesView.itemsize != sizeof(double))
+    {
+        PyBuffer_Release(&valuesView);
+        PyErr_SetString(moduleState.exObj(), "Values array object passed to plot line must be internally contiguous float or double.");
+        return nullptr;
+    }
+
+    int elementCount = (valuesView.len / valuesView.itemsize);
+    if (elementCount < 2 * count || offset * 2 > elementCount)
+    {
+        int itemOffset = offset * 2;
+        int itemCount = count * 2;
+        PyErr_Format(moduleState.exObj(), "Trying to access values array out of bounds. Max count is %d, accessing with offset %d and count %d", elementCount, itemOffset, itemCount);
+        PyBuffer_Release(&valuesView);
+        return nullptr;
+    }
+
+    if (valuesView.itemsize == sizeof(float))
+    {
+        float* values = (float*)valuesView.buf;
+        ImPlot::PlotLine(label, values, values + 1, count, offset, 2 * sizeof(float));
+    }
+    else if (valuesView.itemsize == sizeof(double))
+    {
+        double* values = (double*)valuesView.buf;
+        ImPlot::PlotLine(label, values, values + 1, count, offset, 2 * sizeof(double));
+    }
+
+    PyBuffer_Release(&valuesView);
+    Py_RETURN_NONE;
+}
+
+}
 }
 }

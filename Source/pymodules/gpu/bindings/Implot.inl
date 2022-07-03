@@ -48,6 +48,34 @@ COALPY_FN(end_plot, endPlot, R"(
     of an if statement conditioned on BeginPlot(). See example above.
 )")
 
+COALPY_FN(setup_axes, setupAxes, R"(
+    Sets the label and/or flags for primary X and Y axes (shorthand for two calls to SetupAxis).
+
+    Parameters:
+        x_label (str)
+        y_label (str)
+        x_flags (int)(optional): see coalpy.gpu.ImPlotAxisFlags 
+        y_flags (int)(optional): see coalpy.gpu.ImPlotAxisFlags
+)")
+
+COALPY_FN(setup_axis_limits, setupAxisLimits, R"(
+    Parameters:
+        axis (int): see coalpy.gpu.ImAxis 
+        v_min (float)
+        v_max (float)
+        cond (int)(optional): see coalpy.gpu.ImPlotCond , default is Once 
+)")
+
+COALPY_FN(plot_line, plotLine, R"(
+    Parameters:
+        label (str)
+        values (byte object, or numpy array): array must be contiguous floating point values (x, y) laid down in memory. object must implement buffer protocol.
+        count: the number of points
+        offset: offset of points.
+
+    Note:
+        array is treated as a circular buffer, that is, elements are read in order from offset to count using modulus index.
+)")
 
 /*
 COALPY_FN(begin_subplots, beginSubplots, R"(
@@ -72,6 +100,42 @@ COALPY_ENUM(AntiAliased   , ImPlotFlags_AntiAliased  ,  R"(pot items will be sof
 COALPY_ENUM(CanvasOnly    , ImPlotFlags_CanvasOnly   , R"()")
 COALPY_ENUM_END(ImPlotFlags)
 
+COALPY_ENUM_BEGIN(ImPlotAxisFlags, "")
+COALPY_ENUM(NoLabel       , ImPlotAxisFlags_NoLabel        , R"(the axis label will not be displayed (axis labels also hidden if the supplied string name is NULL)")
+COALPY_ENUM(NoGridLines   , ImPlotAxisFlags_NoGridLines    , R"(rid lines will be displayed)")
+COALPY_ENUM(NoTickMarks   , ImPlotAxisFlags_NoTickMarks    , R"(ick marks will be displayed)")
+COALPY_ENUM(NoTickLabels  , ImPlotAxisFlags_NoTickLabels   , R"(xt labels will be displayed)")
+COALPY_ENUM(NoInitialFit  , ImPlotAxisFlags_NoInitialFit   , R"(will not be initially fit to data extents on the first rendered frame)")
+COALPY_ENUM(NoMenus       , ImPlotAxisFlags_NoMenus        , R"(the user will not be able to open context menus with right-click)")
+COALPY_ENUM(Opposite      , ImPlotAxisFlags_Opposite       , R"(xis ticks and labels will be rendered on conventionally opposite side (i.e, right or top)")
+COALPY_ENUM(Foreground    , ImPlotAxisFlags_Foreground     , R"(d lines will be displayed in the foreground (i.e. on top of data) in stead of the background)")
+COALPY_ENUM(LogScale      , ImPlotAxisFlags_LogScale       , R"( logartithmic (base 10) axis scale will be used (mutually exclusive with ImPlotAxisFlags_Time)")
+COALPY_ENUM(Time          , ImPlotAxisFlags_Time           , R"(   axis will display date/time formatted labels (mutually exclusive with ImPlotAxisFlags_LogScale)")
+COALPY_ENUM(Invert        , ImPlotAxisFlags_Invert         , R"( the axis will be inverted)")
+COALPY_ENUM(AutoFit       , ImPlotAxisFlags_AutoFit        , R"(axis will be auto-fitting to data extents)")
+COALPY_ENUM(RangeFit      , ImPlotAxisFlags_RangeFit       , R"(xis will only fit points if the point is in the visible range of the **orthogonal** axis)")
+COALPY_ENUM(LockMin       , ImPlotAxisFlags_LockMin        , R"(the axis minimum value will be locked when panning/zooming)")
+COALPY_ENUM(LockMax       , ImPlotAxisFlags_LockMax        , R"(the axis maximum value will be locked when panning/zooming)")
+COALPY_ENUM(Lock          , ImPlotAxisFlags_Lock           , R"()")
+COALPY_ENUM(NoDeforations ,  ImPlotAxisFlags_NoDecorations , R"()")
+COALPY_ENUM(AuxDefault    , ImPlotAxisFlags_AuxDefault     , R"()")
+COALPY_ENUM_END(ImPlotAxisFlags)
+
+COALPY_ENUM_BEGIN(ImAxis, "")
+COALPY_ENUM(X1, ImAxis_X1, R"(enabled by default)")
+COALPY_ENUM(X2, ImAxis_X2, R"(disabled by default)")
+COALPY_ENUM(X3, ImAxis_X3, R"(disabled by default)")
+COALPY_ENUM(Y1, ImAxis_Y1, R"(enabled by default)")
+COALPY_ENUM(Y2, ImAxis_Y2, R"(disabled by default)")
+COALPY_ENUM(Y3, ImAxis_Y3, R"(disabled by default)")
+COALPY_ENUM(COUNT, ImAxis_COUNT, "")
+COALPY_ENUM_END(ImAxis)
+
+COALPY_ENUM_BEGIN(ImPlotCond, "")
+COALPY_ENUM(None  , ImPlotCond_None   , R"(No condition (always set the variable), same as _Always)")
+COALPY_ENUM(Always, ImPlotCond_Always , R"(No condition (always set the variable))")
+COALPY_ENUM(Once  , ImPlotCond_Once   , R"(Set the variable once per runtime session (only the first call will succeed))")
+COALPY_ENUM_END(ImPlotCond)
 #undef COALPY_ENUM_END
 #undef COALPY_ENUM_BEGIN
 #undef COALPY_ENUM
