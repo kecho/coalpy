@@ -156,6 +156,7 @@ ShaderHandle BaseShaderDb::requestCompile(const ShaderDesc& desc)
     shaderState.recipe.type = desc.type;
     shaderState.recipe.name = desc.name;
     shaderState.recipe.mainFn = desc.mainFn;
+    shaderState.recipe.defines = desc.defines;
     shaderState.recipe.path = compileState->filePath;
     shaderState.compileState = compileState;
 
@@ -193,6 +194,7 @@ ShaderHandle BaseShaderDb::requestCompile(const ShaderInlineDesc& desc)
     shaderState.recipe.type = desc.type;
     shaderState.recipe.name = desc.name;
     shaderState.recipe.mainFn = desc.mainFn;
+    shaderState.recipe.defines = desc.defines;
     shaderState.recipe.source = desc.immCode;
 
     shaderState.debugName = desc.name;
