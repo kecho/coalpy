@@ -80,6 +80,12 @@ void Dx12Gc::flushDelete(bool waitOnCpu)
         if (waitOnCpu)
             m_fence.waitOnCpu(g.fenceValue);
 
+        if (g.object.resource == nullptr)
+        {
+            ++deleted;
+            continue;
+        }
+
         bool performDelete = m_fence.isComplete(g.fenceValue);
         if (performDelete)
         {
@@ -96,8 +102,6 @@ void Dx12Gc::flushDelete(bool waitOnCpu)
     
     if (deleted == (int)m_garbage.size())
         m_garbage.clear();
-    else
-        m_garbage.resize(m_garbage.size() - deleted);
 }
 
 void Dx12Gc::stop()

@@ -49,7 +49,7 @@ private:
     struct ResourceGarbage
     {
         UINT64 fenceValue = {};
-        Object object;
+        Object object = {};
     };
 
     Dx12CounterPool& m_counterPool;
