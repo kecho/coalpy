@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="coalpy.html"><font color="#ffffff">coalpy</font></a>.gpu</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccoalpy%5Ct2-output%5Cwin64-msvc-debug-default%5Ccoalpy%5Cgpu.pyd">c:\dev\coalpy\t2-output\win64-msvc-debug-default\coalpy\gpu.pyd</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccoalpy%5Ct2-output%5Cwin64-msvc-production-default%5Ccoalpy%5Cgpu.pyd">c:\dev\coalpy\t2-output\win64-msvc-production-default\coalpy\gpu.pyd</a></font></td></tr></table>
     <p><tt>&lt;&lt;&nbsp;coalpy&nbsp;&gt;&gt;&nbsp;Compute&nbsp;Abstraction&nbsp;Layer&nbsp;for&nbsp;Python&nbsp;<br>
 &nbsp;by&nbsp;Kleber&nbsp;A&nbsp;Garcia&nbsp;2021&nbsp;(c).&nbsp;<br>
 coalpy&nbsp;is&nbsp;a&nbsp;compute&nbsp;abstraction&nbsp;layer&nbsp;for&nbsp;python.&nbsp;It&nbsp;brings<br>
@@ -2157,7 +2157,17 @@ of&nbsp;an&nbsp;if&nbsp;statement&nbsp;conditioned&nbsp;on&nbsp;BeginPlot().&nbs
 &nbsp;&nbsp;&nbsp;&nbsp;offset:&nbsp;offset&nbsp;of&nbsp;points.<br>
 &nbsp;<br>
 Note:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;array&nbsp;is&nbsp;treated&nbsp;as&nbsp;a&nbsp;circular&nbsp;buffer,&nbsp;that&nbsp;is,&nbsp;elements&nbsp;are&nbsp;read&nbsp;in&nbsp;order&nbsp;from&nbsp;offset&nbsp;to&nbsp;count&nbsp;using&nbsp;modulus&nbsp;index.</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;value&nbsp;is&nbsp;treated&nbsp;as&nbsp;a&nbsp;circular&nbsp;buffer,&nbsp;that&nbsp;is,&nbsp;elements&nbsp;are&nbsp;read&nbsp;in&nbsp;order&nbsp;from&nbsp;offset&nbsp;to&nbsp;count&nbsp;using&nbsp;modulus&nbsp;index.</tt></dd></dl>
+
+<dl><dt><a name="ImplotBuilder-plot_shaded"><strong>plot_shaded</strong></a>(...)</dt><dd><tt>Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;(str)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;values&nbsp;(byte&nbsp;<a href="builtins.html#object">object</a>,&nbsp;or&nbsp;numpy&nbsp;array):&nbsp;array&nbsp;must&nbsp;be&nbsp;contiguous&nbsp;floating&nbsp;point&nbsp;values&nbsp;(x,&nbsp;y)&nbsp;laid&nbsp;down&nbsp;in&nbsp;memory.&nbsp;<a href="builtins.html#object">object</a>&nbsp;must&nbsp;implement&nbsp;buffer&nbsp;protocol.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;count:&nbsp;the&nbsp;number&nbsp;of&nbsp;points<br>
+&nbsp;&nbsp;&nbsp;&nbsp;yref&nbsp;(float):&nbsp;can&nbsp;be&nbsp;+/-float('inf')<br>
+&nbsp;&nbsp;&nbsp;&nbsp;offset:&nbsp;offset&nbsp;of&nbsp;points.<br>
+&nbsp;<br>
+Note:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;value&nbsp;is&nbsp;treated&nbsp;as&nbsp;a&nbsp;circular&nbsp;buffer,&nbsp;that&nbsp;is,&nbsp;elements&nbsp;are&nbsp;read&nbsp;in&nbsp;order&nbsp;from&nbsp;offset&nbsp;to&nbsp;count&nbsp;using&nbsp;modulus&nbsp;index.</tt></dd></dl>
 
 <dl><dt><a name="ImplotBuilder-setup_axes"><strong>setup_axes</strong></a>(...)</dt><dd><tt>Sets&nbsp;the&nbsp;label&nbsp;and/or&nbsp;flags&nbsp;for&nbsp;primary&nbsp;X&nbsp;and&nbsp;Y&nbsp;axes&nbsp;(shorthand&nbsp;for&nbsp;two&nbsp;calls&nbsp;to&nbsp;SetupAxis).<br>
 &nbsp;<br>
