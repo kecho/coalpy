@@ -1,5 +1,5 @@
 title: CoalPy
 layout: splash 
 excerpt: >
-    Compute Abstraction Layer for Python.
+  Compute Abstraction Layer for Python.
 

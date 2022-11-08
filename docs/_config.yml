@@ -2,4 +2,7 @@ remote_theme: "mmistakes/minimal-mistakes@4.22.0"
 minimal_mistakes_skin: "dark"
 name: CoalPy
 title: CoalPy
-description: Compute Abstraction Layer for Python.
+description: >
+ Compute Abstraction Layer for Python.
+plugins: ["jekyll-include-cache", "jekyll-feed"]
+
