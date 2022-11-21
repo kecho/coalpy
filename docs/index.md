@@ -1,12 +1,12 @@
 ---
-title: CoalPy
+title: Home
 layout: splash 
 excerpt: >
   Compute Abstraction Layer for Python.
 ---
 
-Welcome to CoalPy! CoalPy is a python library that will let you write quickly and effortlessly high performance GPU code.
-To install and get started you can install the Pip package:
+Welcome to CoalPy! This python library will let you write quickly and effortlessly high performance GPU code.
+To install and get started (ensure you use python3.9):
 
 ```bash
 python -m pip install python
