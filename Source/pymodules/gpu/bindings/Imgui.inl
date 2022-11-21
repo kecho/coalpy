@@ -98,7 +98,7 @@ COALPY_FN(collapsing_header, collapsingHeader, R"(
         True if open, False otherwise.
 )")
 
-COALPY_FN(show_demo_window, showDemoWindow, R"(
+COALPY_FN(show_demo_window, showDemoWindowImgui, R"(
     Shows the demo window.
 )")
 

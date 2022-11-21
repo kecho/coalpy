@@ -46,6 +46,8 @@ public:
     virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) override;
     virtual void removeShaderDb() { m_shaderDb = nullptr; }
     virtual IShaderDb* db() override { return (IShaderDb*)m_shaderDb; }
+    virtual void beginCollectMarkers(int maxQueryBytes) override;
+    virtual MarkerResults endCollectMarkers() override;
     void internalReleaseWorkHandle(WorkHandle handle);
     ScheduleStatus internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle); 
 

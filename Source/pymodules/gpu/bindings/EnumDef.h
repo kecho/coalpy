@@ -5,7 +5,7 @@
 #endif
 #define COALPY_ENUM_BEGIN(name, desc) \
     {\
-        static const char* s_EnumName ## name = "gpu.Enum" ## STRINGIFY(name);\
+        static const char* s_EnumName ## name = "gpu.Enum" STRINGIFY(name);\
         static const char* s_EnumPyName ## name = STRINGIFY(name);\
         static const char* s_EnumPyDesc ## name = desc;\
         static const EnumEntry s_##name[] = {

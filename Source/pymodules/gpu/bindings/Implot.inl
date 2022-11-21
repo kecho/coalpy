@@ -16,7 +16,7 @@
 
 //Add here all your imgui forwarding functions. Add implementation in ImguiBuilder.cpp
 //COALPY_FN(python name, c++ name, documentation)
-COALPY_FN(show_demo_window, showDemoWindow, R"(
+COALPY_FN(show_demo_window, showDemoWindowImplot, R"(
     Shows the demo window.
 )")
 

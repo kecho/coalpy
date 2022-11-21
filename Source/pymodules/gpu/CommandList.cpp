@@ -322,7 +322,13 @@ static bool getBufferProtocolObject(
     int& outBufferProtocolSize, 
     std::vector<Py_buffer>& references)
 {
+//HACK: python3.9 in ubuntu is failing to find PyObject_CheckBuffer
+//for now we use the old API in linux until we upgrade to newer version of python
+#if defined(__linux__)
+    if (!PyObject_CheckReadBuffer(constants))
+#else
     if (!PyObject_CheckBuffer(constants))
+#endif
         return false;
 
     references.emplace_back();

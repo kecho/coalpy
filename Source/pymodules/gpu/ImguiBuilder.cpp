@@ -139,7 +139,7 @@ PyObject* end(PyObject* self, PyObject* vargs, PyObject* kwds)
     Py_RETURN_NONE;
 }
 
-PyObject* showDemoWindow(PyObject* self, PyObject* vargs, PyObject* kwds)
+PyObject* showDemoWindowImgui(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI
     ImGui::ShowDemoWindow();

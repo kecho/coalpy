@@ -77,7 +77,7 @@ bool CheckImplot(PyObject* builder)
         return nullptr;
 
 
-PyObject* showDemoWindow(PyObject* self, PyObject* vargs, PyObject* kwds)
+PyObject* showDemoWindowImplot(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMPLOT
     ImPlot::ShowDemoWindow();

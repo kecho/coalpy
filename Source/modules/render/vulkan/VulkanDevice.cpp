@@ -605,6 +605,15 @@ bool VulkanDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags pro
     return false;
 }
 
+void VulkanDevice::beginCollectMarkers(int maxQueryBytes)
+{
+}
+
+MarkerResults VulkanDevice::endCollectMarkers()
+{
+    return {};
+}
+
 TextureResult VulkanDevice::createTexture(const TextureDesc& desc)
 {
     return m_resources->createTexture(desc);

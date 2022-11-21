@@ -158,14 +158,14 @@ void Shader::destroy(PyObject* self)
 
 namespace methods
 {
-    static PyObject* resolve(PyObject* self, PyObject* kwds, PyObject* vargs)
+    PyObject* resolveShader(PyObject* self, PyObject* kwds, PyObject* vargs)
     {
         auto* shader = (Shader*)self;
         shader->db->resolve(shader->handle);
         Py_RETURN_NONE;
     }
 
-    static PyObject* isValid(PyObject* self, PyObject* kwds, PyObject* vargs)
+    PyObject* isValid(PyObject* self, PyObject* kwds, PyObject* vargs)
     {
         auto* shader = (Shader*)self;
         if (shader->db->isValid(shader->handle))
