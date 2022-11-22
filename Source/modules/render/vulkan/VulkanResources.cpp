@@ -119,7 +119,80 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
 TextureResult VulkanResources::createTexture(const TextureDesc& desc)
 {
     std::unique_lock lock(m_mutex);
-    return TextureResult();
+    ResourceHandle handle;
+    VulkanResource& resource = m_container.allocate(handle);
+    if (!handle.valid())
+        return TextureResult  { ResourceResult::InvalidHandle, Texture(), "Not enough slots." };
+
+    VkMemoryPropertyFlags memProFlags = 0u;
+    VkImageCreateInfo createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    if ((desc.memFlags & MemFlag_GpuWrite) != 0)
+        createInfo.usage |= VK_IMAGE_USAGE_STORAGE_BIT;
+    else
+        createInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
+
+    //TODO: figure out how to do cube maps
+    bool isArray = (desc.type == TextureType::k2dArray || desc.type == TextureType::CubeMapArray);
+    if (desc.type == TextureType::k2d || desc.type == TextureType::k2dArray || desc.type == TextureType::CubeMap || desc.type == TextureType::CubeMapArray)
+        createInfo.imageType = VK_IMAGE_TYPE_2D;
+    else if (desc.type == TextureType::k3d)
+        createInfo.imageType = VK_IMAGE_TYPE_3D;
+
+    createInfo.format = getVkFormat(desc.format);
+    createInfo.extent = VkExtent3D { desc.width, desc.height, desc.type == TextureType::k3d ? desc.depth : 1 };
+    createInfo.mipLevels = desc.mipLevels;
+    createInfo.arrayLayers = isArray ? desc.depth : 1;
+    createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    createInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; //not exposed, cant do async in coalpy yet.
+    createInfo.queueFamilyIndexCount = 1;
+    uint32_t desfaultQueueFam = m_device.graphicsFamilyQueueIndex();
+    createInfo.pQueueFamilyIndices = &desfaultQueueFam;
+    createInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
+
+    auto& textureData = resource.textureData;
+    resource.type = VulkanResource::Type::Texture;
+    resource.handle = handle;
+
+    if (vkCreateImage(m_device.vkDevice(), &createInfo, nullptr, &textureData.vkImage) != VK_SUCCESS)
+    {
+        m_container.free(handle);
+        std::cout << "Fail" << std::endl;
+        return TextureResult  { ResourceResult::InvalidParameter, Texture(), "Failed to create texture." };
+    }
+
+    VkMemoryRequirements memReqs = {};
+    vkGetImageMemoryRequirements(m_device.vkDevice(), textureData.vkImage, &memReqs);
+    resource.actualSize = memReqs.size;
+    resource.alignment = memReqs.alignment;
+
+    VkMemoryAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memReqs.size;
+    if (!m_device.findMemoryType(memReqs.memoryTypeBits, 0u, allocInfo.memoryTypeIndex)) 
+    {
+        vkDestroyImage(m_device.vkDevice(), textureData.vkImage, nullptr);
+        m_container.free(handle);
+        return TextureResult { ResourceResult::InternalApiFailure, Texture(), "Failed to find a correct category of memory for this texture." };
+    }
+
+    if (vkAllocateMemory(m_device.vkDevice(), &allocInfo, nullptr, &resource.memory) != VK_SUCCESS)
+    {
+        vkDestroyImage(m_device.vkDevice(), textureData.vkImage, nullptr);
+        m_container.free(handle);
+        return TextureResult { ResourceResult::InternalApiFailure, Texture(), "Failed to allocating buffer memory." };
+    }
+
+    if (vkBindImageMemory(m_device.vkDevice(), textureData.vkImage, resource.memory, 0u) != VK_SUCCESS)
+    {
+        vkDestroyImage(m_device.vkDevice(), textureData.vkImage, nullptr);
+        vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
+        m_container.free(handle);
+        return TextureResult  { ResourceResult::InternalApiFailure, Texture(), "Failed to bind memory into vkimage." };
+    }
+
+    return TextureResult { ResourceResult::Ok, { handle.handleId } };
 }
 
 TextureResult VulkanResources::recreateTexture(Texture texture, const TextureDesc& desc)
@@ -146,6 +219,11 @@ void VulkanResources::release(ResourceHandle handle)
         if (resource.bufferData.vkBufferView)
             vkDestroyBufferView(m_device.vkDevice(), resource.bufferData.vkBufferView, nullptr);
         vkDestroyBuffer(m_device.vkDevice(), resource.bufferData.vkBuffer, nullptr);
+    }
+    else if (resource.isTexture())
+    {
+        if (resource.textureData.vkImage)
+            vkDestroyImage(m_device.vkDevice(), resource.textureData.vkImage, nullptr);
     }
     vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
 

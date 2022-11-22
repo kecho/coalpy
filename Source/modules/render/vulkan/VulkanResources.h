@@ -30,7 +30,7 @@ struct VulkanResource
 
     struct TextureData
     {
-        VkImage vkTexture;
+        VkImage vkImage;
     };
 
     ResourceHandle handle;
