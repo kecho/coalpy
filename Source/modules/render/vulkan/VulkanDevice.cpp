@@ -84,22 +84,30 @@ bool getAvailableVulkanExtensions(std::vector<std::string>& outExtensions)
 {
     unsigned int extCount = 0;
 #if ENABLE_SDL_VULKAN
+
     auto* dummyWindow = SDL_CreateWindow("dummy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1, 1, SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN);
+    std::vector<const char*> extNames(extCount);
 
     // Figure out the amount of extensions vulkan needs to interface with the os windowing system
     // This is necessary because vulkan is a platform agnostic API and needs to know how to interface with the windowing system
-    if (!SDL_Vulkan_GetInstanceExtensions(dummyWindow, &extCount, nullptr))
+    if (dummyWindow == nullptr)
     {
-        CPY_ERROR_MSG(false, "Unable to query the number of Vulkan instance extensions");
-        return false;
+        std::cerr << "SDL could not be initialized" << std::endl;
     }
-
-    std::vector<const char*> extNames(extCount);
-    // Use the amount of extensions queried before to retrieve the names of the extensions
-    if (!SDL_Vulkan_GetInstanceExtensions(dummyWindow, &extCount, extNames.data()))
+    else
     {
-        CPY_ERROR_MSG(false, "Unable to query the number of Vulkan instance extension names");
-        return false;
+        if(!SDL_Vulkan_GetInstanceExtensions(dummyWindow, &extCount, nullptr))
+        {
+            CPY_ERROR_MSG(false, "Unable to query the number of Vulkan instance extensions");
+            return false;
+        }
+
+        // Use the amount of extensions queried before to retrieve the names of the extensions
+        if (!SDL_Vulkan_GetInstanceExtensions(dummyWindow, &extCount, extNames.data()))
+        {
+            CPY_ERROR_MSG(false, "Unable to query the number of Vulkan instance extension names");
+            return false;
+        }
     }
 
     // Display names
