@@ -32,6 +32,7 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
     VkBufferCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     createInfo.usage |= desc.isConstantBuffer ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : (VkBufferUsageFlags)0u;
+    resource.bufferData.isStorageBuffer = false;
     if (desc.type == BufferType::Standard)
     {
         if ((desc.memFlags & MemFlag_GpuRead) != 0)
@@ -45,7 +46,9 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
         //in vulkan it doesnt matter, if structured or raw, always set the storage buffer bit.
         createInfo.usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
         createInfo.size = desc.stride * desc.elementCount;
+        resource.bufferData.isStorageBuffer = true;
     }
+    resource.memFlags = desc.memFlags;
 
     memProFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
@@ -127,10 +130,14 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc)
     VkMemoryPropertyFlags memProFlags = 0u;
     VkImageCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    
+    resource.memFlags = desc.memFlags;
+
+    if ((desc.memFlags & MemFlag_GpuRead) != 0)
+        createInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
+
     if ((desc.memFlags & MemFlag_GpuWrite) != 0)
         createInfo.usage |= VK_IMAGE_USAGE_STORAGE_BIT;
-    else
-        createInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
 
     //TODO: figure out how to do cube maps
     bool isArray = (desc.type == TextureType::k2dArray || desc.type == TextureType::CubeMapArray);
@@ -199,6 +206,59 @@ TextureResult VulkanResources::recreateTexture(Texture texture, const TextureDes
 {
     std::unique_lock lock(m_mutex);
     return TextureResult();
+}
+
+InResourceTableResult VulkanResources::createInResourceTable(const ResourceTableDesc& desc)
+{
+    std::unique_lock lock(m_mutex);
+    std::vector<VulkanResource*> resources;;
+    resources.reserve(desc.resourcesCount);
+    for (int i = 0; i < desc.resourcesCount; ++i)
+    {
+        if (!m_container.contains(desc.resources[i]))
+        {
+            return InResourceTableResult { ResourceResult::InvalidHandle, InResourceTable(), "Passed an invalid resource to in resource table" };
+        }
+        
+        resources.push_back(&m_container[desc.resources[i]]);
+    }
+
+    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    bindings.reserve(desc.resourcesCount);
+    for (int i = 0; i < desc.resourcesCount; ++i)
+    {
+        VulkanResource& resource = *resources[i];
+        if ((resource.memFlags & MemFlag_GpuRead) == 0)
+        {
+            return InResourceTableResult { ResourceResult::InvalidParameter, InResourceTable(), "All resources in InTable must have the flag GpuRead." };
+        }
+
+        VkDescriptorSetLayoutBinding& binding = bindings[i];
+        binding = {};
+        binding.binding = (uint32_t)i;
+        binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        binding.descriptorCount = 1;
+        if (resource.isBuffer())
+            binding.descriptorType = resource.bufferData.isStorageBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER : VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+        else if (resource.isTexture())
+            binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+    }
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, nullptr };
+    layoutInfo.bindingCount = (uint32_t)bindings.size();
+    layoutInfo.pBindings = bindings.data();
+
+    VkDescriptorSetLayout setLayout = {};
+    if (vkCreateDescriptorSetLayout(m_device.vkDevice(), &layoutInfo, nullptr, &setLayout) != VK_SUCCESS)
+    {
+        return InResourceTableResult { ResourceResult::InvalidParameter, InResourceTable(), "Could not create descriptor set layout." };
+    }
+
+    ResourceTable handle;
+    VulkanResourceTable& table = m_tables.allocate(handle);
+    table.type = VulkanResourceTable::Type::In;
+    table.layout = setLayout;
+    return InResourceTableResult { ResourceResult::Ok, InResourceTable { handle.handleId } };
 }
 
 void VulkanResources::release(ResourceHandle handle)

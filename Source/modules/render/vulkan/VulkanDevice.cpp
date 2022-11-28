@@ -86,10 +86,9 @@ bool getAvailableVulkanExtensions(std::vector<std::string>& outExtensions)
 #if ENABLE_SDL_VULKAN
 
     auto* dummyWindow = SDL_CreateWindow("dummy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1, 1, SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN);
-    std::vector<const char*> extNames(extCount);
-
     // Figure out the amount of extensions vulkan needs to interface with the os windowing system
     // This is necessary because vulkan is a platform agnostic API and needs to know how to interface with the windowing system
+    std::vector<const char*> extNames;
     if (dummyWindow == nullptr)
     {
         std::cerr << "SDL could not be initialized" << std::endl;
@@ -102,6 +101,7 @@ bool getAvailableVulkanExtensions(std::vector<std::string>& outExtensions)
             return false;
         }
 
+        extNames.resize(extCount);
         // Use the amount of extensions queried before to retrieve the names of the extensions
         if (!SDL_Vulkan_GetInstanceExtensions(dummyWindow, &extCount, extNames.data()))
         {
@@ -644,7 +644,7 @@ SamplerResult VulkanDevice::createSampler (const SamplerDesc& config)
 
 InResourceTableResult VulkanDevice::createInResourceTable  (const ResourceTableDesc& config)
 {
-    return InResourceTableResult();
+    return m_resources->createInResourceTable(config);
 }
 
 OutResourceTableResult VulkanDevice::createOutResourceTable (const ResourceTableDesc& config)

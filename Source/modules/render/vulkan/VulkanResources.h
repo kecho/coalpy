@@ -24,6 +24,7 @@ struct VulkanResource
 
     struct BufferData
     {
+        bool isStorageBuffer;
         VkBufferView vkBufferView;
         VkBuffer vkBuffer;
     };
@@ -44,9 +45,21 @@ struct VulkanResource
     bool isBuffer() const { return type == Type::Buffer; }
     bool isTexture() const { return type == Type::Texture; }
     
+    MemFlags memFlags;
     VkDeviceSize alignment;
     VkDeviceSize actualSize;
     VkDeviceMemory memory;
+};
+
+struct VulkanResourceTable
+{
+    enum class Type
+    {
+        In, Out, Sampler
+    };
+
+    Type type = Type::In;
+    VkDescriptorSetLayout layout;
 };
 
 class VulkanResources
@@ -63,14 +76,15 @@ public:
     BufferResult createBuffer(const BufferDesc& desc);
     TextureResult createTexture(const TextureDesc& desc);
     TextureResult recreateTexture(Texture texture, const TextureDesc& desc);
+    InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
 
     void release(ResourceHandle handle);
 
 private:
-
     std::mutex m_mutex;
     VulkanDevice& m_device;
     HandleContainer<ResourceHandle, VulkanResource, MaxResources> m_container;
+    HandleContainer<ResourceTable, VulkanResourceTable, MaxResources> m_tables;
 };
 
 }
