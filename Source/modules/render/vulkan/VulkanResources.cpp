@@ -211,7 +211,7 @@ TextureResult VulkanResources::recreateTexture(Texture texture, const TextureDes
 InResourceTableResult VulkanResources::createInResourceTable(const ResourceTableDesc& desc)
 {
     std::unique_lock lock(m_mutex);
-    std::vector<VulkanResource*> resources;;
+    std::vector<VulkanResource*> resources;
     resources.reserve(desc.resourcesCount);
     for (int i = 0; i < desc.resourcesCount; ++i)
     {
@@ -258,6 +258,32 @@ InResourceTableResult VulkanResources::createInResourceTable(const ResourceTable
     VulkanResourceTable& table = m_tables.allocate(handle);
     table.type = VulkanResourceTable::Type::In;
     table.layout = setLayout;
+    table.descriptors = m_device.descriptorSetPools().allocate(table.layout);
+
+    std::vector<VkWriteDescriptorSet> writes;
+    std::vector<VkDescriptorImageInfo> imgInfos;
+    std::vector<VkDescriptorBufferInfo> buffInfos;
+    writes.reserve(resources.size());
+    //TODO: finish this
+    for (int i = 0; i < (int)resources.size(); ++i)
+    {
+        VulkanResource resource = *resources[i];
+        VkWriteDescriptorSet write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr };
+        write.dstSet = table.descriptors.descriptors;
+        write.dstBinding = i;
+        write.dstArrayElement = 0;
+        write.descriptorCount = 1;
+        write.descriptorType = bindings[i].descriptorType;
+        if (resource.isBuffer())
+        {
+            buffInfos.emplace_back();   
+            VkDescriptorBufferInfo& info = buffInfos.back();
+        }
+        else if (resource.isTexture())
+        {
+        }
+    }
+
     return InResourceTableResult { ResourceResult::Ok, InResourceTable { handle.handleId } };
 }
 
@@ -288,6 +314,23 @@ void VulkanResources::release(ResourceHandle handle)
     vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
 
     m_container.free(handle);
+}
+
+void VulkanResources::release(ResourceTable handle)
+{
+    CPY_ASSERT(handle.valid());
+    if (!handle.valid())
+        return;
+
+    CPY_ASSERT(m_tables.contains(handle));
+    if (!m_tables.contains(handle))
+        return;
+
+    std::unique_lock lock(m_mutex);
+    VulkanResourceTable& table = m_tables[handle];
+    vkDestroyDescriptorSetLayout(m_device.vkDevice(), table.layout, nullptr);
+    m_device.descriptorSetPools().free(table.descriptors);
+    m_tables.free(handle);
 }
 
 }

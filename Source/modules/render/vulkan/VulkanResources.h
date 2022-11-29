@@ -3,6 +3,7 @@
 #include <coalpy.render/Resources.h>
 #include <coalpy.core/HandleContainer.h>
 #include <vulkan/vulkan.h>
+#include "VulkanDescriptorSetPools.h"
 
 #include <mutex>
 
@@ -60,6 +61,7 @@ struct VulkanResourceTable
 
     Type type = Type::In;
     VkDescriptorSetLayout layout;
+    VulkanDescriptorTable descriptors;
 };
 
 class VulkanResources
@@ -79,6 +81,7 @@ public:
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
 
     void release(ResourceHandle handle);
+    void release(ResourceTable handle);
 
 private:
     std::mutex m_mutex;

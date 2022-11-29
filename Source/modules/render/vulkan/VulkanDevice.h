@@ -18,7 +18,7 @@ class VulkanShaderDb;
 namespace render
 {
 
-class VulkanDescriptorSetCache;
+class VulkanDescriptorSetPools;
 class VulkanResources;
 
 class VulkanDevice : public TDevice<VulkanDevice>
@@ -55,7 +55,7 @@ public:
     VkDevice vkDevice() const { return m_vkDevice; }
     VkPhysicalDevice vkPhysicalDevice() const { return m_vkPhysicalDevice; }
 
-    VulkanDescriptorSetCache& descriptorSetCache() { return *m_descriptorSetCache; }
+    VulkanDescriptorSetPools& descriptorSetPools() { return *m_descriptorSetPools; }
     int graphicsFamilyQueueIndex() const { return m_queueFamIndex; }
 
     bool findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, uint32_t& outMemType);
@@ -70,7 +70,7 @@ private:
     VkPhysicalDevice m_vkPhysicalDevice;
     VkPhysicalDeviceMemoryProperties m_vkMemProps;
     VkDevice m_vkDevice;
-    VulkanDescriptorSetCache* m_descriptorSetCache;
+    VulkanDescriptorSetPools* m_descriptorSetPools;
     VulkanResources* m_resources;
     int m_queueFamIndex;
 

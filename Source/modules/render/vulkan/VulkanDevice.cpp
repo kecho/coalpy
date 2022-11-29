@@ -7,7 +7,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 #endif
-#include "VulkanDescriptorSetCache.h"
+#include "VulkanDescriptorSetPools.h"
 #include "VulkanDisplay.h"
 #include "VulkanResources.h"
 #include <coalpy.render/ShaderDefs.h>
@@ -18,7 +18,7 @@
 
 #define DEBUG_PRINT_EXTENSIONS 0
 #define ENABLE_DEBUG_CALLBACK_EXT 1
-#define TEST_MUTABLE_DESCRIPTORS 0
+#define TEST_MUTABLE_DESCRIPTORS 1
 #define TEST_DESCRIPTORS_LAYOUT_COPY 0
 
 namespace coalpy
@@ -76,6 +76,7 @@ const std::set<std::string>& getRequestedDeviceExtensionNames()
     if (layers.empty())
     {
         layers.emplace(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+        layers.emplace(VK_KHR_MAINTENANCE_1_EXTENSION_NAME);
     }
     return layers;
 }
@@ -365,7 +366,12 @@ VkDevice createVkDevice(
     {
         auto it = requiredExtensionNames.find(std::string(extProperty.extensionName));
         if (it != requiredExtensionNames.end())
+        {
             devicePropertyNames.emplace_back(extProperty.extensionName);
+#if DEBUG_PRINT_EXTENSIONS
+            std::cout << "Device Ext: " << extProperty.extensionName << std::endl;
+#endif
+        }
     }
 
     // Create queue information structure used by device based on the previously fetched queue information from the physical device
@@ -412,7 +418,7 @@ VkDevice createVkDevice(
 
 void VulkanDevice::testApiFuncs()
 {
-#if TEST_MUTABLE_DESCRIPTORS
+#if 0
     {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
         
@@ -485,7 +491,7 @@ void VulkanDevice::testApiFuncs()
             
             VkDescriptorSetLayoutBinding b1 = {};
             b1.binding = 99;
-            b1.descriptorCount = 1;
+            b1.descriptorCount = 30;
             b1.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
             b1.stageFlags = VK_SHADER_STAGE_ALL;
             bindings.push_back(b1);
@@ -500,15 +506,14 @@ void VulkanDevice::testApiFuncs()
         }
 
         std::vector<VkDescriptorPoolSize> poolSizes = {
-            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 10 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 10 },
+            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1 },
         };
         VkDescriptorPoolCreateInfo poolInfo = {};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.maxSets = 16;
         poolInfo.poolSizeCount = (int)poolSizes.size();
         poolInfo.pPoolSizes = poolSizes.data();
-
 
         VkDescriptorPool pool = {};
         VK_OK(vkCreateDescriptorPool(m_vkDevice, &poolInfo, nullptr, &pool));
@@ -520,7 +525,12 @@ void VulkanDevice::testApiFuncs()
         allocInfo0.descriptorSetCount = 2;
         allocInfo0.pSetLayouts = layouts;
 
-        VK_OK(vkAllocateDescriptorSets(m_vkDevice, &allocInfo0, sets));
+        if (vkAllocateDescriptorSets(m_vkDevice, &allocInfo0, sets) != VK_SUCCESS || sets[0] == nullptr)
+        {
+            std::cerr << "ERROR ALLOCATING" << std::endl;
+        }
+        else std::cerr << "ALLOCATING COMPLETE" << std::endl;
+
 
         VkCopyDescriptorSet copySet = {};
         copySet.sType = VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET;
@@ -570,7 +580,7 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
 
     vkGetPhysicalDeviceMemoryProperties(m_vkPhysicalDevice, &m_vkMemProps);
 
-    m_descriptorSetCache = new VulkanDescriptorSetCache(*this);
+    m_descriptorSetPools = new VulkanDescriptorSetPools(*this);
     m_resources = new VulkanResources(*this);
     
     testApiFuncs();
@@ -582,7 +592,7 @@ VulkanDevice::~VulkanDevice()
         m_shaderDb->setParentDevice(nullptr, nullptr);
 
     delete m_resources;
-    delete m_descriptorSetCache;
+    delete m_descriptorSetPools;
     vkDestroyDevice(m_vkDevice, nullptr); 
     destroyVulkanInstance(m_vkInstance);    
 }
@@ -679,6 +689,7 @@ void VulkanDevice::release(ResourceHandle resource)
 
 void VulkanDevice::release(ResourceTable table)
 {
+    m_resources->release(table);
 }
 
 SmartPtr<IDisplay> VulkanDevice::createDisplay(const DisplayConfig& config)

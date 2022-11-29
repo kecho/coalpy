@@ -88,8 +88,10 @@ void AssertSystem::onAssert(const char* condition, const char* file, unsigned in
 
 void AssertSystem::onError(const char* condition, const char* file, unsigned int line, const char* fmt, ...)
 {
+    std::cout << "ASSERT: " << condition << std::endl;
     if (!s_errorHandler)
         return;
+    std::cout << "ASSERT: " << condition << std::endl;
 
     char buffer[(int)ErrorStringBufferSize];
     if (fmt)
