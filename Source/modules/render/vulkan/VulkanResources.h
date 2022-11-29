@@ -28,11 +28,14 @@ struct VulkanResource
         bool isStorageBuffer;
         VkBufferView vkBufferView;
         VkBuffer vkBuffer;
+        VkDeviceSize size;
     };
 
     struct TextureData
     {
         VkImage vkImage;
+        VkImageView vkSrvView;
+        VkImageView vkUavView;
     };
 
     ResourceHandle handle;

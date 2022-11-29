@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "VulkanFormats.h"
 #include <coalpy.core/Assert.h>
+#include <variant>
 #include <iostream>
 
 namespace coalpy
@@ -98,6 +99,7 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
     }
 
     bufferData.vkBufferView = {};
+    bufferData.size = createInfo.size;
     if (desc.type == BufferType::Standard)
     {
         VkBufferViewCreateInfo bufferViewInfo = {};
@@ -139,12 +141,20 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc)
     if ((desc.memFlags & MemFlag_GpuWrite) != 0)
         createInfo.usage |= VK_IMAGE_USAGE_STORAGE_BIT;
 
-    //TODO: figure out how to do cube maps
     bool isArray = (desc.type == TextureType::k2dArray || desc.type == TextureType::CubeMapArray);
-    if (desc.type == TextureType::k2d || desc.type == TextureType::k2dArray || desc.type == TextureType::CubeMap || desc.type == TextureType::CubeMapArray)
-        createInfo.imageType = VK_IMAGE_TYPE_2D;
-    else if (desc.type == TextureType::k3d)
-        createInfo.imageType = VK_IMAGE_TYPE_3D;
+    switch (desc.type)
+    {
+    case TextureType::k1d:
+        createInfo.imageType = VK_IMAGE_TYPE_1D; break;
+    case TextureType::k3d:
+        createInfo.imageType = VK_IMAGE_TYPE_3D; break;
+    case TextureType::k2d:
+    case TextureType::k2dArray:
+    case TextureType::CubeMap:
+    case TextureType::CubeMapArray:
+    default:
+        createInfo.imageType = VK_IMAGE_TYPE_2D; break;
+    }
 
     createInfo.format = getVkFormat(desc.format);
     createInfo.extent = VkExtent3D { desc.width, desc.height, desc.type == TextureType::k3d ? desc.depth : 1 };
@@ -199,6 +209,40 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc)
         return TextureResult  { ResourceResult::InternalApiFailure, Texture(), "Failed to bind memory into vkimage." };
     }
 
+    if ((resource.memFlags & MemFlag_GpuRead) != 0)
+    {
+        VkImageViewCreateInfo srvViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO, nullptr };
+        srvViewInfo.flags = 0u;
+        srvViewInfo.image = textureData.vkImage;
+    
+        switch (desc.type)
+        {
+        case TextureType::k1d:
+            srvViewInfo.viewType = VK_IMAGE_VIEW_TYPE_1D; break;
+        case TextureType::k2dArray:
+            srvViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY; break;
+        case TextureType::k3d:
+            srvViewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D; break;
+        case TextureType::CubeMap:
+            srvViewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE; break;
+        case TextureType::CubeMapArray:
+            srvViewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY; break;
+        case TextureType::k2d:
+        default:
+            srvViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; break;
+        }
+        
+        srvViewInfo.format = createInfo.format;
+        srvViewInfo.components = {};
+        srvViewInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0u, desc.mipLevels, 0u, isArray ? desc.depth : 1 };
+        if (vkCreateImageView(m_device.vkDevice(), &srvViewInfo, nullptr, &textureData.vkSrvView) != VK_SUCCESS)
+        {
+            vkDestroyImage(m_device.vkDevice(), textureData.vkImage, nullptr);
+            vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
+            m_container.free(handle);
+            return TextureResult { ResourceResult::InternalApiFailure, Texture(), "Failed to create a texture image view" };
+        }
+    }
     return TextureResult { ResourceResult::Ok, { handle.handleId } };
 }
 
@@ -260,27 +304,58 @@ InResourceTableResult VulkanResources::createInResourceTable(const ResourceTable
     table.layout = setLayout;
     table.descriptors = m_device.descriptorSetPools().allocate(table.layout);
 
+    union DescriptorVariantInfo
+    {
+        VkDescriptorImageInfo imageInfo;
+        VkDescriptorBufferInfo texelBufferInfo;
+        VkBufferView bufferInfo;
+    };
     std::vector<VkWriteDescriptorSet> writes;
-    std::vector<VkDescriptorImageInfo> imgInfos;
-    std::vector<VkDescriptorBufferInfo> buffInfos;
+    std::vector<DescriptorVariantInfo> variantInfos;
     writes.reserve(resources.size());
-    //TODO: finish this
+    variantInfos.reserve(resources.size());
+
     for (int i = 0; i < (int)resources.size(); ++i)
     {
         VulkanResource resource = *resources[i];
-        VkWriteDescriptorSet write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr };
+        writes.emplace_back();
+        VkWriteDescriptorSet& write = writes.back();
+        write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr };
         write.dstSet = table.descriptors.descriptors;
         write.dstBinding = i;
         write.dstArrayElement = 0;
         write.descriptorCount = 1;
         write.descriptorType = bindings[i].descriptorType;
+        
+        variantInfos.emplace_back();
+        DescriptorVariantInfo& variantInfo = variantInfos.back();
         if (resource.isBuffer())
         {
-            buffInfos.emplace_back();   
-            VkDescriptorBufferInfo& info = buffInfos.back();
+            if (resource.bufferData.isStorageBuffer)
+            {
+                auto& info = variantInfo.texelBufferInfo;
+                info.buffer = resource.bufferData.vkBuffer;
+                info.offset = 0u;
+                info.range = resource.bufferData.size;
+                write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                write.pBufferInfo = &info;
+            }
+            else
+            {
+                auto& info = variantInfo.bufferInfo;
+                info = resource.bufferData.vkBufferView;
+                write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+                write.pTexelBufferView = &info;
+            }
         }
         else if (resource.isTexture())
         {
+            auto& info = variantInfo.imageInfo;
+            info = {};
+            info.imageView = resource.textureData.vkSrvView;
+            info.imageLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL;
+            write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            write.pImageInfo = &info;
         }
     }
 
