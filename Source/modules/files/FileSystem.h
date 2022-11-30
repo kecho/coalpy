@@ -15,6 +15,12 @@
 namespace coalpy
 {
 
+#ifdef __linux__
+#define FILE_SEP '/'
+#else
+#define FILE_SEP '\\'
+#endif
+
 class FileSystem : public IFileSystem
 {
 public:

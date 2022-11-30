@@ -38,7 +38,7 @@ AsyncFileHandle FileSystem::read(const FileReadRequest& request)
                 if (root[root.size() - 1] == '/' || root[root.size() - 1] == '\\')
                     requestData->filenames.push(root + request.path);
                 else
-                    requestData->filenames.push(root + '\\' + request.path);
+                    requestData->filenames.push(root + FILE_SEP + request.path);
             }
         }
 

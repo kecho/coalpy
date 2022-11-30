@@ -58,6 +58,9 @@ void BaseShaderDb::preparePdbDir()
     if (m_createdPdbDir || !m_desc.dumpPDBs)
         return;
     
+#ifdef __linux__
+    std::cout << "Shader PDB not working in linux. Option ignored" << std::endl;
+#else
     FileAttributes attributes = {};
     m_desc.fs->getFileAttributes(s_pdbDir, attributes);
     if (attributes.exists && attributes.isDir)
@@ -67,6 +70,7 @@ void BaseShaderDb::preparePdbDir()
 
     CPY_ASSERT_FMT(m_pdbDirReady, "Could not created pdb directory %s", s_pdbDir);
     m_createdPdbDir = true;
+#endif
 }
 
 void BaseShaderDb::setParentDevice(render::IDevice* device, const render::DeviceRuntimeInfo* runtimeInfo)
