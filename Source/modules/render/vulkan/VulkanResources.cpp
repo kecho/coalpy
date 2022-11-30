@@ -121,6 +121,36 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
     return BufferResult { ResourceResult::Ok, { handle.handleId } };
 }
 
+VkImageViewCreateInfo VulkanResources::createVulkanImageViewDescTemplate(const TextureDesc& desc, VkImage image) const
+{
+    const bool isArray = (desc.type == TextureType::k2dArray || desc.type == TextureType::CubeMapArray);
+    VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO, nullptr };
+    viewInfo.flags = 0u;
+    viewInfo.image = image;
+    
+    switch (desc.type)
+    {
+    case TextureType::k1d:
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_1D; break;
+    case TextureType::k2dArray:
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY; break;
+    case TextureType::k3d:
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D; break;
+    case TextureType::CubeMap:
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE; break;
+    case TextureType::CubeMapArray:
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY; break;
+    case TextureType::k2d:
+    default:
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; break;
+    }
+    
+    viewInfo.format = getVkFormat(desc.format);
+    viewInfo.components = {};
+    viewInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0u, desc.mipLevels, 0u, isArray ? desc.depth : 1 };
+    return viewInfo;
+}
+
 TextureResult VulkanResources::createTexture(const TextureDesc& desc)
 {
     std::unique_lock lock(m_mutex);
@@ -211,30 +241,7 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc)
 
     if ((resource.memFlags & MemFlag_GpuRead) != 0)
     {
-        VkImageViewCreateInfo srvViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO, nullptr };
-        srvViewInfo.flags = 0u;
-        srvViewInfo.image = textureData.vkImage;
-    
-        switch (desc.type)
-        {
-        case TextureType::k1d:
-            srvViewInfo.viewType = VK_IMAGE_VIEW_TYPE_1D; break;
-        case TextureType::k2dArray:
-            srvViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY; break;
-        case TextureType::k3d:
-            srvViewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D; break;
-        case TextureType::CubeMap:
-            srvViewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE; break;
-        case TextureType::CubeMapArray:
-            srvViewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY; break;
-        case TextureType::k2d:
-        default:
-            srvViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; break;
-        }
-        
-        srvViewInfo.format = createInfo.format;
-        srvViewInfo.components = {};
-        srvViewInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0u, desc.mipLevels, 0u, isArray ? desc.depth : 1 };
+        VkImageViewCreateInfo srvViewInfo = createVulkanImageViewDescTemplate(desc, textureData.vkImage);
         if (vkCreateImageView(m_device.vkDevice(), &srvViewInfo, nullptr, &textureData.vkSrvView) != VK_SUCCESS)
         {
             vkDestroyImage(m_device.vkDevice(), textureData.vkImage, nullptr);
@@ -243,6 +250,23 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc)
             return TextureResult { ResourceResult::InternalApiFailure, Texture(), "Failed to create a texture image view" };
         }
     }
+
+    textureData.uavCounts = 0;
+    if ((resource.memFlags & MemFlag_GpuWrite) != 0)
+    {
+        VkImageViewCreateInfo uavViewInfo = createVulkanImageViewDescTemplate(desc, textureData.vkImage);
+        for (int mip = 0; mip < std::min(desc.mipLevels, (unsigned)VulkanMaxMips); ++mip)
+        {
+            uavViewInfo.subresourceRange.baseMipLevel = mip;
+            uavViewInfo.subresourceRange.levelCount = 1;
+            if (vkCreateImageView(m_device.vkDevice(), &uavViewInfo, nullptr, &textureData.vkUavViews[mip]) != VK_SUCCESS)
+            {
+                CPY_ERROR_MSG(false, "Failed creating mip UAV for texture.");
+            }
+            ++textureData.uavCounts;
+        }
+    }
+
     return TextureResult { ResourceResult::Ok, { handle.handleId } };
 }
 
@@ -252,57 +276,57 @@ TextureResult VulkanResources::recreateTexture(Texture texture, const TextureDes
     return TextureResult();
 }
 
-InResourceTableResult VulkanResources::createInResourceTable(const ResourceTableDesc& desc)
+bool VulkanResources::queryResources(const ResourceHandle* handles, int counts, std::vector<const VulkanResource*>& outResources) const
 {
-    std::unique_lock lock(m_mutex);
-    std::vector<VulkanResource*> resources;
-    resources.reserve(desc.resourcesCount);
-    for (int i = 0; i < desc.resourcesCount; ++i)
+    outResources.reserve(counts);
+    for (int i = 0; i < counts; ++i)
     {
-        if (!m_container.contains(desc.resources[i]))
+        if (!m_container.contains(handles[i]))
         {
-            return InResourceTableResult { ResourceResult::InvalidHandle, InResourceTable(), "Passed an invalid resource to in resource table" };
+            return false;
         }
         
-        resources.push_back(&m_container[desc.resources[i]]);
+        const VulkanResource& resource = m_container[handles[i]];
+        outResources.push_back(&resource);
     }
 
-    std::vector<VkDescriptorSetLayoutBinding> bindings;
-    bindings.reserve(desc.resourcesCount);
-    for (int i = 0; i < desc.resourcesCount; ++i)
-    {
-        VulkanResource& resource = *resources[i];
-        if ((resource.memFlags & MemFlag_GpuRead) == 0)
-        {
-            return InResourceTableResult { ResourceResult::InvalidParameter, InResourceTable(), "All resources in InTable must have the flag GpuRead." };
-        }
+    return true;
+}
 
-        VkDescriptorSetLayoutBinding& binding = bindings[i];
+bool VulkanResources::createBindings(VulkanResourceTable::Type tableType, const VulkanResource** resources, int counts, std::vector<VkDescriptorSetLayoutBinding>& outBindings) const
+{
+    const bool isRead = tableType == VulkanResourceTable::Type::In;
+    auto flagToCheck = isRead ? MemFlag_GpuRead : MemFlag_GpuWrite;
+    outBindings.reserve(counts);
+    for (int i = 0; i < counts; ++i)
+    {
+        const VulkanResource& resource = *resources[i];
+        if ((resource.memFlags & flagToCheck) == 0)
+            return false;
+
+        outBindings.emplace_back();
+        VkDescriptorSetLayoutBinding& binding = outBindings.back();
         binding = {};
         binding.binding = (uint32_t)i;
         binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
         binding.descriptorCount = 1;
         if (resource.isBuffer())
-            binding.descriptorType = resource.bufferData.isStorageBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER : VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+            binding.descriptorType = resource.bufferData.isStorageBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER : (isRead ? VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER);
         else if (resource.isTexture())
-            binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            binding.descriptorType = isRead ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     }
 
-    VkDescriptorSetLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, nullptr };
-    layoutInfo.bindingCount = (uint32_t)bindings.size();
-    layoutInfo.pBindings = bindings.data();
+    return true;
+}
 
-    VkDescriptorSetLayout setLayout = {};
-    if (vkCreateDescriptorSetLayout(m_device.vkDevice(), &layoutInfo, nullptr, &setLayout) != VK_SUCCESS)
-    {
-        return InResourceTableResult { ResourceResult::InvalidParameter, InResourceTable(), "Could not create descriptor set layout." };
-    }
-
-    ResourceTable handle;
-    VulkanResourceTable& table = m_tables.allocate(handle);
-    table.type = VulkanResourceTable::Type::In;
-    table.layout = setLayout;
-    table.descriptors = m_device.descriptorSetPools().allocate(table.layout);
+ResourceTable VulkanResources::createAndFillTable(
+        VulkanResourceTable::Type tableType,
+        const VulkanResource** resources,
+        const VkDescriptorSetLayoutBinding* bindings,
+        const int* uavTargetMips,
+        int counts, VkDescriptorSetLayout layout)
+{
+    bool isRead = tableType == VulkanResourceTable::Type::In;
 
     union DescriptorVariantInfo
     {
@@ -310,14 +334,21 @@ InResourceTableResult VulkanResources::createInResourceTable(const ResourceTable
         VkDescriptorBufferInfo texelBufferInfo;
         VkBufferView bufferInfo;
     };
+
+    ResourceTable handle;
+    VulkanResourceTable& table = m_tables.allocate(handle);
+    table.type = tableType;
+    table.layout = layout;
+    table.descriptors = m_device.descriptorSetPools().allocate(layout);
+
     std::vector<VkWriteDescriptorSet> writes;
     std::vector<DescriptorVariantInfo> variantInfos;
-    writes.reserve(resources.size());
-    variantInfos.reserve(resources.size());
+    writes.reserve(counts);
+    variantInfos.reserve(counts);
 
-    for (int i = 0; i < (int)resources.size(); ++i)
+    for (int i = 0; i < (int)counts; ++i)
     {
-        VulkanResource resource = *resources[i];
+        const VulkanResource& resource = *resources[i];
         writes.emplace_back();
         VkWriteDescriptorSet& write = writes.back();
         write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr };
@@ -344,7 +375,7 @@ InResourceTableResult VulkanResources::createInResourceTable(const ResourceTable
             {
                 auto& info = variantInfo.bufferInfo;
                 info = resource.bufferData.vkBufferView;
-                write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+                write.descriptorType = isRead ? VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
                 write.pTexelBufferView = &info;
             }
         }
@@ -352,15 +383,71 @@ InResourceTableResult VulkanResources::createInResourceTable(const ResourceTable
         {
             auto& info = variantInfo.imageInfo;
             info = {};
-            info.imageView = resource.textureData.vkSrvView;
-            info.imageLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL;
-            write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            if (isRead)
+                info.imageView = resource.textureData.vkSrvView;
+            else
+                info.imageView = uavTargetMips ? resource.textureData.vkUavViews[uavTargetMips[i]] : resource.textureData.vkUavViews[0];
+            info.imageLayout = isRead ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL;
+            write.descriptorType = isRead ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
             write.pImageInfo = &info;
         }
     }
 
+    vkUpdateDescriptorSets(m_device.vkDevice(), (uint32_t)writes.size(), writes.data(), 0u, nullptr);
+    
+    return handle;
+}
+
+InResourceTableResult VulkanResources::createInResourceTable(const ResourceTableDesc& desc)
+{
+    std::unique_lock lock(m_mutex);
+    std::vector<const VulkanResource*> resources;
+    if (!queryResources(desc.resources, desc.resourcesCount, resources))
+            return InResourceTableResult { ResourceResult::InvalidHandle, InResourceTable(), "Passed an invalid resource to in resource table" };
+
+    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    if (!createBindings(VulkanResourceTable::Type::In, resources.data(), (int)resources.size(), bindings))
+            return InResourceTableResult { ResourceResult::InvalidParameter, InResourceTable(), "All resources in InTable must have the flag GpuRead." };
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, nullptr };
+    layoutInfo.bindingCount = (uint32_t)bindings.size();
+    layoutInfo.pBindings = bindings.data();
+
+    VkDescriptorSetLayout layout = {};
+    if (vkCreateDescriptorSetLayout(m_device.vkDevice(), &layoutInfo, nullptr, &layout) != VK_SUCCESS)
+    {
+        return InResourceTableResult { ResourceResult::InvalidParameter, InResourceTable(), "Could not create descriptor set layout." };
+    }
+
+    ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::In, resources.data(), bindings.data(), desc.uavTargetMips, (int)resources.size(), layout);
     return InResourceTableResult { ResourceResult::Ok, InResourceTable { handle.handleId } };
 }
+
+OutResourceTableResult VulkanResources::createOutResourceTable(const ResourceTableDesc& desc)
+{
+    std::unique_lock lock(m_mutex);
+    std::vector<const VulkanResource*> resources;
+    if (!queryResources(desc.resources, desc.resourcesCount, resources))
+            return OutResourceTableResult { ResourceResult::InvalidHandle, OutResourceTable(), "Passed an invalid resource to out resource table" };
+
+    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    if (!createBindings(VulkanResourceTable::Type::Out, resources.data(), (int)resources.size(), bindings))
+            return OutResourceTableResult { ResourceResult::InvalidParameter, OutResourceTable(), "All resources in InTable must have the flag GpuWrite." };
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, nullptr };
+    layoutInfo.bindingCount = (uint32_t)bindings.size();
+    layoutInfo.pBindings = bindings.data();
+
+    VkDescriptorSetLayout layout = {};
+    if (vkCreateDescriptorSetLayout(m_device.vkDevice(), &layoutInfo, nullptr, &layout) != VK_SUCCESS)
+    {
+        return OutResourceTableResult { ResourceResult::InvalidParameter, OutResourceTable(), "Could not create descriptor set layout." };
+    }
+
+    ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::Out, resources.data(), bindings.data(), desc.uavTargetMips, (int)resources.size(), layout);
+    return OutResourceTableResult { ResourceResult::Ok, OutResourceTable { handle.handleId } };
+}
+
 
 void VulkanResources::release(ResourceHandle handle)
 {
@@ -383,9 +470,14 @@ void VulkanResources::release(ResourceHandle handle)
     }
     else if (resource.isTexture())
     {
+        if (resource.textureData.vkSrvView)
+            vkDestroyImageView(m_device.vkDevice(), resource.textureData.vkSrvView, nullptr);
+        for (int mip = 0; mip < resource.textureData.uavCounts; ++mip)
+            vkDestroyImageView(m_device.vkDevice(), resource.textureData.vkUavViews[mip], nullptr);
         if (resource.textureData.vkImage)
             vkDestroyImage(m_device.vkDevice(), resource.textureData.vkImage, nullptr);
     }
+
     vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
 
     m_container.free(handle);

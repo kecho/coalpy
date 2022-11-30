@@ -4,7 +4,7 @@
 #include <coalpy.core/HandleContainer.h>
 #include <vulkan/vulkan.h>
 #include "VulkanDescriptorSetPools.h"
-
+#include <vector>
 #include <mutex>
 
 namespace coalpy
@@ -12,8 +12,9 @@ namespace coalpy
 namespace render
 {
 
-class VulkanDevice;
 
+class VulkanDevice;
+enum { VulkanMaxMips = 14 };
 
 struct VulkanResource
 {
@@ -35,7 +36,8 @@ struct VulkanResource
     {
         VkImage vkImage;
         VkImageView vkSrvView;
-        VkImageView vkUavView;
+        VkImageView vkUavViews[VulkanMaxMips];
+        uint32_t uavCounts;
     };
 
     ResourceHandle handle;
@@ -82,11 +84,23 @@ public:
     TextureResult createTexture(const TextureDesc& desc);
     TextureResult recreateTexture(Texture texture, const TextureDesc& desc);
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
+    OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);
 
     void release(ResourceHandle handle);
     void release(ResourceTable handle);
 
 private:
+    VkImageViewCreateInfo createVulkanImageViewDescTemplate(const TextureDesc& desc, VkImage image) const;
+    bool queryResources(const ResourceHandle* handles, int counts, std::vector<const VulkanResource*>& outResources) const;
+    bool createBindings(VulkanResourceTable::Type tableType, const VulkanResource** resources, int counts, std::vector<VkDescriptorSetLayoutBinding>& outBindings) const;
+
+    ResourceTable createAndFillTable(
+        VulkanResourceTable::Type tableType,
+        const VulkanResource** resources,
+        const VkDescriptorSetLayoutBinding* bindings,
+        const int* uavTargetMips,
+        int counts, VkDescriptorSetLayout layout);
+
     std::mutex m_mutex;
     VulkanDevice& m_device;
     HandleContainer<ResourceHandle, VulkanResource, MaxResources> m_container;

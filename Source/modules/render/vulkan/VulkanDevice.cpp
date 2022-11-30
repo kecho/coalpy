@@ -18,7 +18,8 @@
 
 #define DEBUG_PRINT_EXTENSIONS 0
 #define ENABLE_DEBUG_CALLBACK_EXT 1
-#define TEST_MUTABLE_DESCRIPTORS 1
+#define ENABLE_MUTABLE_DESCRIPTORS_EXT 1
+#define TEST_MUTABLE_DESCRIPTORS 0
 #define TEST_DESCRIPTORS_LAYOUT_COPY 0
 
 namespace coalpy
@@ -385,7 +386,7 @@ VkDevice createVkDevice(
     queueCreateInfo.pNext = NULL;
     queueCreateInfo.flags = 0;
 
-#if TEST_MUTABLE_DESCRIPTORS
+#if ENABLE_MUTABLE_DESCRIPTORS_EXT
     VkPhysicalDeviceMutableDescriptorTypeFeaturesVALVE valveF = {};
     valveF.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_VALVE;
     valveF.pNext = nullptr;
@@ -401,7 +402,7 @@ VkDevice createVkDevice(
     createInfo.enabledLayerCount = static_cast<uint32_t>(layerNames.size());
     createInfo.ppEnabledExtensionNames = devicePropertyNames.data();
     createInfo.enabledExtensionCount = static_cast<uint32_t>(devicePropertyNames.size());
-#if TEST_MUTABLE_DESCRIPTORS
+#if ENABLE_MUTABLE_DESCRIPTORS_EXT
     createInfo.pNext = &valveF;
 #endif
     createInfo.pEnabledFeatures = NULL;
@@ -418,7 +419,7 @@ VkDevice createVkDevice(
 
 void VulkanDevice::testApiFuncs()
 {
-#if 0
+#if TEST_MUTABLE_DESCRIPTORS
     {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
         
@@ -659,7 +660,7 @@ InResourceTableResult VulkanDevice::createInResourceTable  (const ResourceTableD
 
 OutResourceTableResult VulkanDevice::createOutResourceTable (const ResourceTableDesc& config)
 {
-    return OutResourceTableResult();
+    return m_resources->createOutResourceTable(config);
 }
 
 SamplerTableResult  VulkanDevice::createSamplerTable (const ResourceTableDesc& config)
