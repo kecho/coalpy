@@ -29,7 +29,6 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
     if (!handle.valid())
         return BufferResult  { ResourceResult::InvalidHandle, Buffer(), "Not enough slots." };
 
-    VkMemoryPropertyFlags memProFlags = 0u;
     VkBufferCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     createInfo.usage |= desc.isConstantBuffer ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : (VkBufferUsageFlags)0u;
@@ -50,8 +49,6 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
         resource.bufferData.isStorageBuffer = true;
     }
     resource.memFlags = desc.memFlags;
-
-    memProFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
     createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; //not exposed, cant do async in coalpy yet.
     createInfo.queueFamilyIndexCount = 1;
@@ -159,7 +156,6 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc)
     if (!handle.valid())
         return TextureResult  { ResourceResult::InvalidHandle, Texture(), "Not enough slots." };
 
-    VkMemoryPropertyFlags memProFlags = 0u;
     VkImageCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     
