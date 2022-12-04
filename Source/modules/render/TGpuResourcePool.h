@@ -1,4 +1,5 @@
 #include <Config.h>
+#include <queue>
 #include <coalpy.core/Assert.h>
 
 namespace coalpy
@@ -10,7 +11,7 @@ template<class AllocDesc, class AllocationHandle, class HeapType, class GpuAlloc
 class TGpuResourcePool
 {
 public:
-    TGpuResourcePool(FenceType fence, GpuAllocatorType& allocator)
+    TGpuResourcePool(FenceType& fence, GpuAllocatorType& allocator)
     : m_fence(fence) 
     , m_nextFenceVal(0ull)
     , m_allocator(allocator)
