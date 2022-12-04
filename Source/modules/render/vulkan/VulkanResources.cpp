@@ -21,13 +21,16 @@ VulkanResources::~VulkanResources()
 }
 
 
-BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
+BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpecialFlags specialFlags)
 {
     std::unique_lock lock(m_mutex);
     ResourceHandle handle;
     VulkanResource& resource = m_container.allocate(handle);
     if (!handle.valid())
         return BufferResult  { ResourceResult::InvalidHandle, Buffer(), "Not enough slots." };
+
+    if ((desc.memFlags & MemFlag_GpuWrite) != 0 && (desc.memFlags & MemFlag_GpuRead) != 0 && (specialFlags & ResourceSpecialFlag_CpuReadback) != 0)
+        return BufferResult  { ResourceResult::InvalidHandle, Buffer(), "Unsupported special flags combined with mem flags." };
 
     VkBufferCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -37,7 +40,7 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
     {
         if ((desc.memFlags & MemFlag_GpuRead) != 0)
             createInfo.usage |= VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
-        if ((desc.memFlags & MemFlag_GpuWrite) != 0)
+        if ((desc.memFlags & MemFlag_GpuWrite) != 0 || (specialFlags & ResourceSpecialFlag_CpuReadback) != 0)
             createInfo.usage |= VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT;
         createInfo.size = getVkFormatStride(desc.format) * desc.elementCount;
     }
@@ -70,10 +73,17 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc)
     resource.actualSize = memReqs.size;
     resource.alignment = memReqs.alignment;
 
+    VkMemoryPropertyFlags memProperties = {};
+    // as suggested in https://gpuopen.com/learn/vulkan-device-memory
+    if ((specialFlags & ResourceSpecialFlag_CpuReadback) != 0)
+    {
+        memProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    }
+
     VkMemoryAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memReqs.size;
-    if (!m_device.findMemoryType(memReqs.memoryTypeBits, 0u, allocInfo.memoryTypeIndex)) 
+    if (!m_device.findMemoryType(memReqs.memoryTypeBits, memProperties, allocInfo.memoryTypeIndex)) 
     {
         vkDestroyBuffer(m_device.vkDevice(), bufferData.vkBuffer, nullptr);
         m_container.free(handle);

@@ -19,7 +19,9 @@ namespace render
 {
 
 class VulkanDescriptorSetPools;
+class VulkanReadbackBufferPool;
 class VulkanResources;
+class VulkanQueues;
 
 class VulkanDevice : public TDevice<VulkanDevice>
 {
@@ -58,9 +60,13 @@ public:
     VulkanDescriptorSetPools& descriptorSetPools() { return *m_descriptorSetPools; }
     int graphicsFamilyQueueIndex() const { return m_queueFamIndex; }
 
+    VulkanReadbackBufferPool& readbackPool() { return *m_readbackPool; }
+
     bool findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, uint32_t& outMemType);
 
+    VulkanQueues& queues() { return *m_queues; }
     VulkanResources& resources() { return *m_resources; }
+
 private:
     void createSwapchain();
     DeviceInfo m_info;
@@ -71,7 +77,9 @@ private:
     VkPhysicalDeviceMemoryProperties m_vkMemProps;
     VkDevice m_vkDevice;
     VulkanDescriptorSetPools* m_descriptorSetPools;
+    VulkanQueues* m_queues;
     VulkanResources* m_resources;
+    VulkanReadbackBufferPool* m_readbackPool;
     int m_queueFamIndex;
 
     void testApiFuncs();

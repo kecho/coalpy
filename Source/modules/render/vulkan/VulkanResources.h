@@ -12,6 +12,16 @@ namespace coalpy
 namespace render
 {
 
+enum ResourceSpecialFlags : int
+{
+    ResourceSpecialFlag_None = 0,
+    //unused:
+    //ResourceSpecialFlag_NoDeferDelete = 1 << 0,
+    //ResourceSpecialFlag_CanDenyShaderResources = 1 << 1,
+    //ResourceSpecialFlag_TrackTables = 1 << 2,
+    ResourceSpecialFlag_CpuReadback = 1 << 3,
+    //ResourceSpecialFlag_CpuUpload = 1 << 4,
+};
 
 class VulkanDevice;
 enum { VulkanMaxMips = 14 };
@@ -80,11 +90,12 @@ public:
     VulkanResources(VulkanDevice& device);
     ~VulkanResources();
 
-    BufferResult createBuffer(const BufferDesc& desc);
+    BufferResult createBuffer(const BufferDesc& desc, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None);
     TextureResult createTexture(const TextureDesc& desc);
     TextureResult recreateTexture(Texture texture, const TextureDesc& desc);
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
     OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);
+    VulkanResource& unsafeGetResource(ResourceHandle handle) { return m_container[handle]; }
 
     void release(ResourceHandle handle);
     void release(ResourceTable handle);

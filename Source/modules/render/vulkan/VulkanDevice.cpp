@@ -10,6 +10,8 @@
 #include "VulkanDescriptorSetPools.h"
 #include "VulkanDisplay.h"
 #include "VulkanResources.h"
+#include "VulkanReadbackBufferPool.h"
+#include "VulkanQueues.h"
 #include <coalpy.render/ShaderDefs.h>
 #include <iostream>
 #include <set>
@@ -337,7 +339,8 @@ int getGraphicsComputeQueueFamilyIndex(VkPhysicalDevice device)
         const VkQueueFamilyProperties& props = famProps[i];
         if (props.queueCount > 0 &&
            (props.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0 &&
-           (props.queueFlags & VK_QUEUE_COMPUTE_BIT) != 0)
+           (props.queueFlags & VK_QUEUE_COMPUTE_BIT) != 0 &&
+           (props.queueFlags & VK_QUEUE_TRANSFER_BIT) != 0)
             return i;
     }
 
@@ -380,7 +383,7 @@ VkDevice createVkDevice(
     VkDeviceQueueCreateInfo queueCreateInfo;
     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queueCreateInfo.queueFamilyIndex = queueFamilyIdx;
-    queueCreateInfo.queueCount = 1;
+    queueCreateInfo.queueCount = (int)WorkType::Count;
     std::vector<float> queuePrio = { 1.0f };
     queueCreateInfo.pQueuePriorities = queuePrio.data();
     queueCreateInfo.pNext = NULL;
@@ -581,8 +584,10 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
 
     vkGetPhysicalDeviceMemoryProperties(m_vkPhysicalDevice, &m_vkMemProps);
 
+    m_queues =  new VulkanQueues(*this);
     m_descriptorSetPools = new VulkanDescriptorSetPools(*this);
     m_resources = new VulkanResources(*this);
+    m_readbackPool = new VulkanReadbackBufferPool(*this);
     
     testApiFuncs();
 }
@@ -592,8 +597,11 @@ VulkanDevice::~VulkanDevice()
     if (m_shaderDb && m_shaderDb->parentDevice() == this)
         m_shaderDb->setParentDevice(nullptr, nullptr);
 
+    delete m_readbackPool;
     delete m_resources;
     delete m_descriptorSetPools;
+    delete m_queues;
+
     vkDestroyDevice(m_vkDevice, nullptr); 
     destroyVulkanInstance(m_vkInstance);    
 }

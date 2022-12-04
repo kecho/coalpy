@@ -15,6 +15,11 @@
 #include <coalpy.render/../../Dx12/Dx12Device.h>
 #endif
 
+#if ENABLE_VULKAN
+#include <coalpy.render/../../vulkan/VulkanReadbackBufferPool.h>
+#include <coalpy.render/../../vulkan/VulkanDevice.h>
+#endif
+
 #include <iostream>
 #include <cstring>
 
@@ -159,6 +164,45 @@ namespace coalpy
             Dx12CpuMemBlock block2 = bufferPool.allocate(1024 * 1024 * 10);
             Dx12CpuMemBlock block3 = bufferPool.allocate(4123);
             Dx12CpuMemBlock block5 = bufferPool.allocate(1500);
+
+            bufferPool.free(block5);
+            bufferPool.free(block2);
+            bufferPool.free(block3);
+            bufferPool.free(block4);
+        }
+
+        renderTestCtx.end();
+    }
+#endif
+
+#if ENABLE_VULKAN
+    void vulkanBufferPool(TestContext& ctx)
+    {
+        auto& renderTestCtx = (RenderTestContext&)ctx;
+        renderTestCtx.begin();
+        IDevice& device = *renderTestCtx.device;
+        VulkanDevice& vkDevice = (VulkanDevice&)device;
+        VulkanReadbackBufferPool& bufferPool = vkDevice.readbackPool();
+        VulkanReadbackMemBlock block1 = bufferPool.allocate(256);
+        bufferPool.free(block1);
+
+        {
+            VulkanReadbackMemBlock block2 = bufferPool.allocate(1024 * 1024 * 10);
+            VulkanReadbackMemBlock block3 = bufferPool.allocate(215);
+            VulkanReadbackMemBlock block4 = bufferPool.allocate(33);
+            VulkanReadbackMemBlock block5 = bufferPool.allocate(15);
+
+            bufferPool.free(block5);
+            bufferPool.free(block2);
+            bufferPool.free(block3);
+            bufferPool.free(block4);
+        }
+
+        {
+            VulkanReadbackMemBlock block4 = bufferPool.allocate(3323);
+            VulkanReadbackMemBlock block2 = bufferPool.allocate(1024 * 1024 * 10);
+            VulkanReadbackMemBlock block3 = bufferPool.allocate(4123);
+            VulkanReadbackMemBlock block5 = bufferPool.allocate(1500);
 
             bufferPool.free(block5);
             bufferPool.free(block2);
@@ -1915,6 +1959,9 @@ namespace coalpy
         static TestCase sCases[] = {
 #if ENABLE_DX12
             { "dx12BufferPool",  dx12BufferPool },
+#endif
+#if ENABLE_VULKAN
+            { "vulkanBufferPool", vulkanBufferPool },
 #endif
             { "createBuffer",  testCreateBuffer },
             { "createTexture", testCreateTexture },
