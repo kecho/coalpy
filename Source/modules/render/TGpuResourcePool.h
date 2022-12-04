@@ -7,6 +7,10 @@ namespace coalpy
 namespace render
 {
 
+// This is a generic base class for a circular buffer pool that is live on the GPU.
+// This class syncrhonizes uploads to the GPU or allocations utilizing a fence.
+// The beginUsage and endUsage should be called between execution. Internally, these functions
+// perform fence checks on the GPU to ensure that we can synchronize correctly.
 template<class AllocDesc, class AllocationHandle, class HeapType, class GpuAllocatorType, class FenceType>
 class TGpuResourcePool
 {
