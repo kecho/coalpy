@@ -2,6 +2,7 @@
 
 #include "Config.h"
 #include <vector>
+#include <queue>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
 
@@ -48,21 +49,25 @@ public:
     void deallocate(VulkanList& list, uint64_t fenceValue);
 
 private:
-    struct AllocatorRecord
+    void garbageCollectCmdBuffers(WorkType workType);
+
+    struct LiveAllocation
     {
         uint64_t fenceValue = 0;
+        VkCommandBuffer list;
     };
 
     struct QueueContainer
     {
         VkQueue queue = {};
         VulkanFence* fence = nullptr;
-        std::vector<AllocatorRecord> allocatorPool;
-        std::vector<VkCommandBuffer> listPool;
+        std::queue<LiveAllocation> liveAllocations;
         VulkanMemoryPools memPools;
     };
 
     QueueContainer m_containers[(int)WorkType::Count];
+    
+    VkCommandPool m_cmdPool;
     VulkanDevice& m_device;
 };
 
