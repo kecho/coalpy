@@ -135,10 +135,7 @@ void Dx12WorkBundle::applyBarriers(const std::vector<ResourceBarrier>& barriers,
 
         if (b.isUav)
         {
-            if ((d3d12barrier.Flags & D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY) != 0)
-                d3d12barrier.Flags &= ~D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
-            if ((d3d12barrier.Flags & D3D12_RESOURCE_BARRIER_FLAG_END_ONLY) != 0)
-                d3d12barrier.Flags &= ~D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+            d3d12barrier.Flags &= ~(D3D12_RESOURCE_BARRIER_FLAG_END_ONLY | D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY);
             d3d12barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
             d3d12barrier.UAV.pResource = &r.d3dResource();
         }
