@@ -102,7 +102,7 @@ bool transitionResource(
             currState->state = newState;
         }
 
-        if (prevState == ResourceGpuState::Uav && newState == ResourceGpuState::Uav)
+        if (prevState == ResourceGpuState::Uav)
         {
             {
                 srcCmd.postBarrier.emplace_back();
@@ -114,7 +114,7 @@ bool transitionResource(
 
             {
                 dstCmd.preBarrier.emplace_back();
-                auto& endBarrier = dstCmd.preBarrier.back();
+                auto& endBarrier = dstCmd.preBarrier.back(); 
                 endBarrier.resource = resource;
                 endBarrier.isUav = true;
                 endBarrier.type = BarrierType::End;
@@ -169,7 +169,7 @@ bool transitionResource(
             currState->state = newState;
         }
 
-        if (prevState == ResourceGpuState::Uav && newState == ResourceGpuState::Uav)
+        if (prevState == ResourceGpuState::Uav)
         {
             ResourceBarrier newBarrier;
             newBarrier.resource = resource;
