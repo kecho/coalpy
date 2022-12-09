@@ -2,7 +2,7 @@
 
 #ifdef _WIN32
 #define ENABLE_DX12 1
-#define ENABLE_VULKAN 0
+#define ENABLE_VULKAN 1
 #define ENABLE_SDL_VULKAN 0
 #endif
 

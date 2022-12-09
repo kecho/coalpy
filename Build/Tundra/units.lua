@@ -19,11 +19,15 @@ local OpenEXRDir = "External/OpenEXR/"
 local OpenEXRLibDir = "External/OpenEXR/staticlib/"
 local PixDir ="External/WinPixEventRuntime_1.0.210818001"
 local PixBinaryDll ="External/WinPixEventRuntime_1.0.210818001/bin/WinPixEventRuntime.dll"
+local WinVulkanDir = "External/Vulkan/1.3.231.1/"
+local WinVulkanIncludes = WinVulkanDir .. "Include"
+local WinVulkanLibs = WinVulkanDir .. "Lib"
 
 
 local LibIncludes = {
     {
         PythonDir .. "Include",
+        WinVulkanIncludes,
         Config = "win64-*-*"
     },
     {
@@ -63,6 +67,7 @@ local Libraries = {
     },
     {
         "User32.lib",
+        "vulkan-1.lib",
         Config = "win64-msvc-*"
     },
     {
@@ -85,7 +90,11 @@ local Libraries = {
 
 local LibPaths = {
     OpenEXRLibDir,
-    DxcLibDir
+    DxcLibDir,
+    {
+        WinVulkanLibs,
+        Config = "win64-msvc-*"
+    }
 }
 
 local Binaries = {
@@ -280,6 +289,10 @@ local CoalPyModuleIncludes = {
         SpirvReflectDir,
         cJSONDir,
         "Source/modules/window"
+        {
+            WinVulkanIncludes,
+            Config = "win64-*-*"
+        }
     },
     texture = { LibJpgDir, LibPngDir, ZlibDir,
         {

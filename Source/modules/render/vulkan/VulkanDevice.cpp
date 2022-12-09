@@ -1,6 +1,5 @@
 #include <Config.h>
 #if ENABLE_VULKAN
-
 #include "VulkanDevice.h"
 #include "VulkanShaderDb.h"
 #if ENABLE_SDL_VULKAN

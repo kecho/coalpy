@@ -2,6 +2,9 @@
 #include "VulkanShaderDb.h" 
 #include "SpirvReflectionData.h"
 #include "VulkanDevice.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <dxcapi.h>
 #include <iostream>
 

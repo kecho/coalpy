@@ -1,7 +1,6 @@
 #include <Config.h>
 
 #if ENABLE_DX12
-
 #pragma comment(lib, "d3d12")
 #pragma comment(lib, "dxgi")
 
