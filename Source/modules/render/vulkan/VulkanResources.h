@@ -20,7 +20,7 @@ enum ResourceSpecialFlags : int
     //ResourceSpecialFlag_CanDenyShaderResources = 1 << 1,
     //ResourceSpecialFlag_TrackTables = 1 << 2,
     ResourceSpecialFlag_CpuReadback = 1 << 3,
-    //ResourceSpecialFlag_CpuUpload = 1 << 4,
+    ResourceSpecialFlag_CpuUpload = 1 << 4,
 };
 
 class VulkanDevice;

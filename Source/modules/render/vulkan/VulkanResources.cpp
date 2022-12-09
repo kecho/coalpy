@@ -20,7 +20,6 @@ VulkanResources::~VulkanResources()
 {
 }
 
-
 BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpecialFlags specialFlags)
 {
     std::unique_lock lock(m_mutex);
@@ -42,6 +41,9 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
             createInfo.usage |= VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
         if ((desc.memFlags & MemFlag_GpuWrite) != 0 || (specialFlags & ResourceSpecialFlag_CpuReadback) != 0)
             createInfo.usage |= VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT;
+        if (desc.isConstantBuffer)
+            createInfo.usage |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+
         createInfo.size = getVkFormatStride(desc.format) * desc.elementCount;
     }
     else if (desc.type == BufferType::Structured || desc.type == BufferType::Raw)
@@ -76,9 +78,9 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
     VkMemoryPropertyFlags memProperties = {};
     // as suggested in https://gpuopen.com/learn/vulkan-device-memory
     if ((specialFlags & ResourceSpecialFlag_CpuReadback) != 0)
-    {
         memProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
-    }
+    if ((specialFlags & ResourceSpecialFlag_CpuUpload) != 0)
+        memProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
     VkMemoryAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
