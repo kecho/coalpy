@@ -10,6 +10,7 @@
 #include <coalpy.texture/ITextureLoader.h>
 #include "CoalpyTypeObject.h"
 #include "Window.h"
+#include "SettingsSchema.h"
 #include <string>
 #include <iostream>
 
@@ -24,9 +25,16 @@ namespace gpu
 
 std::set<ModuleState*> ModuleState::s_allModules;
 
+struct Test
+{
+    int prop;
+};
+
 ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
 : m_fs(nullptr), m_ts(nullptr), m_textureDestructionCallback(nullptr)
 {
+    ModuleSettings::registerSchema();
+
     {
         FileWatchDesc desc { 120 /*ms*/};
         m_fw = IFileWatcher::create(desc);

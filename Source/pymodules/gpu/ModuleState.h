@@ -33,6 +33,7 @@ namespace gpu
 struct Texture;
 struct Window;
 struct CoalpyTypeObject;
+struct ModuleSettings;
 
 using TextureDesctructionCallback = std::function<void(Texture&)>;
 
@@ -87,6 +88,8 @@ public:
     void setTextureDestructionCallback(TextureDesctructionCallback cb) { m_textureDestructionCallback = cb; }
     void onDestroyTexture(Texture& texture);
 
+    ModuleSettings& settings() { return *m_settings; }
+
 private:
     void onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString);
     void registerTypes(CoalpyTypeObject** types, int typesCount);
@@ -116,6 +119,8 @@ private:
     std::vector<std::string> m_additionalDataPaths;
 
     TextureDesctructionCallback m_textureDestructionCallback;
+
+    ModuleSettings* m_settings = nullptr;
 };
 
 }

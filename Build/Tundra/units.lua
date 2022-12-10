@@ -5,6 +5,7 @@ local ImplotDir = "Source/implot"
 local LibJpgDir = "Source/libjpeg"
 local LibPngDir = "Source/libpng"
 local ZlibDir = "Source/zlib"
+local cJSONDir = "Source/cJSON"
 local TinyObjLoaderDir = "Source/tinyobjloader"
 local SpirvReflectDir = "Source/spirvreflect"
 local DxcDir = "External/dxc/v1.6.2112/"
@@ -242,6 +243,23 @@ local tinyobjloader = StaticLibrary {
     IdeGenerationHints = _G.GenRootIdeHints("tinyobjloader");
 }
 
+-- Build cJSON
+local cjson = StaticLibrary {
+    Name = "cjson",
+    Pass = "BuildCode",
+    Includes = cJSONDir,
+    Sources = {
+        Glob {
+            Dir = cJSONDir,
+            Extensions = { ".c", ".h" },
+            Recursive =  true
+        }
+    },
+    IdeGenerationHints = _G.GenRootIdeHints("cjson");
+}
+
+Default (cjson)
+
 -- C++ module table-> module name with its dependencies
 local CoalPyModuleTable = {
     core    = {},
@@ -274,7 +292,7 @@ local CoalPyModuleIncludes = {
 }
 
 local CoalPyModuleDeps = {
-    render = { imguiLib, implotLib, spirvreflect, tinyobjloader },
+    render = { imguiLib, implotLib, spirvreflect, tinyobjloader, cjson },
     texture = { zlibLib, libpngLib, libjpegLib }
 }
 
