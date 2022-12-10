@@ -120,5 +120,97 @@ VulkanGpuMemoryBlock VulkanGpuUploadPool::allocUploadBlock(size_t sizeBytes)
     return m_impl->allocate(desc);
 }
 
+
+VulkanGpuDescriptorSetPool::VulkanGpuDescriptorSetPool(VulkanDevice& device, VkQueue queue)
+: m_device(device), m_fence(*(new VulkanFence(device, queue))), m_nextFenceVal(0ull), m_activePool(-1)
+{
+}
+
+VulkanGpuDescriptorSetPool::~VulkanGpuDescriptorSetPool()
+{
+    delete &m_fence;
+}
+
+VkDescriptorPool VulkanGpuDescriptorSetPool::newPool() const
+{
+    std::vector<VkDescriptorPoolSize> poolSizes = {
+        { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 64 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 64 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 64 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 64 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 64 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 64 }
+    };
+    
+    VkDescriptorPoolCreateInfo poolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO, nullptr };
+    poolInfo.flags = {};
+    poolInfo.maxSets = 32;
+    poolInfo.poolSizeCount = (int)poolSizes.size();
+    poolInfo.pPoolSizes = poolSizes.data();
+    
+    VkDescriptorPool newPool = {};
+    VK_OK(vkCreateDescriptorPool(m_device.vkDevice(), &poolInfo, nullptr, &newPool));
+    return newPool;
+}
+
+void VulkanGpuDescriptorSetPool::beginUsage()
+{
+    uint64_t completeValue = m_fence.completedValue();
+    while (!m_livePools.empty())
+    {
+        auto& candidate = m_pools[m_livePools.front()];
+        if (candidate.fenceVal > completeValue)
+            break;
+
+        m_freePools.push(m_livePools.front());
+        m_livePools.pop();
+    }
+
+    if (!m_freePools.empty())
+    {
+        m_activePool = m_freePools.front();
+        m_freePools.pop();
+        VK_OK(vkResetDescriptorPool(m_device.vkDevice(), m_pools[m_activePool].pool, 0));
+    }
+    else
+    {
+        m_activePool = m_pools.size();
+        m_pools.push_back(PoolState { newPool(), 0ull });
+    }
+}
+
+void VulkanGpuDescriptorSetPool::endUsage()
+{
+    ++m_nextFenceVal;
+    m_fence.signal(m_nextFenceVal);
+    m_pools[m_activePool].fenceVal = m_nextFenceVal;
+    m_livePools.push(m_activePool);
+    m_activePool = -1;
+}
+
+VkDescriptorSet VulkanGpuDescriptorSetPool::allocUploadBlock(VkDescriptorSetLayout layout)
+{
+    VkDescriptorSetAllocateInfo allocationInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO, nullptr };
+    allocationInfo.descriptorSetCount = 1;
+    allocationInfo.pSetLayouts = &layout;
+    
+    VkDescriptorSet outSet = {};
+    bool foundAllocation = false;
+    while (!foundAllocation)
+    {
+        allocationInfo.descriptorPool = m_pools[m_activePool].pool;
+        if (vkAllocateDescriptorSets(m_device.vkDevice(), &allocationInfo, &outSet) == VK_SUCCESS)
+        {
+            foundAllocation = true;
+            continue;
+        }
+
+        endUsage();
+        beginUsage();
+    }
+
+    return outSet;
+}
+
 }
 }

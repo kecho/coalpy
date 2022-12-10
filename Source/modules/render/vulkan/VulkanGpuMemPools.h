@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
 #include <coalpy.render/Resources.h>
+#include <queue>
 
 namespace coalpy
 {
@@ -10,6 +11,7 @@ namespace render
 {
 
 class VulkanDevice;
+class VulkanFence;
 
 struct VulkanGpuMemoryBlock
 {
@@ -31,6 +33,35 @@ public:
 
 private:
     class VulkanGpuUploadPoolImpl* m_impl;
+};
+
+class VulkanGpuDescriptorSetPool
+{
+public:
+    VulkanGpuDescriptorSetPool(VulkanDevice& device, VkQueue queue);
+    ~VulkanGpuDescriptorSetPool();
+    void beginUsage();
+    void endUsage();
+    VkDescriptorSet allocUploadBlock(VkDescriptorSetLayout layout);
+
+private:
+    VkDescriptorPool newPool() const;
+
+    VulkanDevice& m_device;
+    VulkanFence& m_fence;
+
+    struct PoolState
+    {
+        VkDescriptorPool pool;
+        uint64_t fenceVal;
+    };
+
+    std::queue<int> m_freePools;
+    std::queue<int> m_livePools;
+    std::vector<PoolState> m_pools;
+    int m_activePool;
+    
+    uint64_t m_nextFenceVal;
 };
 
 }
