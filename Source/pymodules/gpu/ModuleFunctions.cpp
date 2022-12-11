@@ -322,11 +322,11 @@ PyObject* run(PyObject* self, PyObject* args)
             Py_INCREF(w);
             renderArgs->userData = w->userData;
             Py_INCREF(w->userData);
-
             w->object->dimensions(renderArgs->width, renderArgs->height);
             
             if (w && w->onRenderCallback != nullptr)
             {
+                Py_XINCREF(w->onRenderCallback);
                 PyObject* retObj = PyObject_CallOneArg(w->onRenderCallback, (PyObject*)renderArgs);
                 //means an exception has been risen. Propagate up.
                 if (retObj == nullptr)
