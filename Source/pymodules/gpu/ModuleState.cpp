@@ -11,11 +11,14 @@
 #include "CoalpyTypeObject.h"
 #include "Window.h"
 #include "SettingsSchema.h"
+#include "ModuleSettings.h"
 #include <string>
 #include <iostream>
 
 extern coalpy::ModuleOsHandle g_ModuleInstance;
 extern std::string g_ModuleFilePath;
+
+#define SETTINGS_FILE "coalpy_settings.json"
 
 namespace coalpy
 {
@@ -53,8 +56,12 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
         m_fs = IFileSystem::create(desc);
     }
 
+    m_ts->start();
+
+    loadSettings();
+
     auto flags = render::DeviceFlags::None;
-    createDevice(0, (int)flags, ShaderModel::Sm6_5, false);
+    createDevice(m_settings->adapter_index, (int)flags, ShaderModel::Sm6_5, false);
 
     {
         m_windowListener = Window::createWindowListener(*this);
@@ -83,6 +90,12 @@ void ModuleState::registerTypes(CoalpyTypeObject** types, int typesCount)
 
     for (int i = 0; i < (int)TypeId::Counts; ++i)
         CPY_ASSERT_MSG(m_types[i] != nullptr, "Missing type");
+}
+
+void ModuleState::loadSettings()
+{
+    m_settings = new ModuleSettings();
+    m_settings->load(*m_fs, SETTINGS_FILE);
 }
 
 bool ModuleState::checkValidDevice()
@@ -116,11 +129,11 @@ ModuleState::~ModuleState()
     delete m_fs;
     delete m_ts;
     delete m_fw;
+    delete m_settings;
 }
 
 void ModuleState::startServices()
 {
-    m_ts->start();
     m_tl->start();
 }
 

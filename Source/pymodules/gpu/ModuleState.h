@@ -88,6 +88,7 @@ public:
     void setTextureDestructionCallback(TextureDesctructionCallback cb) { m_textureDestructionCallback = cb; }
     void onDestroyTexture(Texture& texture);
 
+    void loadSettings();
     ModuleSettings& settings() { return *m_settings; }
 
 private:

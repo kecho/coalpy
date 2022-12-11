@@ -10,13 +10,13 @@ namespace gpu
 struct ModuleSettings
 {
     BEGIN_PARAM_TABLE(ModuleSettings)
-        REGISTER_PARAM(int, adapter_index)
-        REGISTER_PARAM(std::string, adapter_preference)
-        REGISTER_PARAM(std::string, graphics_api)
+        REGISTER_PARAM(adapter_index)
+        REGISTER_PARAM(adapter_preference)
+        REGISTER_PARAM(graphics_api)
     END_PARAM_TABLE()
 
     int adapter_index = 0;
-    std::string adapter_preference = "nvidia";
+    std::string adapter_preference = "auto";
     std::string graphics_api = "dx12";
 };
 

@@ -5,7 +5,7 @@ local ImplotDir = "Source/implot"
 local LibJpgDir = "Source/libjpeg"
 local LibPngDir = "Source/libpng"
 local ZlibDir = "Source/zlib"
-local cJSONDir = "Source/cJSON"
+local cJSONDir = "Source/cjson"
 local TinyObjLoaderDir = "Source/tinyobjloader"
 local SpirvReflectDir = "Source/spirvreflect"
 local DxcDir = "External/dxc/v1.6.2112/"
@@ -34,6 +34,7 @@ local LibIncludes = {
     ImplotDir,
     LibJpgDir,
     LibPngDir,
+    cJSONDir,
     TinyObjLoaderDir
 }
 
@@ -277,6 +278,7 @@ local CoalPyModuleIncludes = {
         ImguiDir,
         ImplotDir,
         SpirvReflectDir,
+        cJSONDir,
         "Source/modules/window"
     },
     texture = { LibJpgDir, LibPngDir, ZlibDir,
