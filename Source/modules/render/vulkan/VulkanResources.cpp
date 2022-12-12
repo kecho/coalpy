@@ -247,9 +247,9 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc)
         return TextureResult  { ResourceResult::InternalApiFailure, Texture(), "Failed to bind memory into vkimage." };
     }
 
+    VkImageViewCreateInfo srvViewInfo = createVulkanImageViewDescTemplate(desc, textureData.vkImage);
     if ((resource.memFlags & MemFlag_GpuRead) != 0)
     {
-        VkImageViewCreateInfo srvViewInfo = createVulkanImageViewDescTemplate(desc, textureData.vkImage);
         if (vkCreateImageView(m_device.vkDevice(), &srvViewInfo, nullptr, &textureData.vkSrvView) != VK_SUCCESS)
         {
             vkDestroyImage(m_device.vkDevice(), textureData.vkImage, nullptr);
@@ -259,6 +259,7 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc)
         }
     }
 
+    textureData.subresourceRange = srvViewInfo.subresourceRange;
     textureData.uavCounts = 0;
     if ((resource.memFlags & MemFlag_GpuWrite) != 0)
     {

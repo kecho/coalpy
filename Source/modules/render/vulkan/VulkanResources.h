@@ -47,6 +47,7 @@ struct VulkanResource
         VkImage vkImage;
         VkImageView vkSrvView;
         VkImageView vkUavViews[VulkanMaxMips];
+        VkImageSubresourceRange subresourceRange;
         uint32_t uavCounts;
     };
 

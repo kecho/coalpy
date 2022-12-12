@@ -106,7 +106,8 @@ enum class BarrierType
 {
     Immediate,
     Begin,
-    End
+    End,
+    Count
 };
 
 struct ResourceBarrier

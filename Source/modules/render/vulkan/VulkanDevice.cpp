@@ -11,6 +11,7 @@
 #include "VulkanDisplay.h"
 #include "VulkanResources.h"
 #include "VulkanReadbackBufferPool.h"
+#include "VulkanWorkBundle.h"
 #include "VulkanQueues.h"
 #include <coalpy.render/ShaderDefs.h>
 #include <iostream>
@@ -712,7 +713,30 @@ void VulkanDevice::internalReleaseWorkHandle(WorkHandle handle)
 
 ScheduleStatus VulkanDevice::internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle)
 {
-    return ScheduleStatus{ workHandle, ScheduleErrorType::Ok };
+    ScheduleStatus status;
+    status.workHandle = workHandle;
+    
+    VulkanWorkBundle vulkanWorkBundle(*this);
+    {
+        m_workDb.lock();
+        WorkBundle& workBundle = m_workDb.unsafeGetWorkBundle(workHandle);
+        vulkanWorkBundle.load(workBundle);
+        m_workDb.unlock();
+    }
+
+    uint64_t fenceValue = vulkanWorkBundle.execute(commandLists, listCounts);
+
+    /*
+    {
+        m_workDb.lock();
+        Dx12WorkInfo workInfo;
+        workInfo.fenceValue = fenceValue;
+        dx12WorkBundle.getDownloadResourceMap(workInfo.downloadMap);
+        m_dx12WorkInfos->workMap[workHandle.handleId] = std::move(workInfo);
+        m_workDb.unlock();
+    }
+    */
+    return status;
 }
 
 }
