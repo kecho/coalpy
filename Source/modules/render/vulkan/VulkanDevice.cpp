@@ -13,6 +13,8 @@
 #include "VulkanReadbackBufferPool.h"
 #include "VulkanWorkBundle.h"
 #include "VulkanQueues.h"
+#include "VulkanEventPool.h"
+#include "VulkanFence.h"
 #include <coalpy.render/ShaderDefs.h>
 #include <iostream>
 #include <set>
@@ -296,7 +298,7 @@ bool createVulkanInstance(VkInstance& outInstance)
     appInfo.applicationVersion = 1;
     appInfo.pEngineName = "coalpy";
     appInfo.engineVersion = 1;
-    appInfo.apiVersion = VK_API_VERSION_1_0;
+    appInfo.apiVersion = VK_API_VERSION_1_3;
 
     VkInstanceCreateInfo instInfo = {};
     instInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -589,12 +591,23 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
     m_descriptorSetPools = new VulkanDescriptorSetPools(*this);
     m_resources = new VulkanResources(*this);
     m_readbackPool = new VulkanReadbackBufferPool(*this);
+    m_eventPool = new VulkanEventPool(*this);
     
     testApiFuncs();
 }
 
 VulkanDevice::~VulkanDevice()
 {
+    //sync device here, so deletion is clean.
+    if (m_queues)
+    {
+        for (int workType = 0; workType < (int)WorkType::Count; ++workType)
+        {
+            VulkanFence& fence = m_queues->getFence((WorkType)workType);
+            fence.waitOnCpu(fence.signal());
+        }
+    }
+
     if (m_shaderDb && m_shaderDb->parentDevice() == this)
         m_shaderDb->setParentDevice(nullptr, nullptr);
 
@@ -602,6 +615,7 @@ VulkanDevice::~VulkanDevice()
     delete m_resources;
     delete m_descriptorSetPools;
     delete m_queues;
+    delete m_eventPool;
 
     vkDestroyDevice(m_vkDevice, nullptr); 
     destroyVulkanInstance(m_vkInstance);    

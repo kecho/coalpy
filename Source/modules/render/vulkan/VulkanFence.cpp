@@ -74,11 +74,12 @@ void VulkanFence::internalSignal(uint64_t value)
     semaphoreSubmitInfo.semaphore = m_semaphore;
     semaphoreSubmitInfo.value = value;
     semaphoreSubmitInfo.stageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT | VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+    semaphoreSubmitInfo.deviceIndex = 0;
 
     VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2, nullptr };
     submitInfo.signalSemaphoreInfoCount = 1;
     submitInfo.pSignalSemaphoreInfos = &semaphoreSubmitInfo;
-    VK_OK(vkQueueSubmit2(m_ownerQueue, 1, &submitInfo, VK_NULL_HANDLE));
+    VK_OK(vkQueueSubmit2(m_ownerQueue, 1, &submitInfo, nullptr));
 }
 
 

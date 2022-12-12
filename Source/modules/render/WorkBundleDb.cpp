@@ -77,6 +77,8 @@ bool transitionResource(
         CPY_ASSERT(dstList.listIndex == context.listIndex);
         CommandInfo& srcCmd = srcList.commandSchedule[currState->commandIndex];
         CommandInfo& dstCmd = dstList.commandSchedule[context.currentCommandIndex];
+        CommandLocation srcCmdLocation = { currState->listIndex, currState->commandIndex };
+        CommandLocation dstCmdLocation = { context.listIndex, context.currentCommandIndex };
 
         auto prevState = currState->state;
         if (prevState != newState)
@@ -84,6 +86,8 @@ bool transitionResource(
             {
                 srcCmd.postBarrier.emplace_back();
                 auto& beginBarrier = srcCmd.postBarrier.back();
+                beginBarrier.srcCmdLocation = srcCmdLocation;
+                beginBarrier.dstCmdLocation = dstCmdLocation;
                 beginBarrier.resource = resource;
                 beginBarrier.prevState = prevState;
                 beginBarrier.postState = newState;
@@ -93,6 +97,8 @@ bool transitionResource(
             {
                 dstCmd.preBarrier.emplace_back();
                 auto& endBarrier = dstCmd.preBarrier.back();
+                endBarrier.srcCmdLocation = srcCmdLocation;
+                endBarrier.dstCmdLocation = dstCmdLocation;
                 endBarrier.resource = resource;
                 endBarrier.prevState = prevState;
                 endBarrier.postState = newState;
@@ -107,6 +113,8 @@ bool transitionResource(
             {
                 srcCmd.postBarrier.emplace_back();
                 auto& beginBarrier = srcCmd.postBarrier.back();
+                beginBarrier.srcCmdLocation = srcCmdLocation;
+                beginBarrier.dstCmdLocation = dstCmdLocation;
                 beginBarrier.resource = resource;
                 beginBarrier.isUav = true;
                 beginBarrier.type = BarrierType::Begin;
@@ -115,6 +123,8 @@ bool transitionResource(
             {
                 dstCmd.preBarrier.emplace_back();
                 auto& endBarrier = dstCmd.preBarrier.back(); 
+                endBarrier.srcCmdLocation = srcCmdLocation;
+                endBarrier.dstCmdLocation = dstCmdLocation;
                 endBarrier.resource = resource;
                 endBarrier.isUav = true;
                 endBarrier.type = BarrierType::End;
@@ -156,9 +166,14 @@ bool transitionResource(
             currState = &it.first->second;
         }
 
+        CommandLocation srcCmdLocation = { currState->listIndex, currState->commandIndex };
+        CommandLocation dstCmdLocation = { context.listIndex, context.currentCommandIndex };
+
         if (prevState != newState)
         {
             ResourceBarrier newBarrier;
+            newBarrier.srcCmdLocation = srcCmdLocation;
+            newBarrier.dstCmdLocation = dstCmdLocation;
             newBarrier.resource = resource;
             newBarrier.prevState = prevState; 
             newBarrier.postState = newState; 
@@ -174,6 +189,8 @@ bool transitionResource(
             ResourceBarrier newBarrier;
             newBarrier.resource = resource;
             newBarrier.isUav = true; 
+            newBarrier.srcCmdLocation = srcCmdLocation;
+            newBarrier.dstCmdLocation = dstCmdLocation;
             newBarrier.type = BarrierType::Immediate;
             context.processedList[context.listIndex]
                 .commandSchedule[context.currentCommandIndex]

@@ -1,10 +1,10 @@
 #pragma once
-
 #include <coalpy.render/CommandDefs.h>
 #include <coalpy.render/Resources.h>
 #include <coalpy.render/AbiCommands.h>
 #include <coalpy.render/CommandList.h>
 #include <coalpy.core/HandleContainer.h>
+#include <stdint.h>
 #include <vector>
 #include <mutex>
 #include <string>
@@ -110,10 +110,53 @@ enum class BarrierType
     Count
 };
 
+struct CommandLocation
+{
+    int processedListIndex = 0;
+    int commandIndex = 0;
+    
+    uint64_t hash() const { return ((uint64_t)(processedListIndex) << 32) | (uint64_t)(commandIndex); }
+
+    bool operator < (const CommandLocation& other) const
+    {
+        return hash() < other.hash();
+    }
+    bool operator <= (const CommandLocation& other) const
+    {
+        return hash() <= other.hash();
+    }
+    bool operator > (const CommandLocation& other) const
+    {
+        return hash() > other.hash();
+    }
+    bool operator >= (const CommandLocation& other) const
+    {
+        return hash() >= other.hash();
+    }
+    bool operator == (const CommandLocation& other) const
+    {
+        return hash() == other.hash();
+    }
+    bool operator != (const CommandLocation& other) const
+    {
+        return hash() != other.hash();
+    }
+};
+
+struct CommandLocationHasher
+{
+    std::size_t operator()(const CommandLocation& loc) const
+    {
+        return loc.hash();
+    }
+};
+
 struct ResourceBarrier
 {
     ResourceHandle resource;
     bool isUav = false; //ignores previous and post states
+    CommandLocation srcCmdLocation = {};
+    CommandLocation dstCmdLocation = {};
     ResourceGpuState prevState = ResourceGpuState::Default;
     ResourceGpuState postState = ResourceGpuState::Default;
     BarrierType type = BarrierType::Immediate;

@@ -31,7 +31,7 @@ public:
 private:
     void internalSignal(uint64_t value);
     VulkanDevice& m_device;
-    VkQueue& m_ownerQueue;
+    VkQueue m_ownerQueue;
     VkSemaphore m_semaphore;
     uint64_t m_fenceValue;
     std::shared_mutex m_fenceMutex;

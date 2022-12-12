@@ -2,8 +2,6 @@
 #include "VulkanFence.h"
 #include "VulkanDevice.h"
 #include <coalpy.core/Assert.h>
-#include <iostream>
-
 
 namespace coalpy
 {
