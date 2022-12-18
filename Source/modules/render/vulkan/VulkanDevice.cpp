@@ -14,6 +14,7 @@
 #include "VulkanWorkBundle.h"
 #include "VulkanQueues.h"
 #include "VulkanEventPool.h"
+#include "VulkanFencePool.h"
 #include "VulkanFence.h"
 #include <coalpy.render/ShaderDefs.h>
 #include <iostream>
@@ -592,6 +593,7 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
     m_resources = new VulkanResources(*this);
     m_readbackPool = new VulkanReadbackBufferPool(*this);
     m_eventPool = new VulkanEventPool(*this);
+    m_fencePool = new VulkanFencePool(*this);
     
     testApiFuncs();
 }
@@ -616,6 +618,7 @@ VulkanDevice::~VulkanDevice()
     delete m_descriptorSetPools;
     delete m_queues;
     delete m_eventPool;
+    delete m_fencePool;
 
     vkDestroyDevice(m_vkDevice, nullptr); 
     destroyVulkanInstance(m_vkInstance);    

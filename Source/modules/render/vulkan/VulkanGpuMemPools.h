@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
 #include <coalpy.render/Resources.h>
+#include "VulkanFencePool.h"
 #include <queue>
 
 namespace coalpy
@@ -26,7 +27,7 @@ class VulkanGpuUploadPool
 public:
     VulkanGpuUploadPool(VulkanDevice& device, VkQueue queue, uint64_t initialPoolSize);
     ~VulkanGpuUploadPool();
-    void beginUsage();
+    void beginUsage(VulkanFenceHandle handle);
     void endUsage();
 
     VulkanGpuMemoryBlock allocUploadBlock(size_t sizeBytes);

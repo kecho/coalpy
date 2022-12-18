@@ -2,6 +2,7 @@
 #include "VulkanDevice.h"
 #include "VulkanResources.h"
 #include "VulkanFence.h"
+#include "VulkanFencePool.h"
 #include "VulkanUtils.h"
 #include "TGpuResourcePool.h"
 #include <coalpy.core/Assert.h>
@@ -11,6 +12,47 @@ namespace coalpy
 {
 namespace render
 {
+
+class VulkanFenceTimeline
+{
+public:
+    using FenceType = VulkanFenceHandle;
+
+    VulkanFenceTimeline(VulkanDevice& device)
+    : m_device(device)
+    {
+    }
+
+    void beginUsageWithFence(VulkanFenceHandle handle)
+    {
+        m_currentFenceHandle = handle;
+    }
+
+    void waitOnCpu(VulkanFenceHandle handle)
+    {
+        m_device.fencePool().waitOnCpu(handle);
+    }
+
+    void signalFence()
+    {
+        //this is done externally
+    } 
+
+    bool isSignaled(VulkanFenceHandle handle)
+    {
+        return m_device.fencePool().isSignaled(handle);
+    }
+
+    VulkanFenceHandle allocateFenceValue()
+    {
+        return m_currentFenceHandle;
+    }
+
+private:
+    VulkanFenceHandle m_currentFenceHandle;
+    VulkanDevice& m_device;
+    std::vector<VulkanFenceHandle> m_activeFences;
+};
 
 struct VulkanUploadDesc
 {
@@ -25,12 +67,13 @@ struct VulkanUploadHeap
     uint64_t size = 0;
 };
 
-using BaseUploadPool = TGpuResourcePool<VulkanUploadDesc, VulkanGpuMemoryBlock, VulkanUploadHeap, VulkanGpuUploadPoolImpl, VulkanFence>;
-class VulkanGpuUploadPoolImpl : public BaseUploadPool
+using BaseUploadPool = TGpuResourcePool<VulkanUploadDesc, VulkanGpuMemoryBlock, VulkanUploadHeap, VulkanGpuUploadPoolImpl, VulkanFenceTimeline>;
+
+class VulkanGpuUploadPoolImpl : public BaseUploadPool, public VulkanFenceTimeline
 {
 public:
     VulkanGpuUploadPoolImpl(VulkanDevice& device, VkQueue queue, uint64_t initialPoolSize)
-    : BaseUploadPool(*(new VulkanFence(device, queue)), *this), m_device(device), m_nextHeapSize(initialPoolSize)
+    : VulkanFenceTimeline(device), BaseUploadPool(*this, *this), m_device(device), m_nextHeapSize(initialPoolSize)
     {
     }
 
@@ -102,9 +145,9 @@ VulkanGpuUploadPool::~VulkanGpuUploadPool()
     delete m_impl;
 }
 
-void VulkanGpuUploadPool::beginUsage()
+void VulkanGpuUploadPool::beginUsage(VulkanFenceHandle handle)
 {
-    m_impl->beginUsage();
+    m_impl->beginUsageWithFence(handle);
 }
 
 void VulkanGpuUploadPool::endUsage()

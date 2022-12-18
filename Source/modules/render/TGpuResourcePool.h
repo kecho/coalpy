@@ -11,14 +11,19 @@ namespace render
 // This class syncrhonizes uploads to the GPU or allocations utilizing a fence.
 // The beginUsage and endUsage should be called between execution. Internally, these functions
 // perform fence checks on the GPU to ensure that we can synchronize correctly.
-template<class AllocDesc, class AllocationHandle, class HeapType, class GpuAllocatorType, class FenceType>
+template<
+    class AllocDesc,
+    class AllocationHandle,
+    class HeapType,
+    class GpuAllocatorType,
+    class FenceTimelineType>
 class TGpuResourcePool
 {
 public:
-    TGpuResourcePool(FenceType& fence, GpuAllocatorType& allocator)
-    : m_fence(fence) 
-    , m_nextFenceVal(0ull)
-    , m_allocator(allocator)
+    typedef typename FenceTimelineType::FenceType FenceType;
+
+    TGpuResourcePool(GpuAllocatorType& allocator, FenceTimelineType& fenceTimeline)
+    : m_allocator(allocator), m_fenceTimeline(fenceTimeline)
     {
     }
 
@@ -27,26 +32,23 @@ public:
         for (auto& slot : m_heaps)
         {
             if (!slot.ranges.empty())
-                m_fence.waitOnCpu(slot.ranges.front().fenceValue);
+                m_fenceTimeline.waitOnCpu(slot.ranges.front().fenceValue);
 
             m_allocator.destroyHeap(slot.heap);
         }
-        delete &m_fence;
     }
 
     void beginUsage()
     {
-        m_nextFenceVal++;
     }
 
     void endUsage()
     {
-        uint64_t currFenceValue = m_fence.completedValue();
         for (HeapSlot& slot : m_heaps)
         {
             while (!slot.ranges.empty())
             {
-                if (slot.ranges.front().fenceValue >= currFenceValue)
+                if (!m_fenceTimeline.isSignaled(slot.ranges.front().fenceValue))
                     break;
 
                 slot.capacity += slot.ranges.front().size;
@@ -58,7 +60,7 @@ public:
                 }
             }
         }
-        m_fence.signal(m_nextFenceVal);
+        m_fenceTimeline.signalFence();
     }
 
     AllocationHandle allocate(const AllocDesc& desc)
@@ -72,7 +74,7 @@ public:
 protected:
     struct Range
     {
-        uint64_t fenceValue = 0ull;
+        FenceType fenceValue = {};
         uint64_t offset = 0ull;
         uint64_t size = 0ull;
     };
@@ -86,9 +88,9 @@ protected:
         HeapType heap;
     };
 
-    void commmitRange(HeapSlot& slot, const Range& range)
+    void commitRange(HeapSlot& slot, const Range& range)
     {
-        if (slot.ranges.empty() || slot.ranges.back().fenceValue < m_nextFenceVal)
+        if (slot.ranges.empty())
             slot.ranges.push(range);
         else
         {
@@ -113,13 +115,12 @@ protected:
         CPY_ASSERT_MSG(rangeResult, "Range result must not fail");
 
         outHandle = m_allocator.allocateHandle(desc, range.offset, newSlot.heap);
-        commmitRange(newSlot, range);
+        commitRange(newSlot, range);
     }
 
     bool calculateRange(const AllocDesc& desc, const HeapSlot& slot, Range& outRange)
     {
         outRange = {};
-        outRange.fenceValue = m_nextFenceVal;
         m_allocator.getRange(desc, slot.offset, outRange.offset, outRange.size);
         if (outRange.offset >= slot.size)
             return false;
@@ -130,13 +131,13 @@ protected:
 
         if (outRange.size > sizeLeft)
         {
-            padding += sizeLeft;
-            outRange.offset = 0ull;
+            padding += sizeLeft; outRange.offset = 0ull;
         }
 
         if ((outRange.size + padding) > slot.capacity)
             return false;
 
+        outRange.fenceValue = m_fenceTimeline.allocateFenceValue();
         outRange.size += padding;
 
         return true;
@@ -153,7 +154,7 @@ protected:
             if (calculateRange(desc, slot, range))
             {
                 outHandle = m_allocator.allocateHandle(desc, range.offset, slot.heap);
-                commmitRange(slot, range);
+                commitRange(slot, range);
                 return true;
             }
         }
@@ -162,9 +163,7 @@ protected:
 
     std::vector<HeapSlot> m_heaps;
     GpuAllocatorType& m_allocator;
-
-    uint64_t m_nextFenceVal;
-    FenceType& m_fence;
+    FenceTimelineType& m_fenceTimeline;
 };
 
 
