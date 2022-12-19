@@ -288,7 +288,7 @@ local CoalPyModuleIncludes = {
         ImplotDir,
         SpirvReflectDir,
         cJSONDir,
-        "Source/modules/window"
+        "Source/modules/window",
         {
             WinVulkanIncludes,
             Config = "win64-*-*"
