@@ -1,7 +1,12 @@
+#include <Config.h>
+#if ENABLE_WIN_VULKAN
+#define VK_USE_PLATFORM_WIN32_KHR
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
+#endif
 #include "VulkanDisplay.h"
 #include "VulkanDevice.h"
 #include "VulkanFormats.h"
-#include <Config.h>
 #include <algorithm>
 #include <iostream>
 
@@ -75,6 +80,13 @@ VulkanDisplay::VulkanDisplay(const DisplayConfig& config, VulkanDevice& device)
     {
         std::cerr << "Surface is not supported by physical device!\n";
     }
+
+#elif ENABLE_WIN_VULKAN
+    VkWin32SurfaceCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR, nullptr };
+    createInfo.hwnd = (HWND)config.handle;
+    createInfo.hinstance = GetModuleHandle(nullptr);
+    if (vkCreateWin32SurfaceKHR(m_device.vkInstance(), &createInfo, nullptr, &m_surface) != VK_SUCCESS)
+        std::cerr << "Windows vulkan surface is not supported by physical device!\n";
 #endif
 
     if (!m_surface)
@@ -151,8 +163,8 @@ Texture VulkanDisplay::texture()
 
 void VulkanDisplay::resize(unsigned int width, unsigned int height)
 {
-    m_config.width = std::max(width, 1u);
-    m_config.height = std::max(height, 1u);
+    m_config.width = width == 0 ? 1u : width;
+    m_config.height = height == 0 ? 1u : height;
     createSwapchain(); //swap chain gets passed trhough old swapchain
 }
 
