@@ -44,6 +44,8 @@ public:
 
     void endUsage()
     {
+        m_fenceTimeline.sync();
+
         for (HeapSlot& slot : m_heaps)
         {
             while (!slot.ranges.empty())

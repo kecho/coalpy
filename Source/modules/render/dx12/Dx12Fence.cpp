@@ -12,7 +12,7 @@ namespace render
 {
 
 Dx12Fence::Dx12Fence(Dx12Device& device, ID3D12CommandQueue& ownerQueue)
-: m_fenceValue(0ull)
+: m_fenceValue(DefaultFenceValue)
 , m_device(device)
 , m_ownerQueue(ownerQueue)
 {

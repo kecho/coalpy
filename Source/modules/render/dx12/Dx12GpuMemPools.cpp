@@ -13,13 +13,59 @@ namespace coalpy
 namespace render
 {
 
-template<class AllocDesc, class AllocationHandle, class HeapType, class GpuAllocatorType>
-class Dx12GenericResourcePool : public TGpuResourcePool<AllocDesc, AllocationHandle, HeapType, GpuAllocatorType, Dx12Fence>
+class Dx12FenceTimeline
 {
 public:
-    typedef TGpuResourcePool<AllocDesc, AllocationHandle, HeapType, GpuAllocatorType, Dx12Fence> SuperType;
+    using FenceType = UINT64;
+
+    Dx12FenceTimeline(Dx12Device& device, ID3D12CommandQueue& queue)
+    : m_fence(*(new Dx12Fence(device, queue))), m_nextFenceValue(Dx12Fence::DefaultFenceValue + 1), m_gpuValue(Dx12Fence::DefaultFenceValue)
+    {
+    }
+
+    void waitOnCpu(UINT64 fenceValue)
+    {
+        m_fence.waitOnCpu(fenceValue);
+    }
+
+    void sync()
+    {
+        m_gpuValue = m_fence.completedValue();
+    }
+
+    void signalFence()
+    {
+        m_fence.signal(m_nextFenceValue++);
+    } 
+
+    bool isSignaled(UINT64 fenceValue)
+    {
+        return fenceValue <= m_gpuValue;
+    }
+
+    UINT64 allocateFenceValue()
+    {
+        return m_nextFenceValue;
+    }
+
+    ~Dx12FenceTimeline()
+    {
+        delete &m_fence;
+    }
+
+private:
+    UINT64 m_nextFenceValue;
+    UINT64 m_gpuValue;
+    Dx12Fence& m_fence;
+};
+
+template<class AllocDesc, class AllocationHandle, class HeapType, class GpuAllocatorType>
+class Dx12GenericResourcePool : public TGpuResourcePool<AllocDesc, AllocationHandle, HeapType, GpuAllocatorType, Dx12FenceTimeline>, public Dx12FenceTimeline
+{
+public:
+    typedef TGpuResourcePool<AllocDesc, AllocationHandle, HeapType, GpuAllocatorType, Dx12FenceTimeline> SuperType;
     Dx12GenericResourcePool(Dx12Device& device, ID3D12CommandQueue& queue, GpuAllocatorType& allocator)
-    : SuperType(*(new Dx12Fence(device, queue)), allocator)
+    : SuperType(allocator, *this), Dx12FenceTimeline(device, queue)
     , m_device(device)
     {
     }

@@ -17,6 +17,8 @@ class Dx12Device;
 class Dx12Fence 
 {
 public:
+    enum { DefaultFenceValue = 0 };
+
     Dx12Fence(Dx12Device& device, ID3D12CommandQueue& ownerQueue);
     ~Dx12Fence();
 
@@ -28,6 +30,7 @@ public:
     void waitOnCpu(UINT64 valueToWait, DWORD timeMs = INFINITE);
     void waitOnGpu(UINT64 valueToWait, ID3D12CommandQueue* externalQueue = nullptr);
     ID3D12Fence& fence() { return *m_fence; }
+
 
 private:
     void internalSignal(UINT64 value);

@@ -33,6 +33,11 @@ public:
         m_device.fencePool().waitOnCpu(handle);
     }
 
+    void sync()
+    {
+        //this is done externally
+    }
+
     void signalFence()
     {
         //this is done externally
