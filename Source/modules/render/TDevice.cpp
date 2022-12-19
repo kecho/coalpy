@@ -28,9 +28,9 @@ void IDevice::enumerate(DevicePlat platform, std::vector<DeviceInfo>& outputList
 
 IDevice * IDevice::create(const DeviceConfig& config)
 {
-    CPY_ERROR(config.shaderDb != nullptr);
-    if (config.shaderDb == nullptr)
-        return nullptr;
+    //CPY_ERROR(config.shaderDb != nullptr);
+    //if (config.shaderDb == nullptr)
+    //    return nullptr;
 
 #if ENABLE_DX12
     if (config.platform == DevicePlat::Dx12)

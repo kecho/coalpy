@@ -125,7 +125,7 @@ bool getAvailableVulkanExtensions(std::vector<std::string>& outExtensions)
         outExtensions.emplace_back(extNames[i]);
 #endif
 
-
+    outExtensions.emplace_back("VK_KHR_surface");
     // Add debug display extension, we need this to relay debug messages
 #if ENABLE_DEBUG_CALLBACK_EXT
     outExtensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
@@ -390,7 +390,7 @@ VkDevice createVkDevice(
     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queueCreateInfo.queueFamilyIndex = queueFamilyIdx;
     queueCreateInfo.queueCount = (int)WorkType::Count;
-    const float queuePrio[(int)WorkType::Count] = { 1.0f };
+    std::vector<float> queuePrio = { 1.0f };
     queueCreateInfo.pQueuePriorities = queuePrio;
     queueCreateInfo.pNext = NULL;
     queueCreateInfo.flags = 0;

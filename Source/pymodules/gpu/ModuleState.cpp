@@ -171,7 +171,8 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
     modulePath += "/resources/";
 
 #if defined(_WIN32)
-    auto platform = render::DevicePlat::Dx12;
+    //auto platform = render::DevicePlat::Dx12;
+    auto platform = render::DevicePlat::Vulkan;
 #elif defined(__linux__)
     auto platform = render::DevicePlat::Vulkan;
 #elif
