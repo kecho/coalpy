@@ -24,25 +24,20 @@ VulkanFencePool::~VulkanFencePool()
 VulkanFenceHandle VulkanFencePool::allocate()
 {
     VulkanFenceHandle handle;
-    FenceState* fenceState;
-    if (m_freeFences.empty())
+    FenceState& fenceState = m_fences.allocate(handle);
+        
+    if (fenceState.allocated)
     {
-        VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO, nullptr };
-        createInfo.flags = 0;
-        fenceState = &m_fences.allocate(handle);
-        VK_OK(vkCreateFence(m_device.vkDevice(), &createInfo, nullptr, &fenceState->fence));
+        VK_OK(vkResetFences(m_device.vkDevice(), 1, &fenceState.fence));
     }
     else
     {
-        handle = m_freeFences.back();
-        m_freeFences.pop_back();
-        fenceState = &m_fences[handle];
-        CPY_ASSERT(!fenceState->allocated);
-        VK_OK(vkResetFences(m_device.vkDevice(), 1, &fenceState->fence));
+        VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO, nullptr };
+        createInfo.flags = 0;
+        VK_OK(vkCreateFence(m_device.vkDevice(), &createInfo, nullptr, &fenceState.fence));
+        fenceState.allocated = true;
     }
-
-    fenceState->allocated = true;
-    fenceState->isSignaled = false;
+    fenceState.isSignaled = false;
     return handle;
 }
 
@@ -70,8 +65,7 @@ void VulkanFencePool::waitOnCpu(VulkanFenceHandle handle)
 
 void VulkanFencePool::free(VulkanFenceHandle handle)
 {
-    m_fences[handle].allocated = false;
-    m_freeFences.push_back(handle);
+    m_fences.free(handle, false);
 }
 
 }

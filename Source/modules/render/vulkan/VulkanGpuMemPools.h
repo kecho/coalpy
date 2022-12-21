@@ -25,7 +25,11 @@ struct VulkanGpuMemoryBlock
 class VulkanGpuUploadPool
 {
 public:
-    VulkanGpuUploadPool(VulkanDevice& device, VkQueue queue, uint64_t initialPoolSize);
+    enum
+    {
+        DefaultUploadPoolSize = 5 * 1024 * 1024 ///5 mb of initial size
+    };
+    VulkanGpuUploadPool(VulkanDevice& device, VulkanFencePool& fencePool, uint64_t initialPoolSize = DefaultUploadPoolSize);
     ~VulkanGpuUploadPool();
     void beginUsage(VulkanFenceHandle handle);
     void endUsage();
@@ -39,9 +43,9 @@ private:
 class VulkanGpuDescriptorSetPool
 {
 public:
-    VulkanGpuDescriptorSetPool(VulkanDevice& device, VkQueue queue);
+    VulkanGpuDescriptorSetPool(VulkanDevice& device, VulkanFencePool& fencePool);
     ~VulkanGpuDescriptorSetPool();
-    void beginUsage();
+    void beginUsage(VulkanFenceHandle handle);
     void endUsage();
     VkDescriptorSet allocUploadBlock(VkDescriptorSetLayout layout);
 
@@ -49,20 +53,19 @@ private:
     VkDescriptorPool newPool() const;
 
     VulkanDevice& m_device;
-    VulkanFence& m_fence;
+    VulkanFencePool& m_fencePool;
 
     struct PoolState
     {
         VkDescriptorPool pool;
-        uint64_t fenceVal;
+        VulkanFenceHandle fenceVal;
     };
 
+    VulkanFenceHandle m_currentFence;
     std::queue<int> m_freePools;
     std::queue<int> m_livePools;
     std::vector<PoolState> m_pools;
     int m_activePool;
-    
-    uint64_t m_nextFenceVal;
 };
 
 }

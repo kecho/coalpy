@@ -15,7 +15,6 @@
 #include "VulkanQueues.h"
 #include "VulkanEventPool.h"
 #include "VulkanFencePool.h"
-#include "VulkanFence.h"
 #include <coalpy.render/ShaderDefs.h>
 #include <iostream>
 #include <set>
@@ -388,8 +387,8 @@ VkDevice createVkDevice(
     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queueCreateInfo.queueFamilyIndex = queueFamilyIdx;
     queueCreateInfo.queueCount = (int)WorkType::Count;
-    std::vector<float> queuePrio = { 1.0f };
-    queueCreateInfo.pQueuePriorities = queuePrio.data();
+    const float queuePrio[(int)WorkType::Count] = { 1.0f };
+    queueCreateInfo.pQueuePriorities = queuePrio;
     queueCreateInfo.pNext = NULL;
     queueCreateInfo.flags = 0;
 
@@ -588,12 +587,12 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
 
     vkGetPhysicalDeviceMemoryProperties(m_vkPhysicalDevice, &m_vkMemProps);
 
-    m_queues =  new VulkanQueues(*this);
-    m_descriptorSetPools = new VulkanDescriptorSetPools(*this);
+    m_fencePool = new VulkanFencePool(*this);
     m_resources = new VulkanResources(*this);
+    m_descriptorSetPools = new VulkanDescriptorSetPools(*this);
     m_readbackPool = new VulkanReadbackBufferPool(*this);
     m_eventPool = new VulkanEventPool(*this);
-    m_fencePool = new VulkanFencePool(*this);
+    m_queues =  new VulkanQueues(*this, *m_fencePool);
     
     testApiFuncs();
 }
@@ -602,22 +601,17 @@ VulkanDevice::~VulkanDevice()
 {
     //sync device here, so deletion is clean.
     if (m_queues)
-    {
         for (int workType = 0; workType < (int)WorkType::Count; ++workType)
-        {
-            VulkanFence& fence = m_queues->getFence((WorkType)workType);
-            fence.waitOnCpu(fence.signal());
-        }
-    }
+            m_queues->waitForAllWorkOnCpu((WorkType)workType);
 
     if (m_shaderDb && m_shaderDb->parentDevice() == this)
         m_shaderDb->setParentDevice(nullptr, nullptr);
 
-    delete m_readbackPool;
-    delete m_resources;
-    delete m_descriptorSetPools;
     delete m_queues;
     delete m_eventPool;
+    delete m_readbackPool;
+    delete m_descriptorSetPools;
+    delete m_resources;
     delete m_fencePool;
 
     vkDestroyDevice(m_vkDevice, nullptr); 

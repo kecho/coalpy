@@ -1,7 +1,6 @@
 #include "VulkanGpuMemPools.h"
 #include "VulkanDevice.h"
 #include "VulkanResources.h"
-#include "VulkanFence.h"
 #include "VulkanFencePool.h"
 #include "VulkanUtils.h"
 #include "TGpuResourcePool.h"
@@ -18,8 +17,8 @@ class VulkanFenceTimeline
 public:
     using FenceType = VulkanFenceHandle;
 
-    VulkanFenceTimeline(VulkanDevice& device)
-    : m_device(device)
+    VulkanFenceTimeline(VulkanFencePool& fencePool)
+    : m_fencePool(fencePool)
     {
     }
 
@@ -30,7 +29,7 @@ public:
 
     void waitOnCpu(VulkanFenceHandle handle)
     {
-        m_device.fencePool().waitOnCpu(handle);
+        m_fencePool.waitOnCpu(handle);
     }
 
     void sync()
@@ -45,7 +44,7 @@ public:
 
     bool isSignaled(VulkanFenceHandle handle)
     {
-        return m_device.fencePool().isSignaled(handle);
+        return m_fencePool.isSignaled(handle);
     }
 
     VulkanFenceHandle allocateFenceValue()
@@ -55,7 +54,7 @@ public:
 
 private:
     VulkanFenceHandle m_currentFenceHandle;
-    VulkanDevice& m_device;
+    VulkanFencePool& m_fencePool;
     std::vector<VulkanFenceHandle> m_activeFences;
 };
 
@@ -77,12 +76,12 @@ using BaseUploadPool = TGpuResourcePool<VulkanUploadDesc, VulkanGpuMemoryBlock, 
 class VulkanGpuUploadPoolImpl : public BaseUploadPool, public VulkanFenceTimeline
 {
 public:
-    VulkanGpuUploadPoolImpl(VulkanDevice& device, VkQueue queue, uint64_t initialPoolSize)
-    : VulkanFenceTimeline(device), BaseUploadPool(*this, *this), m_device(device), m_nextHeapSize(initialPoolSize)
+    VulkanGpuUploadPoolImpl(VulkanDevice& device, VulkanFencePool& fencePool, uint64_t initialPoolSize)
+    : VulkanFenceTimeline(fencePool), BaseUploadPool(*this, *this), m_device(device), m_nextHeapSize(initialPoolSize)
     {
     }
 
-    ~VulkanGpuUploadPoolImpl();
+    ~VulkanGpuUploadPoolImpl() {}
     VulkanUploadHeap createNewHeap(const VulkanUploadDesc& desc, uint64_t& outHeapSize);
     void getRange(const VulkanUploadDesc& desc, uint64_t inputOffset, uint64_t& outputOffset, uint64_t& outputSize) const;
     VulkanGpuMemoryBlock allocateHandle(const VulkanUploadDesc& desc, uint64_t heapOffset, const VulkanUploadHeap& heap);
@@ -140,9 +139,9 @@ void VulkanGpuUploadPoolImpl::destroyHeap(VulkanUploadHeap& heap)
     heap = {};
 }
 
-VulkanGpuUploadPool::VulkanGpuUploadPool(VulkanDevice& device, VkQueue queue, uint64_t initialPoolSize)
+VulkanGpuUploadPool::VulkanGpuUploadPool(VulkanDevice& device, VulkanFencePool& fencePool, uint64_t initialPoolSize)
 {
-    m_impl = new VulkanGpuUploadPoolImpl(device, queue, initialPoolSize);
+    m_impl = new VulkanGpuUploadPoolImpl(device, fencePool, initialPoolSize);
 }
 
 VulkanGpuUploadPool::~VulkanGpuUploadPool()
@@ -169,14 +168,13 @@ VulkanGpuMemoryBlock VulkanGpuUploadPool::allocUploadBlock(size_t sizeBytes)
 }
 
 
-VulkanGpuDescriptorSetPool::VulkanGpuDescriptorSetPool(VulkanDevice& device, VkQueue queue)
-: m_device(device), m_fence(*(new VulkanFence(device, queue))), m_nextFenceVal(0ull), m_activePool(-1)
+VulkanGpuDescriptorSetPool::VulkanGpuDescriptorSetPool(VulkanDevice& device, VulkanFencePool& fencePool)
+: m_device(device), m_fencePool(fencePool), m_activePool(-1)
 {
 }
 
 VulkanGpuDescriptorSetPool::~VulkanGpuDescriptorSetPool()
 {
-    delete &m_fence;
 }
 
 VkDescriptorPool VulkanGpuDescriptorSetPool::newPool() const
@@ -201,13 +199,13 @@ VkDescriptorPool VulkanGpuDescriptorSetPool::newPool() const
     return newPool;
 }
 
-void VulkanGpuDescriptorSetPool::beginUsage()
+void VulkanGpuDescriptorSetPool::beginUsage(VulkanFenceHandle handle)
 {
-    uint64_t completeValue = m_fence.completedValue();
+    m_currentFence = handle;
     while (!m_livePools.empty())
     {
         auto& candidate = m_pools[m_livePools.front()];
-        if (candidate.fenceVal > completeValue)
+        if (!m_fencePool.isSignaled(candidate.fenceVal))
             break;
 
         m_freePools.push(m_livePools.front());
@@ -229,9 +227,7 @@ void VulkanGpuDescriptorSetPool::beginUsage()
 
 void VulkanGpuDescriptorSetPool::endUsage()
 {
-    ++m_nextFenceVal;
-    m_fence.signal(m_nextFenceVal);
-    m_pools[m_activePool].fenceVal = m_nextFenceVal;
+    m_pools[m_activePool].fenceVal = m_currentFence;
     m_livePools.push(m_activePool);
     m_activePool = -1;
 }
@@ -254,7 +250,7 @@ VkDescriptorSet VulkanGpuDescriptorSetPool::allocUploadBlock(VkDescriptorSetLayo
         }
 
         endUsage();
-        beginUsage();
+        beginUsage(m_currentFence);
     }
 
     return outSet;

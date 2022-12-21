@@ -1,6 +1,8 @@
 #pragma once
 
 #include "WorkBundleDb.h"
+#include <coalpy.core/HandleContainer.h>
+#include <coalpy.core/GenericHandle.h>
 #include <unordered_map>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
@@ -10,6 +12,7 @@ namespace coalpy
 namespace render
 {
 class VulkanDevice;
+struct VulkanEventHandle : public GenericHandle<unsigned int> {};
 
 class VulkanEventPool
 {
@@ -21,20 +24,21 @@ public:
 
     ~VulkanEventPool();
 
-    VkEvent allocate(CommandLocation location, bool& isNew);
-    void release(CommandLocation location);
+    VulkanEventHandle allocate(CommandLocation location, bool& isNew);
+    VulkanEventHandle find(CommandLocation location) const;
+    VkEvent getEvent(VulkanEventHandle handle) const { return m_records[handle].event; }
+    void release(VulkanEventHandle location);
 
 private:
     struct EventRecord
     {
+        bool allocated = false;
+        CommandLocation location;
         VkEvent event = {};
-        int refCount = 0;
     };
 
-    std::vector<EventRecord> m_records;
-
-    std::unordered_map<CommandLocation, int, CommandLocationHasher> m_lookups;
-    std::vector<int> m_freeEvents;
+    HandleContainer<VulkanEventHandle, EventRecord> m_records;
+    std::unordered_map<CommandLocation, VulkanEventHandle, CommandLocationHasher> m_lookups;
     VulkanDevice& m_device;
 };
 

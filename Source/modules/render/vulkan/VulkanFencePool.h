@@ -30,12 +30,11 @@ private:
     struct FenceState
     {
         VkFence fence;
-        bool allocated;
-        bool isSignaled;
+        bool allocated = false;
+        bool isSignaled = false;
     };
 
     HandleContainer<VulkanFenceHandle, FenceState> m_fences;
-    std::vector<VulkanFenceHandle> m_freeFences;
     VulkanDevice& m_device;
 };
 
