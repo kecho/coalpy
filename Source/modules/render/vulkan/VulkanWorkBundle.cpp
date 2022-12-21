@@ -1,8 +1,10 @@
 #include "VulkanWorkBundle.h"
 #include "VulkanDevice.h"
 #include "VulkanResources.h"
+#include "VulkanEventPool.h"
 #include <coalpy.core/Assert.h>
 #include <vector>
+#include <unordered_map>
 
 namespace coalpy
 {
@@ -88,16 +90,16 @@ inline VkImageLayout getVkImageLayout(ResourceGpuState state)
     return VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
-void applyBarriers(VulkanDevice& device, const std::vector<ResourceBarrier>& barriers, VkCommandBuffer cmdBuffer)
+void applyBarriers(
+    VulkanDevice& device,
+    VulkanEventPool& eventPool,
+    const std::vector<ResourceBarrier>& barriers,
+    VkCommandBuffer cmdBuffer)
 {
     if (barriers.empty())
         return;
 
-    VkPipelineStageFlags stageBefore[(int)BarrierType::Count] = {};
-    VkPipelineStageFlags stageAfter[(int)BarrierType::Count] = {};
-    std::vector<VkBufferMemoryBarrier> splitBufferBarriers;
     std::vector<VkBufferMemoryBarrier> immBufferBarriers;
-    std::vector<VkImageMemoryBarrier> splitImageBarriers;
     std::vector<VkImageMemoryBarrier> immImageBarriers;
 
     VkBufferMemoryBarrier buffBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER, nullptr };
@@ -105,19 +107,66 @@ void applyBarriers(VulkanDevice& device, const std::vector<ResourceBarrier>& bar
 
     VulkanResources& resources = device.resources();
 
+    struct EventState
+    {
+        VulkanEventHandle eventHandle;
+        VkPipelineStageFlags flags = 0;
+    };
+
+    struct DstEventState : public EventState
+    {
+        VkPipelineStageFlags dstFlags = 0;
+        std::vector<VkImageMemoryBarrier> imageBarriers;
+        std::vector<VkBufferMemoryBarrier> bufferBarriers;
+    };
+
+    CommandLocation srcLocation;
+    EventState srcEvent;
+
+    std::unordered_map<CommandLocation, DstEventState, CommandLocationHasher> dstEvents;
+
     for (const auto& b : barriers)
     {
         if (b.isUav)
             continue;
 
-        stageBefore[(int)b.type] |= getVkStage(b.prevState);
-        stageAfter[(int)b.type] |= getVkStage(b.postState);
+        DstEventState* dstEventPtr = nullptr;
+        if (b.type == BarrierType::Begin)
+        {
+            if (!srcEvent.eventHandle.valid())
+            {
+                srcLocation = b.srcCmdLocation;
+                bool unused = false;
+                srcEvent.eventHandle = eventPool.allocate(srcLocation, unused);
+            }
+
+            CPY_ASSERT(srcLocation == b.srcCmdLocation);
+            srcEvent.flags |= getVkStage(b.prevState);
+        }
+        else if (b.type == BarrierType::End)
+        {
+            auto it = dstEvents.find(b.srcCmdLocation);
+            if (it == dstEvents.end())
+            {
+                VulkanEventHandle eventHandle = eventPool.find(b.srcCmdLocation);
+                CPY_ASSERT(eventHandle.valid());
+                DstEventState dstEvent;
+                dstEvent.eventHandle = eventHandle;
+                dstEventPtr = &dstEvents.insert(std::pair<CommandLocation, DstEventState>(b.srcCmdLocation, dstEvent)).first->second;
+            }
+            else
+            {
+                dstEventPtr = &it->second;
+            }
+            dstEventPtr->flags |= getVkStage(b.prevState);
+            dstEventPtr->dstFlags |= getVkStage(b.postState);
+        }
 
         if (b.type == BarrierType::Begin)
             continue;
-    
-        std::vector<VkBufferMemoryBarrier>& bufferBarriers = b.type == BarrierType::Immediate ? immBufferBarriers : splitBufferBarriers;
-        std::vector<VkImageMemoryBarrier>& imgBarriers = b.type == BarrierType::Immediate ? immImageBarriers : splitImageBarriers;
+
+        std::vector<VkBufferMemoryBarrier>& bufferBarriers = b.type == BarrierType::Immediate ? immBufferBarriers : dstEventPtr->bufferBarriers;
+        std::vector<VkImageMemoryBarrier>& imgBarriers = b.type == BarrierType::Immediate ? immImageBarriers : dstEventPtr->imageBarriers;
         
         VulkanResource& resource = resources.unsafeGetResource(b.resource);
         VkAccessFlags srcAccessMask = getVkAccessMask(b.prevState);
@@ -146,6 +195,23 @@ void applyBarriers(VulkanDevice& device, const std::vector<ResourceBarrier>& bar
             newBarrier.image = resource.textureData.vkImage;
             newBarrier.subresourceRange = resource.textureData.subresourceRange;
         }
+    }
+
+    if (srcEvent.eventHandle.valid())
+    {
+        VkEvent event = eventPool.getEvent(srcEvent.eventHandle);
+        vkCmdSetEvent(cmdBuffer, event, srcEvent.flags);
+    }
+
+    for (auto pairVal : dstEvents)
+    {
+        DstEventState& dstEvent = pairVal.second;
+        VkEvent event = eventPool.getEvent(dstEvent.eventHandle);
+        vkCmdWaitEvents(
+            cmdBuffer, 1, &event, dstEvent.flags, dstEvent.dstFlags,
+            0, nullptr,
+            dstEvent.bufferBarriers.size(), dstEvent.bufferBarriers.data(),
+            dstEvent.imageBarriers.size(), dstEvent.imageBarriers.data());
     }
 }
 
