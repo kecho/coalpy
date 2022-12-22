@@ -2,6 +2,7 @@
 #include "VulkanDevice.h"
 #include "VulkanResources.h"
 #include "VulkanEventPool.h"
+#include "VulkanQueues.h"
 #include <coalpy.core/Assert.h>
 #include <vector>
 #include <unordered_map>
@@ -254,12 +255,56 @@ void applyBarriers(
 
 bool VulkanWorkBundle::load(const WorkBundle& workBundle)
 {
-    return false;
+    m_workBundle = workBundle;
+    return true;
 }
 
-uint64_t VulkanWorkBundle::execute(CommandList** commandLists, int commandListsCount)
+void buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, VkCommandBuffer cmdBuffer)
 {
-    return {};
+}
+
+VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int commandListsCount)
+{
+    CPY_ASSERT(commandListsCount == (int)m_workBundle.processedLists.size());
+    WorkType workType = WorkType::Graphics;
+    VulkanQueues& queues = m_device.queues();
+    queues.syncFences(workType);
+
+    VkQueue queue = queues.cmdQueue(workType);
+    VulkanMemoryPools& pools = queues.memPools(workType);
+    VulkanFenceHandle fenceHandle = queues.fence(workType);
+    VkFence fence = m_device.fencePool().get(fenceHandle);
+    pools.uploadPool->beginUsage(fenceHandle);
+    pools.descriptors->beginUsage(fenceHandle);
+
+    if (m_workBundle.totalUploadBufferSize)
+        m_uploadMemBlock = pools.uploadPool->allocUploadBlock(m_workBundle.totalUploadBufferSize);
+
+    std::vector<VulkanList> lists;
+    std::vector<VkCommandBuffer> cmdBuffers;
+    for (int i = 0; i < commandListsCount; ++i)
+    {
+        lists.emplace_back();
+        VulkanList& list = lists.back();
+        queues.allocate(workType, list);
+        cmdBuffers.push_back(list.list);
+
+        buildCommandList(i, commandLists[i], workType, list.list);
+    }
+
+    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };
+    submitInfo.commandBufferCount = cmdBuffers.size();
+    submitInfo.pCommandBuffers = cmdBuffers.data();
+
+    VK_OK(vkQueueSubmit(queue, 1u, &submitInfo, fence));
+
+    for (auto& l : lists)
+        queues.deallocate(l, fenceHandle);
+    
+    pools.descriptors->endUsage();
+    pools.uploadPool->endUsage();
+    queues.cleanSignaledFences(workType);
+    return fenceHandle;
 }
 
 }

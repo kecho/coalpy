@@ -112,7 +112,8 @@ void VulkanQueues::garbageCollectCmdBuffers(WorkType workType)
         break;
     }
 
-    vkFreeCommandBuffers(m_device.vkDevice(), m_cmdPool, freeCmdBuffers.size(), freeCmdBuffers.data());
+    if (!freeCmdBuffers.empty())
+        vkFreeCommandBuffers(m_device.vkDevice(), m_cmdPool, freeCmdBuffers.size(), freeCmdBuffers.data());
 }
 
 void VulkanQueues::deallocate(VulkanList& list, VulkanFenceHandle fenceValue)

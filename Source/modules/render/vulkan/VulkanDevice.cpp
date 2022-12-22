@@ -735,7 +735,7 @@ ScheduleStatus VulkanDevice::internalSchedule(CommandList** commandLists, int li
         m_workDb.unlock();
     }
 
-    uint64_t fenceValue = vulkanWorkBundle.execute(commandLists, listCounts);
+    vulkanWorkBundle.execute(commandLists, listCounts);
 
     /*
     {
