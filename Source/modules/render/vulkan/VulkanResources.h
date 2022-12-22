@@ -24,6 +24,7 @@ enum ResourceSpecialFlags : int
 };
 
 class VulkanDevice;
+class WorkBundleDb;
 enum { VulkanMaxMips = 14 };
 
 struct VulkanResource
@@ -88,7 +89,7 @@ public:
         MaxResources = 4095
     };
 
-    VulkanResources(VulkanDevice& device);
+    VulkanResources(VulkanDevice& device, WorkBundleDb& workDb);
     ~VulkanResources();
 
     BufferResult createBuffer(const BufferDesc& desc, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None);
@@ -115,6 +116,7 @@ private:
 
     std::mutex m_mutex;
     VulkanDevice& m_device;
+    WorkBundleDb& m_workDb;
     HandleContainer<ResourceHandle, VulkanResource, MaxResources> m_container;
     HandleContainer<ResourceTable, VulkanResourceTable, MaxResources> m_tables;
 };

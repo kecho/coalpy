@@ -1,6 +1,7 @@
 #include "VulkanResources.h"
 #include "VulkanDevice.h"
 #include "Config.h"
+#include "WorkBundleDb.h"
 #include "VulkanFormats.h"
 #include <coalpy.core/Assert.h>
 #include <variant>
@@ -11,8 +12,8 @@ namespace coalpy
 namespace render
 {
 
-VulkanResources::VulkanResources(VulkanDevice& device)
-: m_device(device)
+VulkanResources::VulkanResources(VulkanDevice& device, WorkBundleDb& workDb)
+: m_device(device), m_workDb(workDb)
 {
 }
 
@@ -126,7 +127,11 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
         }
     }
 
-
+    Buffer counterBuffer; //TODO implement counter / append consume buffer. Investigate how its done in vulkan.
+    m_workDb.registerResource(
+        handle, desc.memFlags, ResourceGpuState::Default, 
+        bufferData.size, 1, 1,
+        1, 1, counterBuffer);
     return BufferResult { ResourceResult::Ok, { handle.handleId } };
 }
 
@@ -276,6 +281,10 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc)
         }
     }
 
+    m_workDb.registerResource(
+        handle, desc.memFlags, ResourceGpuState::Default,
+        (int)desc.width, (int)desc.height, (int)createInfo.extent.depth,
+        createInfo.mipLevels, createInfo.arrayLayers);
     return TextureResult { ResourceResult::Ok, { handle.handleId } };
 }
 
@@ -429,6 +438,7 @@ InResourceTableResult VulkanResources::createInResourceTable(const ResourceTable
     }
 
     ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::In, resources.data(), bindings.data(), desc.uavTargetMips, (int)resources.size(), layout);
+    m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, false);
     return InResourceTableResult { ResourceResult::Ok, InResourceTable { handle.handleId } };
 }
 
@@ -454,6 +464,7 @@ OutResourceTableResult VulkanResources::createOutResourceTable(const ResourceTab
     }
 
     ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::Out, resources.data(), bindings.data(), desc.uavTargetMips, (int)resources.size(), layout);
+    m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, true);
     return OutResourceTableResult { ResourceResult::Ok, OutResourceTable { handle.handleId } };
 }
 
@@ -489,6 +500,7 @@ void VulkanResources::release(ResourceHandle handle)
 
     vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
 
+    m_workDb.unregisterResource(handle);
     m_container.free(handle);
 }
 
@@ -506,6 +518,7 @@ void VulkanResources::release(ResourceTable handle)
     VulkanResourceTable& table = m_tables[handle];
     vkDestroyDescriptorSetLayout(m_device.vkDevice(), table.layout, nullptr);
     m_device.descriptorSetPools().free(table.descriptors);
+    m_workDb.unregisterTable(handle);
     m_tables.free(handle);
 }
 

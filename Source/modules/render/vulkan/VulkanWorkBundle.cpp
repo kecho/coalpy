@@ -90,6 +90,47 @@ inline VkImageLayout getVkImageLayout(ResourceGpuState state)
     return VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
+struct EventState
+{
+    VulkanEventHandle eventHandle;
+    VkPipelineStageFlags flags = 0;
+};
+
+EventState createSrcBarrierEvent(
+    VulkanDevice& device,
+    VulkanEventPool& eventPool,
+    const std::vector<ResourceBarrier>& barriers,
+    VkCommandBuffer cmdBuffer)
+{
+    CommandLocation srcLocation;
+    EventState eventState;
+    bool mustReset = false;
+    for (auto& b : barriers)
+    {
+        if (b.type != BarrierType::Begin)
+            continue;
+
+        if (!eventState.eventHandle.valid())
+        {
+            srcLocation = b.srcCmdLocation;
+            bool isNew = false;
+            eventState.eventHandle = eventPool.allocate(srcLocation, isNew);
+            mustReset = !isNew;
+        }
+
+        CPY_ASSERT(srcLocation == b.srcCmdLocation);
+        eventState.flags |= getVkStage(b.prevState);
+        
+    }
+
+    if (mustReset)
+    {
+        VkEvent event = eventPool.getEvent(eventState.eventHandle);
+        vkCmdResetEvent(cmdBuffer, event, eventState.flags);
+    }
+    return eventState;
+}
+
 void applyBarriers(
     VulkanDevice& device,
     VulkanEventPool& eventPool,
@@ -106,12 +147,6 @@ void applyBarriers(
     VkImageMemoryBarrier imgBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, nullptr };
 
     VulkanResources& resources = device.resources();
-
-    struct EventState
-    {
-        VulkanEventHandle eventHandle;
-        VkPipelineStageFlags flags = 0;
-    };
 
     struct DstEventState : public EventState
     {

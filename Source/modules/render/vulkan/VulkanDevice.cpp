@@ -588,7 +588,7 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
     vkGetPhysicalDeviceMemoryProperties(m_vkPhysicalDevice, &m_vkMemProps);
 
     m_fencePool = new VulkanFencePool(*this);
-    m_resources = new VulkanResources(*this);
+    m_resources = new VulkanResources(*this, m_workDb);
     m_descriptorSetPools = new VulkanDescriptorSetPools(*this);
     m_readbackPool = new VulkanReadbackBufferPool(*this);
     m_eventPool = new VulkanEventPool(*this);
