@@ -2,7 +2,6 @@
 #include "VulkanDevice.h"
 #include "VulkanResources.h"
 #include "VulkanEventPool.h"
-#include "VulkanQueues.h"
 #include <coalpy.core/Assert.h>
 #include <vector>
 #include <unordered_map>
@@ -259,8 +258,102 @@ bool VulkanWorkBundle::load(const WorkBundle& workBundle)
     return true;
 }
 
-void buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, VkCommandBuffer cmdBuffer)
+void VulkanWorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCmd* uploadCmd, const CommandInfo& cmdInfo, VulkanList& outList)
 {
+}
+
+void VulkanWorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd* copyCmd, const CommandInfo& cmdInfo, VulkanList& outList)
+{
+}
+
+void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, VulkanList& outList, std::vector<VulkanEventHandle>& events)
+{
+    CPY_ASSERT(cmdList->isFinalized());
+    const unsigned char* listData = cmdList->data();
+    const ProcessedList& pl = m_workBundle.processedLists[listIndex];
+    for (int commandIndex = 0; commandIndex < pl.commandSchedule.size(); ++commandIndex)
+    {
+        const CommandInfo& cmdInfo = pl.commandSchedule[commandIndex];
+        const unsigned char* cmdBlob = listData + cmdInfo.commandOffset;
+        AbiCmdTypes cmdType = *((AbiCmdTypes*)cmdBlob);
+        //applyBarriers(cmdInfo.preBarrier, outList);
+        switch (cmdType)
+        {
+        case AbiCmdTypes::Compute:
+            {
+                //const auto* abiCmd = (const AbiComputeCmd*)cmdBlob;
+                //buildComputeCmd(listData, abiCmd, cmdInfo, outList);
+            }
+            break;
+        case AbiCmdTypes::Copy:
+            {
+                const auto* abiCmd = (const AbiCopyCmd*)cmdBlob;
+                buildCopyCmd(listData, abiCmd, cmdInfo, outList);
+            }
+            break;
+        case AbiCmdTypes::Upload:
+            {
+                const auto* abiCmd = (const AbiUploadCmd*)cmdBlob;
+                buildUploadCmd(listData, abiCmd, cmdInfo, outList);
+            }
+            break;
+        case AbiCmdTypes::Download:
+            {
+                //const auto* abiCmd = (const AbiDownloadCmd*)cmdBlob;
+                //buildDownloadCmd(listData, abiCmd, cmdInfo, workType, outList);
+            }
+            break;
+        case AbiCmdTypes::CopyAppendConsumeCounter:
+            {
+                //const auto* abiCmd = (const AbiCopyAppendConsumeCounter*)cmdBlob;
+                //buildCopyAppendConsumeCounter(listData, abiCmd, cmdInfo, outList);
+            }
+            break;
+        case AbiCmdTypes::ClearAppendConsumeCounter:
+            {
+                //const auto* abiCmd = (const AbiClearAppendConsumeCounter*)cmdBlob;
+                //buildClearAppendConsumeCounter(listData, abiCmd, cmdInfo, outList);
+            }
+            break;
+        case AbiCmdTypes::BeginMarker:
+            {
+                /*
+                const auto* abiCmd = (const AbiBeginMarker*)cmdBlob;
+                Dx12PixApi* pixApi = m_device.getPixApi();
+                if (pixApi)
+                {
+                    const char* str = abiCmd->str.data(listData);
+                    pixApi->pixBeginEventOnCommandList(&outList, 0xffff00ff, str);
+                }
+
+                Dx12MarkerCollector& markerCollector = m_device.markerCollector();
+                if (markerCollector.isActive())
+                {
+                    const char* str = abiCmd->str.data(listData);
+                    markerCollector.beginMarker(outList, str);
+                }
+                */
+            }
+            break;
+        case AbiCmdTypes::EndMarker:
+            {
+                /*
+                Dx12PixApi* pixApi = m_device.getPixApi();
+                if (pixApi)
+                    pixApi->pixEndEventOnCommandList(&outList);
+
+                Dx12MarkerCollector& markerCollector = m_device.markerCollector();
+                if (markerCollector.isActive())
+                    markerCollector.endMarker(outList);
+                */
+            }
+            break;
+        default:
+            CPY_ASSERT_FMT(false, "Unrecognized serialized command %d", cmdType);
+            return;
+        }
+        //applyBarriers(cmdInfo.postBarrier, outList);
+    }
 }
 
 VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int commandListsCount)
@@ -272,7 +365,7 @@ VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int comm
 
     VkQueue queue = queues.cmdQueue(workType);
     VulkanMemoryPools& pools = queues.memPools(workType);
-    VulkanFenceHandle fenceHandle = queues.fence(workType);
+    VulkanFenceHandle fenceHandle = queues.newFence();
     VkFence fence = m_device.fencePool().get(fenceHandle);
     pools.uploadPool->beginUsage(fenceHandle);
     pools.descriptors->beginUsage(fenceHandle);
@@ -282,6 +375,7 @@ VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int comm
 
     std::vector<VulkanList> lists;
     std::vector<VkCommandBuffer> cmdBuffers;
+    std::vector<std::vector<VulkanEventHandle>> events;
     for (int i = 0; i < commandListsCount; ++i)
     {
         lists.emplace_back();
@@ -289,7 +383,9 @@ VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int comm
         queues.allocate(workType, list);
         cmdBuffers.push_back(list.list);
 
-        buildCommandList(i, commandLists[i], workType, list.list);
+        std::vector<VulkanEventHandle> localEvents;
+        buildCommandList(i, commandLists[i], workType, list, localEvents);
+        events.emplace_back(std::move(localEvents));
     }
 
     VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };
@@ -299,11 +395,15 @@ VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int comm
     VK_OK(vkQueueSubmit(queue, 1u, &submitInfo, fence));
 
     for (auto& l : lists)
-        queues.deallocate(l, fenceHandle);
+    for (int i = 0; i < (int)lists.size(); ++i)
+    {
+        auto& l = lists[i];
+        auto& localEvents = events[i];
+        queues.deallocate(l, fenceHandle, std::move(localEvents));
+    }
     
     pools.descriptors->endUsage();
     pools.uploadPool->endUsage();
-    queues.cleanSignaledFences(workType);
     return fenceHandle;
 }
 

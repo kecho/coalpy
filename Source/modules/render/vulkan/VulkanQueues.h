@@ -2,6 +2,7 @@
 
 #include "Config.h"
 #include "VulkanFencePool.h"
+#include "VulkanEventPool.h"
 #include <vector>
 #include <queue>
 #include <vulkan/vulkan.h>
@@ -39,21 +40,21 @@ struct VulkanMemoryPools
 class VulkanQueues
 {
 public:
-    VulkanQueues(VulkanDevice& device, VulkanFencePool& fencePool);
+    VulkanQueues(VulkanDevice& device, VulkanFencePool& fencePool, VulkanEventPool& eventPool);
     ~VulkanQueues();
 
     VkQueue& cmdQueue(WorkType type) { return (m_containers[(int)type].queue); }
     VulkanMemoryPools& memPools(WorkType type) { return m_containers[(int)type].memPools; }
     
-    VulkanFenceHandle fence(WorkType workType);
-    void cleanSignaledFences(WorkType workType);
+    VulkanFenceHandle newFence();
     void syncFences(WorkType workType);
     void waitForAllWorkOnCpu(WorkType workType);
     void allocate(WorkType workType, VulkanList& outList);
     uint64_t currentFenceValue(WorkType workType);
-    void deallocate(VulkanList& list, VulkanFenceHandle fenceValue);
+    void deallocate(VulkanList& list, VulkanFenceHandle fenceValue, std::vector<VulkanEventHandle>&& events);
 
     VulkanFencePool& fencePool() { return m_fencePool; }
+    VulkanEventPool& eventPool() { return m_eventPool; }
 
 private:
     void garbageCollectCmdBuffers(WorkType workType);
@@ -61,35 +62,34 @@ private:
     struct LiveAllocation
     {
         VulkanFenceHandle fenceValue;
+        std::vector<VulkanEventHandle> events;
         VkCommandBuffer list;
     };
 
-    enum : int { MaxFences = 512 };
+    enum : int { MaxLiveAllocations = 512 };
 
     struct QueueContainer
     {
         VkQueue queue = {};
-        VulkanFenceHandle fence;
-        std::queue<LiveAllocation> liveAllocations;
-        VulkanFenceHandle activeFences[MaxFences];
-        int activeFenceBegin = 0;
-        int activeFenceCount = 0;
+        LiveAllocation liveAllocations[MaxLiveAllocations];
+        int liveAllocationsBegin = 0;
+        int liveAllocationsCount = 0;
         VulkanMemoryPools memPools;
 
-        VulkanFenceHandle frontFence() const
+        LiveAllocation& frontAllocation()
         {
-            return activeFences[activeFenceBegin];
+            return liveAllocations[liveAllocationsBegin];
         }
 
-        void popFence()
+        void popAllocation()
         {
-            activeFenceBegin = (activeFenceBegin + 1) % MaxFences;
-            --activeFenceCount;
+            liveAllocationsBegin = (liveAllocationsBegin + 1) % MaxLiveAllocations;
+            --liveAllocationsCount;
         }
 
-        void pushFence(VulkanFenceHandle handle)
+        void pushAllocation(LiveAllocation& liveAllocation)
         {
-            activeFences[(activeFenceBegin + activeFenceCount++) % MaxFences] = handle;
+            liveAllocations[(liveAllocationsBegin + liveAllocationsCount++) % MaxLiveAllocations] = liveAllocation;
         }
     };
 
@@ -97,6 +97,7 @@ private:
     
     VkCommandPool m_cmdPool;
     VulkanFencePool& m_fencePool;
+    VulkanEventPool& m_eventPool;
     VulkanDevice& m_device;
 };
 

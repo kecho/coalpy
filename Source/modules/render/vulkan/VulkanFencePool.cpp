@@ -37,8 +37,19 @@ VulkanFenceHandle VulkanFencePool::allocate()
         VK_OK(vkCreateFence(m_device.vkDevice(), &createInfo, nullptr, &fenceState.fence));
         fenceState.allocated = true;
     }
+
+    CPY_ASSERT(fenceState.refCount == 0);
+    fenceState.refCount = 1;
     fenceState.isSignaled = false;
     return handle;
+}
+
+void VulkanFencePool::addRef(VulkanFenceHandle handle)
+{
+    FenceState& fenceState = m_fences[handle];
+    CPY_ASSERT(fenceState.refCount > 0);
+    CPY_ASSERT(fenceState.allocated);
+    ++fenceState.refCount;
 }
 
 void VulkanFencePool::updateState(VulkanFenceHandle handle)
@@ -65,7 +76,11 @@ void VulkanFencePool::waitOnCpu(VulkanFenceHandle handle)
 
 void VulkanFencePool::free(VulkanFenceHandle handle)
 {
-    m_fences.free(handle, false);
+    FenceState& fenceState = m_fences[handle];
+    CPY_ASSERT(fenceState.refCount > 0);
+    --fenceState.refCount;
+    if (fenceState.refCount == 0)
+        m_fences.free(handle, false);
 }
 
 }

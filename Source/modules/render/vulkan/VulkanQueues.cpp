@@ -9,8 +9,8 @@ namespace coalpy
 namespace render
 {
 
-VulkanQueues::VulkanQueues(VulkanDevice& device, VulkanFencePool& fencePool)
-: m_device(device), m_fencePool(fencePool)
+VulkanQueues::VulkanQueues(VulkanDevice& device, VulkanFencePool& fencePool, VulkanEventPool& eventPool)
+: m_device(device), m_fencePool(fencePool), m_eventPool(eventPool)
 {
     for (int queueIt = 0u; queueIt < (int)WorkType::Count; ++queueIt)
     {
@@ -34,7 +34,7 @@ VulkanQueues::~VulkanQueues()
         QueueContainer& container =  m_containers[workType];
         waitForAllWorkOnCpu((WorkType)workType);
         syncFences((WorkType)workType);
-        cleanSignaledFences((WorkType)workType);
+        garbageCollectCmdBuffers((WorkType)workType);
         delete container.memPools.uploadPool;
         delete container.memPools.descriptors;
     }
@@ -42,46 +42,23 @@ VulkanQueues::~VulkanQueues()
     vkDestroyCommandPool(m_device.vkDevice(), m_cmdPool, nullptr);
 }
 
-VulkanFenceHandle VulkanQueues::fence(WorkType workType)
+VulkanFenceHandle VulkanQueues::newFence()
 {
-    QueueContainer& container = m_containers[(int)workType];
-    CPY_ASSERT(container.activeFenceCount < MaxFences);
-    if (container.activeFenceCount >= MaxFences)
-    {
-        m_fencePool.waitOnCpu(container.frontFence());
-        m_fencePool.free(container.frontFence());
-        container.popFence();
-    }
-    VulkanFenceHandle handle = m_fencePool.allocate();
-    container.pushFence(handle);
-    return handle; 
+    return m_fencePool.allocate(); 
 }
 
 void VulkanQueues::syncFences(WorkType workType)
 {
     QueueContainer& container = m_containers[(int)workType];
-    for (int i = 0; i < container.activeFenceCount; ++i)
-        m_fencePool.updateState(container.activeFences[i % MaxFences]);
-}
-
-void VulkanQueues::cleanSignaledFences(WorkType workType)
-{
-    QueueContainer& container = m_containers[(int)workType];
-    while (container.activeFenceCount != 0)
-    {
-        if (!m_fencePool.isSignaled(container.frontFence()))
-            break;
-
-        m_fencePool.free(container.frontFence());
-        container.popFence();
-    }
+    for (int i = 0; i < container.liveAllocationsCount; ++i)
+        m_fencePool.updateState(container.liveAllocations[(i + container.liveAllocationsBegin) % MaxLiveAllocations].fenceValue);
 }
 
 void VulkanQueues::waitForAllWorkOnCpu(WorkType workType)
 {
     QueueContainer& container = m_containers[(int)workType];
-    for (int i = 0; i < container.activeFenceCount; ++i)
-        m_fencePool.waitOnCpu(container.activeFences[i % MaxFences]);
+    for (int i = 0; i < container.liveAllocationsCount; ++i)
+        m_fencePool.waitOnCpu(container.liveAllocations[(i + container.liveAllocationsBegin) % MaxLiveAllocations].fenceValue);
 }
 
 void VulkanQueues::allocate(WorkType workType, VulkanList& outList)
@@ -100,15 +77,15 @@ void VulkanQueues::garbageCollectCmdBuffers(WorkType workType)
 {
     auto& container = m_containers[(int)workType];
     std::vector<VkCommandBuffer> freeCmdBuffers;
-    while (!container.liveAllocations.empty())
+    while (container.liveAllocationsCount > 0)
     {
-        auto& allocation = container.liveAllocations.front();
+        auto& allocation = container.frontAllocation();
         if (m_fencePool.isSignaled(allocation.fenceValue))
         {
             freeCmdBuffers.push_back(allocation.list);
-            container.liveAllocations.pop();
+            m_fencePool.free(allocation.fenceValue);
+            container.popAllocation();
         }
-
         break;
     }
 
@@ -116,11 +93,13 @@ void VulkanQueues::garbageCollectCmdBuffers(WorkType workType)
         vkFreeCommandBuffers(m_device.vkDevice(), m_cmdPool, freeCmdBuffers.size(), freeCmdBuffers.data());
 }
 
-void VulkanQueues::deallocate(VulkanList& list, VulkanFenceHandle fenceValue)
+void VulkanQueues::deallocate(VulkanList& list, VulkanFenceHandle fenceValue, std::vector<VulkanEventHandle>&& events)
 {
     CPY_ASSERT((int)list.workType >= 0 && (int)list.workType < (int)WorkType::Count);
     auto& q = m_containers[(int)list.workType];
-    q.liveAllocations.push(LiveAllocation { fenceValue, list.list });
+    m_fencePool.addRef(fenceValue);
+    LiveAllocation alloc = { fenceValue, std::move(events), list.list };
+    q.pushAllocation(alloc);
     list = {};
 }
 

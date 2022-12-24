@@ -592,7 +592,7 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
     m_descriptorSetPools = new VulkanDescriptorSetPools(*this);
     m_readbackPool = new VulkanReadbackBufferPool(*this);
     m_eventPool = new VulkanEventPool(*this);
-    m_queues =  new VulkanQueues(*this, *m_fencePool);
+    m_queues =  new VulkanQueues(*this, *m_fencePool, *m_eventPool);
     
     testApiFuncs();
 }
@@ -735,7 +735,8 @@ ScheduleStatus VulkanDevice::internalSchedule(CommandList** commandLists, int li
         m_workDb.unlock();
     }
 
-    vulkanWorkBundle.execute(commandLists, listCounts);
+    VulkanFenceHandle fenceHandle = vulkanWorkBundle.execute(commandLists, listCounts);
+    m_fencePool->free(fenceHandle);
 
     /*
     {

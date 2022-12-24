@@ -25,6 +25,7 @@ public:
     void beginUsageWithFence(VulkanFenceHandle handle)
     {
         m_currentFenceHandle = handle;
+        m_fencePool.addRef(m_currentFenceHandle);
     }
 
     void waitOnCpu(VulkanFenceHandle handle)
@@ -39,7 +40,8 @@ public:
 
     void signalFence()
     {
-        //this is done externally
+        m_fencePool.free(m_currentFenceHandle);
+        m_currentFenceHandle = VulkanFenceHandle();
     } 
 
     bool isSignaled(VulkanFenceHandle handle)
@@ -202,12 +204,14 @@ VkDescriptorPool VulkanGpuDescriptorSetPool::newPool() const
 void VulkanGpuDescriptorSetPool::beginUsage(VulkanFenceHandle handle)
 {
     m_currentFence = handle;
+    m_fencePool.addRef(m_currentFence);
     while (!m_livePools.empty())
     {
         auto& candidate = m_pools[m_livePools.front()];
         if (!m_fencePool.isSignaled(candidate.fenceVal))
             break;
 
+        m_fencePool.free(candidate.fenceVal);
         m_freePools.push(m_livePools.front());
         m_livePools.pop();
     }

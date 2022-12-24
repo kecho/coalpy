@@ -22,6 +22,7 @@ public:
     VulkanFenceHandle allocate();
     void free(VulkanFenceHandle handle);
     VkFence get(VulkanFenceHandle handle) { return m_fences[handle].fence; }
+    void addRef(VulkanFenceHandle handle);
     void updateState(VulkanFenceHandle handle);
     void waitOnCpu(VulkanFenceHandle handle);
     bool isSignaled(VulkanFenceHandle handle);
@@ -30,6 +31,7 @@ private:
     struct FenceState
     {
         VkFence fence;
+        int refCount = 0;
         bool allocated = false;
         bool isSignaled = false;
     };
