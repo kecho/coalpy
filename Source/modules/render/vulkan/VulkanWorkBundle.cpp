@@ -4,7 +4,6 @@
 #include "VulkanEventPool.h"
 #include <coalpy.core/Assert.h>
 #include <vector>
-#include <iostream>
 #include <unordered_map>
 #include <string.h>
 
