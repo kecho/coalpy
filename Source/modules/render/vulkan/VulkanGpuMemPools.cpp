@@ -5,7 +5,6 @@
 #include "VulkanUtils.h"
 #include "TGpuResourcePool.h"
 #include <coalpy.core/Assert.h>
-#include <algorithm>
 
 namespace coalpy
 {
@@ -100,7 +99,7 @@ VulkanUploadHeap VulkanGpuUploadPoolImpl::createNewHeap(const VulkanUploadDesc& 
     bufferDesc.format = Format::RGBA_8_UINT;
     bufferDesc.isConstantBuffer = true;
     bufferDesc.elementCount = std::max(2*desc.requestBytes, m_nextHeapSize);
-    bufferDesc.memFlags = (MemFlags)0;
+    bufferDesc.memFlags = MemFlag_GpuRead;
     
     m_nextHeapSize = std::max(2*desc.requestBytes, 2 * m_nextHeapSize);
     outHeapSize = bufferDesc.elementCount;

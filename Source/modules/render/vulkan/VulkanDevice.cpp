@@ -690,7 +690,7 @@ SamplerTableResult  VulkanDevice::createSamplerTable (const ResourceTableDesc& c
 
 void VulkanDevice::getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo)
 {
-    memInfo = ResourceMemoryInfo();
+    m_resources->getResourceMemoryInfo(handle, memInfo);
 }
 
 WaitStatus VulkanDevice::waitOnCpu(WorkHandle handle, int milliseconds)

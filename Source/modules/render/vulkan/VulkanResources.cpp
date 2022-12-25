@@ -4,6 +4,7 @@
 #include "WorkBundleDb.h"
 #include "VulkanFormats.h"
 #include <coalpy.core/Assert.h>
+#include <coalpy.render/CommandDefs.h>
 #include <variant>
 #include <iostream>
 
@@ -39,9 +40,9 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
     if (desc.type == BufferType::Standard)
     {
         if ((desc.memFlags & MemFlag_GpuRead) != 0)
-            createInfo.usage |= VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
+            createInfo.usage |= (VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
         if ((desc.memFlags & MemFlag_GpuWrite) != 0 || (specialFlags & ResourceSpecialFlag_CpuReadback) != 0)
-            createInfo.usage |= VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT;
+            createInfo.usage |= (VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
         if (desc.isConstantBuffer)
             createInfo.usage |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
@@ -51,10 +52,13 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
     {
         //in vulkan it doesnt matter, if structured or raw, always set the storage buffer bit.
         createInfo.usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+        if ((desc.memFlags & MemFlag_GpuRead) != 0)
+            createInfo.usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        if ((desc.memFlags & MemFlag_GpuWrite) != 0 || (specialFlags & ResourceSpecialFlag_CpuReadback) != 0)
+            createInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         createInfo.size = desc.stride * desc.elementCount;
         resource.bufferData.isStorageBuffer = true;
     }
-    resource.memFlags = desc.memFlags;
 
     createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; //not exposed, cant do async in coalpy yet.
     createInfo.queueFamilyIndexCount = 1;
@@ -110,7 +114,7 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
 
     bufferData.vkBufferView = {};
     bufferData.size = createInfo.size;
-    if (desc.type == BufferType::Standard)
+    if (desc.type == BufferType::Standard && (createInfo.usage & (VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT)) != 0)
     {
         VkBufferViewCreateInfo bufferViewInfo = {};
         bufferViewInfo.sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
@@ -211,6 +215,11 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc)
     createInfo.pQueueFamilyIndices = &desfaultQueueFam;
     createInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
 
+    resource.textureData.width = createInfo.extent.width;
+    resource.textureData.height = createInfo.extent.height;
+    resource.textureData.depth = createInfo.extent.depth;
+    resource.textureData.format = desc.format;
+
     auto& textureData = resource.textureData;
     resource.type = VulkanResource::Type::Texture;
     resource.handle = handle;
@@ -292,6 +301,22 @@ TextureResult VulkanResources::recreateTexture(Texture texture, const TextureDes
 {
     std::unique_lock lock(m_mutex);
     return TextureResult();
+}
+
+void VulkanResources::getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo)
+{
+    const VulkanResource& resource = m_container[handle];
+    
+    memInfo.isBuffer = resource.isBuffer();
+    memInfo.byteSize = (size_t)resource.actualSize;
+    if (resource.isTexture())
+    {
+        memInfo.width = resource.textureData.width;
+        memInfo.height = resource.textureData.height;
+        memInfo.depth  = resource.textureData.depth;
+        memInfo.texelElementPitch = getVkFormatStride(resource.textureData.format);
+        memInfo.rowPitch = memInfo.texelElementPitch * memInfo.width; //TODO: figure out row alignment
+    }
 }
 
 bool VulkanResources::queryResources(const ResourceHandle* handles, int counts, std::vector<const VulkanResource*>& outResources) const

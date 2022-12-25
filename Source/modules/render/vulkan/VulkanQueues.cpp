@@ -84,6 +84,8 @@ void VulkanQueues::garbageCollectCmdBuffers(WorkType workType)
         {
             freeCmdBuffers.push_back(allocation.list);
             m_fencePool.free(allocation.fenceValue);
+            for (auto e : allocation.events)
+                m_eventPool.release(e);
             container.popAllocation();
         }
         break;

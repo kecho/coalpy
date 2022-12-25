@@ -2,6 +2,7 @@
 
 #include <coalpy.render/Resources.h>
 #include <coalpy.core/HandleContainer.h>
+#include <coalpy.core/Formats.h>
 #include <vulkan/vulkan.h>
 #include "VulkanDescriptorSetPools.h"
 #include <vector>
@@ -25,6 +26,7 @@ enum ResourceSpecialFlags : int
 
 class VulkanDevice;
 class WorkBundleDb;
+struct ResourceMemoryInfo;
 enum { VulkanMaxMips = 14 };
 
 struct VulkanResource
@@ -49,6 +51,10 @@ struct VulkanResource
         VkImageView vkSrvView;
         VkImageView vkUavViews[VulkanMaxMips];
         VkImageSubresourceRange subresourceRange;
+        Format format;
+        int width;
+        int height;
+        int depth;
         uint32_t uavCounts;
     };
 
@@ -98,6 +104,7 @@ public:
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
     OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);
     VulkanResource& unsafeGetResource(ResourceHandle handle) { return m_container[handle]; }
+    void getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo);
 
     void release(ResourceHandle handle);
     void release(ResourceTable handle);

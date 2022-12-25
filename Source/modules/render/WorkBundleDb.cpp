@@ -1,6 +1,7 @@
 #include "WorkBundleDb.h"
 #include <coalpy.core/Assert.h>
 #include <coalpy.render/IDevice.h>
+#include <iostream>
 #include <sstream>
 
 namespace coalpy

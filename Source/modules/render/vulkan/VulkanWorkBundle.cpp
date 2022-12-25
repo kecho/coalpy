@@ -4,7 +4,9 @@
 #include "VulkanEventPool.h"
 #include <coalpy.core/Assert.h>
 #include <vector>
+#include <iostream>
 #include <unordered_map>
+#include <string.h>
 
 namespace coalpy
 {
@@ -133,6 +135,7 @@ EventState createSrcBarrierEvent(
 
 void applyBarriers(
     VulkanDevice& device,
+    const EventState& srcEvent,
     VulkanEventPool& eventPool,
     const std::vector<ResourceBarrier>& barriers,
     VkCommandBuffer cmdBuffer)
@@ -140,10 +143,12 @@ void applyBarriers(
     if (barriers.empty())
         return;
 
+    VkPipelineStageFlags immSrcFlags = 0;
+    VkPipelineStageFlags immDstFlags = 0;
     std::vector<VkBufferMemoryBarrier> immBufferBarriers;
     std::vector<VkImageMemoryBarrier> immImageBarriers;
 
-    VkBufferMemoryBarrier buffBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER, nullptr };
+    VkBufferMemoryBarrier buffBarrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER, nullptr };
     VkImageMemoryBarrier imgBarrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, nullptr };
 
     VulkanResources& resources = device.resources();
@@ -156,8 +161,6 @@ void applyBarriers(
     };
 
     CommandLocation srcLocation;
-    EventState srcEvent;
-
     std::unordered_map<CommandLocation, DstEventState, CommandLocationHasher> dstEvents;
 
     for (const auto& b : barriers)
@@ -168,15 +171,7 @@ void applyBarriers(
         DstEventState* dstEventPtr = nullptr;
         if (b.type == BarrierType::Begin)
         {
-            if (!srcEvent.eventHandle.valid())
-            {
-                srcLocation = b.srcCmdLocation;
-                bool unused = false;
-                srcEvent.eventHandle = eventPool.allocate(srcLocation, unused);
-            }
-
-            CPY_ASSERT(srcLocation == b.srcCmdLocation);
-            srcEvent.flags |= getVkStage(b.prevState);
+            CPY_ASSERT(srcEvent.eventHandle.valid());
         }
         else if (b.type == BarrierType::End)
         {
@@ -195,6 +190,11 @@ void applyBarriers(
             }
             dstEventPtr->flags |= getVkStage(b.prevState);
             dstEventPtr->dstFlags |= getVkStage(b.postState);
+        }
+        else
+        {
+            immSrcFlags |= getVkStage(b.prevState);
+            immDstFlags |= getVkStage(b.postState);
         }
 
         if (b.type == BarrierType::Begin)
@@ -238,6 +238,10 @@ void applyBarriers(
         vkCmdSetEvent(cmdBuffer, event, srcEvent.flags);
     }
 
+    if (immSrcFlags != 0 || immDstFlags != 0)
+        vkCmdPipelineBarrier(cmdBuffer, immSrcFlags, immDstFlags, 0, 0, nullptr,
+        immBufferBarriers.size(), immBufferBarriers.data(), immImageBarriers.size(), immImageBarriers.data());
+
     for (auto pairVal : dstEvents)
     {
         DstEventState& dstEvent = pairVal.second;
@@ -260,6 +264,22 @@ bool VulkanWorkBundle::load(const WorkBundle& workBundle)
 
 void VulkanWorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCmd* uploadCmd, const CommandInfo& cmdInfo, VulkanList& outList)
 {
+    VulkanResources& resources = m_device.resources();
+    VulkanResource& destinationResource = resources.unsafeGetResource(uploadCmd->destination);
+    CPY_ASSERT_FMT(cmdInfo.uploadBufferOffset < m_uploadMemBlock.uploadSize, "out of bounds offset: %d < %d", cmdInfo.uploadBufferOffset, m_uploadMemBlock.uploadSize);
+    CPY_ASSERT((m_uploadMemBlock.uploadSize - cmdInfo.uploadBufferOffset) >= uploadCmd->sourceSize);
+    if (destinationResource.isBuffer())
+    {
+        memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + cmdInfo.uploadBufferOffset, uploadCmd->sources.data(data), uploadCmd->sourceSize);
+        VkBufferCopy region = { (VkDeviceSize)(m_uploadMemBlock.offset + cmdInfo.uploadBufferOffset), (VkDeviceSize)uploadCmd->destX, (VkDeviceSize)uploadCmd->sourceSize };
+        VkBuffer srcBuffer = resources.unsafeGetResource(m_uploadMemBlock.buffer).bufferData.vkBuffer;
+        vkCmdCopyBuffer(outList.list, srcBuffer, destinationResource.bufferData.vkBuffer, 1, &region);
+    }
+    else
+    {
+        CPY_ASSERT_FMT(false, "%s", "unimplemented");
+    }
+    
 }
 
 void VulkanWorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd* copyCmd, const CommandInfo& cmdInfo, VulkanList& outList)
@@ -271,12 +291,23 @@ void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdLis
     CPY_ASSERT(cmdList->isFinalized());
     const unsigned char* listData = cmdList->data();
     const ProcessedList& pl = m_workBundle.processedLists[listIndex];
+    if (!pl.commandSchedule.empty())
+    {
+        VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, nullptr };
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        vkBeginCommandBuffer(outList.list, &beginInfo);
+    }
+    
     for (int commandIndex = 0; commandIndex < pl.commandSchedule.size(); ++commandIndex)
     {
         const CommandInfo& cmdInfo = pl.commandSchedule[commandIndex];
         const unsigned char* cmdBlob = listData + cmdInfo.commandOffset;
         AbiCmdTypes cmdType = *((AbiCmdTypes*)cmdBlob);
-        //applyBarriers(cmdInfo.preBarrier, outList);
+        EventState postEventState = createSrcBarrierEvent(m_device, m_device.eventPool(), cmdInfo.postBarrier, outList.list);
+        if (postEventState.eventHandle.valid())
+            events.emplace_back(postEventState.eventHandle);
+        static const EventState s_nullEvent; 
+        applyBarriers(m_device, s_nullEvent, m_device.eventPool(), cmdInfo.preBarrier, outList.list);
         switch (cmdType)
         {
         case AbiCmdTypes::Compute:
@@ -352,8 +383,11 @@ void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdLis
             CPY_ASSERT_FMT(false, "Unrecognized serialized command %d", cmdType);
             return;
         }
-        //applyBarriers(cmdInfo.postBarrier, outList);
+        applyBarriers(m_device, s_nullEvent, m_device.eventPool(), cmdInfo.postBarrier, outList.list);
     }
+
+    if (!pl.commandSchedule.empty())
+        vkEndCommandBuffer(outList.list);
 }
 
 VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int commandListsCount)

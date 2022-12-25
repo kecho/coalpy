@@ -69,7 +69,9 @@ public:
     {
         AllocationHandle h;
         if (!internalFindAlloc(desc, h))
+        {
             internalCreateNew(desc, h);
+        }
         return h;
     }
     
