@@ -30,6 +30,7 @@ public:
     void waitOnCpu(VulkanFenceHandle handle)
     {
         m_fencePool.waitOnCpu(handle);
+        m_fencePool.free(handle);
     }
 
     void sync()
@@ -45,11 +46,15 @@ public:
 
     bool isSignaled(VulkanFenceHandle handle)
     {
-        return m_fencePool.isSignaled(handle);
+        bool res = m_fencePool.isSignaled(handle);
+        if (res)
+            m_fencePool.free(handle);
+        return res;
     }
 
     VulkanFenceHandle allocateFenceValue()
     {
+        m_fencePool.addRef(m_currentFenceHandle);
         return m_currentFenceHandle;
     }
 
@@ -176,6 +181,17 @@ VulkanGpuDescriptorSetPool::VulkanGpuDescriptorSetPool(VulkanDevice& device, Vul
 
 VulkanGpuDescriptorSetPool::~VulkanGpuDescriptorSetPool()
 {
+    while (!m_livePools.empty())
+    {
+        auto& pool = m_pools[m_livePools.front()];
+        m_livePools.pop();
+
+        m_fencePool.waitOnCpu(pool.fenceVal);
+        m_fencePool.free(pool.fenceVal);
+    }
+
+    for (auto& p : m_pools)
+        vkDestroyDescriptorPool(m_device.vkDevice(), p.pool, nullptr);
 }
 
 VkDescriptorPool VulkanGpuDescriptorSetPool::newPool() const
@@ -211,6 +227,7 @@ void VulkanGpuDescriptorSetPool::beginUsage(VulkanFenceHandle handle)
             break;
 
         m_fencePool.free(candidate.fenceVal);
+        candidate.fenceVal = VulkanFenceHandle();
         m_freePools.push(m_livePools.front());
         m_livePools.pop();
     }

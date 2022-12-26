@@ -3,10 +3,10 @@
 #include "Config.h"
 #include "WorkBundleDb.h"
 #include "VulkanFormats.h"
+#include "VulkanGc.h"
 #include <coalpy.core/Assert.h>
 #include <coalpy.render/CommandDefs.h>
 #include <variant>
-#include <iostream>
 
 namespace coalpy
 {
@@ -227,7 +227,6 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc)
     if (vkCreateImage(m_device.vkDevice(), &createInfo, nullptr, &textureData.vkImage) != VK_SUCCESS)
     {
         m_container.free(handle);
-        std::cout << "Fail" << std::endl;
         return TextureResult  { ResourceResult::InvalidParameter, Texture(), "Failed to create texture." };
     }
 
@@ -508,11 +507,7 @@ void VulkanResources::release(ResourceHandle handle)
     VulkanResource& resource = m_container[handle];
 
     if (resource.isBuffer())
-    {
-        if (resource.bufferData.vkBufferView)
-            vkDestroyBufferView(m_device.vkDevice(), resource.bufferData.vkBufferView, nullptr);
-        vkDestroyBuffer(m_device.vkDevice(), resource.bufferData.vkBuffer, nullptr);
-    }
+        m_device.gc().deferRelease(resource.bufferData.vkBuffer, resource.bufferData.vkBufferView, resource.memory);
     else if (resource.isTexture())
     {
         if (resource.textureData.vkSrvView)
@@ -521,9 +516,9 @@ void VulkanResources::release(ResourceHandle handle)
             vkDestroyImageView(m_device.vkDevice(), resource.textureData.vkUavViews[mip], nullptr);
         if (resource.textureData.vkImage)
             vkDestroyImage(m_device.vkDevice(), resource.textureData.vkImage, nullptr);
+        vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
     }
 
-    vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
 
     m_workDb.unregisterResource(handle);
     m_container.free(handle);

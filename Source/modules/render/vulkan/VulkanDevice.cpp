@@ -15,6 +15,7 @@
 #include "VulkanQueues.h"
 #include "VulkanEventPool.h"
 #include "VulkanFencePool.h"
+#include "VulkanGc.h"
 #include <coalpy.render/ShaderDefs.h>
 #include <iostream>
 #include <set>
@@ -588,11 +589,14 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
     vkGetPhysicalDeviceMemoryProperties(m_vkPhysicalDevice, &m_vkMemProps);
 
     m_fencePool = new VulkanFencePool(*this);
+    m_eventPool = new VulkanEventPool(*this);
+    m_queues =  new VulkanQueues(*this, *m_fencePool, *m_eventPool);
+    m_gc = new VulkanGc(125, *this);
     m_resources = new VulkanResources(*this, m_workDb);
     m_descriptorSetPools = new VulkanDescriptorSetPools(*this);
     m_readbackPool = new VulkanReadbackBufferPool(*this);
-    m_eventPool = new VulkanEventPool(*this);
-    m_queues =  new VulkanQueues(*this, *m_fencePool, *m_eventPool);
+
+    m_gc->start();
     
     testApiFuncs();
 }
@@ -607,12 +611,22 @@ VulkanDevice::~VulkanDevice()
     if (m_shaderDb && m_shaderDb->parentDevice() == this)
         m_shaderDb->setParentDevice(nullptr, nullptr);
 
-    delete m_queues;
-    delete m_eventPool;
+    m_queues->releaseResources();
+
     delete m_readbackPool;
+    m_readbackPool = nullptr;
     delete m_descriptorSetPools;
+    m_descriptorSetPools = nullptr;
     delete m_resources;
+    m_resources = nullptr;
+    delete m_gc;
+    m_gc = nullptr;
+    delete m_queues;
+    m_queues = nullptr;
+    delete m_eventPool;
+    m_eventPool = nullptr;
     delete m_fencePool;
+    m_fencePool = nullptr;
 
     vkDestroyDevice(m_vkDevice, nullptr); 
     destroyVulkanInstance(m_vkInstance);    

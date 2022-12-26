@@ -42,6 +42,7 @@ class VulkanQueues
 public:
     VulkanQueues(VulkanDevice& device, VulkanFencePool& fencePool, VulkanEventPool& eventPool);
     ~VulkanQueues();
+    void releaseResources();
 
     VkQueue& cmdQueue(WorkType type) { return (m_containers[(int)type].queue); }
     VulkanMemoryPools& memPools(WorkType type) { return m_containers[(int)type].memPools; }

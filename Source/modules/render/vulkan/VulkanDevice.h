@@ -24,6 +24,7 @@ class VulkanResources;
 class VulkanQueues;
 class VulkanEventPool;
 class VulkanFencePool;
+class VulkanGc;
 
 class VulkanDevice : public TDevice<VulkanDevice>
 {
@@ -70,6 +71,7 @@ public:
     VulkanResources& resources() { return *m_resources; }
     VulkanEventPool& eventPool() { return *m_eventPool; }
     VulkanFencePool& fencePool() { return *m_fencePool; }
+    VulkanGc& gc() { return *m_gc; }
 
 private:
     void createSwapchain();
@@ -86,6 +88,7 @@ private:
     VulkanReadbackBufferPool* m_readbackPool;
     VulkanEventPool* m_eventPool;
     VulkanFencePool* m_fencePool;
+    VulkanGc* m_gc;
     int m_queueFamIndex;
 
     void testApiFuncs();

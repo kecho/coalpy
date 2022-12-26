@@ -3,6 +3,7 @@
 #include "VulkanDevice.h"
 #include <coalpy.core/Assert.h>
 #include "VulkanGpuMemPools.h"
+#include <iostream>
 
 namespace coalpy
 {
@@ -26,17 +27,29 @@ VulkanQueues::VulkanQueues(VulkanDevice& device, VulkanFencePool& fencePool, Vul
     VK_OK(vkCreateCommandPool(m_device.vkDevice(), &poolCreateInfo, nullptr, &m_cmdPool));
 }
 
+void VulkanQueues::releaseResources()
+{
+    for (int workType = 0; workType < (int)WorkType::Count; ++workType)
+    {
+        QueueContainer& container =  m_containers[workType];
+        if (container.memPools.uploadPool)
+            delete container.memPools.uploadPool;
+        if (container.memPools.descriptors)
+            delete container.memPools.descriptors;
+        container.memPools = {};
+    }
+}
+
 VulkanQueues::~VulkanQueues()
 {
-    for (auto& container : m_containers)
+    releaseResources();
+
     for (int workType = 0; workType < (int)WorkType::Count; ++workType)
     {
         QueueContainer& container =  m_containers[workType];
         waitForAllWorkOnCpu((WorkType)workType);
         syncFences((WorkType)workType);
         garbageCollectCmdBuffers((WorkType)workType);
-        delete container.memPools.uploadPool;
-        delete container.memPools.descriptors;
     }
 
     vkDestroyCommandPool(m_device.vkDevice(), m_cmdPool, nullptr);
