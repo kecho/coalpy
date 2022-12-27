@@ -3,6 +3,7 @@
 #include "WorkBundleDb.h"
 #include <coalpy.core/HandleContainer.h>
 #include <coalpy.core/GenericHandle.h>
+#include <vector>
 #include <unordered_map>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
@@ -37,6 +38,7 @@ private:
         VkEvent event = {};
     };
 
+    std::vector<VkEvent> m_allocations;
     HandleContainer<VulkanEventHandle, EventRecord> m_records;
     std::unordered_map<CommandLocation, VulkanEventHandle, CommandLocationHasher> m_lookups;
     VulkanDevice& m_device;

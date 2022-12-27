@@ -10,10 +10,8 @@ namespace render
 
 VulkanEventPool::~VulkanEventPool()
 {
-    m_records.forEach([this](VulkanEventHandle handle, EventRecord& record)
-    {
-        vkDestroyEvent(m_device.vkDevice(), record.event, nullptr); 
-    });
+    for (VkEvent& e : m_allocations)
+        vkDestroyEvent(m_device.vkDevice(), e, nullptr); 
 }
 
 VulkanEventHandle VulkanEventPool::allocate(CommandLocation location, bool& isNew)
@@ -26,6 +24,7 @@ VulkanEventHandle VulkanEventPool::allocate(CommandLocation location, bool& isNe
         VkEventCreateInfo createInfo = { VK_STRUCTURE_TYPE_EVENT_CREATE_INFO, nullptr, VK_EVENT_CREATE_DEVICE_ONLY_BIT };
         record.allocated = false;
         VK_OK(vkCreateEvent(m_device.vkDevice(), &createInfo, nullptr, &record.event));
+        m_allocations.push_back(record.event);
     }
     else
         isNew = false;

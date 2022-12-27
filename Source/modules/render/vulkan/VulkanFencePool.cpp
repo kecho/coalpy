@@ -14,11 +14,11 @@ VulkanFencePool::VulkanFencePool(VulkanDevice& device)
 
 VulkanFencePool::~VulkanFencePool()
 {
-    m_fences.forEach([this](VulkanFenceHandle handle, FenceState& fenceState)
+    for (VkFence& fence : m_allocations)
     {
-        waitOnCpu(handle);
-        vkDestroyFence(m_device.vkDevice(), fenceState.fence, nullptr);
-    });
+        VK_OK(vkWaitForFences(m_device.vkDevice(), 1, &fence, VK_TRUE, ~0ull));
+        vkDestroyFence(m_device.vkDevice(), fence, nullptr);
+    }
 }
 
 VulkanFenceHandle VulkanFencePool::allocate()
@@ -35,6 +35,7 @@ VulkanFenceHandle VulkanFencePool::allocate()
         VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO, nullptr };
         createInfo.flags = 0;
         VK_OK(vkCreateFence(m_device.vkDevice(), &createInfo, nullptr, &fenceState.fence));
+        m_allocations.push_back(fenceState.fence);
         fenceState.allocated = true;
     }
 

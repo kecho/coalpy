@@ -36,6 +36,7 @@ private:
         bool isSignaled = false;
     };
 
+    std::vector<VkFence> m_allocations;
     HandleContainer<VulkanFenceHandle, FenceState> m_fences;
     VulkanDevice& m_device;
 };
