@@ -283,6 +283,42 @@ void VulkanWorkBundle::buildUploadCmd(const unsigned char* data, const AbiUpload
 
 void VulkanWorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd* copyCmd, const CommandInfo& cmdInfo, VulkanList& outList)
 {
+    VulkanResources& resources = m_device.resources();
+    VulkanResource& src = resources.unsafeGetResource(copyCmd->source);
+    VulkanResource& dst = resources.unsafeGetResource(copyCmd->destination);
+    if (src.isBuffer())
+    {
+        uint64_t sizeToCopy =  0ull;
+        uint64_t srcOffset  =  0ull;
+        uint64_t destOffset =  0ull;
+        if (copyCmd->fullCopy)
+        {
+            sizeToCopy = src.actualSize;
+        }
+        else
+        {
+            srcOffset = copyCmd->sourceX;
+            destOffset = copyCmd->destX;
+            if (copyCmd->sizeX >= 0)
+            {
+                sizeToCopy = copyCmd->sizeX;
+            }
+            else
+            {
+                int dstRemainingSize = ((int)dst.actualSize - copyCmd->destX);
+                int srcRemainingSize = ((int)src.actualSize - copyCmd->sourceX);
+                sizeToCopy = std::min(dstRemainingSize, srcRemainingSize);
+            }
+        }
+        VkBufferCopy region = { srcOffset, destOffset, sizeToCopy };
+        VkBuffer srcBuffer = src.bufferData.vkBuffer;
+        VkBuffer dstBuffer = dst.bufferData.vkBuffer;
+        vkCmdCopyBuffer(outList.list, srcBuffer, dstBuffer, 1, &region);
+    }
+    else
+    {
+        CPY_ASSERT_FMT(false, "%s", "unimplemented");
+    }
 }
 
 void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, VulkanList& outList, std::vector<VulkanEventHandle>& events)
