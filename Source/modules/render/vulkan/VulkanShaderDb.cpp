@@ -153,7 +153,13 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
             {
                 SpvReflectDescriptorBinding* binding = setData->bindings[b];
                 std::cout << "\tb[" << binding->binding << "] : " << debugDescTypeName(binding->descriptor_type);
-                std::cout << " count[" << binding->count << "]" <<  std::endl;
+                std::cout << " count[" << binding->count << "]";
+                std::cout << " spirv_id[" << binding->spirv_id << "]";
+                std::cout << " uav_counter_id[" << binding->uav_counter_id << "]";
+                if (binding->uav_counter_binding != nullptr)
+                    std::cout << " counter_binding[" << binding->uav_counter_binding->binding << "]";
+                std::cout << " " << binding->name;
+                std::cout << std::endl;
             }
         }
     }

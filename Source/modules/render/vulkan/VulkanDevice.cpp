@@ -84,6 +84,9 @@ const std::set<std::string>& getRequestedDeviceExtensionNames()
     {
         layers.emplace(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         layers.emplace(VK_KHR_MAINTENANCE_1_EXTENSION_NAME);
+        //used for append consume hlsl buffer reflection data. Nice google.
+        layers.emplace(VK_GOOGLE_HLSL_FUNCTIONALITY_1_EXTENSION_NAME);
+        layers.emplace(VK_GOOGLE_USER_TYPE_EXTENSION_NAME);
     }
     return layers;
 }
