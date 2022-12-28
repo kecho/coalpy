@@ -68,11 +68,14 @@ bool VulkanFencePool::isSignaled(VulkanFenceHandle handle)
     return fenceState.isSignaled;
 }
 
-void VulkanFencePool::waitOnCpu(VulkanFenceHandle handle)
+bool VulkanFencePool::waitOnCpu(VulkanFenceHandle handle, uint64_t milliseconds)
 {
     FenceState& fenceState = m_fences[handle];
     CPY_ASSERT(fenceState.allocated);
-    VK_OK(vkWaitForFences(m_device.vkDevice(), 1, &fenceState.fence, VK_TRUE, ~0ull));
+    VkResult result = vkWaitForFences(m_device.vkDevice(), 1, &fenceState.fence, VK_TRUE, milliseconds == ~0ull ? ~0ull : (milliseconds * 1000000));
+    CPY_ASSERT_FMT((milliseconds == ~0ull && result == VK_SUCCESS) || (milliseconds != ~0ull), "%s", "illegal timeout on infinite wait time.");
+
+    return result == VK_SUCCESS;
 }
 
 void VulkanFencePool::free(VulkanFenceHandle handle)

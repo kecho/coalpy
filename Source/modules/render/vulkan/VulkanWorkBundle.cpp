@@ -321,7 +321,37 @@ void VulkanWorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd*
     }
 }
 
-void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, VulkanList& outList, std::vector<VulkanEventHandle>& events)
+void VulkanWorkBundle::buildDownloadCmd(
+    const unsigned char* data, const AbiDownloadCmd* downloadCmd,
+    const CommandInfo& cmdInfo, VulkanFenceHandle fenceValue, VulkanList& outList)
+{
+    VulkanResources& resources = m_device.resources();
+    CPY_ASSERT(cmdInfo.commandDownloadIndex >= 0 && cmdInfo.commandDownloadIndex < (int)m_downloadStates.size());
+    CPY_ASSERT(downloadCmd->source.valid());
+    VulkanResource& resource = resources.unsafeGetResource(downloadCmd->source);
+    VulkanResourceDownloadState& downloadState = m_downloadStates[cmdInfo.commandDownloadIndex];
+    downloadState.downloadKey = ResourceDownloadKey { downloadCmd->source, downloadCmd->mipLevel, downloadCmd->arraySlice };
+    downloadState.memoryBlock = m_device.readbackPool().allocate(resource.actualSize);
+    VkBuffer dstBuffer = resources.unsafeGetResource(downloadState.memoryBlock.buffer).bufferData.vkBuffer;
+    if (resource.isBuffer())
+    {
+        VkBuffer srcBuffer = resource.bufferData.vkBuffer;
+
+        VkBufferCopy region = { 0ull, downloadState.memoryBlock.offset, resource.actualSize };
+        vkCmdCopyBuffer(outList.list, srcBuffer, dstBuffer, 1, &region);
+    }
+    else
+    {
+        CPY_ASSERT_FMT(false, "%s", "unimplemented");
+    }
+
+    downloadState.queueType = WorkType::Graphics;
+    downloadState.fenceValue = fenceValue;
+    downloadState.resource = downloadCmd->source;
+    m_device.fencePool().addRef(fenceValue);
+}
+
+void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, VulkanList& outList, std::vector<VulkanEventHandle>& events, VulkanFenceHandle fenceValue)
 {
     CPY_ASSERT(cmdList->isFinalized());
     const unsigned char* listData = cmdList->data();
@@ -365,8 +395,8 @@ void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdLis
             break;
         case AbiCmdTypes::Download:
             {
-                //const auto* abiCmd = (const AbiDownloadCmd*)cmdBlob;
-                //buildDownloadCmd(listData, abiCmd, cmdInfo, workType, outList);
+                const auto* abiCmd = (const AbiDownloadCmd*)cmdBlob;
+                buildDownloadCmd(listData, abiCmd, cmdInfo, fenceValue, outList);
             }
             break;
         case AbiCmdTypes::CopyAppendConsumeCounter:
@@ -438,6 +468,7 @@ VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int comm
     VkFence fence = m_device.fencePool().get(fenceHandle);
     pools.uploadPool->beginUsage(fenceHandle);
     pools.descriptors->beginUsage(fenceHandle);
+    m_downloadStates.resize((int)m_workBundle.resourcesToDownload.size());
 
     if (m_workBundle.totalUploadBufferSize)
         m_uploadMemBlock = pools.uploadPool->allocUploadBlock(m_workBundle.totalUploadBufferSize);
@@ -453,7 +484,7 @@ VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int comm
         cmdBuffers.push_back(list.list);
 
         std::vector<VulkanEventHandle> localEvents;
-        buildCommandList(i, commandLists[i], workType, list, localEvents);
+        buildCommandList(i, commandLists[i], workType, list, localEvents, fenceHandle);
         events.emplace_back(std::move(localEvents));
     }
 
@@ -474,6 +505,12 @@ VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int comm
     pools.descriptors->endUsage();
     pools.uploadPool->endUsage();
     return fenceHandle;
+}
+
+void VulkanWorkBundle::getDownloadResourceMap(VulkanDownloadResourceMap& downloadMap)
+{
+    for (auto& state : m_downloadStates)
+        downloadMap[state.downloadKey] = state;
 }
 
 }

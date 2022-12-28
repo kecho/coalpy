@@ -211,7 +211,7 @@ ID3D12CommandSignature* createIndirectDispatchCommandSignature(ID3D12Device2& de
 struct Dx12WorkInfo
 {
     UINT64 fenceValue = {};
-    Dx12DownloadResourceMap downloadMap;
+    VulkanDownloadResourceMap downloadMap;
 };
 
 struct Dx12WorkInformationMap

@@ -556,6 +556,16 @@ void VulkanDevice::testApiFuncs()
 #endif
 }
 
+struct VulkanWorkInfo
+{
+    VulkanFenceHandle fenceValue = {};
+    VulkanDownloadResourceMap downloadMap;
+};
+
+struct VulkanWorkInformationMap
+{
+    std::unordered_map<int, VulkanWorkInfo> workMap;
+};
 
 VulkanDevice::VulkanDevice(const DeviceConfig& config)
 :   TDevice<VulkanDevice>(config),
@@ -563,6 +573,7 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
     m_queueFamIndex(-1),
     m_resources(nullptr)
 {
+    m_vulkanWorkInfos = new VulkanWorkInformationMap;
     m_runtimeInfo = { ShaderModel::End };
     m_vkMemProps = {};
     createVulkanInstance(m_vkInstance);
@@ -611,6 +622,10 @@ VulkanDevice::~VulkanDevice()
     if (m_shaderDb && m_shaderDb->parentDevice() == this)
         m_shaderDb->setParentDevice(nullptr, nullptr);
 
+    for (auto p : m_vulkanWorkInfos->workMap)
+        for (auto dl : p.second.downloadMap)
+            readbackPool().free(dl.second.memoryBlock);
+
     m_queues->releaseResources();
 
     delete m_readbackPool;
@@ -630,6 +645,7 @@ VulkanDevice::~VulkanDevice()
 
     vkDestroyDevice(m_vkDevice, nullptr); 
     destroyVulkanInstance(m_vkInstance);    
+    delete m_vulkanWorkInfos;
 }
 
 void VulkanDevice::enumerate(std::vector<DeviceInfo>& outputList)
@@ -709,12 +725,46 @@ void VulkanDevice::getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryIn
 
 WaitStatus VulkanDevice::waitOnCpu(WorkHandle handle, int milliseconds)
 {
-    return WaitStatus();
+    auto workInfoIt = m_vulkanWorkInfos->workMap.find(handle.handleId);
+    if (workInfoIt == m_vulkanWorkInfos->workMap.end())
+        return WaitStatus { WaitErrorType::Invalid, "Invalid work handle." };    
+
+    if (milliseconds != 0u)
+        m_fencePool->waitOnCpu(workInfoIt->second.fenceValue, milliseconds < 0 ? ~0ull : (uint64_t)milliseconds);
+
+    m_fencePool->updateState(workInfoIt->second.fenceValue);
+    if (m_fencePool->isSignaled(workInfoIt->second.fenceValue))
+        return WaitStatus { WaitErrorType::Ok, "" };
+    else
+        return WaitStatus { WaitErrorType::NotReady, "" };
 }
 
 DownloadStatus VulkanDevice::getDownloadStatus(WorkHandle bundle, ResourceHandle handle, int mipLevel, int arraySlice)
 {
-    return DownloadStatus();
+    auto it = m_vulkanWorkInfos->workMap.find(bundle.handleId);
+    if (it == m_vulkanWorkInfos->workMap.end())
+        return DownloadStatus { DownloadResult::Invalid, nullptr, 0u };
+
+    ResourceDownloadKey downloadKey { handle, mipLevel, arraySlice };
+    auto downloadStateIt = it->second.downloadMap.find(downloadKey);
+    if (downloadStateIt == it->second.downloadMap.end())
+        return DownloadStatus { DownloadResult::Invalid, nullptr, 0u };
+
+    auto& downloadState = downloadStateIt->second;
+    m_fencePool->updateState(downloadState.fenceValue);
+    if (m_fencePool->isSignaled(downloadState.fenceValue))
+    {
+        return DownloadStatus {
+            DownloadResult::Ok,
+            downloadState.memoryBlock.mappedMemory,
+            downloadState.memoryBlock.size,
+            downloadState.rowPitch,
+            downloadState.width,
+            downloadState.height,
+            downloadState.depth,
+        };
+    }
+    return DownloadStatus { DownloadResult::NotReady, nullptr, 0u };
 }
 
 void VulkanDevice::release(ResourceHandle resource)
@@ -734,6 +784,19 @@ SmartPtr<IDisplay> VulkanDevice::createDisplay(const DisplayConfig& config)
 
 void VulkanDevice::internalReleaseWorkHandle(WorkHandle handle)
 {
+    auto workInfoIt = m_vulkanWorkInfos->workMap.find(handle.handleId);
+    CPY_ASSERT(workInfoIt != m_vulkanWorkInfos->workMap.end());
+    if (workInfoIt == m_vulkanWorkInfos->workMap.end())
+        return;
+
+    for (auto downloadStatePair : workInfoIt->second.downloadMap)
+    {
+        m_fencePool->free(downloadStatePair.second.fenceValue);
+        readbackPool().free(downloadStatePair.second.memoryBlock);
+    }
+
+    m_fencePool->free(workInfoIt->second.fenceValue);
+    m_vulkanWorkInfos->workMap.erase(workInfoIt);
 }
 
 ScheduleStatus VulkanDevice::internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle)
@@ -749,19 +812,17 @@ ScheduleStatus VulkanDevice::internalSchedule(CommandList** commandLists, int li
         m_workDb.unlock();
     }
 
-    VulkanFenceHandle fenceHandle = vulkanWorkBundle.execute(commandLists, listCounts);
-    m_fencePool->free(fenceHandle);
+    VulkanFenceHandle fenceValue = vulkanWorkBundle.execute(commandLists, listCounts);
 
-    /*
     {
         m_workDb.lock();
-        Dx12WorkInfo workInfo;
+        VulkanWorkInfo workInfo;
         workInfo.fenceValue = fenceValue;
-        dx12WorkBundle.getDownloadResourceMap(workInfo.downloadMap);
-        m_dx12WorkInfos->workMap[workHandle.handleId] = std::move(workInfo);
+        vulkanWorkBundle.getDownloadResourceMap(workInfo.downloadMap);
+        m_vulkanWorkInfos->workMap[workHandle.handleId] = std::move(workInfo);
         m_workDb.unlock();
     }
-    */
+
     return status;
 }
 

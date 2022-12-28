@@ -24,7 +24,7 @@ public:
     VkFence get(VulkanFenceHandle handle) { return m_fences[handle].fence; }
     void addRef(VulkanFenceHandle handle);
     void updateState(VulkanFenceHandle handle);
-    void waitOnCpu(VulkanFenceHandle handle);
+    bool waitOnCpu(VulkanFenceHandle handle, uint64_t milliseconds = ~0ull);
     bool isSignaled(VulkanFenceHandle handle);
 
 private:

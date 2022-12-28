@@ -25,6 +25,7 @@ class VulkanQueues;
 class VulkanEventPool;
 class VulkanFencePool;
 class VulkanGc;
+struct VulkanWorkInformationMap;
 
 class VulkanDevice : public TDevice<VulkanDevice>
 {
@@ -89,6 +90,7 @@ private:
     VulkanEventPool* m_eventPool;
     VulkanFencePool* m_fencePool;
     VulkanGc* m_gc;
+    VulkanWorkInformationMap* m_vulkanWorkInfos;
     int m_queueFamIndex;
 
     void testApiFuncs();

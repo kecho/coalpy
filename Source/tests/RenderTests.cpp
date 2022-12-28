@@ -1597,15 +1597,13 @@ namespace coalpy
             CPY_ASSERT(downloadStatus.success());
 
             auto resultList = (int*)downloadStatus.downloadPtr;
-            //for (int i = 0; i < bufferLen; ++i)
-            //    CPY_ASSERT(testBuffer[i] == resultList[i]);
+            for (int i = 0; i < bufferLen; ++i)
+                CPY_ASSERT(testBuffer[i] == resultList[i]);
         
             device.release(scheduleStatus.workHandle);
         }
 
         cmdList.reset();
-/*
-
         const int copyLen = 4;
         const int srcOffset = 4;
         const int dstOffset = 1;
@@ -1643,8 +1641,6 @@ namespace coalpy
         
             device.release(scheduleStatus.workHandle);
         }
-        
-*/
 
         device.release(srcBuffer);
         device.release(dstBuffer);
