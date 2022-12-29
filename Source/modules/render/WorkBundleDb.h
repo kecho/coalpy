@@ -179,6 +179,7 @@ struct TableAllocation
     int offset = 0;
     int count = 0;
     bool isSampler = false;
+    std::set<ShaderHandle> shaders;
 };
 
 struct ProcessedList
@@ -236,10 +237,17 @@ struct WorkResourceInfo
 using WorkTableInfos = std::unordered_map<ResourceTable,  WorkTableInfo>;
 using WorkResourceInfos = std::unordered_map<ResourceHandle, WorkResourceInfo>;
 
+
+enum WorkBundleDbFlags 
+{
+    WorkBundleDbFlags_None = 0,
+    WorkBundleDbFlags_TrackShadersOnTableAllocations = 1 << 0
+};
+
 class WorkBundleDb
 {
 public:
-    WorkBundleDb(IDevice& device) : m_device(device) {}
+    WorkBundleDb(IDevice& device, WorkBundleDbFlags flags = WorkBundleDbFlags_None) : m_device(device), m_flags(flags) {}
     ~WorkBundleDb() {}
 
     ScheduleStatus build(CommandList** lists, int listCount);
@@ -276,6 +284,7 @@ private:
 
     WorkTableInfos m_tables;
     WorkResourceInfos m_resources;
+    WorkBundleDbFlags m_flags;
 };
 
 }

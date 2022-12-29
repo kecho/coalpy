@@ -17,7 +17,7 @@ template<class PlatDevice>
 class TDevice : public IDevice
 {
 public:
-    TDevice(const DeviceConfig& config);
+    TDevice(const DeviceConfig& config, WorkBundleDbFlags flags = WorkBundleDbFlags_None);
     virtual ~TDevice();
 
     virtual const DeviceConfig& config() const override { return m_config; }
@@ -31,8 +31,8 @@ protected:
 };
 
 template<class PlatDevice>
-TDevice<PlatDevice>::TDevice(const DeviceConfig& config)
-: m_config(config), m_db(*config.shaderDb), m_workDb(*this)
+TDevice<PlatDevice>::TDevice(const DeviceConfig& config, WorkBundleDbFlags flags)
+: m_config(config), m_db(*config.shaderDb), m_workDb(*this, flags)
 {
 }
 

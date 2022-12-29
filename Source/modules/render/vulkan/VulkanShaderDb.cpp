@@ -79,21 +79,36 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
         return;
 
     render::VulkanDevice& vulkanDevice = *static_cast<render::VulkanDevice*>(m_parentDevice);
-
     
     // Create descriptor layouts
-    std::vector<VkDescriptorSetLayout> layouts;
-    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    auto* payload = new SpirvPayload;
+    shaderState.payload = payload;
     {
+        std::vector<VkDescriptorSetLayout> layouts;
+        std::vector<VkDescriptorSetLayoutBinding> bindings;
         bindings.reserve(64);
         auto stageFlags = (VkShaderStageFlags)shaderState.spirVReflectionData->module.shader_stage;
         for (int i = 0; i < (int)shaderState.spirVReflectionData->descriptorSets.size(); ++i)
         {
             bindings.clear();
             SpvReflectDescriptorSet* setData = shaderState.spirVReflectionData->descriptorSets[i];
+            if (setData->set >= (uint32_t)SpirvMaxRegisterSpace)
+            {
+                std::cerr << "Error: found descriptor set " << setData->set
+                          << ". Max binding for set is " << SpirvMaxRegisterSpace
+                          << ". Set won't be bound, and it wil be ignored." << std::endl;
+                continue;
+            }
+            uint64_t* descriptorBitsSections = payload->activeDescriptors[setData->set];
             for (int b = 0; b < (int)setData->binding_count; ++b)
             {
                 SpvReflectDescriptorBinding& reflectionBinding = *setData->bindings[b];
+                if (reflectionBinding.binding >= ((uint32_t)SpirvRegisterType::Count * (uint32_t)SpirvRegisterTypeShiftCount))
+                {
+                    std::cerr << "Spir binding out of range. We can only utilize up to " << SpirvRegisterTypeShiftCount 
+                              << " per register type. Binding wil be ignored." << std::endl;
+                    continue;
+                }
                 bindings.emplace_back();
                 VkDescriptorSetLayoutBinding& binding = bindings.back();
                 binding = {};
@@ -101,6 +116,8 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
                 binding.descriptorType = (VkDescriptorType)reflectionBinding.descriptor_type;
                 binding.descriptorCount = reflectionBinding.count;
                 binding.stageFlags = stageFlags;
+                uint64_t& activeDescriptorBits = descriptorBitsSections[(int)reflectionBinding.binding / (int)SpirvRegisterTypeShiftCount];
+                activeDescriptorBits |= 1 << ((int)reflectionBinding.binding % (int)SpirvRegisterTypeShiftCount);
             }
 
             VkDescriptorSetLayout layout = {};
@@ -111,11 +128,8 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
             VK_OK(vkCreateDescriptorSetLayout(vulkanDevice.vkDevice(), &layoutCreateInfo, nullptr, &layout));
             layouts.push_back(layout);
         }
+        payload->layouts = std::move(layouts);
     }
-
-    auto* payload = new SpirvPayload;
-    shaderState.payload = payload;
-    payload->layouts = layouts;
 
     // Create layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};

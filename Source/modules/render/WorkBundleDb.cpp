@@ -25,6 +25,7 @@ struct WorkBuildContext
     int listIndex = -1;
     int currentCommandIndex = -1;
     MemOffset command = 0;
+    WorkBundleDbFlags flags = WorkBundleDbFlags_None;
 
     //output of the context, error and mutable states
     ScheduleErrorType errorType = ScheduleErrorType::Ok;
@@ -233,40 +234,36 @@ bool transitionTable(
 
 bool processTable(
     ResourceTable table,
-    WorkBuildContext& context)
+    WorkBuildContext& context,
+    bool isSampler,
+    ShaderHandle trackedShader)
 {
     if (!transitionTable(table, context))
         return false;
 
-    if (context.tableAllocations.find(table) != context.tableAllocations.end())
+    const WorkTableInfos& tableInfos = *context.tableInfos;
+    const auto& tableInfoIt = tableInfos.find(table);
+    if (tableInfoIt == tableInfos.end())
+        return false;
+
+    auto it = context.tableAllocations.find(table);
+    if (it != context.tableAllocations.end())
+    {
+        if (trackedShader.valid())
+            it->second.shaders.insert(trackedShader);
         return true;
-
-    const WorkTableInfos& tableInfos = *context.tableInfos;
-    const auto& tableInfoIt = tableInfos.find(table);
-    if (tableInfoIt == tableInfos.end())
-        return false;
+    }
 
     TableAllocation& allocation = context.tableAllocations[table];
-    allocation.offset = context.totalTableSize;
+    allocation.offset = isSampler ? context.totalSamplers : context.totalTableSize;
     allocation.count = tableInfoIt->second.resources.size();
-    context.totalTableSize += allocation.count;
-    return true;
-}
-
-bool processSamplerTable(
-    ResourceTable table,
-    WorkBuildContext& context)
-{
-    const WorkTableInfos& tableInfos = *context.tableInfos;
-    const auto& tableInfoIt = tableInfos.find(table);
-    if (tableInfoIt == tableInfos.end())
-        return false;
-
-    TableAllocation& allocation = context.tableAllocations[table];
-    allocation.offset = context.totalSamplers;
-    allocation.count = tableInfoIt->second.resources.size();
-    allocation.isSampler = true;
-    context.totalSamplers += allocation.count;
+    if (trackedShader.valid())
+        allocation.shaders.insert(trackedShader);
+    allocation.isSampler = isSampler;
+    if (isSampler)
+        context.totalSamplers += allocation.count;
+    else
+        context.totalTableSize += allocation.count;
     return true;
 }
 
@@ -286,11 +283,12 @@ bool commitResourceStates(const ResourceStateMap& input, WorkResourceInfos& reso
 
 bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBuildContext& context)
 {
+    ShaderHandle trackedShader = ((int)context.flags & (int)WorkBundleDbFlags_TrackShadersOnTableAllocations) != 0 ? cmd->shader : ShaderHandle();
     {
         const InResourceTable* inTables = cmd->inResourceTables.data(data);
         for (int i = 0; i < cmd->inResourceTablesCounts; ++i)
         {
-            if (!processTable(inTables[i], context))
+            if (!processTable(inTables[i], context, false, trackedShader))
                 return false;
         }
     }
@@ -299,7 +297,7 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         const OutResourceTable* outTables = cmd->outResourceTables.data(data);
         for (int i = 0; i < cmd->outResourceTablesCounts; ++i)
         {
-            if (!processTable(outTables[i], context))
+            if (!processTable(outTables[i], context, false, trackedShader))
                 return false;
         }
     }
@@ -308,7 +306,7 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         const SamplerTable* samplerTables = cmd->samplerTables.data(data);
         for (int i = 0; i < cmd->samplerTablesCounts; ++i)
         {
-            if (!processSamplerTable(samplerTables[i], context))
+            if (!processTable(samplerTables[i], context, true, trackedShader))
                 return false;
         }
     }
@@ -763,6 +761,7 @@ ScheduleStatus WorkBundleDb::build(CommandList** lists, int listCount)
         ctx.device = &m_device;
         ctx.resourceInfos = &m_resources;
         ctx.tableInfos = &m_tables;
+        ctx.flags = m_flags;
         for (int l = 0; l < listCount; ++l)
         {
             CommandList* list = lists[l];

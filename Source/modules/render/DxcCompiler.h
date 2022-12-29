@@ -24,8 +24,9 @@ struct DxcResultPayload
 
 enum
 {
+    MaxDxcCompilerResourceTables = 8,
     SpirvRegisterTypeShiftCount = 32,
-    SpirvMaxRegisterSpace = 8
+    SpirvMaxRegisterSpace = MaxDxcCompilerResourceTables
 };
 
 enum class SpirvRegisterType : int

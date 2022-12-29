@@ -29,6 +29,7 @@
 #include "Dx12CounterPool.h"
 #include "Dx12Fence.h"
 #include "Dx12PixApi.h"
+#include "DxcCompiler.h"
 #include "Dx12MarkerCollector.h"
 #include "Dx12Gc.h"
 
@@ -42,7 +43,7 @@ namespace
 
 enum : int
 {
-    Tier3MaxNumTables = 8
+    Tier3MaxNumTables = (int)MaxDxcCompilerResourceTables
 };
 
 struct CardInfos

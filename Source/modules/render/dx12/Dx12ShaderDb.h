@@ -30,6 +30,7 @@ public:
 
     ID3D12PipelineState* unsafeGetCsPso(ShaderHandle handle)
     {
+        std::shared_lock lock(m_shadersMutex);
         ShaderGPUPayload payload = m_shaders[handle]->payload;
         return (ID3D12PipelineState*)payload;
     }
