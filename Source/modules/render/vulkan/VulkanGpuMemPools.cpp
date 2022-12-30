@@ -252,7 +252,7 @@ void VulkanGpuDescriptorSetPool::endUsage()
     m_activePool = -1;
 }
 
-VkDescriptorSet VulkanGpuDescriptorSetPool::allocUploadBlock(VkDescriptorSetLayout layout)
+VkDescriptorSet VulkanGpuDescriptorSetPool::allocateDescriptorSet(VkDescriptorSetLayout layout)
 {
     VkDescriptorSetAllocateInfo allocationInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO, nullptr };
     allocationInfo.descriptorSetCount = 1;

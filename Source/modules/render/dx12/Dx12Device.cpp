@@ -221,7 +221,7 @@ struct Dx12WorkInformationMap
 };
 
 Dx12Device::Dx12Device(const DeviceConfig& config)
-: TDevice<Dx12Device>(config)
+: TDevice<Dx12Device>(config, WorkBundleDbFlags_SetupTablePreallocations)
 , m_debugLayer(nullptr)
 , m_device(nullptr)
 , m_shaderDb(nullptr)

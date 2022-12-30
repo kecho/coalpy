@@ -571,7 +571,7 @@ struct VulkanWorkInformationMap
 };
 
 VulkanDevice::VulkanDevice(const DeviceConfig& config)
-:   TDevice<VulkanDevice>(config, WorkBundleDbFlags_TrackShadersOnTableAllocations),
+:   TDevice<VulkanDevice>(config),
     m_shaderDb(nullptr),
     m_queueFamIndex(-1),
     m_resources(nullptr)

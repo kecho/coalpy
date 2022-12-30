@@ -85,6 +85,7 @@ struct VulkanResourceTable
     Type type = Type::In;
     VkDescriptorSetLayout layout;
     VulkanDescriptorTable descriptors;
+    int counts = 0;
 };
 
 class VulkanResources
@@ -104,6 +105,7 @@ public:
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
     OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);
     VulkanResource& unsafeGetResource(ResourceHandle handle) { return m_container[handle]; }
+    VulkanResourceTable& unsafeGetTable(ResourceTable handle) { return m_tables[handle]; }
     void getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo);
 
     void release(ResourceHandle handle);

@@ -14,6 +14,7 @@ namespace render
 
 class CommandList;
 class VulkanDevice;
+class VulkanGpuDescriptorSetPool;
 struct VulkanList;
 struct AbiCopyCmd;
 struct AbiUploadCmd;
@@ -42,6 +43,7 @@ public:
     void getDownloadResourceMap(VulkanDownloadResourceMap& downloadMap);
 
 private:
+    void buildComputeCmd(const unsigned char* data, const AbiComputeCmd* computeCmd, const CommandInfo& cmdInfo, VulkanList& outList);
     void buildUploadCmd(const unsigned char* data, const AbiUploadCmd* uploadCmd, const CommandInfo& cmdInfo, VulkanList& outList);
     void buildCopyCmd(const unsigned char* data, const AbiCopyCmd* copyCmd, const CommandInfo& cmdInfo, VulkanList& outList);
     void buildDownloadCmd(const unsigned char* data, const AbiDownloadCmd* downloadCmd,const CommandInfo& cmdInfo, VulkanFenceHandle fenceValue, VulkanList& outList);
@@ -50,6 +52,7 @@ private:
 
     WorkBundle m_workBundle;
     VulkanDevice& m_device;
+    VulkanGpuDescriptorSetPool* m_descriptors = nullptr;
     VulkanGpuMemoryBlock m_uploadMemBlock;
     std::vector<VulkanResourceDownloadState> m_downloadStates;
 };

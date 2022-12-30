@@ -2,6 +2,7 @@
 #include "VulkanDevice.h"
 #include "VulkanResources.h"
 #include "VulkanEventPool.h"
+#include "VulkanShaderDb.h"
 #include <coalpy.core/Assert.h>
 #include <vector>
 #include <unordered_map>
@@ -261,6 +262,53 @@ bool VulkanWorkBundle::load(const WorkBundle& workBundle)
     return true;
 }
 
+void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiComputeCmd* computeCmd, const CommandInfo& cmdInfo, VulkanList& outList)
+{
+    const VulkanShaderDb& shaderDb = (VulkanShaderDb&)*m_device.db();
+    const SpirvPayload& shaderPayload = shaderDb.unsafeGetSpirvPayload(computeCmd->shader);
+
+    std::vector<VkDescriptorSet> sets;
+    sets.reserve(shaderPayload.descriptorSetsInfos.size());
+    for (const VulkanDescriptorSetInfo& setInfo : shaderPayload.descriptorSetsInfos)
+        sets.push_back(m_descriptors->allocateDescriptorSet(setInfo.layout));
+
+    std::vector<VkCopyDescriptorSet> copies;
+    VulkanResources& resources = m_device.resources();
+    auto fillDescriptors = [&copies, &sets, &resources](SpirvRegisterType type, int tableCounts, const ResourceTable* tables)
+    {
+        for (int i = 0; i < tableCounts; ++i)
+        {
+            if (i >= sets.size())
+                break;
+
+            ResourceTable tableHandle = tables[i];
+            const VulkanResourceTable& table = resources.unsafeGetTable(tableHandle);
+            copies.emplace_back();
+            VkCopyDescriptorSet& copy = copies.back();
+            copy = { VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, nullptr };
+            copy.srcSet = table.descriptors.descriptors;
+            copy.srcBinding = 0;
+            copy.dstSet = sets[i];
+            copy.dstBinding = SpirvRegisterTypeOffset(type);
+            copy.descriptorCount = table.counts;
+        }
+    };
+
+    fillDescriptors(SpirvRegisterType::t, computeCmd->inResourceTablesCounts, (const ResourceTable*)computeCmd->inResourceTables.data(data));
+    fillDescriptors(SpirvRegisterType::u, computeCmd->outResourceTablesCounts, (const ResourceTable*)computeCmd->outResourceTables.data(data));
+    vkUpdateDescriptorSets(m_device.vkDevice(), 0, nullptr, copies.size(), copies.data());
+
+    VkCommandBuffer cmdBuffer = outList.list;
+    vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, shaderPayload.pipeline);
+	vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, shaderPayload.pipelineLayout, 0, sets.size(), sets.data(), 0, nullptr);
+    if (!computeCmd->isIndirect)
+        vkCmdDispatch(cmdBuffer, computeCmd->x, computeCmd->y, computeCmd->z);
+    else
+    {
+        CPY_ASSERT_FMT(false, "%s", "Unimplemented");
+    }
+}
+
 void VulkanWorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCmd* uploadCmd, const CommandInfo& cmdInfo, VulkanList& outList)
 {
     VulkanResources& resources = m_device.resources();
@@ -377,8 +425,8 @@ void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdLis
         {
         case AbiCmdTypes::Compute:
             {
-                //const auto* abiCmd = (const AbiComputeCmd*)cmdBlob;
-                //buildComputeCmd(listData, abiCmd, cmdInfo, outList);
+                const auto* abiCmd = (const AbiComputeCmd*)cmdBlob;
+                buildComputeCmd(listData, abiCmd, cmdInfo, outList);
             }
             break;
         case AbiCmdTypes::Copy:
@@ -468,6 +516,7 @@ VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int comm
     VkFence fence = m_device.fencePool().get(fenceHandle);
     pools.uploadPool->beginUsage(fenceHandle);
     pools.descriptors->beginUsage(fenceHandle);
+    m_descriptors = pools.descriptors;
     m_downloadStates.resize((int)m_workBundle.resourcesToDownload.size());
 
     if (m_workBundle.totalUploadBufferSize)

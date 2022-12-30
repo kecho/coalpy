@@ -36,13 +36,14 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
     VkBufferCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     createInfo.usage |= desc.isConstantBuffer ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : (VkBufferUsageFlags)0u;
+    resource.memFlags = desc.memFlags;
     resource.bufferData.isStorageBuffer = false;
     if (desc.type == BufferType::Standard)
     {
         if ((desc.memFlags & MemFlag_GpuRead) != 0)
-            createInfo.usage |= (VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+            createInfo.usage |= (VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
         if ((desc.memFlags & MemFlag_GpuWrite) != 0 || (specialFlags & ResourceSpecialFlag_CpuReadback) != 0)
-            createInfo.usage |= (VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+            createInfo.usage |= (VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
         if (desc.isConstantBuffer)
             createInfo.usage |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
@@ -53,9 +54,9 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
         //in vulkan it doesnt matter, if structured or raw, always set the storage buffer bit.
         createInfo.usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
         if ((desc.memFlags & MemFlag_GpuRead) != 0)
-            createInfo.usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+            createInfo.usage |= (VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
         if ((desc.memFlags & MemFlag_GpuWrite) != 0 || (specialFlags & ResourceSpecialFlag_CpuReadback) != 0)
-            createInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+            createInfo.usage |= (VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
         createInfo.size = desc.stride * desc.elementCount;
         resource.bufferData.isStorageBuffer = true;
     }
@@ -183,10 +184,10 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc)
     resource.memFlags = desc.memFlags;
 
     if ((desc.memFlags & MemFlag_GpuRead) != 0)
-        createInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;
+        createInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
     if ((desc.memFlags & MemFlag_GpuWrite) != 0)
-        createInfo.usage |= VK_IMAGE_USAGE_STORAGE_BIT;
+        createInfo.usage |= VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
     bool isArray = (desc.type == TextureType::k2dArray || desc.type == TextureType::CubeMapArray);
     switch (desc.type)
@@ -382,6 +383,7 @@ ResourceTable VulkanResources::createAndFillTable(
     table.type = tableType;
     table.layout = layout;
     table.descriptors = m_device.descriptorSetPools().allocate(layout);
+    table.counts = counts;
 
     std::vector<VkWriteDescriptorSet> writes;
     std::vector<DescriptorVariantInfo> variantInfos;

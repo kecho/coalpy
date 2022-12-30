@@ -14,12 +14,18 @@
 namespace coalpy
 {
 
+struct VulkanDescriptorSetInfo
+{
+    uint32_t setIndex;
+    VkDescriptorSetLayout layout;
+};
+
 struct SpirvPayload
 {
     VkShaderModule shaderModule = {};
     VkPipeline pipeline = {};
     VkPipelineLayout pipelineLayout = {};
-    std::vector<VkDescriptorSetLayout> layouts;
+    std::vector<VulkanDescriptorSetInfo> descriptorSetsInfos;
     uint64_t activeDescriptors[SpirvMaxRegisterSpace][(int)SpirvRegisterType::Count] = {};
 };
 

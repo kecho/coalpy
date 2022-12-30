@@ -83,8 +83,9 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
     // Create descriptor layouts
     auto* payload = new SpirvPayload;
     shaderState.payload = payload;
+    std::vector<VkDescriptorSetLayout> layouts;
     {
-        std::vector<VkDescriptorSetLayout> layouts;
+        std::vector<VulkanDescriptorSetInfo> descriptorSetsInfos;
         std::vector<VkDescriptorSetLayoutBinding> bindings;
         bindings.reserve(64);
         auto stageFlags = (VkShaderStageFlags)shaderState.spirVReflectionData->module.shader_stage;
@@ -126,16 +127,17 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
             layoutCreateInfo.bindingCount = (uint32_t)bindings.size();
             layoutCreateInfo.pBindings = bindings.data();
             VK_OK(vkCreateDescriptorSetLayout(vulkanDevice.vkDevice(), &layoutCreateInfo, nullptr, &layout));
+            descriptorSetsInfos.push_back(VulkanDescriptorSetInfo { setData->set, layout });
             layouts.push_back(layout);
         }
-        payload->layouts = std::move(layouts);
+        payload->descriptorSetsInfos = std::move(descriptorSetsInfos);
     }
 
     // Create layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = (int)payload->layouts.size();
-    pipelineLayoutInfo.pSetLayouts = payload->layouts.data();
+    pipelineLayoutInfo.setLayoutCount = (int)layouts.size();
+    pipelineLayoutInfo.pSetLayouts = layouts.data();
     VK_OK(vkCreatePipelineLayout(vulkanDevice.vkDevice(), &pipelineLayoutInfo, nullptr, &payload->pipelineLayout));
 
     // Shader module
@@ -206,8 +208,8 @@ void VulkanShaderDb::onDestroyPayload(ShaderState& shaderState)
         if (spirvPayload.pipelineLayout)
             vkDestroyPipelineLayout(vulkanDevice.vkDevice(), spirvPayload.pipelineLayout, nullptr);
 
-        for (auto& setLayout : spirvPayload.layouts)
-            vkDestroyDescriptorSetLayout(vulkanDevice.vkDevice(), setLayout, nullptr);
+        for (auto& setInfo : spirvPayload.descriptorSetsInfos)
+            vkDestroyDescriptorSetLayout(vulkanDevice.vkDevice(), setInfo.layout, nullptr);
     }
 
     delete &spirvPayload;

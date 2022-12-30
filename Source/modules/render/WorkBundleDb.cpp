@@ -209,6 +209,15 @@ bool transitionTable(
     ResourceTable table,
     WorkBuildContext& context)
 {
+    if (!table.valid())
+    {
+        std::stringstream ss;
+        ss << "Invalid table passed.";
+        context.errorMsg = ss.str();
+        context.errorType = ScheduleErrorType::BadTableInfo;
+        return false;
+    }
+
     const WorkResourceInfos& resourceInfos = *context.resourceInfos;
     const WorkTableInfos& tableInfos = *context.tableInfos;
     auto tableInfIt = tableInfos.find(table);
@@ -236,7 +245,7 @@ bool processTable(
     ResourceTable table,
     WorkBuildContext& context,
     bool isSampler,
-    ShaderHandle trackedShader)
+    bool processTableAllocations)
 {
     if (!transitionTable(table, context))
         return false;
@@ -246,19 +255,18 @@ bool processTable(
     if (tableInfoIt == tableInfos.end())
         return false;
 
+    if (!processTableAllocations)
+        return true;
+
     auto it = context.tableAllocations.find(table);
     if (it != context.tableAllocations.end())
     {
-        if (trackedShader.valid())
-            it->second.shaders.insert(trackedShader);
         return true;
     }
 
     TableAllocation& allocation = context.tableAllocations[table];
     allocation.offset = isSampler ? context.totalSamplers : context.totalTableSize;
     allocation.count = tableInfoIt->second.resources.size();
-    if (trackedShader.valid())
-        allocation.shaders.insert(trackedShader);
     allocation.isSampler = isSampler;
     if (isSampler)
         context.totalSamplers += allocation.count;
@@ -283,12 +291,12 @@ bool commitResourceStates(const ResourceStateMap& input, WorkResourceInfos& reso
 
 bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBuildContext& context)
 {
-    ShaderHandle trackedShader = ((int)context.flags & (int)WorkBundleDbFlags_TrackShadersOnTableAllocations) != 0 ? cmd->shader : ShaderHandle();
+    bool processTableAllocations = ((int)context.flags & (int)WorkBundleDbFlags_SetupTablePreallocations) != 0;
     {
         const InResourceTable* inTables = cmd->inResourceTables.data(data);
         for (int i = 0; i < cmd->inResourceTablesCounts; ++i)
         {
-            if (!processTable(inTables[i], context, false, trackedShader))
+            if (!processTable(inTables[i], context, false, processTableAllocations))
                 return false;
         }
     }
@@ -297,7 +305,7 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         const OutResourceTable* outTables = cmd->outResourceTables.data(data);
         for (int i = 0; i < cmd->outResourceTablesCounts; ++i)
         {
-            if (!processTable(outTables[i], context, false, trackedShader))
+            if (!processTable(outTables[i], context, false, processTableAllocations))
                 return false;
         }
     }
@@ -306,7 +314,7 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         const SamplerTable* samplerTables = cmd->samplerTables.data(data);
         for (int i = 0; i < cmd->samplerTablesCounts; ++i)
         {
-            if (!processTable(samplerTables[i], context, true, trackedShader))
+            if (!processTable(samplerTables[i], context, true, processTableAllocations))
                 return false;
         }
     }

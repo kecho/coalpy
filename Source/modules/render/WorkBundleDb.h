@@ -179,7 +179,6 @@ struct TableAllocation
     int offset = 0;
     int count = 0;
     bool isSampler = false;
-    std::set<ShaderHandle> shaders;
 };
 
 struct ProcessedList
@@ -241,7 +240,7 @@ using WorkResourceInfos = std::unordered_map<ResourceHandle, WorkResourceInfo>;
 enum WorkBundleDbFlags 
 {
     WorkBundleDbFlags_None = 0,
-    WorkBundleDbFlags_TrackShadersOnTableAllocations = 1 << 0
+    WorkBundleDbFlags_SetupTablePreallocations = 1 << 0
 };
 
 class WorkBundleDb

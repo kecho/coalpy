@@ -421,14 +421,16 @@ namespace coalpy
         int totalElements = 128;
         BufferDesc buffDesc;
         buffDesc.memFlags = (MemFlags)MemFlag_GpuWrite;
-        buffDesc.format = Format::R32_SINT;
+        buffDesc.format = Format::R32_UINT;
         buffDesc.elementCount = totalElements;
         Buffer buff = device.createBuffer(buffDesc);
         
         ResourceTableDesc tableDesc;
         tableDesc.resources = &buff;
         tableDesc.resourcesCount = 1;
-        OutResourceTable outTable = device.createOutResourceTable(tableDesc);
+        OutResourceTableResult outTableResult = device.createOutResourceTable(tableDesc);
+        CPY_ASSERT_FMT(outTableResult.success(), "Error creating out table: %s", outTableResult.message.c_str());
+        OutResourceTable outTable = outTableResult;
 
         CommandList commandList;
         {

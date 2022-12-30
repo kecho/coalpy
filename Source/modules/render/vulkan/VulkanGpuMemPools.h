@@ -47,7 +47,7 @@ public:
     ~VulkanGpuDescriptorSetPool();
     void beginUsage(VulkanFenceHandle handle);
     void endUsage();
-    VkDescriptorSet allocUploadBlock(VkDescriptorSetLayout layout);
+    VkDescriptorSet allocateDescriptorSet(VkDescriptorSetLayout layout);
 
 private:
     VkDescriptorPool newPool() const;
