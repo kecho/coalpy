@@ -41,6 +41,8 @@ public:
         return *((SpirvPayload*)payload);
     }
 
+    void purgePayloads();
+
 private:
     virtual void onCreateComputePayload(const ShaderHandle& handle, ShaderState& state) override;
     void onDestroyPayload(ShaderState& state);

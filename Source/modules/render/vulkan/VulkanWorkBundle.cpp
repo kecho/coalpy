@@ -7,6 +7,9 @@
 #include <vector>
 #include <unordered_map>
 #include <string.h>
+#include <iostream>
+
+#define DEBUG_EXECUTION 0
 
 namespace coalpy
 {
@@ -417,9 +420,16 @@ void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdLis
         const unsigned char* cmdBlob = listData + cmdInfo.commandOffset;
         AbiCmdTypes cmdType = *((AbiCmdTypes*)cmdBlob);
         EventState postEventState = createSrcBarrierEvent(m_device, m_device.eventPool(), cmdInfo.postBarrier, outList.list);
+        #if DEBUG_EXECUTION
+            if (postEventState.eventHandle.valid())
+                std::cout << "[CmdBuffer] Src Event begin" << std::endl;
+        #endif
         if (postEventState.eventHandle.valid())
             events.emplace_back(postEventState.eventHandle);
         static const EventState s_nullEvent; 
+        #if DEBUG_EXECUTION
+        std::cout << "[CmdBuffer] Pre apply barriers" << std::endl;
+        #endif
         applyBarriers(m_device, s_nullEvent, m_device.eventPool(), cmdInfo.preBarrier, outList.list);
         switch (cmdType)
         {
@@ -496,7 +506,10 @@ void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdLis
             CPY_ASSERT_FMT(false, "Unrecognized serialized command %d", cmdType);
             return;
         }
-        applyBarriers(m_device, s_nullEvent, m_device.eventPool(), cmdInfo.postBarrier, outList.list);
+        #if DEBUG_EXECUTION
+        std::cout << "[CmdBuffer] Post apply barriers" << std::endl;
+        #endif
+        applyBarriers(m_device, postEventState, m_device.eventPool(), cmdInfo.postBarrier, outList.list);
     }
 
     if (!pl.commandSchedule.empty())

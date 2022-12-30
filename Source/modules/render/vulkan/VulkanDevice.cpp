@@ -623,7 +623,10 @@ VulkanDevice::~VulkanDevice()
             m_queues->waitForAllWorkOnCpu((WorkType)workType);
 
     if (m_shaderDb && m_shaderDb->parentDevice() == this)
+    {
+        m_shaderDb->purgePayloads();
         m_shaderDb->setParentDevice(nullptr, nullptr);
+    }
 
     for (auto p : m_vulkanWorkInfos->workMap)
         for (auto dl : p.second.downloadMap)

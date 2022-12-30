@@ -217,6 +217,11 @@ void VulkanShaderDb::onDestroyPayload(ShaderState& shaderState)
 
 VulkanShaderDb::~VulkanShaderDb()
 {
+    purgePayloads();
+}
+
+void VulkanShaderDb::purgePayloads()
+{
     m_shaders.forEach([this](ShaderHandle handle, ShaderState* state)
     {
         onDestroyPayload(*state);

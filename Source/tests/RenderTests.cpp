@@ -521,7 +521,7 @@ namespace coalpy
 
         BufferDesc buffDesc;
         buffDesc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
-        buffDesc.format = Format::R32_SINT;
+        buffDesc.format = Format::R32_UINT;
         buffDesc.elementCount = totalElements;
 
         Buffer pingBuffs[2];

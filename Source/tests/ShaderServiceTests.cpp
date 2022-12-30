@@ -80,7 +80,12 @@ void dxcCompileFunction(DxcCompiler& compiler)
     compilerArgs.mainFn = "csMain";
     compilerArgs.shaderName = "SimpleComputeShader";
     compilerArgs.source = simpleComputeShader();
+#if _WIN32
     compilerArgs.generatePdb = true;
+#elif __linux__
+    compilerArgs.generatePdb = false;
+#endif
+
     compilerArgs.onError = [&](const char* name, const char* errorString)
     {
         CPY_ASSERT_FMT(false, "Unexpected compilation error: \"%s\".", errorString);
@@ -111,7 +116,6 @@ void dxcTestSimpleDxcCompile(TestContext& ctx)
     auto& testContext = (ShaderServiceContext&)ctx;
 
     ShaderDbDesc dbDesc = {};
-    //dbDesc.compilerDllPath = testContext.rootDir.c_str();
     DxcCompiler compiler(dbDesc);
     dxcCompileFunction(compiler);
 }
@@ -122,7 +126,6 @@ void dxcTestParallelDxcCompile(TestContext& ctx)
     testContext.begin();
 
     ShaderDbDesc dbDesc = {};
-    //dbDesc.compilerDllPath = testContext.rootDir.c_str();
     DxcCompiler compiler(dbDesc);
 
     TaskDesc compileTask([&compiler](TaskContext& taskContext) {
@@ -148,7 +151,6 @@ void dxcTestManySerialDxcCompile(TestContext& ctx)
 {
     auto& testContext = (ShaderServiceContext&)ctx;
     ShaderDbDesc dbDesc = {};
-    //dbDesc.compilerDllPath = testContext.rootDir.c_str();
     DxcCompiler compiler(dbDesc);
 
     int compileTasksCount = 20;
