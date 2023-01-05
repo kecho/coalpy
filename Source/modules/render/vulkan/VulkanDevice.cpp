@@ -391,7 +391,7 @@ VkDevice createVkDevice(
     queueCreateInfo.queueFamilyIndex = queueFamilyIdx;
     queueCreateInfo.queueCount = (int)WorkType::Count;
     std::vector<float> queuePrio = { 1.0f };
-    queueCreateInfo.pQueuePriorities = queuePrio;
+    queueCreateInfo.pQueuePriorities = queuePrio.data();
     queueCreateInfo.pNext = NULL;
     queueCreateInfo.flags = 0;
 

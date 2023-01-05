@@ -17,7 +17,7 @@ struct ModuleSettings
 
     int adapter_index = 0;
     std::string adapter_preference = "auto";
-    std::string graphics_api = "dx12";
+    std::string graphics_api = "default";
 };
 
 }

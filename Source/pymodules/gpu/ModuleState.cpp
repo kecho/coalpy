@@ -18,8 +18,6 @@
 extern coalpy::ModuleOsHandle g_ModuleInstance;
 extern std::string g_ModuleFilePath;
 
-#define SETTINGS_FILE "coalpy_settings.json"
-
 namespace coalpy
 {
 
@@ -32,6 +30,8 @@ struct Test
 {
     int prop;
 };
+
+const char* ModuleState::sSettingsFileName = ".coalpy_settings.json";
 
 ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
 : m_fs(nullptr), m_ts(nullptr), m_textureDestructionCallback(nullptr)
@@ -95,7 +95,7 @@ void ModuleState::registerTypes(CoalpyTypeObject** types, int typesCount)
 void ModuleState::loadSettings()
 {
     m_settings = new ModuleSettings();
-    m_settings->load(*m_fs, SETTINGS_FILE);
+    m_settings->load(*m_fs, sSettingsFileName);
 }
 
 bool ModuleState::checkValidDevice()
@@ -171,13 +171,19 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
     modulePath += "/resources/";
 
 #if defined(_WIN32)
-    //auto platform = render::DevicePlat::Dx12;
-    auto platform = render::DevicePlat::Vulkan;
+    auto platform = render::DevicePlat::Dx12;
 #elif defined(__linux__)
     auto platform = render::DevicePlat::Vulkan;
 #elif
     #error "Platform not supported";
 #endif
+
+    if (!strcmpi(m_settings->graphics_api.c_str(), "dx12"))
+        platform = render::DevicePlat::Dx12;
+    else if (!strcmpi(m_settings->graphics_api.c_str(), "vulkan"))
+        platform = render::DevicePlat::Vulkan;
+    if (strcmpi(m_settings->graphics_api.c_str(), "default"))
+        std::cerr << "Unrecognized setting for graphics API \"" << m_settings->graphics_api << "\". Default will be used:" << render::getDevicePlatName(platform) << std::endl; 
 
     {
 

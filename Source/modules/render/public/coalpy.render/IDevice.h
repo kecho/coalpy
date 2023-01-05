@@ -25,6 +25,19 @@ enum class DevicePlat
     Vulkan
 };
 
+inline const char* getDevicePlatName(DevicePlat plat)
+{
+    switch (plat)
+    {
+    case DevicePlat::Dx12:
+        return "dx12";
+    case DevicePlat::Vulkan:
+        return "vulkan";
+    default:
+        return "unknown";
+    }
+}
+
 enum class DeviceFlags : int
 {
     None = 0,

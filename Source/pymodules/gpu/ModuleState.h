@@ -40,6 +40,7 @@ using TextureDesctructionCallback = std::function<void(Texture&)>;
 class ModuleState
 {
 public:
+    static const char* sSettingsFileName;
     ModuleState(CoalpyTypeObject** types, int typesCount);
     ~ModuleState();
 
