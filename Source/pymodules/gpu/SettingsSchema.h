@@ -1,5 +1,7 @@
 #pragma once
 
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
 #include <map>
 #include <vector>
 #include <string>
@@ -9,6 +11,7 @@
     static SettingsSchema s_schema;\
     bool serialize(IFileSystem& fs, const char* filename) const { return s_schema.serialize(fs, filename, this); }\
     bool load(IFileSystem& fs, const char* filename) { return s_schema.load(fs, filename, this); }\
+    void dumpToDictionary(PyObject* outDictionary) const { return s_schema.dumpToDictionary(this, outDictionary); }\
     static inline void registerSchema(){\
         ThisType settingsObj;\
         s_schema = SettingsSchema();
@@ -43,6 +46,7 @@ public:
     void declParameter(std::string name, size_t offset, SettingsParamType type);
     bool serialize(IFileSystem& fs, const char* filename, const void* settingsObj);
     bool load(IFileSystem& fs, const char* filename, void* settingsObj);
+    void dumpToDictionary(const void* settingsObj, PyObject* outputDictionary);
 
 private:
     struct Record

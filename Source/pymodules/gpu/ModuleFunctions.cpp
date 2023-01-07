@@ -9,6 +9,7 @@
 #include "ImguiBuilder.h"
 #include "ImplotBuilder.h"
 #include "Resources.h"
+#include "ModuleSettings.h"
 #include <coalpy.core/Assert.h>
 #include <coalpy.window/IWindow.h>
 #include <coalpy.render/IShaderDb.h>
@@ -25,6 +26,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <moduleobject.h>
+#include <dictobject.h>
 
 namespace
 {
@@ -99,6 +101,14 @@ namespace methods
 PyMethodDef* get()
 {
     return g_moduleFunctions;
+}
+
+PyObject* getSettings(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    PyObject* ret = PyDict_New();
+    ModuleState& state = getState(self);
+    state.settings().dumpToDictionary(ret);
+    return ret;
 }
 
 PyObject* getAdapters(PyObject* self, PyObject* vargs, PyObject* kwds)

@@ -4,6 +4,8 @@
 #include <cJSON.h>
 #include <iostream>
 
+#include <dictobject.h>
+
 namespace coalpy
 {
 namespace gpu
@@ -36,11 +38,13 @@ bool SettingsSchema::serialize(IFileSystem& fs, const char* filename, const void
                 float v = *reinterpret_cast<const float*>(settingsBytes + record.offset);
                 item = cJSON_CreateNumber(v);
             }
+            break;
         case SettingsParamType::STRING:
             {
                 const std::string& str = *reinterpret_cast<const std::string*>(settingsBytes + record.offset);
                 item = cJSON_CreateString(str.c_str());
             }
+            break;
         }
 
         if (item != nullptr)
@@ -109,6 +113,7 @@ bool SettingsSchema::load(IFileSystem& fs, const char* filename, void* settingsO
                     *reinterpret_cast<float*>(settingsBytes + record.offset) = v;
                 }
             }
+            break;
         case SettingsParamType::STRING:
             {
                 if (cJSON_IsNumber(item))
@@ -117,11 +122,44 @@ bool SettingsSchema::load(IFileSystem& fs, const char* filename, void* settingsO
                     *reinterpret_cast<std::string*>(settingsBytes + record.offset) = v;
                 }
             }
+            break;
         }
     }
 
     return success;
 }
+
+void SettingsSchema::dumpToDictionary(const void* settingsObj, PyObject* outputDictionary)
+{
+    const char* settingsBytes = (const char*)settingsObj;
+    for (auto& record : m_records)
+    {
+        PyObject* memberVal = nullptr;
+        switch (record.type)
+        {
+        case SettingsParamType::INT:
+            {
+                int v = *reinterpret_cast<const int*>(settingsBytes + record.offset);
+                memberVal = Py_BuildValue("i", v);
+            }
+            break;
+        case SettingsParamType::FLOAT:
+            {
+                float v = *reinterpret_cast<const float*>(settingsBytes + record.offset);
+                memberVal = Py_BuildValue("f", v);
+            }
+        case SettingsParamType::STRING:
+            {
+                const std::string& str = *reinterpret_cast<const std::string*>(settingsBytes + record.offset);
+                memberVal = Py_BuildValue("s", str.c_str());
+            }
+        }
+
+        if (memberVal)
+            PyDict_SetItemString(outputDictionary, record.name.c_str(), memberVal);
+    }
+}
+
 
 }
 }

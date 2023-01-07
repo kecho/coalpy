@@ -1,5 +1,14 @@
 //Main coalpy module gpu bindings.
 
+COALPY_FN(get_settings, getSettings,
+    R"(
+    Returns an object containing all the settings loaded for the coalpy.gpu module.
+
+    Returns:
+        Object: object containing all the settings loaded for coalpy.gpu
+    )"
+)
+
 COALPY_FN(get_adapters, getAdapters,
     R"(
     Lists all gpu graphics cards found in the system.

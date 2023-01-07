@@ -25,6 +25,7 @@ void freeModule(void* modulePtr);
 bool getModulePath(ModuleState& moduleState, PyObject* moduleObject, std::string& path);
 
 // coalpy::gpu
+PyObject* getSettings(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* getAdapters(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* getCurrentAdapterInfo(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* setCurrentAdapter(PyObject* self, PyObject* args, PyObject* kwds);
