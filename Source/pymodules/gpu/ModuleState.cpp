@@ -31,12 +31,10 @@ struct Test
     int prop;
 };
 
-const char* ModuleState::sSettingsFileName = ".coalpy_settings.json";
-
 ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
 : m_fs(nullptr), m_ts(nullptr), m_textureDestructionCallback(nullptr)
 {
-    ModuleSettings::registerSchema();
+    registerTypes(types, typesCount);
 
     {
         FileWatchDesc desc { 120 /*ms*/};
@@ -68,7 +66,6 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
     }
 
     s_allModules.insert(this);
-    registerTypes(types, typesCount);
 }
 
 void ModuleState::registerTypes(CoalpyTypeObject** types, int typesCount)
@@ -94,8 +91,9 @@ void ModuleState::registerTypes(CoalpyTypeObject** types, int typesCount)
 
 void ModuleState::loadSettings()
 {
-    m_settings = new ModuleSettings();
-    m_settings->load(*m_fs, sSettingsFileName);
+    m_settings = alloc<ModuleSettings>();
+    new (m_settings) ModuleSettings;
+    m_settings->load(*m_fs, ModuleSettings::sSettingsFileName);
 }
 
 bool ModuleState::checkValidDevice()
@@ -113,6 +111,8 @@ bool ModuleState::checkValidDevice()
 
 ModuleState::~ModuleState()
 {
+    Py_DECREF(m_settings);
+
     if (m_fw)
         m_fw->stop();
 
@@ -129,7 +129,6 @@ ModuleState::~ModuleState()
     delete m_fs;
     delete m_ts;
     delete m_fw;
-    delete m_settings;
 }
 
 void ModuleState::startServices()

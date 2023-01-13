@@ -22,6 +22,7 @@ enum class TypeId : int
     ImguiBuilder,
     ImplotBuilder,
     TinyObjLoader,
+    ModuleSettings,
     Counts,
 
     //special type, reserved for enums

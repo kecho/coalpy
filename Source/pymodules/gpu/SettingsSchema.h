@@ -11,13 +11,14 @@
     static SettingsSchema s_schema;\
     bool serialize(IFileSystem& fs, const char* filename) const { return s_schema.serialize(fs, filename, this); }\
     bool load(IFileSystem& fs, const char* filename) { return s_schema.load(fs, filename, this); }\
-    void dumpToDictionary(PyObject* outDictionary) const { return s_schema.dumpToDictionary(this, outDictionary); }\
     static inline void registerSchema(){\
         ThisType settingsObj;\
         s_schema = SettingsSchema();
-#define REGISTER_PARAM( name) ThisType::s_schema.declParameter(\
-    std::string(#name), offsetof(ThisType, name), SettingsParamTypeTrait::enumType(settingsObj.name));
-#define END_PARAM_TABLE() }
+#define REGISTER_PARAM(name, docStr) ThisType::s_schema.declParameter(\
+    std::string(#name), docStr, offsetof(ThisType, name), SettingsParamTypeTrait::enumType(settingsObj.name));
+#define END_PARAM_TABLE()\
+     ThisType::s_schema.genPyGetSetterTable();}
+
 #define IMPLEMENT_SETTING(type) SettingsSchema type::s_schema;
 
 namespace coalpy
@@ -43,21 +44,27 @@ struct SettingsParamTypeTrait
 class SettingsSchema
 {
 public:
-    void declParameter(std::string name, size_t offset, SettingsParamType type);
+    void declParameter(std::string name, const char* doc, size_t offset, SettingsParamType type);
     bool serialize(IFileSystem& fs, const char* filename, const void* settingsObj);
     bool load(IFileSystem& fs, const char* filename, void* settingsObj);
-    void dumpToDictionary(const void* settingsObj, PyObject* outputDictionary);
+    void genPyGetSetterTable();
+    PyGetSetDef* pyGetSetTable() { return m_pyGetSetters.data(); }
 
 private:
     struct Record
     {
         std::string name;
+        const char* doc;
         SettingsParamType type;
         size_t offset;
     };
 
+    static PyObject* pyGetter(PyObject* instance, void* closure);
+    static int pySetter(PyObject* instance, PyObject* value, void* closure);
+
     std::vector<Record> m_records;
     std::map<std::string,int> m_lookups;
+    std::vector<PyGetSetDef> m_pyGetSetters;
 };
 
 }

@@ -105,10 +105,9 @@ PyMethodDef* get()
 
 PyObject* getSettings(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
-    PyObject* ret = PyDict_New();
     ModuleState& state = getState(self);
-    state.settings().dumpToDictionary(ret);
-    return ret;
+    Py_INCREF(&state.settings());
+    return reinterpret_cast<PyObject*>(&state.settings());
 }
 
 PyObject* getAdapters(PyObject* self, PyObject* vargs, PyObject* kwds)

@@ -11,11 +11,90 @@ namespace coalpy
 namespace gpu
 {
 
-void SettingsSchema::declParameter(std::string name, size_t offset, SettingsParamType type)
+void SettingsSchema::declParameter(std::string name, const char* doc, size_t offset, SettingsParamType type)
 {
     int idx = (int)m_records.size();
-    m_records.emplace_back(SettingsSchema::Record { name, type, offset });
+    m_records.emplace_back(SettingsSchema::Record { name, doc, type, offset });
     m_lookups[name] = idx;
+}
+
+void SettingsSchema::genPyGetSetterTable()
+{
+    m_pyGetSetters.resize(m_records.size() + 1);
+    m_pyGetSetters[m_records.size()] = { nullptr };
+
+    for (int i = 0; i < (int)m_records.size(); ++i)
+    {
+        Record& r = m_records[i];
+        PyGetSetDef& getSetter = m_pyGetSetters[i];
+        getSetter.name = r.name.c_str();
+        getSetter.doc = r.doc;
+        getSetter.get = &pyGetter;
+        getSetter.set = &pySetter;
+        getSetter.closure = (void*)&r;
+    }
+}
+
+PyObject* SettingsSchema::pyGetter(PyObject* instance, void* closure)
+{
+    const Record& record = *reinterpret_cast<Record*>(closure);
+    const char* settingsBytes = reinterpret_cast<const char*>(instance);
+    PyObject* memberVal = nullptr;
+    switch (record.type)
+    {
+    case SettingsParamType::INT:
+        {
+            int v = *reinterpret_cast<const int*>(settingsBytes + record.offset);
+            memberVal = Py_BuildValue("i", v);
+        }
+        break;
+    case SettingsParamType::FLOAT:
+        {
+            float v = *reinterpret_cast<const float*>(settingsBytes + record.offset);
+            memberVal = Py_BuildValue("f", v);
+        }
+        break;
+    case SettingsParamType::STRING:
+        {
+            const std::string& str = *reinterpret_cast<const std::string*>(settingsBytes + record.offset);
+            memberVal = Py_BuildValue("s", str.c_str());
+        }
+        break;
+    }
+    return memberVal;
+}
+
+int SettingsSchema::pySetter(PyObject* instance, PyObject* value, void* closure)
+{
+    const Record& record = *reinterpret_cast<Record*>(closure);
+    char* settingsBytes = reinterpret_cast<char*>(instance);
+    switch (record.type)
+    {
+    case SettingsParamType::INT:
+        {
+            int& v = *reinterpret_cast<int*>(settingsBytes + record.offset);
+            PyArg_Parse(value, "i", &v);
+        }
+        break;
+    case SettingsParamType::FLOAT:
+        {
+            float& v = *reinterpret_cast<float*>(settingsBytes + record.offset);
+            PyArg_Parse(value, "f", &v);
+        }
+        break;
+    case SettingsParamType::STRING:
+        {
+            std::string& str = *reinterpret_cast<std::string*>(settingsBytes + record.offset);
+            char* val = nullptr;
+            PyArg_Parse(value, "s", &val);
+            str = val;
+        }
+        break;
+    default:
+        return -1;
+    }
+    
+    return 0;
 }
 
 bool SettingsSchema::serialize(IFileSystem& fs, const char* filename, const void* settingsObj)
@@ -128,38 +207,6 @@ bool SettingsSchema::load(IFileSystem& fs, const char* filename, void* settingsO
 
     return success;
 }
-
-void SettingsSchema::dumpToDictionary(const void* settingsObj, PyObject* outputDictionary)
-{
-    const char* settingsBytes = (const char*)settingsObj;
-    for (auto& record : m_records)
-    {
-        PyObject* memberVal = nullptr;
-        switch (record.type)
-        {
-        case SettingsParamType::INT:
-            {
-                int v = *reinterpret_cast<const int*>(settingsBytes + record.offset);
-                memberVal = Py_BuildValue("i", v);
-            }
-            break;
-        case SettingsParamType::FLOAT:
-            {
-                float v = *reinterpret_cast<const float*>(settingsBytes + record.offset);
-                memberVal = Py_BuildValue("f", v);
-            }
-        case SettingsParamType::STRING:
-            {
-                const std::string& str = *reinterpret_cast<const std::string*>(settingsBytes + record.offset);
-                memberVal = Py_BuildValue("s", str.c_str());
-            }
-        }
-
-        if (memberVal)
-            PyDict_SetItemString(outputDictionary, record.name.c_str(), memberVal);
-    }
-}
-
 
 }
 }
