@@ -7,6 +7,7 @@
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.render/IDevice.h>
 #include <coalpy.render/CommandList.h>
+#include <coalpy.render/ShaderModels.h>
 #include <coalpy.texture/ITextureLoader.h>
 #include "CoalpyTypeObject.h"
 #include "Window.h"
@@ -96,17 +97,11 @@ void ModuleState::loadSettings()
 bool ModuleState::checkValidDevice()
 {
     const int attempts = 2;
-    for (int i = 0; i < attempts; ++i)
-    {
-        if (m_device && m_device->info().valid)
-            return true;
-        
-        if (i < (attempts - 1))
-        {
-            auto flags = render::DeviceFlags::None;
-            createDevice(m_settings->adapter_index, (int)flags, ShaderModel::Sm6_5, false);
-        }
-    }
+    if (m_device && m_device->info().valid)
+        return true;
+    
+    if (!createDeviceFromSettings())
+        return false;
 
     PyErr_SetString(exObj(),
         "Current gpu device used is invalid. "
@@ -114,6 +109,54 @@ bool ModuleState::checkValidDevice()
         "a valid adapter using coalpy.gpu.set_current_adapter.");
 
     return false;
+}
+
+static ShaderModel strToShaderModel(const std::string& sm)
+{
+    if (sm == "sm6_5")
+        return ShaderModel::Sm6_5;
+    if (sm == "sm6_4")
+        return ShaderModel::Sm6_4;
+    if (sm == "sm6_3")
+        return ShaderModel::Sm6_3;
+    if (sm == "sm6_2")
+        return ShaderModel::Sm6_2;
+    if (sm == "sm6_1")
+        return ShaderModel::Sm6_1;
+    if (sm == "sm6_0")
+        return ShaderModel::Sm6_0;
+
+    return ShaderModel::Sm6_5;
+}
+
+bool ModuleState::createDeviceFromSettings()
+{
+    std::vector<render::DeviceInfo> allAdapters;
+#if defined(_WIN32)
+    auto platform = render::DevicePlat::Dx12;
+#elif defined(__linux__)
+    auto platform = render::DevicePlat::Vulkan;
+#elif
+    #error "Platform not supported";
+#endif
+    render::IDevice::enumerate(platform, allAdapters);
+
+    int index = m_settings->adapter_index < 0 ? 0 : m_settings->adapter_index;
+    if (allAdapters.empty())
+    {
+        PyErr_SetString(exObj(), "No graphics card adapter available in the current system.");
+        return false;
+    }
+    if (index >= (int)allAdapters.size())
+    {
+        PyErr_SetString(exObj(), "Invalid adapter index selected.");
+        return false;
+    }
+    
+    int flags = (int)render::DeviceFlags::None;
+    if (m_settings->enable_debug_device)
+        flags |= (int)render::DeviceFlags::EnableDebug;
+    return createDevice(m_settings->adapter_index, flags, strToShaderModel(m_settings->shader_model), m_settings->enable_shader_pdb);
 }
 
 ModuleState::~ModuleState()
@@ -252,38 +295,6 @@ void ModuleState::destroyDevice()
     delete m_tl;
     delete m_db;
     delete m_device;
-}
-
-bool ModuleState::selectAdapter(int index, int flags, ShaderModel shaderModel, bool dumpPDBs)
-{
-    std::vector<render::DeviceInfo> allAdapters;
-#if defined(_WIN32)
-    auto platform = render::DevicePlat::Dx12;
-#elif defined(__linux__)
-    auto platform = render::DevicePlat::Vulkan;
-#elif
-    #error "Platform not supported";
-#endif
-    render::IDevice::enumerate(platform, allAdapters);
-
-    if (allAdapters.empty())
-    {
-        PyErr_SetString(exObj(), "No graphics card adapter available in the current system.");
-        return false;
-    }
-    if (index < 0 || index >= (int)allAdapters.size())
-    {
-        PyErr_SetString(exObj(), "Invalid adapter index selected.");
-        return false;
-    }
-
-    destroyDevice();
-
-    if (!createDevice(index, flags, shaderModel, dumpPDBs))
-        return false;
-
-    m_tl->start(); //restart the texture loader
-    return true;
 }
 
 void ModuleState::onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString)

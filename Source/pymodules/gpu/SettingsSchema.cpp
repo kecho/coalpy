@@ -3,7 +3,6 @@
 #include <string.h>
 #include <cJSON.h>
 #include <iostream>
-
 #include <dictobject.h>
 
 namespace coalpy
@@ -60,6 +59,14 @@ PyObject* SettingsSchema::pyGetter(PyObject* instance, void* closure)
             memberVal = Py_BuildValue("s", str.c_str());
         }
         break;
+    case SettingsParamType::BOOL:
+        {
+            bool b = *reinterpret_cast<const bool*>(settingsBytes + record.offset);
+            memberVal = b ? Py_True : Py_False;
+            std::cout << "REF" << memberVal->ob_refcnt << std::endl;
+            Py_INCREF(memberVal);
+        }
+        break;
     }
     return memberVal;
 }
@@ -88,6 +95,14 @@ int SettingsSchema::pySetter(PyObject* instance, PyObject* value, void* closure)
             char* val = nullptr;
             PyArg_Parse(value, "s", &val);
             str = val;
+        }
+        break;
+    case SettingsParamType::BOOL:
+        {
+            bool& b = *reinterpret_cast<bool*>(settingsBytes + record.offset);
+            int val = 0;
+            PyArg_Parse(value, "p", &val);
+            b = (bool)val;
         }
         break;
     default:
@@ -122,6 +137,12 @@ bool SettingsSchema::serialize(IFileSystem& fs, const char* filename, const void
             {
                 const std::string& str = *reinterpret_cast<const std::string*>(settingsBytes + record.offset);
                 item = cJSON_CreateString(str.c_str());
+            }
+            break;
+        case SettingsParamType::BOOL:
+            {
+                const bool& b = *reinterpret_cast<const bool*>(settingsBytes + record.offset);
+                item = cJSON_CreateBool(b ? 1 : 0);
             }
             break;
         }
@@ -199,6 +220,15 @@ bool SettingsSchema::load(IFileSystem& fs, const char* filename, void* settingsO
                 {
                     std::string v = item->valuestring;
                     *reinterpret_cast<std::string*>(settingsBytes + record.offset) = v;
+                }
+            }
+            break;
+        case SettingsParamType::BOOL:
+            {
+                if (cJSON_IsBool(item))
+                {
+                    bool v = cJSON_IsTrue(item);
+                    *reinterpret_cast<bool*>(settingsBytes + record.offset) = v;
                 }
             }
             break;

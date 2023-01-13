@@ -27,18 +27,6 @@ COALPY_FN(get_current_adapter_info, getCurrentAdapterInfo,
     )"
 )
 
-COALPY_FN(set_current_adapter, setCurrentAdapter,
-    R"(
-    Selects an active GPU adapter. For a list of GPU adapters see coalpy.gpu.get_adapters.
-
-    Parameters:
-        index (int): the desired device index. See get_adapters for a full list.
-        flags (gpu.DeviceFlags) (optional): bit mask with device flags.
-        dump_shader_pdbs (bool)(optional): if True it will dump the built shader's PDBs to the .shader_pdb folder.
-        shader_model (int)(optional):  Default is sm6_5. sets the current shader model used for shader compilation. See the enum coalpy.gpu.ShaderModel for the available models.
-    )"
-)
-
 COALPY_FN(add_data_path, addDataPath,
     R"(
     Adds a path to load shader / texture files / shader includes from.

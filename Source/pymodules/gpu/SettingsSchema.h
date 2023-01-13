@@ -31,13 +31,14 @@ namespace gpu
 
 enum class SettingsParamType
 {
-    INT, FLOAT, STRING
+    BOOL, INT, FLOAT, STRING
 };
 
 struct SettingsParamTypeTrait
 {
-    static SettingsParamType enumType(int v) {return SettingsParamType::INT;}
+    static SettingsParamType enumType(int v)   {return SettingsParamType::INT;}
     static SettingsParamType enumType(float v) {return SettingsParamType::FLOAT;}
+    static SettingsParamType enumType(bool v)  {return SettingsParamType::BOOL;}
     static SettingsParamType enumType(std::string v) {return SettingsParamType::STRING;}
 };
 

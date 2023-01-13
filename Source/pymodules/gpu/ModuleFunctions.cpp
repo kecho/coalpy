@@ -153,31 +153,6 @@ PyObject* getCurrentAdapterInfo(PyObject* self, PyObject* args, PyObject* kwds)
     return nullptr;
 }
 
-PyObject* setCurrentAdapter(PyObject* self, PyObject* args, PyObject* kwds)
-{
-    static char* argnames[] = { "index", "flags", "dump_shader_pdbs", "shader_model", nullptr };
-    int selected = -1;
-    int flags = (int)render::DeviceFlags::None;
-    int dumpPDBs = 0;
-    ShaderModel shaderModel = ShaderModel::Sm6_5;
-    
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i|ipi", argnames, &selected, &flags, &dumpPDBs, &shaderModel))
-        return nullptr;
-
-    ModuleState& state = getState(self);
-
-    if ((int)shaderModel < (int)ShaderModel::Begin || (int)shaderModel > (int)ShaderModel::End)
-    {
-        PyErr_SetString(state.exObj(), "Shader model must be a valid value defined in coalpy.gpu.ShaderModel enums");
-        return nullptr;
-    }
-
-    if (!state.selectAdapter(selected, flags, shaderModel, (bool)dumpPDBs))
-        return nullptr;
-    
-    Py_RETURN_NONE;
-}
-
 PyObject* addDataPath(PyObject* self, PyObject* args, PyObject* kwds)
 {
     ModuleState& moduleState = getState(self);

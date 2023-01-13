@@ -28,7 +28,6 @@ bool getModulePath(ModuleState& moduleState, PyObject* moduleObject, std::string
 PyObject* getSettings(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* getAdapters(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* getCurrentAdapterInfo(PyObject* self, PyObject* args, PyObject* kwds);
-PyObject* setCurrentAdapter(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* addDataPath(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* schedule(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* run(PyObject* self, PyObject* args);
