@@ -39,9 +39,6 @@ namespace methods
     PyObject* saveSettings(PyObject* self, PyObject* vargs, PyObject* kwds)
     {
         ModuleState& moduleState = parentModule(self);
-        if (!moduleState.checkValidDevice())
-            return nullptr;
-
         ModuleSettings* settingsObj = reinterpret_cast<ModuleSettings*>(self);
 
         static char* arguments[] = { "filename", nullptr };
