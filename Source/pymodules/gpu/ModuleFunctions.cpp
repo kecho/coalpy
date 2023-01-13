@@ -139,6 +139,12 @@ PyObject* getAdapters(PyObject* self, PyObject* vargs, PyObject* kwds)
 PyObject* getCurrentAdapterInfo(PyObject* self, PyObject* args, PyObject* kwds)
 {
     ModuleState& state = getState(self);
+    if (!state.checkValidDevice())
+    {
+        PyErr_SetString(state.exObj(), "Can't use current device.");
+        return nullptr;
+    }
+
     auto& info = state.device().info();
     if (info.valid)
         return Py_BuildValue("(is)", info.index, info.name.c_str());

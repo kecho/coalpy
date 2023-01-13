@@ -154,25 +154,21 @@ PyMODINIT_FUNC PyInit_gpu(void)
     Py_XINCREF(exceptionObject);
     state->setExObj(exceptionObject);
 
-    if (state->checkValidDevice())
+    coalpy::gpu::processTypes(typeList, state, *moduleObj);
+
+    if (PyModule_AddObject(moduleObj, "exception_object", exceptionObject) < 0) {
+        Py_XDECREF(exceptionObject);
+        Py_CLEAR(exceptionObject);
+        Py_DECREF(moduleObj);
+        return NULL;
+    }
+
     {
-        state->startServices();
-        coalpy::gpu::processTypes(typeList, state, *moduleObj);
-
-        if (PyModule_AddObject(moduleObj, "exception_object", exceptionObject) < 0) {
-            Py_XDECREF(exceptionObject);
-            Py_CLEAR(exceptionObject);
-            Py_DECREF(moduleObj);
-            return NULL;
-        }
-
-        {
-            std::string modulePath;
-            std::string moduleFilePath = g_ModuleFilePath;
-            coalpy::FileUtils::getDirName(moduleFilePath, modulePath);
-            state->addDataPath(modulePath.c_str());
-            state->addDataPath(".");
-        }
+        std::string modulePath;
+        std::string moduleFilePath = g_ModuleFilePath;
+        coalpy::FileUtils::getDirName(moduleFilePath, modulePath);
+        state->addDataPath(modulePath.c_str());
+        state->addDataPath(".");
     }
 
     return moduleObj;

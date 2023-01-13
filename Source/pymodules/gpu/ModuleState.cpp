@@ -58,9 +58,6 @@ ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
 
     loadSettings();
 
-    auto flags = render::DeviceFlags::None;
-    createDevice(m_settings->adapter_index, (int)flags, ShaderModel::Sm6_5, false);
-
     {
         m_windowListener = Window::createWindowListener(*this);
     }
@@ -98,8 +95,18 @@ void ModuleState::loadSettings()
 
 bool ModuleState::checkValidDevice()
 {
-    if (m_device && m_device->info().valid)
-        return true;
+    const int attempts = 2;
+    for (int i = 0; i < attempts; ++i)
+    {
+        if (m_device && m_device->info().valid)
+            return true;
+        
+        if (i < (attempts - 1))
+        {
+            auto flags = render::DeviceFlags::None;
+            createDevice(m_settings->adapter_index, (int)flags, ShaderModel::Sm6_5, false);
+        }
+    }
 
     PyErr_SetString(exObj(),
         "Current gpu device used is invalid. "
@@ -233,6 +240,8 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
 
     for (const auto& p : m_additionalDataPaths)
         internalAddPath(p);
+
+    startServices();
 
     return true;
 }
