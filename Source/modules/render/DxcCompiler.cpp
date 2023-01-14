@@ -335,6 +335,8 @@ void addSpirvArguments(std::vector<std::wstring>& args)
 
     args.push_back(L"-spirv");
     args.push_back(L"-fspv-reflect"); //add the append consume buffer reflection info
+    args.push_back(L"-fspv-extension=SPV_GOOGLE_hlsl_functionality1");
+    args.push_back(L"-fspv-extension=SPV_GOOGLE_user_type");
     for (auto& s : g_registerShiftArgs)
     {
         args.push_back(s.c_str());
