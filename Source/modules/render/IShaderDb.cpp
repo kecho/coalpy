@@ -17,7 +17,9 @@ IShaderDb* IShaderDb::create(const ShaderDbDesc& desc)
 #if ENABLE_DX12
     if (desc.platform == render::DevicePlat::Dx12)
         return new Dx12ShaderDb(desc);
-#elif ENABLE_VULKAN
+#endif
+
+#if ENABLE_VULKAN
     if (desc.platform == render::DevicePlat::Vulkan)
         return new VulkanShaderDb(desc);
 #endif

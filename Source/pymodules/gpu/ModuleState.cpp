@@ -225,8 +225,11 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
         platform = render::DevicePlat::Dx12;
     else if (!strcmpi(m_settings->graphics_api.c_str(), "vulkan"))
         platform = render::DevicePlat::Vulkan;
-    if (strcmpi(m_settings->graphics_api.c_str(), "default"))
-        std::cerr << "Unrecognized setting for graphics API \"" << m_settings->graphics_api << "\". Default will be used:" << render::getDevicePlatName(platform) << std::endl; 
+    else if (strcmpi(m_settings->graphics_api.c_str(), "default"))
+    {
+        PyErr_Format(exObj(), "Unrecognized setting for graphics API \"%s\" Default will be used: %s", m_settings->graphics_api.c_str(), render::getDevicePlatName(platform));
+        return false;
+    }
 
     {
 
@@ -248,6 +251,10 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
     }
 
     {
+
+#if _DEBUG
+        flags |= (int)render::DeviceFlags::EnableDebug;
+#endif
         render::DeviceConfig devConfig;
         devConfig.platform = platform;
         devConfig.moduleHandle = g_ModuleInstance;
@@ -255,9 +262,6 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
         devConfig.index = index;
         devConfig.flags = (render::DeviceFlags)flags;
         devConfig.resourcePath = modulePath;
-#if _DEBUG
-        devConfig.flags = (render::DeviceFlags)((int)devConfig.flags | (int)render::DeviceFlags::EnableDebug);
-#endif
         m_device = render::IDevice::create(devConfig);
         if (!m_device || !m_device->info().valid)
         {
