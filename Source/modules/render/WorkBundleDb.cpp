@@ -247,7 +247,7 @@ bool processTable(
     bool isSampler,
     bool processTableAllocations)
 {
-    if (!transitionTable(table, context))
+    if (!isSampler && !transitionTable(table, context))
         return false;
 
     const WorkTableInfos& tableInfos = *context.tableInfos;

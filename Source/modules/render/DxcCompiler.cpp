@@ -45,11 +45,9 @@ LIB_MODULE g_dxilModule = nullptr;
 const char* g_defaultDxcPath = "coalpy\\resources";
 const char* g_dxCompiler = "dxcompiler.dll";
 const char* g_dxil = "dxil.dll";
-#define ENABLE_DXIL_VALIDATION 1
 #elif defined(__linux__)
 const char* g_defaultDxcPath = "coalpy/resources";
 const char* g_dxCompiler = "libdxcompiler.so";
-#define ENABLE_DXIL_VALIDATION 0
 #endif
 
 void loadCompilerModule(const char* searchPath, const char* moduleName, LIB_MODULE& outModule, DxcCreateInstanceProc& outProc)
@@ -97,18 +95,14 @@ struct DxcInstance
 {
     DxcCompilerHandle compiler;
     DxcUtilsHandle utils;
-#if ENABLE_DXIL_VALIDATION 
     DxcValidatorHandle validator;
-#endif
 };
 
 struct DxcInstanceData
 {
     IDxcCompiler3& compiler;
     IDxcUtils& utils;
-#if ENABLE_DXIL_VALIDATION
     IDxcValidator2& validator;
-#endif
 };
 
 class DxcPool : public RefCounted
@@ -134,13 +128,11 @@ public:
                 DX_OK(g_dxcCreateInstanceFn(CLSID_DxcUtils, __uuidof(IDxcUtils), (void**)&instance));
         }
 
-#if ENABLE_DXIL_VALIDATION
         {
             SmartPtr<IDxcValidator2>& instance = m_validatorPool.allocate(h.validator);
             if (instance == nullptr)
                 DX_OK(g_dxilCreateInstanceFn(CLSID_DxcValidator, __uuidof(IDxcValidator2), (void**)&instance));
         }
-#endif
         return h;
     }
 
@@ -149,16 +141,12 @@ public:
         CPY_ERROR(m_compilerPool.contains(instance.compiler));
         CPY_ERROR(m_utilsPool.contains(instance.utils));
         SmartPtr<IDxcCompiler3>& c = m_compilerPool[instance.compiler];
-#if ENABLE_DXIL_VALIDATION
         SmartPtr<IDxcValidator2>& vc = m_validatorPool[instance.validator];
-#endif
         SmartPtr<IDxcUtils>& u = m_utilsPool[instance.utils];
         return DxcInstanceData {
             *c,
             *u,
-#if ENABLE_DXIL_VALIDATION
             *vc,
-#endif
         };
     }
 
@@ -166,26 +154,20 @@ public:
     {
         m_compilerPool.free(instance.compiler, false/*dont reset object so we recycle it*/);
         m_utilsPool.free(instance.utils, false/*dont reset object so we recycle it*/);
-#if ENABLE_DXIL_VALIDATION
         m_validatorPool.free(instance.validator, false/*dont reset object so we recycle it*/);
-#endif
     }
 
     void clear()
     {
         m_compilerPool.clear();
         m_utilsPool.clear();
-#if ENABLE_DXIL_VALIDATION
         m_validatorPool.clear();
-#endif
     }
 
 private:
     HandleContainer<DxcCompilerHandle, SmartPtr<IDxcCompiler3>> m_compilerPool;
     HandleContainer<DxcUtilsHandle, SmartPtr<IDxcUtils>> m_utilsPool;
-#if ENABLE_DXIL_VALIDATION
     HandleContainer<DxcValidatorHandle, SmartPtr<IDxcValidator2>> m_validatorPool;
-#endif
 };
 
 thread_local SmartPtr<DxcPool> s_dxcPool = nullptr;
@@ -487,21 +469,22 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
 
             if (shaderOut != nullptr)
             {
-#if ENABLE_DXIL_VALIDATION
-                SmartPtr<IDxcOperationResult> validationResult;
-                DX_OK(instanceData.validator.Validate(&(*shaderOut), DxcValidatorFlags_InPlaceEdit, (IDxcOperationResult **)&validationResult));
-
-                HRESULT validationStatus;
-                validationResult->GetStatus(&validationStatus);
-                if (FAILED(validationStatus))
+                if (!outputSpirV)
                 {
-                    if (args.onError)
-                        compiledSuccess = false;
+                    SmartPtr<IDxcOperationResult> validationResult;
+                    DX_OK(instanceData.validator.Validate(&(*shaderOut), DxcValidatorFlags_InPlaceEdit, (IDxcOperationResult**)&validationResult));
+
+                    HRESULT validationStatus;
+                    validationResult->GetStatus(&validationStatus);
+                    if (FAILED(validationStatus))
+                    {
+                        if (args.onError)
+                            compiledSuccess = false;
+                    }
                 }
-                else if (args.onFinished)
-#else
-                compiledSuccess = shaderOut->GetBufferPointer() != nullptr;                    
-#endif
+
+                compiledSuccess = compiledSuccess && shaderOut->GetBufferPointer() != nullptr;
+                if (args.onFinished)
                 {
                     SpirvReflectionData* spirVReflectionData = nullptr;
                     if (outputSpirV)
