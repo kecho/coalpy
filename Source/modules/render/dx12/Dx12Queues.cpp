@@ -63,13 +63,13 @@ Dx12Queues::~Dx12Queues()
         for (auto& allocatorRec : q.allocatorPool)
             q.fence->waitOnCpu(allocatorRec.fenceValue);
 
-        delete q.fence;
         if (q.queue)
             q.queue->Release();
 
         delete q.memPools.uploadPool;
         delete q.memPools.tablePool;
         delete q.memPools.samplerPool;
+        delete q.fence;
     }
 }
 

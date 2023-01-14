@@ -60,7 +60,7 @@ private:
 };
 
 template<class AllocDesc, class AllocationHandle, class HeapType, class GpuAllocatorType>
-class Dx12GenericResourcePool : public TGpuResourcePool<AllocDesc, AllocationHandle, HeapType, GpuAllocatorType, Dx12FenceTimeline>, public Dx12FenceTimeline
+class Dx12GenericResourcePool : public Dx12FenceTimeline, public TGpuResourcePool<AllocDesc, AllocationHandle, HeapType, GpuAllocatorType, Dx12FenceTimeline>
 {
 public:
     typedef TGpuResourcePool<AllocDesc, AllocationHandle, HeapType, GpuAllocatorType, Dx12FenceTimeline> SuperType;

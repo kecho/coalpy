@@ -4,6 +4,8 @@
 #include <coalpy.core/ClTokenizer.h>
 #include <coalpy.core/Stopwatch.h>
 #include <coalpy.core/SmartPtr.h>
+#include <coalpy.render/IDevice.h>
+#include <coalpy.render/../../Config.h>
 #include <string>
 #include <set>
 #include <atomic>
@@ -91,6 +93,7 @@ struct ArgParameters
     bool forever = false;
     const char* suitefilter = "";
     const char* testfilter = "";
+    const char* graphicsApi = "";
 };
 
 bool prepareCli(ClParser& p, ArgParameters& params)
@@ -101,6 +104,7 @@ bool prepareCli(ClParser& p, ArgParameters& params)
     CliSwitch(gid, "print available suites and tests", "p", "printtests", Bool, ArgParameters, printTests);
     CliSwitch(gid, "Comma separated suite filters", "s", "suites", String, ArgParameters, suitefilter);
     CliSwitch(gid, "Comma separated test case filters", "t", "tests", String, ArgParameters, testfilter);
+    CliSwitch(gid, "Graphics api (dx12, vulkan or default)", "g", "gapi", String, ArgParameters, graphicsApi);
     CliSwitch(gid, "Run indefinitely iterations of the tests. Ideal to stress test things.", "e", "forever", Bool, ArgParameters, forever);
     return true;
 }
@@ -110,7 +114,6 @@ int main(int argc, char* argv[])
     ApplicationContext appCtx;
     appCtx.argc = argc;
     appCtx.argv = argv;
-    ApplicationContext::set(appCtx);
     
     ArgParameters params;
     ClParser p;
@@ -130,6 +133,26 @@ int main(int argc, char* argv[])
         p.prettyPrintHelp();
         return 0;
     }
+
+    #if defined(_WIN32) && ENABLE_DX12
+    auto platform = render::DevicePlat::Dx12;
+    #elif defined(__linux__) && ENABLE_VULKAN
+    auto platform = render::DevicePlat::Vulkan;
+    #endif
+
+    if (!strcmp(params.graphicsApi, "dx12"))
+        platform = render::DevicePlat::Dx12;
+    else if (!strcmp(params.graphicsApi, "vulkan"))
+        platform = render::DevicePlat::Vulkan;
+    else if (strcmp(params.graphicsApi,"default") && strcmp(params.graphicsApi,""))
+    {
+        std::cerr << "Undefined graphics api requested." << std::endl;
+        return -1;
+    }
+
+    appCtx.graphicsApi = platform;
+
+    ApplicationContext::set(appCtx);
 
     int suiteCounts = (int)(sizeof(g_suites)/sizeof(g_suites[0]));
     if (params.printTests)

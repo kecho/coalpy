@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <coalpy.render/IDevice.h>
 
 namespace coalpy
 {
@@ -39,6 +40,7 @@ struct ApplicationContext
 {
     int argc;
     char** argv;
+    render::DevicePlat graphicsApi;
     
     static const ApplicationContext& get();
     static void set(const ApplicationContext& ctx);

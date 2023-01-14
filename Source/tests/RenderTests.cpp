@@ -97,13 +97,7 @@ namespace coalpy
         CPY_ASSERT(db == nullptr);
         CPY_ASSERT(device == nullptr);
 
-#if defined(_WIN32)
-        auto platform = DevicePlat::Dx12;
-#elif defined(__linux__)
-        auto platform = DevicePlat::Vulkan;
-#else
-        #error "Platform not supported"
-#endif
+        auto platform = ApplicationContext::get().graphicsApi;
 
         {
             ShaderDbDesc desc = { platform, rootResourceDir.c_str(), fs, ts };
@@ -922,7 +916,7 @@ namespace coalpy
 
         CommandList* cmdListPtr = &commandList;
         ScheduleStatus status = device.schedule(&cmdListPtr, 1, ScheduleFlags_GetWorkHandle); 
-        CPY_ASSERT(status.success());
+        CPY_ASSERT_FMT(status.success(), "%s", status.message.c_str());
 
         WaitStatus waitStatus = device.waitOnCpu(status.workHandle, -1);
         CPY_ASSERT(waitStatus.success());
@@ -1956,13 +1950,7 @@ namespace coalpy
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
     {
-        static TestCase sCases[] = {
-#if ENABLE_DX12
-            { "dx12BufferPool",  dx12BufferPool },
-#endif
-#if ENABLE_VULKAN
-            { "vulkanBufferPool", vulkanBufferPool },
-#endif
+        static const TestCase defaultCases[] = {
             { "createBuffer",  testCreateBuffer },
             { "createTexture", testCreateTexture },
             { "createTables",  testCreateTables },
@@ -1983,9 +1971,37 @@ namespace coalpy
             { "copyTextureArrayAndMips",  testCopyTextureArrayAndMips },
             { "collectGpuMarkers",  testCollectGpuMarkers },
         };
+
+#if ENABLE_DX12
+        static const TestCase dx12Cases[] = {
+            { "dx12BufferPool",  dx12BufferPool },
+        };
+#endif
     
-        caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
-        return sCases;
+#if ENABLE_VULKAN
+        static const TestCase vulkanCases[] = {
+            { "vulkanBufferPool", vulkanBufferPool },
+        };
+#endif
+
+        static std::vector<TestCase> sCases;
+        if (sCases.empty())
+        {
+#if ENABLE_DX12
+            if (ApplicationContext::get().graphicsApi == render::DevicePlat::Dx12)
+                sCases.insert(sCases.end(), dx12Cases, dx12Cases + (sizeof(dx12Cases)/sizeof(TestCase)));
+#endif
+
+#if ENABLE_VULKAN
+            if (ApplicationContext::get().graphicsApi == render::DevicePlat::Vulkan)
+                sCases.insert(sCases.end(), vulkanCases, vulkanCases + (sizeof(vulkanCases)/sizeof(TestCase)));
+#endif
+            sCases.insert(sCases.end(), defaultCases, defaultCases + (sizeof(defaultCases)/sizeof(TestCase)));
+        }
+
+
+        caseCounts = (int)sCases.size();
+        return sCases.data();
     }
 
     TestSuite* renderSuite()
