@@ -27,11 +27,6 @@ namespace gpu
 
 std::set<ModuleState*> ModuleState::s_allModules;
 
-struct Test
-{
-    int prop;
-};
-
 ModuleState::ModuleState(CoalpyTypeObject** types, int typesCount)
 : m_fs(nullptr), m_ts(nullptr), m_textureDestructionCallback(nullptr)
 {
@@ -96,12 +91,11 @@ void ModuleState::loadSettings()
 
 bool ModuleState::checkValidDevice()
 {
-    const int attempts = 2;
     if (m_device && m_device->info().valid)
         return true;
     
-    if (!createDeviceFromSettings())
-        return false;
+    if (createDeviceFromSettings())
+        return true;
 
     PyErr_SetString(exObj(),
         "Current gpu device used is invalid. "
@@ -156,7 +150,7 @@ bool ModuleState::createDeviceFromSettings()
     int flags = (int)render::DeviceFlags::None;
     if (m_settings->enable_debug_device)
         flags |= (int)render::DeviceFlags::EnableDebug;
-    return createDevice(m_settings->adapter_index, flags, strToShaderModel(m_settings->shader_model), m_settings->enable_shader_pdb);
+    return createDevice(m_settings->adapter_index, flags, strToShaderModel(m_settings->shader_model), m_settings->dump_shader_pdbs);
 }
 
 ModuleState::~ModuleState()
@@ -291,10 +285,15 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
 
 void ModuleState::destroyDevice()
 {
-    m_device->removeShaderDb();
+    if (m_device)
+        m_device->removeShaderDb();
     delete m_tl;
     delete m_db;
-    delete m_device;
+    if (m_device)
+        delete m_device;
+    m_device = nullptr;
+    m_tl = nullptr;
+    m_db = nullptr;
 }
 
 void ModuleState::onShaderCompileError(ShaderHandle handle, const char* shaderName, const char* shaderErrorString)

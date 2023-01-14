@@ -63,7 +63,6 @@ PyObject* SettingsSchema::pyGetter(PyObject* instance, void* closure)
         {
             bool b = *reinterpret_cast<const bool*>(settingsBytes + record.offset);
             memberVal = b ? Py_True : Py_False;
-            std::cout << "REF" << memberVal->ob_refcnt << std::endl;
             Py_INCREF(memberVal);
         }
         break;

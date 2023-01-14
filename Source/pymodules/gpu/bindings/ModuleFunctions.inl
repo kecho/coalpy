@@ -18,6 +18,15 @@ COALPY_FN(get_adapters, getAdapters,
     )"
 )
 
+COALPY_FN(init, initAdapter,
+    R"(
+        Initializes the device, if it hasn't been initialized.
+        Call this function to explicitely initialize the device. Only here any configuration changes will be applied.
+        If this function is not called, initialization of the adapter happens upon the first usage (implicitely).
+        Any modifications to the settings (such as graphics API or adapter index) won't be applied until the application restarts.
+    )"
+)
+
 COALPY_FN(get_current_adapter_info, getCurrentAdapterInfo,
     R"(
     Gets the currently active GPU adapter, as a tuple of (i : int, name : Str).

@@ -153,6 +153,18 @@ PyObject* getCurrentAdapterInfo(PyObject* self, PyObject* args, PyObject* kwds)
     return nullptr;
 }
 
+PyObject* initAdapter(PyObject* self, PyObject* args, PyObject* kwds)
+{
+    ModuleState& state = getState(self);
+    if (!state.checkValidDevice())
+    {
+        PyErr_SetString(state.exObj(), "Cannot initialize device");
+        return nullptr;
+    }
+
+    Py_RETURN_NONE;
+}
+
 PyObject* addDataPath(PyObject* self, PyObject* args, PyObject* kwds)
 {
     ModuleState& moduleState = getState(self);
