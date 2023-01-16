@@ -334,6 +334,7 @@ void addSpirvArguments(std::vector<std::wstring>& args)
     }
 
     args.push_back(L"-spirv");
+    //TODO: uncoment to get support for validated spirv append consume buffers
     //args.push_back(L"-fspv-reflect"); //add the append consume buffer reflection info
     for (auto& s : g_registerShiftArgs)
     {

@@ -20,7 +20,6 @@
 #include <set>
 #include <vector>
 
-
 #define DEBUG_PRINT_EXTENSIONS 0
 #define ENABLE_DEBUG_CALLBACK_EXT 1
 #define ENABLE_MUTABLE_DESCRIPTORS_EXT 1

@@ -109,23 +109,29 @@ EventState createSrcBarrierEvent(
 {
     CommandLocation srcLocation;
     EventState eventState;
+    bool allocateEvent = false;
     bool mustReset = false;
     for (auto& b : barriers)
     {
         if (b.type != BarrierType::Begin)
             continue;
 
-        if (!eventState.eventHandle.valid())
+        if (!allocateEvent)
         {
             srcLocation = b.srcCmdLocation;
-            bool isNew = false;
-            eventState.eventHandle = eventPool.allocate(srcLocation, isNew);
-            mustReset = !isNew;
+            allocateEvent = true;
         }
 
         CPY_ASSERT(srcLocation == b.srcCmdLocation);
         eventState.flags |= getVkStage(b.prevState);
-        
+    }
+
+    if (allocateEvent)
+    {
+        CPY_ASSERT(!eventState.eventHandle.valid());
+        bool isNew = false;
+        eventState.eventHandle = eventPool.allocate(srcLocation, eventState.flags, isNew);
+        mustReset = !isNew;
     }
 
     if (mustReset)
@@ -133,6 +139,7 @@ EventState createSrcBarrierEvent(
         VkEvent event = eventPool.getEvent(eventState.eventHandle);
         vkCmdResetEvent(cmdBuffer, event, eventState.flags);
     }
+
     return eventState;
 }
 
@@ -249,8 +256,9 @@ void applyBarriers(
     {
         DstEventState& dstEvent = pairVal.second;
         VkEvent event = eventPool.getEvent(dstEvent.eventHandle);
+        VkPipelineStageFlags srcEventFlags = eventPool.getFlags(dstEvent.eventHandle);
         vkCmdWaitEvents(
-            cmdBuffer, 1, &event, dstEvent.flags, dstEvent.dstFlags,
+            cmdBuffer, 1, &event, srcEventFlags, dstEvent.dstFlags,
             0, nullptr,
             dstEvent.bufferBarriers.size(), dstEvent.bufferBarriers.data(),
             dstEvent.imageBarriers.size(), dstEvent.imageBarriers.data());
@@ -537,7 +545,7 @@ VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int comm
 
     std::vector<VulkanList> lists;
     std::vector<VkCommandBuffer> cmdBuffers;
-    std::vector<std::vector<VulkanEventHandle>> events;
+    std::vector<VulkanEventHandle> events;
     for (int i = 0; i < commandListsCount; ++i)
     {
         lists.emplace_back();
@@ -545,9 +553,7 @@ VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int comm
         queues.allocate(workType, list);
         cmdBuffers.push_back(list.list);
 
-        std::vector<VulkanEventHandle> localEvents;
-        buildCommandList(i, commandLists[i], workType, list, localEvents, fenceHandle);
-        events.emplace_back(std::move(localEvents));
+        buildCommandList(i, commandLists[i], workType, list, events, fenceHandle);
     }
 
     VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };
@@ -556,13 +562,14 @@ VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int comm
 
     VK_OK(vkQueueSubmit(queue, 1u, &submitInfo, fence));
 
-    for (auto& l : lists)
     for (int i = 0; i < (int)lists.size(); ++i)
     {
         auto& l = lists[i];
-        auto& localEvents = events[i];
-        queues.deallocate(l, fenceHandle, std::move(localEvents));
+        queues.deallocate(l, fenceHandle);
     }
+
+    for (auto& eventHandle : events)
+        m_device.eventPool().release(eventHandle);
     
     pools.descriptors->endUsage();
     pools.uploadPool->endUsage();

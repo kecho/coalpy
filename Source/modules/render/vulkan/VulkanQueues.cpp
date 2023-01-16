@@ -97,8 +97,6 @@ void VulkanQueues::garbageCollectCmdBuffers(WorkType workType)
         {
             freeCmdBuffers.push_back(allocation.list);
             m_fencePool.free(allocation.fenceValue);
-            for (auto e : allocation.events)
-                m_eventPool.release(e);
             container.popAllocation();
         }
         break;
@@ -108,12 +106,12 @@ void VulkanQueues::garbageCollectCmdBuffers(WorkType workType)
         vkFreeCommandBuffers(m_device.vkDevice(), m_cmdPool, freeCmdBuffers.size(), freeCmdBuffers.data());
 }
 
-void VulkanQueues::deallocate(VulkanList& list, VulkanFenceHandle fenceValue, std::vector<VulkanEventHandle>&& events)
+void VulkanQueues::deallocate(VulkanList& list, VulkanFenceHandle fenceValue)
 {
     CPY_ASSERT((int)list.workType >= 0 && (int)list.workType < (int)WorkType::Count);
     auto& q = m_containers[(int)list.workType];
     m_fencePool.addRef(fenceValue);
-    LiveAllocation alloc = { fenceValue, std::move(events), list.list };
+    LiveAllocation alloc = { fenceValue, list.list };
     q.pushAllocation(alloc);
     list = {};
 }

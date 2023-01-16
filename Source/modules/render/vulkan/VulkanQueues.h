@@ -52,7 +52,7 @@ public:
     void waitForAllWorkOnCpu(WorkType workType);
     void allocate(WorkType workType, VulkanList& outList);
     uint64_t currentFenceValue(WorkType workType);
-    void deallocate(VulkanList& list, VulkanFenceHandle fenceValue, std::vector<VulkanEventHandle>&& events);
+    void deallocate(VulkanList& list, VulkanFenceHandle fenceValue);
 
     VulkanFencePool& fencePool() { return m_fencePool; }
     VulkanEventPool& eventPool() { return m_eventPool; }
@@ -63,7 +63,6 @@ private:
     struct LiveAllocation
     {
         VulkanFenceHandle fenceValue;
-        std::vector<VulkanEventHandle> events;
         VkCommandBuffer list;
     };
 

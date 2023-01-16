@@ -14,7 +14,7 @@ VulkanEventPool::~VulkanEventPool()
         vkDestroyEvent(m_device.vkDevice(), e, nullptr); 
 }
 
-VulkanEventHandle VulkanEventPool::allocate(CommandLocation location, bool& isNew)
+VulkanEventHandle VulkanEventPool::allocate(CommandLocation location, VkPipelineStageFlags flags, bool& isNew)
 {
     VulkanEventHandle handle;
     EventRecord& record = m_records.allocate(handle);
@@ -22,13 +22,15 @@ VulkanEventHandle VulkanEventPool::allocate(CommandLocation location, bool& isNe
     {
         isNew = true;
         VkEventCreateInfo createInfo = { VK_STRUCTURE_TYPE_EVENT_CREATE_INFO, nullptr, VK_EVENT_CREATE_DEVICE_ONLY_BIT };
-        record.allocated = false;
         VK_OK(vkCreateEvent(m_device.vkDevice(), &createInfo, nullptr, &record.event));
+        record.allocated = true;
         m_allocations.push_back(record.event);
     }
     else
         isNew = false;
+
     record.location = location;
+    record.flags = flags;
     m_lookups.insert(std::pair<CommandLocation, VulkanEventHandle>(location, handle));
     return handle;
 }

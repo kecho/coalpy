@@ -25,16 +25,18 @@ public:
 
     ~VulkanEventPool();
 
-    VulkanEventHandle allocate(CommandLocation location, bool& isNew);
+    VulkanEventHandle allocate(CommandLocation location, VkPipelineStageFlags flags, bool& isNew);
     VulkanEventHandle find(CommandLocation location) const;
     VkEvent getEvent(VulkanEventHandle handle) const { return m_records[handle].event; }
-    void release(VulkanEventHandle location);
+    VkPipelineStageFlags getFlags(VulkanEventHandle handle) const { return m_records[handle].flags; }
+    void release(VulkanEventHandle handle);
 
 private:
     struct EventRecord
     {
         bool allocated = false;
         CommandLocation location;
+        VkPipelineStageFlags flags;
         VkEvent event = {};
     };
 
