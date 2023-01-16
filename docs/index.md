@@ -9,7 +9,7 @@ Welcome to CoalPy! This python library will let you write quickly and effortless
 To install and get started (ensure you use python3.9):
 
 ```bash
-python -m pip install python
+python -m pip install coalpy
 ```
 
 ## Examples
