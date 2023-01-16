@@ -6,6 +6,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 #endif
+#if defined(_WIN32)
+#include <windows.h>
+#include <vulkan/vulkan_win32.h>
+#endif
 #include "VulkanDescriptorSetPools.h"
 #include "VulkanDisplay.h"
 #include "VulkanResources.h"
@@ -122,6 +126,11 @@ bool getAvailableVulkanExtensions(std::vector<std::string>& outExtensions)
     // Display names
     for (unsigned int i = 0; i < extCount; i++)
         outExtensions.emplace_back(extNames[i]);
+#endif
+    
+
+#if defined(_WIN32)
+    outExtensions.emplace_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 #endif
 
     outExtensions.emplace_back("VK_KHR_surface");

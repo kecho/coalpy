@@ -215,7 +215,7 @@ bool SettingsSchema::load(IFileSystem& fs, const char* filename, void* settingsO
             break;
         case SettingsParamType::STRING:
             {
-                if (cJSON_IsNumber(item))
+                if (cJSON_IsString(item))
                 {
                     std::string v = item->valuestring;
                     *reinterpret_cast<std::string*>(settingsBytes + record.offset) = v;

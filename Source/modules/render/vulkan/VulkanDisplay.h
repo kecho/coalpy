@@ -2,6 +2,7 @@
 
 #include <coalpy.render/IDisplay.h>
 #include <vulkan/vulkan.h>
+#include "VulkanFencePool.h"
 
 namespace coalpy
 {
@@ -28,6 +29,8 @@ private:
     VkSwapchainKHR m_swapchain;
     VulkanDevice& m_device;
     VkPresentModeKHR m_presentationMode;
+    VulkanFenceHandle m_presentFence;
+    uint32_t m_activeImageIndex = 0;
     int m_swapCount;
 };
 
