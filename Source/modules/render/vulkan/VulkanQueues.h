@@ -53,12 +53,12 @@ public:
     void allocate(WorkType workType, VulkanList& outList);
     uint64_t currentFenceValue(WorkType workType);
     void deallocate(VulkanList& list, VulkanFenceHandle fenceValue);
+    void garbageCollectCmdBuffers(WorkType workType);
 
     VulkanFencePool& fencePool() { return m_fencePool; }
     VulkanEventPool& eventPool() { return m_eventPool; }
 
 private:
-    void garbageCollectCmdBuffers(WorkType workType);
 
     struct LiveAllocation
     {

@@ -223,6 +223,7 @@ void VulkanGpuDescriptorSetPool::beginUsage(VulkanFenceHandle handle)
     while (!m_livePools.empty())
     {
         auto& candidate = m_pools[m_livePools.front()];
+        m_fencePool.updateState(candidate.fenceVal);
         if (!m_fencePool.isSignaled(candidate.fenceVal))
             break;
 

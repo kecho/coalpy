@@ -122,6 +122,15 @@ void VulkanDisplay::destroySwapchain()
 
 void VulkanDisplay::createSwapchain()
 {
+    if (m_swapchain)
+    {
+        waitOnImageFence();
+        VulkanFencePool& fencePool = m_device.fencePool();
+        auto fenceVal = fencePool.allocate();
+        VK_OK(vkQueueSubmit(m_device.queues().cmdQueue(WorkType::Graphics), 0, nullptr, fencePool.get(fenceVal)));
+        fencePool.waitOnCpu(fenceVal);
+    }
+    
     VkSurfaceTransformFlagBitsKHR transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 
     VkExtent2D extent = { m_config.width, m_config.height };
@@ -147,7 +156,18 @@ void VulkanDisplay::createSwapchain()
     swapInfo.presentMode = m_presentationMode;
     swapInfo.clipped = true;
     swapInfo.oldSwapchain = m_swapchain;
-    VK_OK(vkCreateSwapchainKHR(m_device.vkDevice(), &swapInfo, nullptr, &m_swapchain))
+    m_swapchain = {};
+    auto ret = vkCreateSwapchainKHR(m_device.vkDevice(), &swapInfo, nullptr, &m_swapchain);
+    VK_OK(ret);
+
+    uint32_t imageCounts = 0;
+    VK_OK(vkGetSwapchainImagesKHR(m_device.vkDevice(), m_swapchain, &imageCounts, nullptr));
+
+    m_vkImages.clear();
+    m_vkImages.resize(imageCounts);
+    VK_OK(vkGetSwapchainImagesKHR(m_device.vkDevice(), m_swapchain, &imageCounts, m_vkImages.data()));
+
+    acquireNextImage();
 }
 
 VulkanDisplay::~VulkanDisplay()
@@ -155,6 +175,9 @@ VulkanDisplay::~VulkanDisplay()
     destroySwapchain();
     if (m_surface)
         vkDestroySurfaceKHR(m_device.vkInstance(), m_surface, nullptr);
+
+    if (m_presentFence.valid())
+        m_device.fencePool().free(m_presentFence);
 }
 
 Texture VulkanDisplay::texture()
@@ -169,30 +192,35 @@ void VulkanDisplay::resize(unsigned int width, unsigned int height)
     createSwapchain(); //swap chain gets passed trhough old swapchain
 }
 
+void VulkanDisplay::acquireNextImage()
+{
+    VulkanFencePool& fencePool = m_device.fencePool();
+    CPY_ASSERT(!m_presentFence.valid());
+    m_presentFence = fencePool.allocate();
+    VkAcquireNextImageInfoKHR acquireImageInfo = { VK_STRUCTURE_TYPE_ACQUIRE_NEXT_IMAGE_INFO_KHR, nullptr };
+    acquireImageInfo.swapchain = m_swapchain;
+    acquireImageInfo.fence = fencePool.get(m_presentFence);
+    acquireImageInfo.deviceMask = 1;
+    VK_OK(vkAcquireNextImage2KHR(m_device.vkDevice(), &acquireImageInfo, &m_activeImageIndex));
+}
+
+void VulkanDisplay::waitOnImageFence()
+{
+    if (!m_presentFence.valid())
+        return;
+     
+    VulkanFencePool& fencePool = m_device.fencePool();
+    fencePool.updateState(m_presentFence);
+    if (!fencePool.isSignaled(m_presentFence))
+        fencePool.waitOnCpu(m_presentFence);
+    
+    fencePool.free(m_presentFence);
+    m_presentFence = VulkanFenceHandle();
+}
+
 void VulkanDisplay::present()
 {
-    static bool done = false;
-    if (!done)
-    {
-        VkImage images[10] = {};
-        uint32_t imageCounts = 0;
-        auto ret = vkGetSwapchainImagesKHR(m_device.vkDevice(), m_swapchain, &imageCounts, nullptr);
-        VK_OK(ret);
-        ret = vkGetSwapchainImagesKHR(m_device.vkDevice(), m_swapchain, &imageCounts, images);
-        VK_OK(ret);
-        done = true;
-    }
-
-    VulkanFencePool& fencePool = m_device.fencePool();
-    if (m_presentFence.valid())
-    {
-        fencePool.updateState(m_presentFence);
-        if (!fencePool.isSignaled(m_presentFence))
-            fencePool.waitOnCpu(m_presentFence);
-
-        fencePool.free(m_presentFence);
-        m_presentFence = VulkanFenceHandle();
-    }
+    waitOnImageFence();
 
     VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR, nullptr };
     presentInfo.pSwapchains = &m_swapchain;
@@ -202,13 +230,7 @@ void VulkanDisplay::present()
     VkQueue queue = m_device.queues().cmdQueue(WorkType::Graphics);
     VK_OK(vkQueuePresentKHR(queue, &presentInfo));
 
-    m_presentFence = fencePool.allocate();
-    VkAcquireNextImageInfoKHR acquireImageInfo = { VK_STRUCTURE_TYPE_ACQUIRE_NEXT_IMAGE_INFO_KHR, nullptr };
-    acquireImageInfo.swapchain = m_swapchain;
-    acquireImageInfo.fence = fencePool.get(m_presentFence);
-    acquireImageInfo.deviceMask = 1;
-    VK_OK(vkAcquireNextImage2KHR(m_device.vkDevice(), &acquireImageInfo, &m_activeImageIndex));
-    std::cout << m_activeImageIndex << std::endl;
+    acquireNextImage();
 }
 
 }

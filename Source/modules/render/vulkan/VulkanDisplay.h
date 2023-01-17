@@ -24,6 +24,8 @@ public:
 private:
     void createSwapchain();
     void destroySwapchain();
+    void acquireNextImage();
+    void waitOnImageFence();
 
     VkSurfaceKHR m_surface;
     VkSwapchainKHR m_swapchain;
@@ -32,6 +34,7 @@ private:
     VulkanFenceHandle m_presentFence;
     uint32_t m_activeImageIndex = 0;
     int m_swapCount;
+    std::vector<VkImage> m_vkImages;
 };
 
 }

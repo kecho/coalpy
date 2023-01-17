@@ -526,9 +526,10 @@ void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdLis
 
 VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int commandListsCount)
 {
+    
     CPY_ASSERT(commandListsCount == (int)m_workBundle.processedLists.size());
     WorkType workType = WorkType::Graphics;
-    VulkanQueues& queues = m_device.queues();
+    VulkanQueues& queues = m_device.queues();    
     queues.syncFences(workType);
 
     VkQueue queue = queues.cmdQueue(workType);
@@ -572,7 +573,7 @@ VulkanFenceHandle VulkanWorkBundle::execute(CommandList** commandLists, int comm
         m_device.eventPool().release(eventHandle);
     
     pools.descriptors->endUsage();
-    pools.uploadPool->endUsage();
+    pools.uploadPool->endUsage();    
     return fenceHandle;
 }
 
