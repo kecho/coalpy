@@ -123,12 +123,15 @@ void VulkanDisplay::destroySwapchain()
 void VulkanDisplay::createSwapchain()
 {
     if (m_swapchain)
-    {
+    {   
+        //Flush an acquired image. Unfortunately this is the best way i can find to flush the swap chain state.
         waitOnImageFence();
-        VulkanFencePool& fencePool = m_device.fencePool();
-        auto fenceVal = fencePool.allocate();
-        VK_OK(vkQueueSubmit(m_device.queues().cmdQueue(WorkType::Graphics), 0, nullptr, fencePool.get(fenceVal)));
-        fencePool.waitOnCpu(fenceVal);
+        VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR, nullptr };
+        presentInfo.pSwapchains = &m_swapchain;
+        presentInfo.swapchainCount = 1;
+        presentInfo.pImageIndices = &m_activeImageIndex;
+        VkQueue queue = m_device.queues().cmdQueue(WorkType::Graphics);
+        vkQueuePresentKHR(queue, &presentInfo); //Expecting an error here 'Out of date'
     }
     
     VkSurfaceTransformFlagBitsKHR transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
@@ -177,7 +180,7 @@ VulkanDisplay::~VulkanDisplay()
         vkDestroySurfaceKHR(m_device.vkInstance(), m_surface, nullptr);
 
     if (m_presentFence.valid())
-        m_device.fencePool().free(m_presentFence);
+        waitOnImageFence();
 }
 
 Texture VulkanDisplay::texture()
@@ -201,6 +204,7 @@ void VulkanDisplay::acquireNextImage()
     acquireImageInfo.swapchain = m_swapchain;
     acquireImageInfo.fence = fencePool.get(m_presentFence);
     acquireImageInfo.deviceMask = 1;
+    acquireImageInfo.timeout = ~0;
     VK_OK(vkAcquireNextImage2KHR(m_device.vkDevice(), &acquireImageInfo, &m_activeImageIndex));
 }
 
@@ -221,15 +225,12 @@ void VulkanDisplay::waitOnImageFence()
 void VulkanDisplay::present()
 {
     waitOnImageFence();
-
     VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR, nullptr };
     presentInfo.pSwapchains = &m_swapchain;
     presentInfo.swapchainCount = 1;
     presentInfo.pImageIndices = &m_activeImageIndex;
-
     VkQueue queue = m_device.queues().cmdQueue(WorkType::Graphics);
     VK_OK(vkQueuePresentKHR(queue, &presentInfo));
-
     acquireNextImage();
 }
 
