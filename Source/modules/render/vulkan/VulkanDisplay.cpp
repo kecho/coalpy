@@ -224,7 +224,6 @@ void VulkanDisplay::waitOnImageFence()
 
 void VulkanDisplay::present()
 {
-    waitOnImageFence();
     VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR, nullptr };
     presentInfo.pSwapchains = &m_swapchain;
     presentInfo.swapchainCount = 1;
@@ -232,6 +231,7 @@ void VulkanDisplay::present()
     VkQueue queue = m_device.queues().cmdQueue(WorkType::Graphics);
     VK_OK(vkQueuePresentKHR(queue, &presentInfo));
     acquireNextImage();
+    waitOnImageFence();
 }
 
 }
