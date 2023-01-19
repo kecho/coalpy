@@ -37,6 +37,7 @@ inline VkPipelineStageFlagBits getVkStage(ResourceGpuState state)
         case ResourceGpuState::Rtv:
             return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         case ResourceGpuState::Present:
+        case ResourceGpuState::Uninitialized:
             return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
     }
     CPY_ASSERT_FMT(false, "D3d12 state used is not handled in coalpy's rendering", state);
@@ -65,6 +66,8 @@ inline VkAccessFlags getVkAccessMask(ResourceGpuState state)
             return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         case ResourceGpuState::Present:
             return VK_ACCESS_MEMORY_WRITE_BIT;
+        case ResourceGpuState::Uninitialized:
+            return VK_ACCESS_NONE;
     }
     CPY_ASSERT_FMT(false, "D3d12 state used is not handled in coalpy's rendering", state);
     return VK_ACCESS_NONE;
@@ -90,6 +93,8 @@ inline VkImageLayout getVkImageLayout(ResourceGpuState state)
         case ResourceGpuState::Rtv:
         case ResourceGpuState::Present:
             return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        case ResourceGpuState::Uninitialized:
+            return VK_IMAGE_LAYOUT_PREINITIALIZED;
     }
     CPY_ASSERT_FMT(false, "D3d12 state used is not handled in coalpy's rendering", state);
     return VK_IMAGE_LAYOUT_UNDEFINED;

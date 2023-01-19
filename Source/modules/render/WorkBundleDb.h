@@ -99,6 +99,7 @@ enum class ResourceGpuState
     Rtv,
     CopySrc,
     CopyDst,
+    Uninitialized,
     Present
 };
 
