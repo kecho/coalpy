@@ -47,6 +47,7 @@ struct VulkanResource
 
     struct TextureData
     {
+        bool ownsImage;
         VkImage vkImage;
         VkImageView vkSrvView;
         VkImageView vkUavViews[VulkanMaxMips];
@@ -100,7 +101,7 @@ public:
     ~VulkanResources();
 
     BufferResult createBuffer(const BufferDesc& desc, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None);
-    TextureResult createTexture(const TextureDesc& desc);
+    TextureResult createTexture(const TextureDesc& desc, VkImage resourceToAcquire = VK_NULL_HANDLE);
     TextureResult recreateTexture(Texture texture, const TextureDesc& desc);
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
     OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);

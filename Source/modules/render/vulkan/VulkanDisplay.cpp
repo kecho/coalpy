@@ -8,6 +8,7 @@
 #include "VulkanDevice.h"
 #include "VulkanFormats.h"
 #include "VulkanQueues.h"
+#include "VulkanResources.h"
 #include <algorithm>
 #include <iostream>
 
@@ -166,9 +167,22 @@ void VulkanDisplay::createSwapchain()
     uint32_t imageCounts = 0;
     VK_OK(vkGetSwapchainImagesKHR(m_device.vkDevice(), m_swapchain, &imageCounts, nullptr));
 
-    m_vkImages.clear();
-    m_vkImages.resize(imageCounts);
-    VK_OK(vkGetSwapchainImagesKHR(m_device.vkDevice(), m_swapchain, &imageCounts, m_vkImages.data()));
+    std::vector<VkImage> vkImages;
+    vkImages.resize(imageCounts);
+
+    for (auto t : m_textures)
+        m_device.resources().release(t);
+
+    m_textures.clear();
+    m_textures.resize(imageCounts);
+    VK_OK(vkGetSwapchainImagesKHR(m_device.vkDevice(), m_swapchain, &imageCounts, vkImages.data()));
+
+    TextureDesc imageDesc;
+    imageDesc.format = Format::RGBA_8_UNORM_SRGB;
+    imageDesc.width = m_config.width;
+    imageDesc.height = m_config.height;
+    for (int i = 0; i < (int)vkImages.size(); ++i)
+        m_textures[i] = m_device.resources().createTexture(imageDesc, vkImages[i]);
 
     acquireNextImage();
 }
@@ -185,7 +199,8 @@ VulkanDisplay::~VulkanDisplay()
 
 Texture VulkanDisplay::texture()
 {
-    return Texture();
+    CPY_ASSERT(m_activeImageIndex >= 0 && m_activeImageIndex < (int)m_textures.size());
+    return m_textures[m_activeImageIndex];
 }
 
 void VulkanDisplay::resize(unsigned int width, unsigned int height)

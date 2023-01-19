@@ -1,6 +1,7 @@
 #pragma once
 
 #include <coalpy.render/IDisplay.h>
+#include <coalpy.render/Resources.h>
 #include <vulkan/vulkan.h>
 #include "VulkanFencePool.h"
 
@@ -34,7 +35,7 @@ private:
     VulkanFenceHandle m_presentFence;
     uint32_t m_activeImageIndex = 0;
     int m_swapCount;
-    std::vector<VkImage> m_vkImages;
+    std::vector<Texture> m_textures;
 };
 
 }

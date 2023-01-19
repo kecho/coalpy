@@ -170,7 +170,7 @@ VkImageViewCreateInfo VulkanResources::createVulkanImageViewDescTemplate(const T
     return viewInfo;
 }
 
-TextureResult VulkanResources::createTexture(const TextureDesc& desc)
+TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage resourceToAcquire)
 {
     std::unique_lock lock(m_mutex);
     ResourceHandle handle;
@@ -225,10 +225,19 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc)
     resource.type = VulkanResource::Type::Texture;
     resource.handle = handle;
 
-    if (vkCreateImage(m_device.vkDevice(), &createInfo, nullptr, &textureData.vkImage) != VK_SUCCESS)
+    if (resourceToAcquire != VK_NULL_HANDLE)
     {
-        m_container.free(handle);
-        return TextureResult  { ResourceResult::InvalidParameter, Texture(), "Failed to create texture." };
+        if (vkCreateImage(m_device.vkDevice(), &createInfo, nullptr, &textureData.vkImage) != VK_SUCCESS)
+        {
+            m_container.free(handle);
+            return TextureResult  { ResourceResult::InvalidParameter, Texture(), "Failed to create texture." };
+        }
+        textureData.ownsImage = true;
+    }
+    else
+    {
+        textureData.ownsImage = false;
+        textureData.vkImage = resourceToAcquire;
     }
 
     VkMemoryRequirements memReqs = {};
@@ -516,7 +525,7 @@ void VulkanResources::release(ResourceHandle handle)
             vkDestroyImageView(m_device.vkDevice(), resource.textureData.vkSrvView, nullptr);
         for (int mip = 0; mip < resource.textureData.uavCounts; ++mip)
             vkDestroyImageView(m_device.vkDevice(), resource.textureData.vkUavViews[mip], nullptr);
-        if (resource.textureData.vkImage)
+        if (resource.textureData.vkImage && resource.textureData.ownsImage)
             vkDestroyImage(m_device.vkDevice(), resource.textureData.vkImage, nullptr);
         vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
     }
