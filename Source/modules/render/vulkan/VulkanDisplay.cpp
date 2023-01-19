@@ -9,6 +9,7 @@
 #include "VulkanFormats.h"
 #include "VulkanQueues.h"
 #include "VulkanResources.h"
+#include "VulkanBarriers.h"
 #include <algorithm>
 #include <iostream>
 
@@ -125,8 +126,8 @@ void VulkanDisplay::createSwapchain()
 {
     if (m_swapchain)
     {   
+        presentBarrier();
         //Flush an acquired image. Unfortunately this is the best way i can find to flush the swap chain state.
-        waitOnImageFence();
         VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR, nullptr };
         presentInfo.pSwapchains = &m_swapchain;
         presentInfo.swapchainCount = 1;
@@ -141,17 +142,18 @@ void VulkanDisplay::createSwapchain()
     // Get swapchain image format
     VkFormat imageFormat = getVkFormat(m_config.format);
 
+    
     // Populate swapchain creation info
     VkSwapchainCreateInfoKHR swapInfo = {};
     swapInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     swapInfo.flags = 0;
     swapInfo.surface = m_surface;
     swapInfo.minImageCount = m_swapCount;
-    swapInfo.imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
+    swapInfo.imageFormat = imageFormat;//VK_FORMAT_B8G8R8A8_SRGB;
     swapInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
     swapInfo.imageExtent = extent;
     swapInfo.imageArrayLayers = 1;
-    swapInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    swapInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
     swapInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     swapInfo.queueFamilyIndexCount = 0;
     swapInfo.pQueueFamilyIndices = nullptr;
@@ -178,7 +180,7 @@ void VulkanDisplay::createSwapchain()
     VK_OK(vkGetSwapchainImagesKHR(m_device.vkDevice(), m_swapchain, &imageCounts, vkImages.data()));
 
     TextureDesc imageDesc;
-    imageDesc.format = Format::RGBA_8_UNORM_SRGB;
+    imageDesc.format = m_config.format;//Format::BGRA_8_UNORM_SRGB;
     imageDesc.width = m_config.width;
     imageDesc.height = m_config.height;
     for (int i = 0; i < (int)vkImages.size(); ++i)
@@ -221,6 +223,8 @@ void VulkanDisplay::acquireNextImage()
     acquireImageInfo.deviceMask = 1;
     acquireImageInfo.timeout = ~0;
     VK_OK(vkAcquireNextImage2KHR(m_device.vkDevice(), &acquireImageInfo, &m_activeImageIndex));
+
+    waitOnImageFence();
 }
 
 void VulkanDisplay::waitOnImageFence()
@@ -237,16 +241,48 @@ void VulkanDisplay::waitOnImageFence()
     m_presentFence = VulkanFenceHandle();
 }
 
+void VulkanDisplay::presentBarrier()
+{
+    VulkanFencePool& fencePool = m_device.fencePool();
+    VulkanQueues& queues = m_device.queues();
+    VkQueue queue = queues.cmdQueue(WorkType::Graphics);
+
+    VulkanList list;
+    VulkanFenceHandle submitFence = fencePool.allocate();
+    queues.allocate(WorkType::Graphics, list);
+
+    VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, nullptr };
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vkBeginCommandBuffer(list.list, &beginInfo);
+
+    BarrierRequest barrier = {texture(), ResourceGpuState::Present };
+    inlineApplyBarriers(m_device, &barrier, 1, list.list);
+
+    vkEndCommandBuffer(list.list);
+
+    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &list.list;    
+    VK_OK(vkQueueSubmit(queue, 1u, &submitInfo, fencePool.get(submitFence)));
+
+    fencePool.waitOnCpu(submitFence);
+    queues.deallocate(list, submitFence);
+    fencePool.free(submitFence);
+
+}
+
 void VulkanDisplay::present()
 {
+    presentBarrier();
+
+    VulkanQueues& queues = m_device.queues();
+    VkQueue queue = queues.cmdQueue(WorkType::Graphics);
     VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR, nullptr };
     presentInfo.pSwapchains = &m_swapchain;
     presentInfo.swapchainCount = 1;
     presentInfo.pImageIndices = &m_activeImageIndex;
-    VkQueue queue = m_device.queues().cmdQueue(WorkType::Graphics);
     VK_OK(vkQueuePresentKHR(queue, &presentInfo));
     acquireNextImage();
-    waitOnImageFence();
 }
 
 }

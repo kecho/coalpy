@@ -3,7 +3,6 @@
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
 #include "VulkanWorkBundle.h"
-#include <vector>
 
 namespace coalpy
 {
@@ -12,6 +11,18 @@ namespace render
 
 class VulkanDevice;
 class VulkanEventPool;
+
+struct EventState
+{
+    VulkanEventHandle eventHandle;
+    VkPipelineStageFlags flags = 0;
+};
+
+struct BarrierRequest
+{
+    ResourceHandle resource;
+    ResourceGpuState state;
+};
 
 inline VkPipelineStageFlagBits getVkStage(ResourceGpuState state)
 {
@@ -31,6 +42,7 @@ inline VkPipelineStageFlagBits getVkStage(ResourceGpuState state)
         case ResourceGpuState::Rtv:
             return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         case ResourceGpuState::Present:
+            return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         case ResourceGpuState::Uninitialized:
             return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
     }
@@ -86,7 +98,7 @@ inline VkImageLayout getVkImageLayout(ResourceGpuState state)
             return VK_IMAGE_LAYOUT_UNDEFINED;
         case ResourceGpuState::Rtv:
         case ResourceGpuState::Present:
-            return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         case ResourceGpuState::Uninitialized:
             return VK_IMAGE_LAYOUT_PREINITIALIZED;
     }
@@ -94,26 +106,26 @@ inline VkImageLayout getVkImageLayout(ResourceGpuState state)
     return VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
-struct EventState
-{
-    VulkanEventHandle eventHandle;
-    VkPipelineStageFlags flags = 0;
-};
-
-
 EventState createSrcBarrierEvent(
     VulkanDevice& device,
     VulkanEventPool& eventPool,
-    const std::vector<ResourceBarrier>& barriers,
+    const ResourceBarrier* barriers,
+    int barriersCount,
     VkCommandBuffer cmdBuffer);
 
 void applyBarriers(
     VulkanDevice& device,
     const EventState& srcEvent,
     VulkanEventPool& eventPool,
-    const std::vector<ResourceBarrier>& barriers,
+    const ResourceBarrier* barriers,
+    int barriersCount,
     VkCommandBuffer cmdBuffer);
 
+void inlineApplyBarriers(
+    VulkanDevice& device,
+    const BarrierRequest* requests,
+    int requestsCount,
+    VkCommandBuffer cmdBuffer);
 
 }
 }

@@ -73,6 +73,7 @@ public:
     VulkanEventPool& eventPool() { return *m_eventPool; }
     VulkanFencePool& fencePool() { return *m_fencePool; }
     VulkanGc& gc() { return *m_gc; }
+    WorkBundleDb& workDb() { return m_workDb; }
 
 private:
     void createSwapchain();

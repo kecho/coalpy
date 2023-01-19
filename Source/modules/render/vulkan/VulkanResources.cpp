@@ -225,7 +225,7 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
     resource.type = VulkanResource::Type::Texture;
     resource.handle = handle;
 
-    if (resourceToAcquire != VK_NULL_HANDLE)
+    if (resourceToAcquire == VK_NULL_HANDLE)
     {
         if (vkCreateImage(m_device.vkDevice(), &createInfo, nullptr, &textureData.vkImage) != VK_SUCCESS)
         {
@@ -255,14 +255,14 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
         return TextureResult { ResourceResult::InternalApiFailure, Texture(), "Failed to find a correct category of memory for this texture." };
     }
 
-    if (vkAllocateMemory(m_device.vkDevice(), &allocInfo, nullptr, &resource.memory) != VK_SUCCESS)
+    if (textureData.ownsImage && vkAllocateMemory(m_device.vkDevice(), &allocInfo, nullptr, &resource.memory) != VK_SUCCESS)
     {
         vkDestroyImage(m_device.vkDevice(), textureData.vkImage, nullptr);
         m_container.free(handle);
         return TextureResult { ResourceResult::InternalApiFailure, Texture(), "Failed to allocating buffer memory." };
     }
 
-    if (vkBindImageMemory(m_device.vkDevice(), textureData.vkImage, resource.memory, 0u) != VK_SUCCESS)
+    if (textureData.ownsImage && vkBindImageMemory(m_device.vkDevice(), textureData.vkImage, resource.memory, 0u) != VK_SUCCESS)
     {
         vkDestroyImage(m_device.vkDevice(), textureData.vkImage, nullptr);
         vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
@@ -300,7 +300,7 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
     }
 
     m_workDb.registerResource(
-        handle, desc.memFlags, textureData.ownsImage ? ResourceGpuState::Default : ResourceGpuState::Uninitialized,
+        handle, desc.memFlags, ResourceGpuState::Default,
         (int)desc.width, (int)desc.height, (int)createInfo.extent.depth,
         createInfo.mipLevels, createInfo.arrayLayers);
     return TextureResult { ResourceResult::Ok, { handle.handleId } };
@@ -525,8 +525,11 @@ void VulkanResources::release(ResourceHandle handle)
             vkDestroyImageView(m_device.vkDevice(), resource.textureData.vkSrvView, nullptr);
         for (int mip = 0; mip < resource.textureData.uavCounts; ++mip)
             vkDestroyImageView(m_device.vkDevice(), resource.textureData.vkUavViews[mip], nullptr);
-        if (resource.textureData.vkImage && resource.textureData.ownsImage)
-            vkDestroyImage(m_device.vkDevice(), resource.textureData.vkImage, nullptr);
+        if (resource.textureData.ownsImage)
+        {
+            if (resource.textureData.vkImage)
+                vkDestroyImage(m_device.vkDevice(), resource.textureData.vkImage, nullptr);
+        }
         vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
     }
 

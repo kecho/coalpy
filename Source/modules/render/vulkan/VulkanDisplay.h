@@ -27,6 +27,7 @@ private:
     void destroySwapchain();
     void acquireNextImage();
     void waitOnImageFence();
+    void presentBarrier();
 
     VkSurfaceKHR m_surface;
     VkSwapchainKHR m_swapchain;

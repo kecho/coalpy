@@ -177,7 +177,7 @@ void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdLis
         const CommandInfo& cmdInfo = pl.commandSchedule[commandIndex];
         const unsigned char* cmdBlob = listData + cmdInfo.commandOffset;
         AbiCmdTypes cmdType = *((AbiCmdTypes*)cmdBlob);
-        EventState postEventState = createSrcBarrierEvent(m_device, m_device.eventPool(), cmdInfo.postBarrier, outList.list);
+        EventState postEventState = createSrcBarrierEvent(m_device, m_device.eventPool(), cmdInfo.postBarrier.data(), cmdInfo.postBarrier.size(), outList.list);
         #if DEBUG_EXECUTION
             if (postEventState.eventHandle.valid())
                 std::cout << "[CmdBuffer] Src Event begin" << std::endl;
@@ -188,7 +188,7 @@ void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdLis
         #if DEBUG_EXECUTION
         std::cout << "[CmdBuffer] Pre apply barriers" << std::endl;
         #endif
-        applyBarriers(m_device, s_nullEvent, m_device.eventPool(), cmdInfo.preBarrier, outList.list);
+        applyBarriers(m_device, s_nullEvent, m_device.eventPool(), cmdInfo.preBarrier.data(), (int)cmdInfo.preBarrier.size(), outList.list);
         switch (cmdType)
         {
         case AbiCmdTypes::Compute:
@@ -267,7 +267,7 @@ void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdLis
         #if DEBUG_EXECUTION
         std::cout << "[CmdBuffer] Post apply barriers" << std::endl;
         #endif
-        applyBarriers(m_device, postEventState, m_device.eventPool(), cmdInfo.postBarrier, outList.list);
+        applyBarriers(m_device, postEventState, m_device.eventPool(), cmdInfo.postBarrier.data(), (int)cmdInfo.postBarrier.size(), outList.list);
     }
 
     if (!pl.commandSchedule.empty())
