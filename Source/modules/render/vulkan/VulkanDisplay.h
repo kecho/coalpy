@@ -27,7 +27,8 @@ private:
     void destroySwapchain();
     void acquireNextImage();
     void waitOnImageFence();
-    void presentBarrier();
+    void copyToComputeTexture(VkCommandBuffer cmdBuffer);
+    void presentBarrier(bool flushComputeTexture = false);
 
     std::vector<VkSurfaceFormatKHR> m_surfaceFormats;
     VkSurfaceKHR m_surface;
@@ -37,6 +38,7 @@ private:
     VulkanFenceHandle m_presentFence;
     uint32_t m_activeImageIndex = 0;
     int m_swapCount;
+    Texture m_computeTexture;
     std::vector<Texture> m_textures;
 };
 

@@ -174,7 +174,7 @@ void VulkanDisplay::createSwapchain()
     swapInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
     swapInfo.imageExtent = extent;
     swapInfo.imageArrayLayers = 1;
-    swapInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+    swapInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     swapInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     swapInfo.queueFamilyIndexCount = 0;
     swapInfo.pQueueFamilyIndices = nullptr;
@@ -207,14 +207,25 @@ void VulkanDisplay::createSwapchain()
     for (int i = 0; i < (int)vkImages.size(); ++i)
         m_textures[i] = m_device.resources().createTexture(imageDesc, vkImages[i]);
 
+    if (m_computeTexture.valid())
+        m_device.resources().release(m_computeTexture);
+
+    m_computeTexture = m_device.resources().createTexture(imageDesc);
+
     acquireNextImage();
 }
 
 VulkanDisplay::~VulkanDisplay()
 {
+    for (auto t : m_textures)
+        m_device.resources().release(t);
+
     destroySwapchain();
     if (m_surface)
         vkDestroySurfaceKHR(m_device.vkInstance(), m_surface, nullptr);
+
+    if (m_computeTexture.valid())
+        m_device.resources().release(m_computeTexture);
 
     if (m_presentFence.valid())
         waitOnImageFence();
@@ -222,8 +233,39 @@ VulkanDisplay::~VulkanDisplay()
 
 Texture VulkanDisplay::texture()
 {
-    CPY_ASSERT(m_activeImageIndex >= 0 && m_activeImageIndex < (int)m_textures.size());
-    return m_textures[m_activeImageIndex];
+    return m_computeTexture;
+}
+
+void VulkanDisplay::copyToComputeTexture(VkCommandBuffer cmdBuffer)
+{
+    VulkanResources& resources = m_device.resources();
+    Texture destination = m_textures[m_activeImageIndex];
+
+    BarrierRequest barriers[2] = {
+        { m_computeTexture, ResourceGpuState::CopySrc },
+        { destination, ResourceGpuState::CopyDst }
+    };
+
+    VkImage srcImage = resources.unsafeGetResource(m_computeTexture).textureData.vkImage;
+    VkImage dstImage = resources.unsafeGetResource(destination).textureData.vkImage;
+
+    inlineApplyBarriers(m_device, barriers, (int)(sizeof(barriers)/sizeof(barriers[0])), cmdBuffer);
+
+    VkImageSubresourceLayers srsL = {};
+    srsL.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    srsL.layerCount = 1;
+
+    VkImageCopy region = {};
+    region.srcSubresource = region.dstSubresource = srsL;
+    region.extent.width = m_config.width;
+    region.extent.height = m_config.height;
+    region.extent.depth = 1;
+    vkCmdCopyImage(
+        cmdBuffer,
+        srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        1, &region);
+    
 }
 
 void VulkanDisplay::resize(unsigned int width, unsigned int height)
@@ -262,7 +304,7 @@ void VulkanDisplay::waitOnImageFence()
     m_presentFence = VulkanFenceHandle();
 }
 
-void VulkanDisplay::presentBarrier()
+void VulkanDisplay::presentBarrier(bool flushComputeTexture)
 {
     VulkanFencePool& fencePool = m_device.fencePool();
     VulkanQueues& queues = m_device.queues();
@@ -276,7 +318,10 @@ void VulkanDisplay::presentBarrier()
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(list.list, &beginInfo);
 
-    BarrierRequest barrier = {texture(), ResourceGpuState::Present };
+    if (flushComputeTexture)
+        copyToComputeTexture(list.list);
+
+    BarrierRequest barrier = {m_textures[m_activeImageIndex], ResourceGpuState::Present };
     inlineApplyBarriers(m_device, &barrier, 1, list.list);
 
     vkEndCommandBuffer(list.list);
@@ -294,7 +339,7 @@ void VulkanDisplay::presentBarrier()
 
 void VulkanDisplay::present()
 {
-    presentBarrier();
+    presentBarrier(true);
 
     VulkanQueues& queues = m_device.queues();
     VkQueue queue = queues.cmdQueue(WorkType::Graphics);

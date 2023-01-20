@@ -525,12 +525,13 @@ void VulkanResources::release(ResourceHandle handle)
             vkDestroyImageView(m_device.vkDevice(), resource.textureData.vkSrvView, nullptr);
         for (int mip = 0; mip < resource.textureData.uavCounts; ++mip)
             vkDestroyImageView(m_device.vkDevice(), resource.textureData.vkUavViews[mip], nullptr);
+        
         if (resource.textureData.ownsImage)
         {
             if (resource.textureData.vkImage)
                 vkDestroyImage(m_device.vkDevice(), resource.textureData.vkImage, nullptr);
+            vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
         }
-        vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
     }
 
 
