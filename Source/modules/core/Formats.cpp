@@ -27,6 +27,7 @@ static const char* g_formatNames[] = {
 /*    RGBA_8_UINT,      */    "RGBA_8_UINT",
 /*    RGBA_8_SINT,      */    "RGBA_8_SINT",
 /*    RGBA_8_UNORM,     */    "RGBA_8_UNORM",
+/*    BGRA_8_UNORM,     */    "BGRA_8_UNORM",
 /*    RGBA_8_UNORM_SRGB,*/    "RGBA_8_UNORM_SRGB",
 /*    BGRA_8_UNORM_SRGB,*/    "BGRA_8_UNORM_SRGB",
 /*    RGBA_8_SNORM,     */    "RGBA_8_SNORM",

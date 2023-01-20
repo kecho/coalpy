@@ -95,6 +95,11 @@ VulkanDisplay::VulkanDisplay(const DisplayConfig& config, VulkanDevice& device)
     if (!m_surface)
         return;
 
+    uint32_t formatsCount = 0;
+    VK_OK(vkGetPhysicalDeviceSurfaceFormatsKHR(m_device.vkPhysicalDevice(), m_surface, &formatsCount, nullptr));
+    m_surfaceFormats.resize(formatsCount);
+    VK_OK(vkGetPhysicalDeviceSurfaceFormatsKHR(m_device.vkPhysicalDevice(), m_surface, &formatsCount, m_surfaceFormats.data()));
+
     VkSurfaceCapabilitiesKHR surfaceProperties;
     if (!getSurfaceProperties(m_device.vkPhysicalDevice(), m_surface, surfaceProperties))
     {
@@ -139,9 +144,25 @@ void VulkanDisplay::createSwapchain()
     VkSurfaceTransformFlagBitsKHR transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 
     VkExtent2D extent = { m_config.width, m_config.height };
-    // Get swapchain image format
-    VkFormat imageFormat = getVkFormat(m_config.format);
 
+    // Get swapchain image format
+    Format inputFormat = m_config.format;
+
+    //fixup the format
+    if (inputFormat == Format::RGBA_8_UNORM)
+        inputFormat = Format::BGRA_8_UNORM;
+    else if (inputFormat == Format::RGBA_8_UNORM_SRGB)
+        inputFormat = Format::BGRA_8_UNORM_SRGB;
+
+    VkFormat imageFormat = getVkFormat(inputFormat);
+    //find surface format
+    std::vector<VkSurfaceFormatKHR>::iterator foundSurfaceFormat = std::find_if(m_surfaceFormats.begin(), m_surfaceFormats.end(),
+    [imageFormat](const VkSurfaceFormatKHR& surfaceFormat)
+    {
+        return surfaceFormat.format == imageFormat;
+    });
+
+    VkColorSpaceKHR colorSpace = foundSurfaceFormat != m_surfaceFormats.end() ? foundSurfaceFormat->colorSpace : VK_COLOR_SPACE_PASS_THROUGH_EXT;
     
     // Populate swapchain creation info
     VkSwapchainCreateInfoKHR swapInfo = {};
@@ -149,7 +170,7 @@ void VulkanDisplay::createSwapchain()
     swapInfo.flags = 0;
     swapInfo.surface = m_surface;
     swapInfo.minImageCount = m_swapCount;
-    swapInfo.imageFormat = imageFormat;//VK_FORMAT_B8G8R8A8_SRGB;
+    swapInfo.imageFormat = imageFormat;
     swapInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
     swapInfo.imageExtent = extent;
     swapInfo.imageArrayLayers = 1;
@@ -180,7 +201,7 @@ void VulkanDisplay::createSwapchain()
     VK_OK(vkGetSwapchainImagesKHR(m_device.vkDevice(), m_swapchain, &imageCounts, vkImages.data()));
 
     TextureDesc imageDesc;
-    imageDesc.format = m_config.format;//Format::BGRA_8_UNORM_SRGB;
+    imageDesc.format = inputFormat;
     imageDesc.width = m_config.width;
     imageDesc.height = m_config.height;
     for (int i = 0; i < (int)vkImages.size(); ++i)

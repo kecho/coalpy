@@ -29,6 +29,7 @@ private:
     void waitOnImageFence();
     void presentBarrier();
 
+    std::vector<VkSurfaceFormatKHR> m_surfaceFormats;
     VkSurfaceKHR m_surface;
     VkSwapchainKHR m_swapchain;
     VulkanDevice& m_device;
