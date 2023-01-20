@@ -7,6 +7,7 @@
 #include <coalpy.core/SmartPtr.h>
 #include <atomic>
 #include "VulkanFencePool.h"
+#include "VulkanResources.h"
 
 namespace coalpy
 {
@@ -24,13 +25,15 @@ public:
 
     void start();
     void stop();
+    void deferRelease(VkImage image, VkImageView* uavs, int uavCounts, VkImageView srv, VkDeviceMemory memory);
     void deferRelease(VkBuffer buffer, VkBufferView bufferView, VkDeviceMemory memory);
+    void deferRelease(VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkShaderModule shaderModule);
     void flush();
 
 private:
     enum class Type
     {    
-        None, Buffer, Texture
+        None, Buffer, Texture, ComputePipeline
     };
 
     struct BufferData
@@ -41,6 +44,16 @@ private:
 
     struct TextureData
     {
+        VkImage image;
+        VkImageView imageViews[VulkanMaxMips + 1];
+        int imageViewsCount;
+    };
+
+    struct ComputePipelineData
+    {
+        VkPipelineLayout pipelineLayout;
+        VkPipeline pipeline;
+        VkShaderModule shaderModule;
     };
 
     struct Object
@@ -51,6 +64,7 @@ private:
         {
             BufferData bufferData;
             TextureData textureData;
+            ComputePipelineData computeData;
         };
     };
 

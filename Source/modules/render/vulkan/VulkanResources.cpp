@@ -521,17 +521,11 @@ void VulkanResources::release(ResourceHandle handle)
         m_device.gc().deferRelease(resource.bufferData.vkBuffer, resource.bufferData.vkBufferView, resource.memory);
     else if (resource.isTexture())
     {
-        if (resource.textureData.vkSrvView)
-            vkDestroyImageView(m_device.vkDevice(), resource.textureData.vkSrvView, nullptr);
-        for (int mip = 0; mip < resource.textureData.uavCounts; ++mip)
-            vkDestroyImageView(m_device.vkDevice(), resource.textureData.vkUavViews[mip], nullptr);
-        
-        if (resource.textureData.ownsImage)
-        {
-            if (resource.textureData.vkImage)
-                vkDestroyImage(m_device.vkDevice(), resource.textureData.vkImage, nullptr);
-            vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
-        }
+        m_device.gc().deferRelease(
+            resource.textureData.ownsImage ? resource.textureData.vkImage : VK_NULL_HANDLE,
+            resource.textureData.vkUavViews, resource.textureData.uavCounts,
+            resource.textureData.vkSrvView,
+            resource.textureData.ownsImage ? resource.memory : VK_NULL_HANDLE);
     }
 
 

@@ -25,8 +25,9 @@ bool VulkanWorkBundle::load(const WorkBundle& workBundle)
 
 void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiComputeCmd* computeCmd, const CommandInfo& cmdInfo, VulkanList& outList)
 {
-    const VulkanShaderDb& shaderDb = (VulkanShaderDb&)*m_device.db();
-    const SpirvPayload& shaderPayload = shaderDb.unsafeGetSpirvPayload(computeCmd->shader);
+    VulkanShaderDb& db = (VulkanShaderDb&)*m_device.db();
+    db.resolve(computeCmd->shader);
+    const SpirvPayload& shaderPayload = db.unsafeGetSpirvPayload(computeCmd->shader);
 
     std::vector<VkDescriptorSet> sets;
     sets.reserve(shaderPayload.descriptorSetsInfos.size());

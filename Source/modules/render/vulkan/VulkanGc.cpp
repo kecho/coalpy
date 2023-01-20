@@ -2,6 +2,7 @@
 #include "VulkanGc.h"
 #include "VulkanDevice.h"
 #include "VulkanQueues.h"
+#include <coalpy.core/Assert.h>
 #include <chrono>
 
 namespace coalpy
@@ -111,10 +112,54 @@ void VulkanGc::deleteVulkanObjects(Object& obj)
         break;
     case Type::Texture:
         {
+            TextureData& textureData = obj.textureData;
+            if (textureData.image)
+                vkDestroyImage(m_device.vkDevice(), textureData.image, nullptr);
+
+            for (int i = 0; i < textureData.imageViewsCount; ++i)
+                if (textureData.imageViews[i])
+                    vkDestroyImageView(m_device.vkDevice(), textureData.imageViews[i], nullptr);
+        }
+        break;
+    case Type::ComputePipeline:
+        {
+            ComputePipelineData& data = obj.computeData;
+            if (data.shaderModule)
+                vkDestroyShaderModule(m_device.vkDevice(), data.shaderModule, nullptr);
+
+            if (data.pipeline)
+                vkDestroyPipeline(m_device.vkDevice(), data.pipeline, nullptr);
+
+            if (data.pipelineLayout)
+                vkDestroyPipelineLayout(m_device.vkDevice(), data.pipelineLayout, nullptr);
         }
         break;
     default:
         return;
+    }
+}
+
+void VulkanGc::deferRelease(VkImage image, VkImageView* uavs, int uavCounts, VkImageView srv, VkDeviceMemory memory)
+{
+    Object obj;
+    obj.type = Type::Texture;
+    obj.memory = memory;
+    auto& data = obj.textureData;
+    data.image = image;
+    CPY_ASSERT((uavCounts + (srv ? 1 : 0)) <= (VulkanMaxMips + 1));
+    data.imageViewsCount = 0;
+    for (int i = 0; i < uavCounts; ++i)
+    {
+        if (uavs[i])
+            data.imageViews[data.imageViewsCount++] = uavs[i];
+    }
+
+    if (srv)
+        data.imageViews[data.imageViewsCount++] = srv;
+
+    {
+        std::unique_lock lock(m_gcMutex);
+        m_pendingDeletion.push(obj);
     }
 }
 
@@ -126,6 +171,22 @@ void VulkanGc::deferRelease(VkBuffer buffer, VkBufferView bufferView, VkDeviceMe
     auto& data = obj.bufferData;
     data.buffer = buffer;
     data.bufferView = bufferView;
+    
+    {
+        std::unique_lock lock(m_gcMutex);
+        m_pendingDeletion.push(obj);
+    }
+}
+
+void VulkanGc::deferRelease(VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkShaderModule shaderModule)
+{
+    Object obj;
+    obj.type = Type::ComputePipeline;
+    obj.memory = VK_NULL_HANDLE;
+    auto& data = obj.computeData;
+    data.pipelineLayout = pipelineLayout;
+    data.pipeline = pipeline;
+    data.shaderModule = shaderModule;
     
     {
         std::unique_lock lock(m_gcMutex);

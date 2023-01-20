@@ -2,6 +2,7 @@
 #include "VulkanShaderDb.h" 
 #include "SpirvReflectionData.h"
 #include "VulkanDevice.h"
+#include "VulkanGc.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -70,18 +71,20 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
     if (!shaderState.shaderBlob)
         return;
 
+    render::VulkanDevice& vulkanDevice = *static_cast<render::VulkanDevice*>(m_parentDevice);
     ShaderGPUPayload oldPayload = shaderState.payload;
     auto* oldSpirvPayload = (SpirvPayload*)oldPayload;
     if (oldSpirvPayload != nullptr)
     {
-        std::cout << "TODO: implementt deferred delete for SpirvShaderPayload" << std::endl;
+        vulkanDevice.gc().deferRelease(
+            oldSpirvPayload->pipelineLayout,
+            oldSpirvPayload->pipeline,
+            oldSpirvPayload->shaderModule);
         delete oldSpirvPayload;
     }
 
     if (m_parentDevice == nullptr)
         return;
-
-    render::VulkanDevice& vulkanDevice = *static_cast<render::VulkanDevice*>(m_parentDevice);
     
     // Create descriptor layouts
     auto* payload = new SpirvPayload;

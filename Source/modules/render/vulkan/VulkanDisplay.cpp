@@ -331,7 +331,7 @@ void VulkanDisplay::presentBarrier(bool flushComputeTexture)
     submitInfo.pCommandBuffers = &list.list;    
     VK_OK(vkQueueSubmit(queue, 1u, &submitInfo, fencePool.get(submitFence)));
 
-    fencePool.waitOnCpu(submitFence);
+    //fencePool.waitOnCpu(submitFence);
     queues.deallocate(list, submitFence);
     fencePool.free(submitFence);
 
