@@ -1,11 +1,9 @@
 #pragma once
 
 #include <d3d12.h>
-#include <coalpy.render/IimguiRenderer.h>
 #include <coalpy.render/Resources.h>
+#include "BaseImguiRenderer.h"
 #include "Dx12DescriptorPool.h" 
-#include <imgui.h>
-#include <implot.h>
 #include <vector>
 #include <queue>
 #include <unordered_map>
@@ -24,15 +22,13 @@ class Dx12Texture;
 class Dx12Fence;
 struct Dx12List;
 
-class Dx12imguiRenderer : public IimguiRenderer
+class Dx12imguiRenderer : public BaseImguiRenderer
 {
 public:
     Dx12imguiRenderer(const IimguiRendererDesc& desc);
     virtual ~Dx12imguiRenderer();
 
     virtual void newFrame() override;
-    virtual void endFrame() override;
-    virtual void activate() override;
     virtual void render() override;
     ImTextureID registerTexture(Texture texture) override;
     void unregisterTexture(Texture texture) override;
@@ -44,7 +40,6 @@ private:
         MaxTextureGpuHandles = 64
     };
 
-    void setCoalpyStyle();
     void setupSwapChain();
     void flushPendingDeleteIndices();
 
@@ -71,8 +66,6 @@ private:
     };
 
     std::vector<int> m_freeGpuHandleIndex;
-    ImGuiContext* m_context;
-    ImPlotContext* m_plotContext;
 
     std::queue<PendingFreeIndex> m_textureDeleteQueue;
 };
