@@ -42,9 +42,19 @@ struct FileWatchMessage
 
 #ifdef _WIN32
 typedef void* WatchHandle;
+
+struct WinFileWatch
+{
+    bool waitResult;
+    HANDLE event;
+    OVERLAPPED overlapped;
+    char payload[sizeof(FILE_NOTIFY_INFORMATION) + 1024];
+};
+
 #elif defined(__linux__)
 typedef int WatchHandle;
 #endif
+
 
 struct FileWatchState
 {
@@ -58,8 +68,7 @@ public:
     ThreadQueue<FileWatchMessage> queue;
 
 #ifdef _WIN32 
-    std::vector<bool> waitResults;
-    std::vector<HANDLE> events;
+    std::vector<WinFileWatch> watches;
 #elif defined(__linux__)
     int inotifyInstance;
 #endif
@@ -70,7 +79,7 @@ namespace
 {
 
 #ifdef _WIN32 
-bool findResults(
+void findResults(
     const std::string& rootDir,
     HANDLE dirHandle,
     OVERLAPPED& overlapped,
@@ -82,7 +91,7 @@ bool findResults(
 
     auto hasOverlapped = GetOverlappedResult(dirHandle, &overlapped, &bytesReturned, FALSE);
     if (!hasOverlapped)
-        return false;
+        return;
 
     FILE_NOTIFY_INFORMATION* curr = bytesReturned ? infos : nullptr;
     while (curr != nullptr)
@@ -102,8 +111,6 @@ bool findResults(
 #endif
         curr = curr->NextEntryOffset == 0 ? nullptr : (FILE_NOTIFY_INFORMATION*)((char*)curr + curr->NextEntryOffset);
     }
-    
-    return true;
 }
 #endif
 
@@ -124,42 +131,42 @@ bool waitListenForDirs(FileWatchState& state, int millisecondsToWait)
         #endif
 
         auto dirHandle = (HANDLE)state.handles[i];
-        auto event = state.events[i];
-        OVERLAPPED overlapped;
-        overlapped.hEvent = event;
-        FILE_NOTIFY_INFORMATION infos[1024] = {};
-
+        WinFileWatch& fileWatch = state.watches[i];
+        auto event = fileWatch.event;
+        OVERLAPPED& overlapped = fileWatch.overlapped;
         {
-            if (!state.waitResults[i])
+            if (!fileWatch.waitResult)
             {
+                overlapped = {};
+                overlapped.hEvent = event;
                 DWORD bytesReturned = 0;
                 bool result = ReadDirectoryChangesW(
-                    dirHandle, (LPVOID)&infos, sizeof(infos), TRUE, FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned,
+                    dirHandle, (LPVOID)&fileWatch.payload, sizeof(fileWatch.payload), TRUE, FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_LAST_WRITE, &bytesReturned,
                     &overlapped, NULL);
-                state.waitResults[i] = true;
+                fileWatch.waitResult = true;
                 CPY_ASSERT_FMT(result, "Failed watching directory \"%s\"", state.directories[i].c_str());
 
                 if (!result)
                     return false;
             }
 
-            if (state.waitResults[i])
+            if (fileWatch.waitResult)
             {
                 auto waitResult = WaitForSingleObject(overlapped.hEvent, i == 0 ? millisecondsToWait : 0);
                 if (waitResult == WAIT_TIMEOUT)
                     continue;
             }
 
-            if (!findResults(
+            findResults(
                 state.directories[i],
                 dirHandle,
                 overlapped,
-                infos,
+                reinterpret_cast<FILE_NOTIFY_INFORMATION*>(fileWatch.payload),
                 i == 0 ? millisecondsToWait : 0,
-                caughtFiles))
-                    return false;
+                caughtFiles);
+            
 
-            state.waitResults[i] = false;
+            fileWatch.waitResult = false;
         }
     }
 #elif defined(__linux__)
@@ -260,8 +267,8 @@ void FileWatcher::stop()
     for (auto h : m_state->handles)
         CloseHandle((HANDLE)h);
 
-    for (auto e : m_state->events)
-        CloseHandle((HANDLE)e);
+    for (auto& w : m_state->watches)
+        CloseHandle((HANDLE)w.event);
 #elif defined(__linux__)
     for (auto h : m_state->handles)
         inotify_rm_watch(m_state->inotifyInstance, (int)h);
@@ -298,8 +305,13 @@ void FileWatcher::addDirectory(const char* directory)
 
     m_state->directories.push_back(dirStr);
     m_state->handles.push_back((WatchHandle)dirHandle);
-    m_state->waitResults.push_back(false);
-    m_state->events.push_back(CreateEvent(NULL, TRUE, TRUE, NULL));
+
+    m_state->watches.emplace_back();
+    WinFileWatch& fileWatch = m_state->watches.back();
+    fileWatch.waitResult = false;
+    fileWatch.event = CreateEvent(NULL, TRUE, TRUE, NULL);
+    fileWatch.overlapped = {};
+    fileWatch.overlapped.hEvent = fileWatch.event;
 #elif defined(__linux__)
     m_state->directories.push_back(dirStr);
     int wd = inotify_add_watch(
