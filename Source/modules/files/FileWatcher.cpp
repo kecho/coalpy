@@ -68,7 +68,7 @@ public:
     ThreadQueue<FileWatchMessage> queue;
 
 #ifdef _WIN32 
-    std::vector<WinFileWatch> watches;
+    std::vector<WinFileWatch*> watches;
 #elif defined(__linux__)
     int inotifyInstance;
 #endif
@@ -131,7 +131,7 @@ bool waitListenForDirs(FileWatchState& state, int millisecondsToWait)
         #endif
 
         auto dirHandle = (HANDLE)state.handles[i];
-        WinFileWatch& fileWatch = state.watches[i];
+        WinFileWatch& fileWatch = *state.watches[i];
         auto event = fileWatch.event;
         OVERLAPPED& overlapped = fileWatch.overlapped;
         {
@@ -268,7 +268,11 @@ void FileWatcher::stop()
         CloseHandle((HANDLE)h);
 
     for (auto& w : m_state->watches)
-        CloseHandle((HANDLE)w.event);
+    {
+        CloseHandle((HANDLE)w->event);
+        delete w;
+    }
+
 #elif defined(__linux__)
     for (auto h : m_state->handles)
         inotify_rm_watch(m_state->inotifyInstance, (int)h);
@@ -306,8 +310,8 @@ void FileWatcher::addDirectory(const char* directory)
     m_state->directories.push_back(dirStr);
     m_state->handles.push_back((WatchHandle)dirHandle);
 
-    m_state->watches.emplace_back();
-    WinFileWatch& fileWatch = m_state->watches.back();
+    m_state->watches.push_back(new WinFileWatch);
+    WinFileWatch& fileWatch = *m_state->watches.back();
     fileWatch.waitResult = false;
     fileWatch.event = CreateEvent(NULL, TRUE, TRUE, NULL);
     fileWatch.overlapped = {};
