@@ -319,6 +319,15 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         }
     }
 
+    if (!cmd->shader.valid())
+    {
+        std::stringstream ss;
+        ss << "Shader handle passed into command list is invalid.";
+        context.errorMsg = ss.str();
+        context.errorType = ScheduleErrorType::InvalidResource;
+        return false;
+    }
+
     {
         const Buffer* cbuffers = cmd->constants.data(data);
         CommandInfo& cmdInfo = context.currentCommandInfo();

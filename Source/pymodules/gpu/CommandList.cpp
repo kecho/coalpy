@@ -428,6 +428,12 @@ namespace methods
         }
 
         Shader& shaderObj = *((Shader*)shader);
+        if (!shaderObj.handle.valid())
+        {
+            PyErr_SetString(moduleState.exObj(), "Shader handle is invalid. Shader object used must be valid");
+            return nullptr;
+        }
+
         references.objects.push_back(shader);
         cmd.setShader(shaderObj.handle);
 

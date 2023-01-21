@@ -43,7 +43,6 @@ GpuImageImporterShaders::GpuImageImporterShaders(render::IDevice& device)
     if (device.db() == nullptr)
         return;
 
-    /*
     {
         IShaderDb& db = *device.db();
         {
@@ -61,7 +60,6 @@ GpuImageImporterShaders::GpuImageImporterShaders(render::IDevice& device)
             CPY_ASSERT(db.isValid(s));
         }
     }
-    */
 }
 
 GpuImageImporterShaders::GpuImageImporterShaders(const GpuImageImporterShaders& other)
