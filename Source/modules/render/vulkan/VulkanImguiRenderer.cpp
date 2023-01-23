@@ -1,5 +1,12 @@
-#include "VulkanImguiRenderer.h"
 #include "Config.h"
+
+#if ENABLE_WIN_VULKAN
+#define VK_USE_PLATFORM_WIN32_KHR
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
+#endif
+
+#include "VulkanImguiRenderer.h"
 #include "VulkanDisplay.h"
 #include "VulkanDevice.h"
 #include "VulkanFormats.h"
@@ -7,6 +14,8 @@
 #include "VulkanResources.h"
 #include "VulkanFencePool.h"
 #include "VulkanBarriers.h"
+#include "../modules/window/Config.h"
+#include <iostream>
 
 #include <backends/imgui_impl_vulkan.h>
 
@@ -14,6 +23,25 @@ namespace coalpy
 {
 namespace render
 {
+
+#if ENABLE_WIN_VULKAN
+static int VulkanCreateVkSurface(ImGuiViewport* vp, ImU64 vk_inst, const void* vk_allocators, ImU64* out_vk_surface)
+{
+    HWND winHandle = *((HWND*)vp->PlatformUserData);
+
+    VkWin32SurfaceCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR, nullptr };
+    createInfo.hwnd = winHandle;
+    createInfo.hinstance = GetModuleHandle(nullptr);
+    VkSurfaceKHR surface;
+    VkResult result = vkCreateWin32SurfaceKHR((VkInstance)vk_inst, &createInfo, nullptr, &surface);
+    if (result != VK_SUCCESS)
+        std::cerr << "Windows vulkan surface is not supported by physical device!\n";
+
+    *((VkSurfaceKHR*)out_vk_surface) = surface;
+
+    return result;
+}
+#endif
 
 VulkanImguiRenderer::VulkanImguiRenderer(const IimguiRendererDesc& desc)
 : BaseImguiRenderer(desc)
@@ -37,10 +65,16 @@ VulkanImguiRenderer::VulkanImguiRenderer(const IimguiRendererDesc& desc)
     vulkanInitInfo.MinImageCount = m_display.config().buffering;
     vulkanInitInfo.ImageCount = m_display.config().buffering;
     vulkanInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+    #if ENABLE_WIN_VULKAN 
+    ImGui::GetPlatformIO().Platform_CreateVkSurface = &VulkanCreateVkSurface;
+    #endif
+
     ImGui_ImplVulkan_Init(&vulkanInitInfo, m_vkRenderPass);
 
     initFontTextures();
     setupSwapChain();
+
 }
 
 VulkanImguiRenderer::~VulkanImguiRenderer()
@@ -113,14 +147,23 @@ void VulkanImguiRenderer::initPass()
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachment;
 
+
+    VkSubpassDependency dependency = {};
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcAccessMask = 0;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
     VkRenderPassCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     info.attachmentCount = 1;
     info.pAttachments = &attachment;
     info.subpassCount = 1;
     info.pSubpasses = &subpass;
-    info.dependencyCount = 0;
-    info.pDependencies = nullptr;
+    info.dependencyCount = 1;
+    info.pDependencies = &dependency;
     VK_OK(vkCreateRenderPass(m_device.vkDevice(), &info, nullptr, &m_vkRenderPass));
 }
 

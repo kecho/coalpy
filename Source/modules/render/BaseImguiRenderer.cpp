@@ -28,12 +28,8 @@ BaseImguiRenderer::BaseImguiRenderer(const IimguiRendererDesc& desc)
     ImGui::SetCurrentContext(m_context);
     ImPlot::SetCurrentContext(m_plotContext);
 
-    //TODO: do not support these for now. Must write some glue code.
-    if (desc.device->config().platform != DevicePlat::Vulkan)
-    {
-        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    }
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     setCoalpyStyle();
 
