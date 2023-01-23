@@ -22,6 +22,9 @@ public:
     virtual void resize(unsigned int width, unsigned int height) override;
     virtual void present() override;
 
+    int version() const { return m_version; }
+    Format resolvedFormat() const { return m_resolvedFormat; }
+
 private:
     void createSwapchain();
     void destroySwapchain();
@@ -37,8 +40,10 @@ private:
     VkPresentModeKHR m_presentationMode;
     VulkanFenceHandle m_presentFence;
     uint32_t m_activeImageIndex = 0;
-    int m_swapCount;
+    int m_swapCount = 0;
+    int m_version = 0;
     Texture m_computeTexture;
+    Format m_resolvedFormat;
     std::vector<Texture> m_textures;
 };
 

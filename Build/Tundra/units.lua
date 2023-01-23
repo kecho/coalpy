@@ -128,6 +128,10 @@ local imguiLib = StaticLibrary {
     Includes = {
         ImguiDir,
         {
+            WinVulkanIncludes,
+            Config = { "win64-msvc-*" }
+        },
+        {
             "/usr/include/SDL2/",
             Config = { "linux-gcc-*" }
         }
@@ -144,6 +148,10 @@ local imguiLib = StaticLibrary {
             Recursive = true
         },
         {
+            ImguiDir.."$(SEP)backends$(SEP)imgui_impl_vulkan.h",
+            ImguiDir.."$(SEP)backends$(SEP)imgui_impl_vulkan.cpp",
+        },
+        {
             Config = { "win64-msvc-*" },
             {
                 ImguiDir.."$(SEP)backends$(SEP)imgui_impl_dx12.cpp",
@@ -157,8 +165,6 @@ local imguiLib = StaticLibrary {
             {
                 ImguiDir.."$(SEP)backends$(SEP)imgui_impl_sdl.h",
                 ImguiDir.."$(SEP)backends$(SEP)imgui_impl_sdl.cpp",
-                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_vulkan.h",
-                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_vulkan.cpp",
             }
         }
     },

@@ -22,6 +22,7 @@ enum ResourceSpecialFlags : int
     //ResourceSpecialFlag_TrackTables = 1 << 2,
     ResourceSpecialFlag_CpuReadback = 1 << 3,
     ResourceSpecialFlag_CpuUpload = 1 << 4,
+    ResourceSpecialFlag_EnableColorAttachment = 1 << 5,
 };
 
 class VulkanDevice;
@@ -101,7 +102,7 @@ public:
     ~VulkanResources();
 
     BufferResult createBuffer(const BufferDesc& desc, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None);
-    TextureResult createTexture(const TextureDesc& desc, VkImage resourceToAcquire = VK_NULL_HANDLE);
+    TextureResult createTexture(const TextureDesc& desc, VkImage resourceToAcquire = VK_NULL_HANDLE, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None);
     TextureResult recreateTexture(Texture texture, const TextureDesc& desc);
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
     OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);

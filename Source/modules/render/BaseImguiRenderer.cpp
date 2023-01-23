@@ -1,4 +1,5 @@
 #include "BaseImguiRenderer.h"
+#include <coalpy.render/IDevice.h>
 #include <coalpy.core/Assert.h>
 #include "../modules/window/Config.h"
 
@@ -17,7 +18,6 @@ namespace coalpy
 namespace render
 {
 
-
 BaseImguiRenderer::BaseImguiRenderer(const IimguiRendererDesc& desc)
 : m_desc(desc)
 {
@@ -27,8 +27,14 @@ BaseImguiRenderer::BaseImguiRenderer(const IimguiRendererDesc& desc)
     m_plotContext = ImPlot::CreateContext();
     ImGui::SetCurrentContext(m_context);
     ImPlot::SetCurrentContext(m_plotContext);
-    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+    //TODO: do not support these for now. Must write some glue code.
+    if (desc.device->config().platform != DevicePlat::Vulkan)
+    {
+        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    }
+
     setCoalpyStyle();
 
     #if ENABLE_WIN32_WINDOW
@@ -140,20 +146,6 @@ void BaseImguiRenderer::render()
 void BaseImguiRenderer::endFrame()
 {
     activate();
-}
-
-ImTextureID BaseImguiRenderer::registerTexture(Texture texture)
-{
-    return {};
-}
-
-void BaseImguiRenderer::unregisterTexture(Texture texture)
-{
-}
-
-bool BaseImguiRenderer::isTextureRegistered(Texture texture) const
-{
-    return false;
 }
 
 

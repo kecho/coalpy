@@ -35,7 +35,7 @@ public:
     void waitForGpu();
     void present(Dx12Fence& fence);
 
-    int version() { return m_version; }
+    int version() const { return m_version; }
 private:
     void copyToSwapChain(int bufferIndex);
     void createComputeTexture();

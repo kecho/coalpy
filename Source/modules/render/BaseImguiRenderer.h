@@ -20,9 +20,6 @@ public:
     virtual void activate() override;
     virtual void render() override;
     virtual void endFrame() override;
-    virtual ImTextureID registerTexture(Texture texture) override;
-    virtual void unregisterTexture(Texture texture) override;
-    virtual bool isTextureRegistered(Texture texture) const override;
 
 protected:
     void setCoalpyStyle();

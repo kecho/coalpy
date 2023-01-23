@@ -5,7 +5,12 @@ g.init()
 s = g.Shader(name = "test_shader", main_function="csMain", file="shader_test.hlsl")
 s.resolve()
 
+def buildUi(imgui):
+    w = True
+    w = imgui.begin("Test window", w)
+    imgui.end()
 def doRender(renderArgs):
+    buildUi(renderArgs.imgui)
     cmdList = g.CommandList() 
     cmdList.dispatch(
         shader = s,

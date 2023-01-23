@@ -145,16 +145,15 @@ void VulkanDisplay::createSwapchain()
 
     VkExtent2D extent = { m_config.width, m_config.height };
 
-    // Get swapchain image format
-    Format inputFormat = m_config.format;
-
     //fixup the format
-    if (inputFormat == Format::RGBA_8_UNORM)
-        inputFormat = Format::BGRA_8_UNORM;
-    else if (inputFormat == Format::RGBA_8_UNORM_SRGB)
-        inputFormat = Format::BGRA_8_UNORM_SRGB;
+    if (m_config.format == Format::RGBA_8_UNORM)
+        m_resolvedFormat = Format::BGRA_8_UNORM;
+    else if (m_config.format == Format::RGBA_8_UNORM_SRGB)
+        m_resolvedFormat = Format::BGRA_8_UNORM_SRGB;
+    else
+        m_resolvedFormat = m_config.format;
 
-    VkFormat imageFormat = getVkFormat(inputFormat);
+    VkFormat imageFormat = getVkFormat(m_resolvedFormat);
     //find surface format
     std::vector<VkSurfaceFormatKHR>::iterator foundSurfaceFormat = std::find_if(m_surfaceFormats.begin(), m_surfaceFormats.end(),
     [imageFormat](const VkSurfaceFormatKHR& surfaceFormat)
@@ -201,7 +200,7 @@ void VulkanDisplay::createSwapchain()
     VK_OK(vkGetSwapchainImagesKHR(m_device.vkDevice(), m_swapchain, &imageCounts, vkImages.data()));
 
     TextureDesc imageDesc;
-    imageDesc.format = inputFormat;
+    imageDesc.format = m_resolvedFormat;
     imageDesc.width = m_config.width;
     imageDesc.height = m_config.height;
     for (int i = 0; i < (int)vkImages.size(); ++i)
@@ -210,9 +209,10 @@ void VulkanDisplay::createSwapchain()
     if (m_computeTexture.valid())
         m_device.resources().release(m_computeTexture);
 
-    m_computeTexture = m_device.resources().createTexture(imageDesc);
+    m_computeTexture = m_device.resources().createTexture(imageDesc, VK_NULL_HANDLE, ResourceSpecialFlag_EnableColorAttachment);
 
     acquireNextImage();
+    ++m_version;
 }
 
 VulkanDisplay::~VulkanDisplay()

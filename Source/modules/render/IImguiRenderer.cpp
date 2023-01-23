@@ -4,6 +4,9 @@
 #if ENABLE_DX12
 #include "dx12/Dx12ImguiRenderer.h"
 #endif
+#if ENABLE_VULKAN
+#include "vulkan/VulkanImguiRenderer.h"
+#endif
 
 namespace coalpy
 {
@@ -26,8 +29,11 @@ IimguiRenderer* IimguiRenderer::create(const IimguiRendererDesc& desc)
 #endif
 
 #if ENABLE_VULKAN
-    return nullptr;
+    if (platform == DevicePlat::Vulkan)
+        return new VulkanImguiRenderer(desc);
 #endif
+
+    return nullptr;
 }
 
 }

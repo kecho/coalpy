@@ -170,7 +170,7 @@ VkImageViewCreateInfo VulkanResources::createVulkanImageViewDescTemplate(const T
     return viewInfo;
 }
 
-TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage resourceToAcquire)
+TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage resourceToAcquire, ResourceSpecialFlags specialFlags)
 {
     std::unique_lock lock(m_mutex);
     ResourceHandle handle;
@@ -185,6 +185,9 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
 
     if ((desc.memFlags & MemFlag_GpuRead) != 0)
         createInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+
+    if ((specialFlags & ResourceSpecialFlag_EnableColorAttachment) != 0)
+        createInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     if ((desc.memFlags & MemFlag_GpuWrite) != 0)
         createInfo.usage |= VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
