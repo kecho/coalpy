@@ -13,11 +13,6 @@ namespace render
 namespace 
 {
 
-enum 
-{
-    ConstantBufferAlignment = 256,
-};
-
 struct WorkBuildContext
 {
     IDevice* device = nullptr;

@@ -61,6 +61,7 @@ private:
     Dx12GpuDescriptorTable m_cbvTable;
     Dx12GpuDescriptorTable m_samplersTable;
     Dx12GpuMemoryBlock m_uploadMemBlock;
+    Dx12GpuMemoryBlock m_constantMemBlock;
     std::unordered_map<ResourceHandle, D3D12_RESOURCE_STATES> m_states;
     std::vector<Dx12ResourceDownloadState> m_downloadStates;
     UINT64 m_currentFenceValue = {};

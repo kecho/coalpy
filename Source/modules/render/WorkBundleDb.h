@@ -19,6 +19,12 @@ namespace render
 
 class IDevice;
 
+
+enum 
+{
+    ConstantBufferAlignment = 256,
+};
+
 struct ResourceDownloadKey
 {
     ResourceHandle handle;

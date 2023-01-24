@@ -4,6 +4,7 @@
 #include "VulkanEventPool.h"
 #include "VulkanShaderDb.h"
 #include "VulkanBarriers.h"
+#include "VulkanUtils.h"
 #include <coalpy.core/Assert.h>
 #include <vector>
 #include <unordered_map>
@@ -35,6 +36,8 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
         sets.push_back(m_descriptors->allocateDescriptorSet(setInfo.layout));
 
     std::vector<VkCopyDescriptorSet> copies;
+    std::vector<VkWriteDescriptorSet> writes;
+    std::vector<VkDescriptorBufferInfo> cbuffers;
     VulkanResources& resources = m_device.resources();
     auto fillDescriptors = [&copies, &sets, &resources](SpirvRegisterType type, int tableCounts, const ResourceTable* tables)
     {
@@ -51,14 +54,61 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
             copy.srcSet = table.descriptors.descriptors;
             copy.srcBinding = 0;
             copy.dstSet = sets[i];
-            copy.dstBinding = SpirvRegisterTypeOffset(type);
+            copy.dstBinding = (uint32_t)SpirvRegisterTypeOffset(type);
             copy.descriptorCount = table.counts;
         }
     };
 
+    if (computeCmd->inlineConstantBufferSize > 0)
+    {
+        writes.emplace_back();
+        VkWriteDescriptorSet& write = writes.back();
+        write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr };
+
+        cbuffers.emplace_back();
+        VkDescriptorBufferInfo& cbuffer = cbuffers.back();
+        
+        CPY_ASSERT(computeCmd->inlineConstantBufferSize <= (m_uploadMemBlock.uploadSize - cmdInfo.uploadBufferOffset));
+        memcpy((char*)m_uploadMemBlock.mappedBuffer + cmdInfo.uploadBufferOffset, computeCmd->inlineConstantBuffer.data(data), computeCmd->inlineConstantBufferSize);
+
+        unsigned alignedSize = alignByte((unsigned)computeCmd->inlineConstantBufferSize, (unsigned)ConstantBufferAlignment);
+        write.dstSet = sets[0]; //always write to set 0
+        write.dstBinding = (uint32_t)SpirvRegisterTypeOffset(SpirvRegisterType::b);
+        write.descriptorCount = 1;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write.pBufferInfo = &cbuffer;
+        
+        cbuffer.buffer = resources.unsafeGetResource(m_uploadMemBlock.buffer).bufferData.vkBuffer;
+        cbuffer.offset = cmdInfo.uploadBufferOffset;
+        cbuffer.range = alignedSize;
+    }
+    else if (computeCmd->constantCounts > 0)
+    {
+        cbuffers.resize(computeCmd->constantCounts);
+        for (int i = 0; i < computeCmd->constantCounts; ++i)
+        {
+            writes.emplace_back();
+            const Buffer& constantBuffer = *(computeCmd->constants.data(data) + i);
+            VkWriteDescriptorSet& write = writes[i];
+            VkDescriptorBufferInfo& cbuffer = cbuffers[i];
+
+            write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr };
+            write.dstSet = sets[i];
+            write.dstBinding = (uint32_t)SpirvRegisterTypeOffset(SpirvRegisterType::b);
+            write.descriptorCount = 1;
+            write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            write.pBufferInfo = &cbuffer;
+
+            auto& bufferData = resources.unsafeGetResource(constantBuffer).bufferData;
+            cbuffer.buffer = bufferData.vkBuffer;
+            cbuffer.offset = 0;
+            cbuffer.range = bufferData.size;
+        }
+    }
+
     fillDescriptors(SpirvRegisterType::t, computeCmd->inResourceTablesCounts, (const ResourceTable*)computeCmd->inResourceTables.data(data));
     fillDescriptors(SpirvRegisterType::u, computeCmd->outResourceTablesCounts, (const ResourceTable*)computeCmd->outResourceTables.data(data));
-    vkUpdateDescriptorSets(m_device.vkDevice(), 0, nullptr, copies.size(), copies.data());
+    vkUpdateDescriptorSets(m_device.vkDevice(), writes.size(), writes.data(), copies.size(), copies.data());
 
     VkCommandBuffer cmdBuffer = outList.list;
     vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, shaderPayload.pipeline);

@@ -1076,16 +1076,18 @@ namespace coalpy
         DownloadStatus downloadStatus = device.getDownloadStatus(result.workHandle, destTex);
         CPY_ASSERT(downloadStatus.success());
 
+        int failCount = 0;
         for (int y = 0; y < texDimY; ++y)
         {
             for (int x = 0; x < texDimX; ++x)
             {
                 int* row = (int*)((char*)downloadStatus.downloadPtr + downloadStatus.rowPitch * y);
                 int i = texDimX * y + x;
-                CPY_ASSERT(row[x] == i - 10);
+                if (row[x] != i - 10) ++failCount;
             }
         }
 
+        CPY_ASSERT(failCount == 0);
         device.release(result.workHandle);
         device.release(destTex);
         renderTestCtx.end();
@@ -1242,8 +1244,11 @@ namespace coalpy
             CPY_ASSERT(downloadStatus.success());
             CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
             CPY_ASSERT(downloadStatus.downloadByteSize == 2 * sizeof(int));
-            CPY_ASSERT(6 == *((int*)downloadStatus.downloadPtr));
-            CPY_ASSERT(10 == *((int*)downloadStatus.downloadPtr + 1));
+            if (downloadStatus.downloadPtr)
+            {
+                CPY_ASSERT(6 == *((int*)downloadStatus.downloadPtr));
+                CPY_ASSERT(10 == *((int*)downloadStatus.downloadPtr + 1));
+            }
         }
 
         device.release(result.workHandle);
@@ -1865,12 +1870,16 @@ namespace coalpy
             CPY_ASSERT(downloadStatus.success());
 
             const char* resultTexels = (const char*)downloadStatus.downloadPtr;
-            for (int y = 0; y < (txH >> 1); ++y)
+            CPY_ASSERT(resultTexels);
+            if (resultTexels)
             {
-                const int* row = (const int*)(resultTexels + (downloadStatus.rowPitch * y));
-                for (int x = 0; x < (txW >> 1); ++x)
+                for (int y = 0; y < (txH >> 1); ++y)
                 {
-                    CPY_ASSERT(pixelVals[y * (txW >> 1) + x] == row[x]);
+                    const int* row = (const int*)(resultTexels + (downloadStatus.rowPitch * y));
+                    for (int x = 0; x < (txW >> 1); ++x)
+                    {
+                        CPY_ASSERT(pixelVals[y * (txW >> 1) + x] == row[x]);
+                    }
                 }
             }
 

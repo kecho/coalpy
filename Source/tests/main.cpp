@@ -39,11 +39,13 @@ CreateSuiteFn g_suites[] = {
     renderSuite
 };
 
+bool g_enableErrorOutput = true;
 int g_totalErrors = 0;
 std::atomic<int> g_errors = 0;
 void assertHandler(const char* condition, const char* fileStr, int line, const char* msg)
 {
-    printf("%s:%d %s %s \n", fileStr, line, condition, msg ? msg :"");
+    if (g_enableErrorOutput)
+        printf("%s:%d %s %s \n", fileStr, line, condition, msg ? msg :"");
     ++g_errors;
 }
 
@@ -91,6 +93,7 @@ struct ArgParameters
     bool help = false;
     bool printTests = false;
     bool forever = false;
+    bool quietMode = false;
     const char* suitefilter = "";
     const char* testfilter = "";
     const char* graphicsApi = "";
@@ -102,6 +105,7 @@ bool prepareCli(ClParser& p, ArgParameters& params)
     p.bind(gid, &params);
     CliSwitch(gid, "help", "h", "help", Bool, ArgParameters, help);
     CliSwitch(gid, "print available suites and tests", "p", "printtests", Bool, ArgParameters, printTests);
+    CliSwitch(gid, "quiet mode, only report test outcome. Doesnt print error details", "q", "quiet", Bool, ArgParameters, quietMode);
     CliSwitch(gid, "Comma separated suite filters", "s", "suites", String, ArgParameters, suitefilter);
     CliSwitch(gid, "Comma separated test case filters", "t", "tests", String, ArgParameters, testfilter);
     CliSwitch(gid, "Graphics api (dx12, vulkan or default)", "g", "gapi", String, ArgParameters, graphicsApi);
@@ -133,6 +137,8 @@ int main(int argc, char* argv[])
         p.prettyPrintHelp();
         return 0;
     }
+
+    g_enableErrorOutput = !params.quietMode;
 
     #if defined(_WIN32) && ENABLE_DX12
     auto platform = render::DevicePlat::Dx12;

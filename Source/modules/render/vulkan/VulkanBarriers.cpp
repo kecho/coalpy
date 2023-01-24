@@ -4,6 +4,7 @@
 #include "VulkanResources.h"
 #include "WorkBundleDb.h"
 #include <vector>
+#include <iostream>
 
 namespace coalpy
 {
@@ -24,7 +25,7 @@ EventState createSrcBarrierEvent(
     for (int i = 0; i < barriersCount; ++i)
     {
         const ResourceBarrier& b = barriers[i];
-        if (b.type != BarrierType::Begin)
+        if (b.type != BarrierType::Begin || b.isUav)
             continue;
 
         if (!allocateEvent)
@@ -89,7 +90,11 @@ void applyBarriers(
     {
         const auto& b = barriers[i];
         if (b.isUav)
+        {
+            immSrcFlags |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+            immDstFlags |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
             continue;
+        }
 
         DstEventState* dstEventPtr = nullptr;
         if (b.type == BarrierType::Begin)
@@ -157,10 +162,7 @@ void applyBarriers(
     }
 
     if (srcEvent.eventHandle.valid())
-    {
-        VkEvent event = eventPool.getEvent(srcEvent.eventHandle);
-        vkCmdSetEvent(cmdBuffer, event, srcEvent.flags);
-    }
+        vkCmdSetEvent(cmdBuffer, eventPool.getEvent(srcEvent.eventHandle), srcEvent.flags);
 
     if (immSrcFlags != 0 || immDstFlags != 0)
         vkCmdPipelineBarrier(cmdBuffer, immSrcFlags, immDstFlags, 0, 0, nullptr,

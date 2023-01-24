@@ -3,6 +3,7 @@
 #include "VulkanResources.h"
 #include "VulkanFencePool.h"
 #include "VulkanUtils.h"
+#include "WorkBundleDb.h"
 #include "TGpuResourcePool.h"
 #include <coalpy.core/Assert.h>
 
@@ -168,7 +169,7 @@ void VulkanGpuUploadPool::endUsage()
 VulkanGpuMemoryBlock VulkanGpuUploadPool::allocUploadBlock(size_t sizeBytes)
 {
     VulkanUploadDesc desc;
-    desc.alignment = 2560ull;
+    desc.alignment = ConstantBufferAlignment;
     desc.requestBytes = sizeBytes;
     return m_impl->allocate(desc);
 }
