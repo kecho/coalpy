@@ -62,6 +62,7 @@ struct ShaderDbDesc
     OnShaderErrorFn onErrorFn = nullptr;
     bool resolveOnDestruction = false;
     bool enableLiveEditing = false;
+    bool spirvPrintReflectionInfo = false;
     ShaderModel shaderModel = ShaderModel::Sm6_5;
     bool dumpPDBs = false;
 };

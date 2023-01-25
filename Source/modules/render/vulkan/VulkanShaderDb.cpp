@@ -9,8 +9,6 @@
 #include <dxcapi.h>
 #include <iostream>
 
-#define DEBUG_PRINT_SPIRV_REFLECTION 0
-
 #if ENABLE_VULKAN
 
 namespace coalpy
@@ -164,9 +162,9 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
     pipelineInfo.stage.module = payload->shaderModule;
     VK_OK(vkCreateComputePipelines(vulkanDevice.vkDevice(), cache, 1, &pipelineInfo, nullptr, &payload->pipeline));
 
-#if DEBUG_PRINT_SPIRV_REFLECTION
+    if (m_desc.spirvPrintReflectionInfo)
     {
-        std::cout << "Vulkan Reflection:" << shaderState.debugName << std::endl;
+        std::cout << "SPIRV Reflection:" << shaderState.debugName << "{" << std::endl;
         for (int i = 0; i < (int)shaderState.spirVReflectionData->descriptorSets.size(); ++i)
         {
             std::cout << "\tDescriptor set - " << i << std::endl;
@@ -183,9 +181,9 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
                 std::cout << " " << binding->name;
                 std::cout << std::endl;
             }
+            std::cout << "}" << std::endl;
         }
     }
-#endif
 
     shaderState.spirVReflectionData->Release();
     shaderState.spirVReflectionData = nullptr;

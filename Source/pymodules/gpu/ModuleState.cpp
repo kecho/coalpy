@@ -243,6 +243,7 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
         desc.enableLiveEditing = true;
         desc.shaderModel = shaderModel;
         desc.dumpPDBs = dumpPDBs;
+        desc.spirvPrintReflectionInfo = m_settings->spirv_debug_reflection;
         desc.onErrorFn = [this](ShaderHandle handle, const char* shaderName, const char* shaderErrorStr)
         {
             onShaderCompileError(handle, shaderName, shaderErrorStr);

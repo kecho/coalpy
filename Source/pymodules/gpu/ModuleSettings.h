@@ -20,6 +20,7 @@ struct ModuleSettings
         REGISTER_PARAM(adapter_index, "Current adapter index to use.")
         REGISTER_PARAM(graphics_api, "Graphics api to use. Valid strings are \"dx12\" or \"vulkan\" case sensitive.")
         REGISTER_PARAM(shader_model, "HLSL shader model to use. Can be sm6_0, sm6_1, sm6_2, sm6_3, sm6_4, sm6_5. The system will try and find the maximum possible")
+        REGISTER_PARAM(spirv_debug_reflection, "For vulkan, prints out spirv reflection information. Has no effect in other render APIs")
     END_PARAM_TABLE()
 
     static const char* sSettingsFileName;
@@ -28,6 +29,7 @@ struct ModuleSettings
     PyObject_HEAD
     bool enable_debug_device = false;
     bool dump_shader_pdbs = false;
+    bool spirv_debug_reflection = false;
     int adapter_index = 0;
     std::string graphics_api = "default";
     std::string shader_model = "sm6_5";

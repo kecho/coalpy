@@ -1,5 +1,6 @@
 import coalpy.gpu as g
 g.get_settings().graphics_api = 'vulkan'
+g.get_settings().spirv_debug_reflection = 'hello'
 g.init()
 
 s = g.Shader(name = "test_shader", main_function="csMain", file="shader_test.hlsl")
