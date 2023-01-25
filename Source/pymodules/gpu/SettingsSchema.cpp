@@ -74,33 +74,35 @@ int SettingsSchema::pySetter(PyObject* instance, PyObject* value, void* closure)
 {
     const Record& record = *reinterpret_cast<Record*>(closure);
     char* settingsBytes = reinterpret_cast<char*>(instance);
+    int ret = 0;
     switch (record.type)
     {
     case SettingsParamType::INT:
         {
             int& v = *reinterpret_cast<int*>(settingsBytes + record.offset);
-            PyArg_Parse(value, "i", &v);
+            ret = PyArg_Parse(value, "i", &v);
         }
         break;
     case SettingsParamType::FLOAT:
         {
             float& v = *reinterpret_cast<float*>(settingsBytes + record.offset);
-            PyArg_Parse(value, "f", &v);
+            ret = PyArg_Parse(value, "f", &v);
         }
         break;
     case SettingsParamType::STRING:
         {
             std::string& str = *reinterpret_cast<std::string*>(settingsBytes + record.offset);
             char* val = nullptr;
-            PyArg_Parse(value, "s", &val);
-            str = val;
+            ret = PyArg_Parse(value, "s", &val);
+            if (ret != 0)
+                str = val;
         }
         break;
     case SettingsParamType::BOOL:
         {
             bool& b = *reinterpret_cast<bool*>(settingsBytes + record.offset);
             int val = 0;
-            PyArg_Parse(value, "p", &val);
+            ret = PyArg_Parse(value, "p", &val);
             b = (bool)val;
         }
         break;
@@ -108,7 +110,7 @@ int SettingsSchema::pySetter(PyObject* instance, PyObject* value, void* closure)
         return -1;
     }
     
-    return 0;
+    return ret == 0 ? -1 : 0;
 }
 
 bool SettingsSchema::serialize(IFileSystem& fs, const char* filename, const void* settingsObj)
@@ -162,7 +164,7 @@ bool SettingsSchema::serialize(IFileSystem& fs, const char* filename, const void
     fs.closeHandle(handle);
     free(str);
     cJSON_Delete(root);
-    return success;
+    return false;
 }
 
 bool SettingsSchema::load(IFileSystem& fs, const char* filename, void* settingsObj)
