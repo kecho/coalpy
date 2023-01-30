@@ -124,12 +124,13 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
     VkCommandBuffer cmdBuffer = outList.list;
     vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, shaderPayload.pipeline);
 	vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, shaderPayload.pipelineLayout, 0, sets.size(), sets.data(), 0, nullptr);
-    if (!computeCmd->isIndirect)
-        vkCmdDispatch(cmdBuffer, computeCmd->x, computeCmd->y, computeCmd->z);
-    else
+    if (computeCmd->isIndirect)
     {
-        CPY_ASSERT_FMT(false, "%s", "Unimplemented");
+        VkBuffer argBuffer = resources.unsafeGetResource(computeCmd->indirectArguments).bufferData.vkBuffer;
+        vkCmdDispatchIndirect(cmdBuffer, argBuffer, 0u);
     }
+    else
+        vkCmdDispatch(cmdBuffer, computeCmd->x, computeCmd->y, computeCmd->z);
 }
 
 void VulkanWorkBundle::buildUploadCmd(const unsigned char* data, const AbiUploadCmd* uploadCmd, const CommandInfo& cmdInfo, VulkanList& outList)

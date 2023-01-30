@@ -31,6 +31,7 @@ inline VkPipelineStageFlagBits getVkStage(ResourceGpuState state)
         case ResourceGpuState::Default:
             return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         case ResourceGpuState::IndirectArgs:
+            return VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT;
         case ResourceGpuState::Uav:
         case ResourceGpuState::Srv:
             return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
