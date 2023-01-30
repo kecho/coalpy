@@ -39,23 +39,33 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
     std::vector<VkWriteDescriptorSet> writes;
     std::vector<VkDescriptorBufferInfo> cbuffers;
     VulkanResources& resources = m_device.resources();
-    auto fillDescriptors = [&copies, &sets, &resources](SpirvRegisterType type, int tableCounts, const ResourceTable* tables)
+    auto fillDescriptors = [&copies, &sets, &resources, &shaderPayload]
+        (SpirvRegisterType type, int tableCounts, const ResourceTable* tables)
     {
         for (int i = 0; i < tableCounts; ++i)
         {
             if (i >= sets.size())
                 break;
 
-            ResourceTable tableHandle = tables[i];
-            const VulkanResourceTable& table = resources.unsafeGetTable(tableHandle);
-            copies.emplace_back();
-            VkCopyDescriptorSet& copy = copies.back();
-            copy = { VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, nullptr };
-            copy.srcSet = table.descriptors.descriptors;
-            copy.srcBinding = 0;
-            copy.dstSet = sets[i];
-            copy.dstBinding = (uint32_t)SpirvRegisterTypeOffset(type);
-            copy.descriptorCount = table.counts;
+            uint64_t activeMask = shaderPayload.activeDescriptors[i][(int)type];
+            while (activeMask)
+            {
+                ResourceTable tableHandle = tables[i];
+                const VulkanResourceTable& table = resources.unsafeGetTable(tableHandle);
+                int startBinding, bindingCounts;                
+                SpirvPayload::nextDescriptorRange(activeMask, startBinding, bindingCounts);
+                if (startBinding >= (int)table.counts)
+                    continue;
+
+                copies.emplace_back();
+                VkCopyDescriptorSet& copy = copies.back();
+                copy = { VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, nullptr };
+                copy.srcSet = table.descriptors.descriptors;
+                copy.srcBinding = startBinding;
+                copy.dstSet = sets[i];
+                copy.dstBinding = (uint32_t)SpirvRegisterTypeOffset(type) + startBinding;
+                copy.descriptorCount = std::min(bindingCounts, (int)table.counts);
+            }
         }
     };
 

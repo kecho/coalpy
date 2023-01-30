@@ -5,9 +5,14 @@
 #include "VulkanGc.h"
 #ifdef _WIN32
 #include <windows.h>
+#include <intrin.h>
 #endif
 #include <dxcapi.h>
 #include <iostream>
+
+#ifdef __linux__
+#include <x86intrin.h>
+#endif
 
 #if ENABLE_VULKAN
 
@@ -91,11 +96,13 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
     {
         std::vector<VulkanDescriptorSetInfo> descriptorSetsInfos;
         std::vector<VkDescriptorSetLayoutBinding> bindings;
+        std::vector<VkDescriptorBindingFlags> bindingsFlags;
         bindings.reserve(64);
         auto stageFlags = (VkShaderStageFlags)shaderState.spirVReflectionData->module.shader_stage;
         for (int i = 0; i < (int)shaderState.spirVReflectionData->descriptorSets.size(); ++i)
         {
             bindings.clear();
+            bindingsFlags.clear();
             SpvReflectDescriptorSet* setData = shaderState.spirVReflectionData->descriptorSets[i];
             if (setData->set >= (uint32_t)SpirvMaxRegisterSpace)
             {
@@ -115,21 +122,32 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
                     continue;
                 }
                 bindings.emplace_back();
+                bindingsFlags.emplace_back();
                 VkDescriptorSetLayoutBinding& binding = bindings.back();
+                VkDescriptorBindingFlags& flags = bindingsFlags.back();
                 binding = {};
+                flags = {};
                 binding.binding = reflectionBinding.binding;
                 binding.descriptorType = (VkDescriptorType)reflectionBinding.descriptor_type;
                 binding.descriptorCount = reflectionBinding.count;
                 binding.stageFlags = stageFlags;
                 uint64_t& activeDescriptorBits = descriptorBitsSections[(int)reflectionBinding.binding / (int)SpirvRegisterTypeShiftCount];
                 activeDescriptorBits |= 1 << ((int)reflectionBinding.binding % (int)SpirvRegisterTypeShiftCount);
+                //TODO: bindless
+                //if (reflectionBinding.count)
+                //{
+                //    flags |= VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+                //    flags |= VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
+                //}
             }
 
             VkDescriptorSetLayout layout = {};
-            VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
-            layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            VkDescriptorSetLayoutBindingFlagsCreateInfo layoutFlagsCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO, nullptr };
+            VkDescriptorSetLayoutCreateInfo layoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, &layoutFlagsCreateInfo };
             layoutCreateInfo.bindingCount = (uint32_t)bindings.size();
             layoutCreateInfo.pBindings = bindings.data();
+            layoutFlagsCreateInfo.bindingCount = (uint32_t)bindingsFlags.size();
+            layoutFlagsCreateInfo.pBindingFlags = bindingsFlags.data();
             VK_OK(vkCreateDescriptorSetLayout(vulkanDevice.vkDevice(), &layoutCreateInfo, nullptr, &layout));
             descriptorSetsInfos.push_back(VulkanDescriptorSetInfo { setData->set, layout });
             layouts.push_back(layout);
@@ -184,9 +202,19 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
             std::cout << "}" << std::endl;
         }
     }
-
     shaderState.spirVReflectionData->Release();
     shaderState.spirVReflectionData = nullptr;
+}
+
+void SpirvPayload::nextDescriptorRange(uint64_t& mask, int& beginIndex, int& count)
+{
+    uint64_t beginMask = mask ^ (mask | (mask - 1));
+    beginIndex = 64 - (int)__lzcnt64(beginMask);
+    uint64_t endMask = mask + (1 << beginIndex);
+    endMask = endMask ^ (endMask | (endMask - 1));
+    int endIndex = 64 - (int)__lzcnt64(endMask);
+    count =  endIndex - beginIndex;
+    mask = mask & ~((1ull << endIndex) - 1ull);
 }
 
 void VulkanShaderDb::onDestroyPayload(ShaderState& shaderState)

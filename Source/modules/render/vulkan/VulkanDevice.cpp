@@ -26,7 +26,6 @@
 
 #define DEBUG_PRINT_EXTENSIONS 0
 #define ENABLE_DEBUG_CALLBACK_EXT 1
-#define ENABLE_MUTABLE_DESCRIPTORS_EXT 1
 #define TEST_MUTABLE_DESCRIPTORS 0
 #define TEST_DESCRIPTORS_LAYOUT_COPY 0
 
@@ -394,34 +393,28 @@ VkDevice createVkDevice(
 
     // Create queue information structure used by device based on the previously fetched queue information from the physical device
     // We create one command processing queue for graphics
-    VkDeviceQueueCreateInfo queueCreateInfo;
-    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    VkDeviceQueueCreateInfo queueCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, nullptr };
     queueCreateInfo.queueFamilyIndex = queueFamilyIdx;
     queueCreateInfo.queueCount = (int)WorkType::Count;
     std::vector<float> queuePrio = { 1.0f };
     queueCreateInfo.pQueuePriorities = queuePrio.data();
-    queueCreateInfo.pNext = NULL;
     queueCreateInfo.flags = 0;
 
-#if ENABLE_MUTABLE_DESCRIPTORS_EXT
-    VkPhysicalDeviceMutableDescriptorTypeFeaturesVALVE valveF = {};
-    valveF.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_VALVE;
-    valveF.pNext = nullptr;
+    VkPhysicalDeviceMutableDescriptorTypeFeaturesVALVE valveF = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_VALVE, nullptr };
     valveF.mutableDescriptorType = true;
-#endif
+
+    VkPhysicalDeviceDescriptorIndexingFeatures indexingF = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES, &valveF };
+    indexingF.descriptorBindingPartiallyBound = true;
+    indexingF.runtimeDescriptorArray = true;
 
     // Device creation information
-    VkDeviceCreateInfo createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    VkDeviceCreateInfo createInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, &indexingF };
     createInfo.queueCreateInfoCount = 1;
     createInfo.pQueueCreateInfos = &queueCreateInfo;
     createInfo.ppEnabledLayerNames = layerNames.data();
     createInfo.enabledLayerCount = static_cast<uint32_t>(layerNames.size());
     createInfo.ppEnabledExtensionNames = devicePropertyNames.data();
     createInfo.enabledExtensionCount = static_cast<uint32_t>(devicePropertyNames.size());
-#if ENABLE_MUTABLE_DESCRIPTORS_EXT
-    createInfo.pNext = &valveF;
-#endif
     createInfo.pEnabledFeatures = NULL;
     createInfo.flags = 0;
 

@@ -1,5 +1,7 @@
 
 RWTexture2D<float4> g_output : register(u0);
+RWTexture2D<float4> g_output1 : register(u1);
+RWTexture2D<float4> g_output2 : register(u2);
 
 cbuffer Constants : register(b0)
 {
@@ -9,7 +11,6 @@ cbuffer Constants : register(b0)
 [numthreads(8,8,1)]
 void csMain(int3 dti : SV_DispatchThreadID)
 {
-    //g_output[dti.xy] = (dti.x & 0x1) ^ (dti.y & 0x1) ? float4(1,1,1,1) : float4(0,0,0,0);
-    //g_output[dti.xy] = float4(1,0,0,1);
     g_output[dti.xy] = g_constantColor;
+    g_output2[dti.xy] = float4(1,0,0,0);
 }

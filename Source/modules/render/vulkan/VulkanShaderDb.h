@@ -27,6 +27,8 @@ struct SpirvPayload
     VkPipelineLayout pipelineLayout = {};
     std::vector<VulkanDescriptorSetInfo> descriptorSetsInfos;
     uint64_t activeDescriptors[SpirvMaxRegisterSpace][(int)SpirvRegisterType::Count] = {};
+
+    static void nextDescriptorRange(uint64_t& mask, int& beingIndex, int& count);
 };
 
 class VulkanShaderDb : public BaseShaderDb

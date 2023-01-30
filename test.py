@@ -7,17 +7,20 @@ g.init()
 s = g.Shader(name = "test_shader", main_function="csMain", file="shader_test.hlsl")
 s.resolve()
 
+t1 = g.Texture(width = 200, height = 200)
+t2 = g.Texture(width = 200, height = 200)
+
 def buildUi(imgui, implot):
     imgui.show_demo_window()
     implot.show_demo_window()
 
 def doRender(renderArgs):
-    buildUi(renderArgs.imgui, renderArgs.implot)
+    #buildUi(renderArgs.imgui, renderArgs.implot)
     cmdList = g.CommandList() 
     cmdList.dispatch(
         shader = s,
         constants = [float(1.0), float(0.0), float(1.0), float(1.0)],
-        outputs = renderArgs.window.display_texture,
+        outputs = [renderArgs.window.display_texture, t1],
         x = int(renderArgs.width/8),
         y = int(renderArgs.height/8),
         z = 1)
