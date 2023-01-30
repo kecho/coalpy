@@ -219,9 +219,10 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
     createInfo.pQueueFamilyIndices = &desfaultQueueFam;
     createInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
 
+    resource.textureData.textureType = desc.type;
     resource.textureData.width = createInfo.extent.width;
     resource.textureData.height = createInfo.extent.height;
-    resource.textureData.depth = createInfo.extent.depth;
+    resource.textureData.depth = desc.depth;
     resource.textureData.format = desc.format;
 
     auto& textureData = resource.textureData;

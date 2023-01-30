@@ -1083,7 +1083,8 @@ namespace coalpy
             {
                 int* row = (int*)((char*)downloadStatus.downloadPtr + downloadStatus.rowPitch * y);
                 int i = texDimX * y + x;
-                if (row[x] != i - 10) ++failCount;
+                if (row[x] != (i - 10))
+                    ++failCount;
             }
         }
 
@@ -1303,7 +1304,7 @@ namespace coalpy
             desc.format = Format::RGBA_32_SINT;
             desc.width = 8;
             desc.height = 8;
-            desc.depth = 4;
+            desc.depth = arraySlices;
             //desc.mipLevels = 8;
             //texArray = device.createTexture(desc);
             //CPY_ASSERT(!texArray.valid());

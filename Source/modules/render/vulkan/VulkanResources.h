@@ -53,6 +53,7 @@ struct VulkanResource
         VkImageView vkSrvView;
         VkImageView vkUavViews[VulkanMaxMips];
         VkImageSubresourceRange subresourceRange;
+        TextureType textureType;
         Format format;
         int width;
         int height;

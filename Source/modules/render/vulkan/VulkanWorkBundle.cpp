@@ -5,6 +5,7 @@
 #include "VulkanShaderDb.h"
 #include "VulkanBarriers.h"
 #include "VulkanUtils.h"
+#include "VulkanFormats.h"
 #include <coalpy.core/Assert.h>
 #include <vector>
 #include <unordered_map>
@@ -137,16 +138,41 @@ void VulkanWorkBundle::buildUploadCmd(const unsigned char* data, const AbiUpload
     VulkanResource& destinationResource = resources.unsafeGetResource(uploadCmd->destination);
     CPY_ASSERT_FMT(cmdInfo.uploadBufferOffset < m_uploadMemBlock.uploadSize, "out of bounds offset: %d < %d", cmdInfo.uploadBufferOffset, m_uploadMemBlock.uploadSize);
     CPY_ASSERT((m_uploadMemBlock.uploadSize - cmdInfo.uploadBufferOffset) >= uploadCmd->sourceSize);
+    VkBuffer srcBuffer = resources.unsafeGetResource(m_uploadMemBlock.buffer).bufferData.vkBuffer;
     if (destinationResource.isBuffer())
     {
         memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + cmdInfo.uploadBufferOffset, uploadCmd->sources.data(data), uploadCmd->sourceSize);
         VkBufferCopy region = { (VkDeviceSize)(m_uploadMemBlock.offset + cmdInfo.uploadBufferOffset), (VkDeviceSize)uploadCmd->destX, (VkDeviceSize)uploadCmd->sourceSize };
-        VkBuffer srcBuffer = resources.unsafeGetResource(m_uploadMemBlock.buffer).bufferData.vkBuffer;
         vkCmdCopyBuffer(outList.list, srcBuffer, destinationResource.bufferData.vkBuffer, 1, &region);
     }
     else
     {
-        CPY_ASSERT_FMT(false, "%s", "unimplemented");
+        int formatStride = getVkFormatStride(destinationResource.textureData.format);
+        CPY_ASSERT(formatStride == cmdInfo.uploadDestinationMemoryInfo.texelElementPitch);
+        auto isArray = [](TextureType t) { return t == TextureType::k2dArray || t == TextureType::CubeMapArray || t == TextureType::CubeMap; };
+
+        int szX = uploadCmd->sizeX < 0 ? (cmdInfo.uploadDestinationMemoryInfo.width  - uploadCmd->destX) : uploadCmd->sizeX;
+        int szY = uploadCmd->sizeY < 0 ? (cmdInfo.uploadDestinationMemoryInfo.height - uploadCmd->destY) : uploadCmd->sizeY;
+        int szZ = uploadCmd->sizeZ < 0 ? (cmdInfo.uploadDestinationMemoryInfo.depth  - uploadCmd->destZ) : uploadCmd->sizeZ;
+        int segments = szY * szZ;
+        int sourceRowPitch = szX * formatStride;
+        memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + cmdInfo.uploadBufferOffset, uploadCmd->sources.data(data), sourceRowPitch * segments);
+        
+        VkBufferImageCopy region = {};
+        region.bufferOffset = m_uploadMemBlock.offset + cmdInfo.uploadBufferOffset;
+        region.bufferRowLength = 0; //tightly packed
+        region.bufferImageHeight = 0; //tightly packed
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = uploadCmd->mipLevel;
+        region.imageSubresource.baseArrayLayer = 0;
+        region.imageSubresource.layerCount = isArray ? szZ : 1;
+        region.imageOffset.x = uploadCmd->destX;
+        region.imageOffset.y = uploadCmd->destY;
+        region.imageOffset.z = uploadCmd->destZ;
+        region.imageExtent.width = szX;
+        region.imageExtent.height = szY;
+        region.imageExtent.depth = szZ;
+        vkCmdCopyBufferToImage(outList.list, srcBuffer, destinationResource.textureData.vkImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     }
     
 }
@@ -206,13 +232,32 @@ void VulkanWorkBundle::buildDownloadCmd(
     if (resource.isBuffer())
     {
         VkBuffer srcBuffer = resource.bufferData.vkBuffer;
-
         VkBufferCopy region = { 0ull, downloadState.memoryBlock.offset, resource.actualSize };
         vkCmdCopyBuffer(outList.list, srcBuffer, dstBuffer, 1, &region);
     }
     else
     {
-        CPY_ASSERT_FMT(false, "%s", "unimplemented");
+        VulkanResource::TextureData& textureData = resource.textureData;
+        downloadState.width = textureData.width;
+        downloadState.height = textureData.height;
+        downloadState.depth = textureData.depth;
+        downloadState.rowPitch = textureData.width * getVkFormatStride(textureData.format);
+        VkImage srcImage = textureData.vkImage;
+        VkBufferImageCopy region = {};
+        region.bufferOffset = downloadState.memoryBlock.offset;
+        region.bufferRowLength = 0; //tightly packed
+        region.bufferImageHeight = 0; //tightly packed
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = downloadCmd->mipLevel;
+        region.imageSubresource.baseArrayLayer = downloadCmd->arraySlice;
+        region.imageSubresource.layerCount = 1;
+        region.imageOffset.x = 0; 
+        region.imageOffset.y = 0; 
+        region.imageOffset.z = 0; 
+        region.imageExtent.width = (downloadState.width >> downloadCmd->mipLevel);
+        region.imageExtent.height = (downloadState.height >> downloadCmd->mipLevel);
+        region.imageExtent.depth = (textureData.textureType == TextureType::k3d) ? (downloadState.depth >> downloadCmd->mipLevel) : 1;
+        vkCmdCopyImageToBuffer(outList.list, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstBuffer, 1, &region);
     }
 
     downloadState.queueType = WorkType::Graphics;
