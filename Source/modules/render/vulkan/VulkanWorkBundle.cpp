@@ -238,10 +238,10 @@ void VulkanWorkBundle::buildDownloadCmd(
     else
     {
         VulkanResource::TextureData& textureData = resource.textureData;
-        downloadState.width = textureData.width;
-        downloadState.height = textureData.height;
-        downloadState.depth = textureData.depth;
-        downloadState.rowPitch = textureData.width * getVkFormatStride(textureData.format);
+        downloadState.width = (textureData.width >> downloadCmd->mipLevel);
+        downloadState.height = (textureData.height >> downloadCmd->mipLevel);
+        downloadState.depth = (textureData.textureType == TextureType::k3d) ? (textureData.depth >> downloadCmd->mipLevel) : 1;
+        downloadState.rowPitch = downloadState.width * getVkFormatStride(textureData.format);
         VkImage srcImage = textureData.vkImage;
         VkBufferImageCopy region = {};
         region.bufferOffset = downloadState.memoryBlock.offset;
@@ -254,9 +254,9 @@ void VulkanWorkBundle::buildDownloadCmd(
         region.imageOffset.x = 0; 
         region.imageOffset.y = 0; 
         region.imageOffset.z = 0; 
-        region.imageExtent.width = (downloadState.width >> downloadCmd->mipLevel);
-        region.imageExtent.height = (downloadState.height >> downloadCmd->mipLevel);
-        region.imageExtent.depth = (textureData.textureType == TextureType::k3d) ? (downloadState.depth >> downloadCmd->mipLevel) : 1;
+        region.imageExtent.width = downloadState.width;
+        region.imageExtent.height = downloadState.height;
+        region.imageExtent.depth = downloadState.depth;
         vkCmdCopyImageToBuffer(outList.list, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstBuffer, 1, &region);
     }
 
