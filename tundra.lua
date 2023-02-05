@@ -35,7 +35,7 @@ Build {
                 CPPPATH = {
                     "$(OBJECTDIR)$(SEP)Source"
                 },
-                CXXOPTS = { "-std=c++17", "-fPIC", "-Wno-multichar", "-Wno-write-strings" },
+                CXXOPTS = { "-std=c++17", "-fPIC", "-Wno-multichar", "-Wno-write-strings", "-mlzcnt" },
                 CXXOPTS_DEBUG   = { "-ggdb",  "-D _DEBUG=1" },
                 CCOPTS = { "-fPIC", "-Wno-multichar" },
             },

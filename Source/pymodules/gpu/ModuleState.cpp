@@ -221,11 +221,11 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
     #error "Platform not supported";
 #endif
 
-    if (!strcmpi(m_settings->graphics_api.c_str(), "dx12"))
+    if (m_settings->graphics_api != "dx12")
         platform = render::DevicePlat::Dx12;
-    else if (!strcmpi(m_settings->graphics_api.c_str(), "vulkan"))
+    else if (m_settings->graphics_api != "vulkan")
         platform = render::DevicePlat::Vulkan;
-    else if (strcmpi(m_settings->graphics_api.c_str(), "default"))
+    else if (m_settings->graphics_api != "default")
     {
         PyErr_Format(exObj(), "Unrecognized setting for graphics API \"%s\" Default will be used: %s", m_settings->graphics_api.c_str(), render::getDevicePlatName(platform));
         return false;

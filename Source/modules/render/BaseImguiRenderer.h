@@ -1,6 +1,6 @@
 #pragma once
 
-#include <coalpy.render/IImguiRenderer.h>
+#include <coalpy.render/IimguiRenderer.h>
 #include <coalpy.render/Resources.h>
 #include <imgui.h>
 #include <implot.h>
