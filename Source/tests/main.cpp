@@ -206,5 +206,5 @@ int main(int argc, char* argv[])
         
         keepRunning = params.forever;
     }
-    return 0;
+    return (g_errors == 0) ? 0 : 1;
 }
