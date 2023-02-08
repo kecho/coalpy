@@ -3,7 +3,7 @@ run-name: CI - ${{ github.actor }}
 on: [push]
 jobs:
     build-debug:
-        - uses: ./.github/workflows/build.yaml
-          with:
+        uses: ./.github/workflows/build.yaml
+        with:
             build_type: "debug"
 
