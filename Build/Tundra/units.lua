@@ -14,7 +14,7 @@ local DxcLibDir = DxcDir.."lib/x64/"
 local DxcBinaryCompiler = DxcDir.."bin/x64/dxcompiler.dll"
 local DxcBinaryCompilerSo = DxcDir.."bin/x64/libdxcompiler.so"
 local DxcBinaryIl = DxcDir.."bin/x64/dxil.dll"
-local PythonDir = "External/Python39-win64/"
+local PythonDir = "External/Python3.11.2-win64/"
 local OpenEXRDir = "External/OpenEXR/"
 local OpenEXRLibDir = "External/OpenEXR/staticlib/"
 local PixDir ="External/WinPixEventRuntime_1.0.210818001"
@@ -31,7 +31,7 @@ local LibIncludes = {
         Config = "win64-*-*"
     },
     {
-        "/usr/include/python3.9",
+        "/usr/include/python3.11.2",
         Config = "linux-*-*"
     },
     ImguiDir,
@@ -44,7 +44,7 @@ local LibIncludes = {
 
 local Libraries = {
     {
-        PythonDir.."python39_d.lib",
+        PythonDir.."python311_d.lib",
         "Half-2_5_d.lib",
         "Iex-2_5_d.lib",
         "IexMath-2_5_d.lib",
@@ -55,7 +55,7 @@ local Libraries = {
         Config = { "win64-msvc-debug-*" }
     },
     {
-        PythonDir.."python39.lib",
+        PythonDir.."python311.lib",
         "Half-2_5.lib",
         "Iex-2_5.lib",
         "IexMath-2_5.lib",

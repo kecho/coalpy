@@ -32,7 +32,7 @@ And presto!
 The following section specifies guidelines for contributing to the coalpy project.
 
 ### Building requirements
-* Install Python 3.9x
+* Install Python [3.11.2](https://www.python.org/downloads/release/python-3112/)
 * Ensure you have a version of visual studio with support for VC 
 * Ensure you are on the latest and greatest version of windows 10
 
