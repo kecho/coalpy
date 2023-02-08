@@ -5,6 +5,7 @@ on:
         inputs:
             build_type:
                 required: true
+                type: string
 jobs:
     Build:
         runs-on: ubuntu-latest
