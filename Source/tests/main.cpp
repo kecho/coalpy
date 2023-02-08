@@ -7,6 +7,7 @@
 #include <coalpy.render/IDevice.h>
 #include <coalpy.render/../../Config.h>
 #include <string>
+#include <string.h>
 #include <set>
 #include <atomic>
 #include "testsystem.h"
