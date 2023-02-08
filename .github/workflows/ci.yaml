@@ -9,5 +9,5 @@ jobs:
         secrets:
             ciip: ${{ secrets.ciip }}
             ciport: ${{ secrets.ciport }}
-            cimac: ${{ secrets.cmac }}
+            cimac: ${{ secrets.cimac }}
 
