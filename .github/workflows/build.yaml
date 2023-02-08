@@ -5,22 +5,31 @@ on:
         inputs:
             build_type:
                 required: true
-runs:
-    steps:
-    - name: set branch
-      run: |
-        echo "CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV &&\
-        echo "CIIP=${{secrets.ciip}}" >> $GITHUB_ENV &&\
-        echo "CIPORT=${{secrets.ciport}}" >> $GITHUB_ENV &&\
-        echo "CIMAC=${{secrets.cimac}}" >> $GITHUB_ENV
-    - name: wakeup
-      run: python .github/scripts/wakeup.py -s $CIIP -p 9 $CIMAC
-    - name: create session
-      run: python .github/scripts/agent.py -s $CIIP -p $CIPORT session_start s=0 > session
-    - name: remote git sync
-      run: python .github/scripts/agent.py -s $CIIP -p $CIPORT git "session=$(cat session)&op=sync&branch=$CURRENT_BRANCH" -w
-    - name: run build
-      run: |
-        export SESSION=$(cat session) && python .github/scripts/agent.py -s $CIIP -p $CIPORT build "session=$(cat session)&type=${{inputs.build_type}}" -w
-    - name: destroy session
-      run: python .github/scripts/agent.py -s $CIIP -p $CIPORT session_end session=$(cat session)
+jobs:
+    Build:
+        runs-on: ubuntu-latest
+        steps:
+        - name: checkout
+          uses: actions/checkout@v2 # checkout the repository content to github runner
+        - name: setup python
+          uses: actions/setup-python@v4 
+          with:
+            python-version: '3.10'
+        - run: pip install wakeonlan
+        - name: set branch
+          run: |
+            echo "CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV &&\
+            echo "CIIP=${{secrets.ciip}}" >> $GITHUB_ENV &&\
+            echo "CIPORT=${{secrets.ciport}}" >> $GITHUB_ENV &&\
+            echo "CIMAC=${{secrets.cimac}}" >> $GITHUB_ENV
+        - name: wakeup
+          run: python .github/scripts/wakeup.py -s $CIIP -p 9 $CIMAC
+        - name: create session
+          run: python .github/scripts/agent.py -s $CIIP -p $CIPORT session_start s=0 > session
+        - name: remote git sync
+          run: python .github/scripts/agent.py -s $CIIP -p $CIPORT git "session=$(cat session)&op=sync&branch=$CURRENT_BRANCH" -w
+        - name: run build
+          run: |
+            export SESSION=$(cat session) && python .github/scripts/agent.py -s $CIIP -p $CIPORT build "session=$(cat session)&type=${{inputs.build_type}}" -w
+        - name: destroy session
+          run: python .github/scripts/agent.py -s $CIIP -p $CIPORT session_end session=$(cat session)

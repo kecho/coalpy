@@ -2,22 +2,8 @@ name: coalpy-continuous-integration
 run-name: CI - ${{ github.actor }}
 on: [push]
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        name: Build
-        steps:
-        - name: checkout
-          uses: actions/checkout@v2 # checkout the repository content to github runner
-
-        - name: setup python
-          uses: actions/setup-python@v4 
-          with:
-            python-version: '3.10'
-
-        - run: pip install wakeonlan
-
-        - name: build-debug
-          uses: .github/workflows/build.yaml
-          with:
+    build-debug:
+        uses: ./github/workflows/build.yaml
+        with:
             build_type: "debug"
 
