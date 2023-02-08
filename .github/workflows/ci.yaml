@@ -7,7 +7,7 @@ jobs:
         steps:
             - name: checkout
               uses: actions/checkout@v2
-            - uses: ./github/workflows/build.yaml
+            - uses: .github/workflows/build.yaml
               with:
                 build_type: "debug"
 
