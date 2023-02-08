@@ -6,6 +6,15 @@ on:
             build_type:
                 required: true
                 type: string
+            ciip:
+                required: true
+                type: string
+            ciport:
+                required: true
+                type: string
+            cimac:
+                required: true
+                type: string
 jobs:
     Build:
         runs-on: ubuntu-latest
@@ -20,9 +29,9 @@ jobs:
         - name: set branch
           run: |
             echo "CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV &&\
-            echo "CIIP=${{secrets.ciip}}" >> $GITHUB_ENV &&\
-            echo "CIPORT=${{secrets.ciport}}" >> $GITHUB_ENV &&\
-            echo "CIMAC=${{secrets.cimac}}" >> $GITHUB_ENV
+            echo "CIIP=${{inputs.ciip}}" >> $GITHUB_ENV &&\
+            echo "CIPORT=${{inputs.ciport}}" >> $GITHUB_ENV &&\
+            echo "CIMAC=${{inputs.cimac}}" >> $GITHUB_ENV
         - name: wakeup
           run: python .github/scripts/wakeup.py -s $CIIP -p 9 $CIMAC
         - name: create session

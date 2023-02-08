@@ -6,4 +6,7 @@ jobs:
         uses: ./.github/workflows/build.yaml
         with:
             build_type: "debug"
+            ciip: ${{ secrets.ciip }}
+            ciport: ${{ secrets.ciport }}
+            cimac: ${{ secrets.cmac }}
 
