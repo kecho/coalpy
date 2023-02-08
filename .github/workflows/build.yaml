@@ -1,9 +1,10 @@
 name: build
 
-inputs:
-    build_type:
-        required: true
-
+on:
+    workflow_call:
+        inputs:
+            build_type:
+                required: true
 runs:
     steps:
     - name: set branch
