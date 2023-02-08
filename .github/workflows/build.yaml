@@ -14,7 +14,7 @@ on:
             cimac:
                 required: true
 jobs:
-    Build:
+    BuildAndTest:
         runs-on: ubuntu-latest
         steps:
         - name: checkout
@@ -38,6 +38,9 @@ jobs:
           run: python .github/scripts/agent.py -s $CIIP -p $CIPORT git "session=$(cat session)&op=sync&branch=$CURRENT_BRANCH" -w
         - name: run build
           run: |
-            export SESSION=$(cat session) && python .github/scripts/agent.py -s $CIIP -p $CIPORT build "session=$(cat session)&type=${{inputs.build_type}}" -w
+            python .github/scripts/agent.py -s $CIIP -p $CIPORT build "session=$(cat session)&type=${{inputs.build_type}}" -w
+        - name: run tests
+          run: |
+            python .github/scripts/agent.py -s $CIIP -p $CIPORT tests "session=$(cat session)&type=${{inputs.build_type}}" -w
         - name: destroy session
           run: python .github/scripts/agent.py -s $CIIP -p $CIPORT session_end session=$(cat session)

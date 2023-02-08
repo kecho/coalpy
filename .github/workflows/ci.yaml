@@ -18,4 +18,12 @@ jobs:
             ciip: ${{ secrets.ciip }}
             ciport: ${{ secrets.ciport }}
             cimac: ${{ secrets.cimac }}
+    build-production:
+        uses: ./.github/workflows/build.yaml
+        with:
+            build_type: "production"
+        secrets:
+            ciip: ${{ secrets.ciip }}
+            ciport: ${{ secrets.ciport }}
+            cimac: ${{ secrets.cimac }}
 
