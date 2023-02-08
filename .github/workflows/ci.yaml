@@ -18,6 +18,7 @@ jobs:
             ciip: ${{ secrets.ciip }}
             ciport: ${{ secrets.ciport }}
             cimac: ${{ secrets.cimac }}
+        needs: build-debug
     build-production:
         uses: ./.github/workflows/build.yaml
         with:
@@ -26,4 +27,5 @@ jobs:
             ciip: ${{ secrets.ciip }}
             ciport: ${{ secrets.ciport }}
             cimac: ${{ secrets.cimac }}
+        needs: [build-debug, build-release]
 
