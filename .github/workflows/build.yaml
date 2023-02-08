@@ -1,0 +1,25 @@
+name: build
+
+inputs:
+    build_type:
+        required: true
+
+runs:
+    steps:
+    - name: set branch
+      run: |
+        echo "CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV &&\
+        echo "CIIP=${{secrets.ciip}}" >> $GITHUB_ENV &&\
+        echo "CIPORT=${{secrets.ciport}}" >> $GITHUB_ENV &&\
+        echo "CIMAC=${{secrets.cimac}}" >> $GITHUB_ENV
+    - name: wakeup
+      run: python .github/scripts/wakeup.py -s $CIIP -p 9 $CIMAC
+    - name: create session
+      run: python .github/scripts/agent.py -s $CIIP -p $CIPORT session_start s=0 > session
+    - name: remote git sync
+      run: python .github/scripts/agent.py -s $CIIP -p $CIPORT git "session=$(cat session)&op=sync&branch=$CURRENT_BRANCH" -w
+    - name: run build
+      run: |
+        export SESSION=$(cat session) && python .github/scripts/agent.py -s $CIIP -p $CIPORT build "session=$(cat session)&type=${{inputs.build_type}}" -w
+    - name: destroy session
+      run: python .github/scripts/agent.py -s $CIIP -p $CIPORT session_end session=$(cat session)
