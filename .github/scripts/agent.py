@@ -63,6 +63,7 @@ if __name__ == "__main__":
                     time.sleep(1)
                 print (msg)
                 if success == False:
+                    print ("Compilation error", file=sys.stderr)
                     sys.exit(1)
             else:
                 print (str(response_obj))
