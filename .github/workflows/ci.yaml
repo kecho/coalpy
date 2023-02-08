@@ -10,7 +10,7 @@ jobs:
             ciip: ${{ secrets.ciip }}
             ciport: ${{ secrets.ciport }}
             cimac: ${{ secrets.cimac }}
-    build-debug:
+    build-release:
         uses: ./.github/workflows/build.yaml
         with:
             build_type: "release"
