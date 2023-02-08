@@ -20,9 +20,10 @@ def WaitForCommand(args, post_args):
 
     status_obj = response_obj["message"]
     if status_obj["status"] != "STATE_RUNNING":
-        return (True, status_obj["message"])
+        success = status_obj["status"] == "STATE_COMPLETE_SUCCESS"
+        return (True, success, status_obj["message"])
     else:
-        return (False, "")
+        return (False, True,  "")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -56,10 +57,13 @@ if __name__ == "__main__":
             if args.wait:
                 finished = False
                 msg = ""
+                success = False
                 while not finished:
-                    (finished, msg) = WaitForCommand(args, args.post_args)
+                    (finished, success, msg) = WaitForCommand(args, args.post_args)
                     time.sleep(1)
                 print (msg)
+                if success == False:
+                    sys.exit(1)
             else:
                 print (str(response_obj))
         sys.exit(0)

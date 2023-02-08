@@ -13,7 +13,6 @@ namespace coalpy
 
 namespace render
 {
-
 IimguiRenderer* IimguiRenderer::create(const IimguiRendererDesc& desc)
 {
     if (desc.device == nullptr || desc.window == nullptr || desc.display == nullptr)
