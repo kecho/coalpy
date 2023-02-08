@@ -17,7 +17,7 @@ jobs:
         - run: pip install wakeonlan
 
         - name: build-debug
-          uses: .github/workflows/build.yaml
+          uses: .github/actions/build.yaml
           with:
             build_type: "debug"
 
