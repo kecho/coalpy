@@ -206,5 +206,7 @@ int main(int argc, char* argv[])
         
         keepRunning = params.forever;
     }
-    return (g_errors == 0) ? 0 : 1;
+    if (g_totalErrors > 0)
+        std::cerr << "Error detected in run." << std::endl;
+    return (g_totalErrors == 0) ? 0 : 1;
 }
