@@ -1,4 +1,4 @@
-name: coalpy-continuous-integration
+name: tests-ci
 run-name: CI - ${{ github.actor }}
 on: [push]
 jobs:

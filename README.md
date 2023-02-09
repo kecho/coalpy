@@ -2,7 +2,7 @@
 Compute abstraction layer for python.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://app.travis-ci.com/kecho/coalpy.svg?branch=master)](https://app.travis-ci.com/github/kecho/coalpy/branches)
+[![Build Status](https://github.com/kecho/coalpy/actions/workflows/ci.yaml/badge.svg)](https://github.com/kecho/coalpy/actions/workflows/ci.yaml)
 
 Coalpy is a free low friction python 3.9 native module for Windows. Coalpy's main goal is to make modern DX12 GPU compute software easy to write and deploy.
 
