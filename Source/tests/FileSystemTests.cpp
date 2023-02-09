@@ -5,6 +5,7 @@
 #include <coalpy.files/IFileWatcher.h>
 #include <coalpy.files/Utils.h>
 #include <unordered_map>
+#include <atomic>
 #include <sstream>
 #include <iostream>
 
@@ -214,19 +215,22 @@ void testFileWatcher(TestContext& ctx)
     fileWatcher.addListener(&watchObj); 
     fileWatcher.addDirectory(".testWatchFile");
 
-    for (int i = 0; i < numFiles; ++i)
+    for (int j = 0; j < 16; ++j)
     {
-        std::string fileName = getFileName(i);
-        handles[i] = writeFile(fileName, &successes[i]);
-        fs.execute(handles[i]);
-    }
+        for (int i = 0; i < numFiles; ++i)
+        {
+            std::string fileName = getFileName(i);
+            handles[i] = writeFile(fileName, &successes[i]);
+            fs.execute(handles[i]);
+        }
 
-    for (int i = 0; i < numFiles; ++i)
-    {
-        fs.wait(handles[i]);
-        fs.closeHandle(handles[i]);
-        std::string fileName = getFileName(i);
-        CPY_ASSERT_FMT(successes[i], "Failed writting file \"%s\"", fileName.c_str());
+        for (int i = 0; i < numFiles; ++i)
+        {
+            fs.wait(handles[i]);
+            fs.closeHandle(handles[i]);
+            std::string fileName = getFileName(i);
+            CPY_ASSERT_FMT(successes[i], "Failed writting file \"%s\"", fileName.c_str());
+        }
     }
 
     fileWatcher.stop();
