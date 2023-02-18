@@ -1,5 +1,6 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <object.h>
 #include <iostream>
 #include "ModuleState.h"
 #include "ModuleFunctions.h"
@@ -61,6 +62,8 @@ void setupModule()
 #elif defined(__linux__)
 
 #include <dlfcn.h>
+
+PyObject* PyObject_CallOneArg(PyObject*, PyObject*) { return nullptr; }
 
 void forceLinkUse()
 {

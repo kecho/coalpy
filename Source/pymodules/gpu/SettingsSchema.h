@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <cstddef>
 
 #define BEGIN_PARAM_TABLE(settingsType)\
     using ThisType=settingsType;\

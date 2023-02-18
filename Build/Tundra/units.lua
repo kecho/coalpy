@@ -31,7 +31,7 @@ local LibIncludes = {
         Config = "win64-*-*"
     },
     {
-        "/usr/include/python3.11.2",
+        "/usr/include/python3.11",
         Config = "linux-*-*"
     },
     ImguiDir,

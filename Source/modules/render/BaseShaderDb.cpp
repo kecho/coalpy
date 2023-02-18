@@ -8,6 +8,7 @@
 #include <coalpy.files/Utils.h>
 #include <coalpy.tasks/ITaskSystem.h>
 #include <coalpy.core/String.h>
+#include <mutex>
 
 #include "BaseShaderDb.h" 
 #include "SpirvReflectionData.h"
