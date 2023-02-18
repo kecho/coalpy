@@ -1,6 +1,9 @@
 name: tests-ci
 run-name: CI - ${{ github.actor }}
-on: [push]
+on:
+    push:
+        branches:
+            - master
 jobs:
     build-debug:
         uses: ./.github/workflows/build.yaml
