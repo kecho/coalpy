@@ -20,6 +20,7 @@ public:
     ITaskSystem* ts = nullptr;
     IFileSystem* fs = nullptr;
     IShaderDb* db = nullptr;
+    ShaderDbDesc dbDesc = {};
     std::string rootDir;
     virtual ~ShaderServiceContext() {}
     void begin()
@@ -115,8 +116,7 @@ void dxcTestSimpleDxcCompile(TestContext& ctx)
 {
     auto& testContext = (ShaderServiceContext&)ctx;
 
-    ShaderDbDesc dbDesc = {};
-    DxcCompiler compiler(dbDesc);
+    DxcCompiler compiler(testContext.dbDesc);
     dxcCompileFunction(compiler);
 }
 
@@ -125,8 +125,7 @@ void dxcTestParallelDxcCompile(TestContext& ctx)
     auto& testContext = (ShaderServiceContext&)ctx;
     testContext.begin();
 
-    ShaderDbDesc dbDesc = {};
-    DxcCompiler compiler(dbDesc);
+    DxcCompiler compiler(testContext.dbDesc);
 
     TaskDesc compileTask([&compiler](TaskContext& taskContext) {
         dxcCompileFunction(compiler);
@@ -150,8 +149,7 @@ void dxcTestParallelDxcCompile(TestContext& ctx)
 void dxcTestManySerialDxcCompile(TestContext& ctx)
 {
     auto& testContext = (ShaderServiceContext&)ctx;
-    ShaderDbDesc dbDesc = {};
-    DxcCompiler compiler(dbDesc);
+    DxcCompiler compiler(testContext.dbDesc);
 
     int compileTasksCount = 20;
     for (int i = 0; i < compileTasksCount; ++i)
@@ -296,6 +294,7 @@ public:
 
         {
             ShaderDbDesc desc = { platform, resourceDir.c_str(), testContext->fs, testContext->ts, nullptr };
+            testContext->dbDesc = desc;
             testContext->db = IShaderDb::create(desc);
         }
 

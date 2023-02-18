@@ -102,7 +102,7 @@ struct DxcInstanceData
 {
     IDxcCompiler3& compiler;
     IDxcUtils& utils;
-    IDxcValidator2& validator;
+    IDxcValidator2* validator;
 };
 
 class DxcPool : public RefCounted
@@ -129,9 +129,11 @@ public:
         }
 
         {
+#ifndef __linux__
             SmartPtr<IDxcValidator2>& instance = m_validatorPool.allocate(h.validator);
             if (instance == nullptr)
                 DX_OK(g_dxilCreateInstanceFn(CLSID_DxcValidator, __uuidof(IDxcValidator2), (void**)&instance));
+#endif
         }
         return h;
     }
@@ -141,12 +143,14 @@ public:
         CPY_ERROR(m_compilerPool.contains(instance.compiler));
         CPY_ERROR(m_utilsPool.contains(instance.utils));
         SmartPtr<IDxcCompiler3>& c = m_compilerPool[instance.compiler];
-        SmartPtr<IDxcValidator2>& vc = m_validatorPool[instance.validator];
+        SmartPtr<IDxcValidator2> vc;
+        if (instance.validator.valid())
+            vc = m_validatorPool[instance.validator];
         SmartPtr<IDxcUtils>& u = m_utilsPool[instance.utils];
         return DxcInstanceData {
             *c,
             *u,
-            *vc,
+            vc,
         };
     }
 
@@ -470,10 +474,10 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
 
             if (shaderOut != nullptr)
             {
-                if (!outputSpirV)
+                if (!outputSpirV && instanceData.validator)
                 {
                     SmartPtr<IDxcOperationResult> validationResult;
-                    DX_OK(instanceData.validator.Validate(&(*shaderOut), DxcValidatorFlags_InPlaceEdit, (IDxcOperationResult**)&validationResult));
+                    DX_OK(instanceData.validator->Validate(&(*shaderOut), DxcValidatorFlags_InPlaceEdit, (IDxcOperationResult**)&validationResult));
 
                     HRESULT validationStatus;
                     validationResult->GetStatus(&validationStatus);
