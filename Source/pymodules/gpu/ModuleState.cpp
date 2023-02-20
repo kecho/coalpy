@@ -221,9 +221,9 @@ bool ModuleState::createDevice(int index, int flags, ShaderModel shaderModel, bo
     #error "Platform not supported";
 #endif
 
-    if (m_settings->graphics_api != "dx12")
+    if (m_settings->graphics_api == "dx12")
         platform = render::DevicePlat::Dx12;
-    else if (m_settings->graphics_api != "vulkan")
+    else if (m_settings->graphics_api == "vulkan")
         platform = render::DevicePlat::Vulkan;
     else if (m_settings->graphics_api != "default")
     {
