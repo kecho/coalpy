@@ -1,5 +1,6 @@
 #include "VulkanDescriptorSetPools.h"
 #include "VulkanDevice.h"
+#include "VulkanUtils.h"
 #include <coalpy.core/Assert.h>
 #include <Config.h>
 #include <iostream>
@@ -66,7 +67,10 @@ void VulkanDescriptorSetPools::allocateNewPool()
     };
     
     VkDescriptorPoolCreateInfo poolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO, nullptr };
-    poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_HOST_ONLY_BIT_VALVE | VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    poolInfo.flags = {};
+    if ((m_device.enabledDeviceExts() & asFlag(VulkanDeviceExtensions::MutableDescriptor)) != 0)
+        poolInfo.flags |= VK_DESCRIPTOR_POOL_CREATE_HOST_ONLY_BIT_VALVE;
+    poolInfo.flags |= VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     poolInfo.maxSets = 32;
     poolInfo.poolSizeCount = (int)poolSizes.size();
     poolInfo.pPoolSizes = poolSizes.data();

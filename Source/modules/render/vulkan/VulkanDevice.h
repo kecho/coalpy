@@ -4,6 +4,7 @@
 #include <TDevice.h>
 #endif
 
+#include <coalpy.core/BitMask.h>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
 #include <coalpy.render/Resources.h>
@@ -75,6 +76,10 @@ public:
     VulkanGc& gc() { return *m_gc; }
     WorkBundleDb& workDb() { return m_workDb; }
 
+    BitMask enabledLayers() const { return m_Layers; }
+    BitMask enabledExts() const { return m_Extensions; }
+    BitMask enabledDeviceExts() const { return m_DeviceExtensions; }
+
 private:
     void createSwapchain();
     DeviceInfo m_info;
@@ -95,6 +100,10 @@ private:
     int m_queueFamIndex;
 
     void testApiFuncs();
+
+    BitMask m_Layers = {};
+    BitMask m_Extensions = {};
+    BitMask m_DeviceExtensions = {};
 };
 
 

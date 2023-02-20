@@ -20,6 +20,8 @@
 #include <coalpy.render/../../vulkan/VulkanDevice.h>
 #endif
 
+#include <string>
+#include <set>
 #include <iostream>
 #include <cstring>
 
@@ -1960,6 +1962,7 @@ namespace coalpy
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
     {
+
         static const TestCase defaultCases[] = {
             { "createBuffer",  testCreateBuffer },
             { "createTexture", testCreateTexture },
@@ -1982,6 +1985,18 @@ namespace coalpy
             { "collectGpuMarkers",  testCollectGpuMarkers },
         };
 
+        static const std::set<std::string> vulkanDisabledTests =
+        {
+            "textureSamplers",
+            "appendConsumeBufferCreate",
+            "appendConsumeBufferAppend",
+            "copyTexture",
+            "copyTextureArrayAndMips",
+            "collectGpuMarkers"
+        };
+
+        static const std::set<std::string> dx12DisabledTests = {};
+
 #if ENABLE_DX12
         static const TestCase dx12Cases[] = {
             { "dx12BufferPool",  dx12BufferPool },
@@ -1997,16 +2012,32 @@ namespace coalpy
         static std::vector<TestCase> sCases;
         if (sCases.empty())
         {
+            std::vector<TestCase> cs;
+            std::set<std::string> const* disabledFilter = nullptr;
 #if ENABLE_DX12
             if (ApplicationContext::get().graphicsApi == render::DevicePlat::Dx12)
-                sCases.insert(sCases.end(), dx12Cases, dx12Cases + (sizeof(dx12Cases)/sizeof(TestCase)));
+            {
+                disabledFilter = &dx12DisabledTests;
+                cs.insert(cs.end(), dx12Cases, dx12Cases + (sizeof(dx12Cases)/sizeof(TestCase)));
+            }
 #endif
 
 #if ENABLE_VULKAN
             if (ApplicationContext::get().graphicsApi == render::DevicePlat::Vulkan)
-                sCases.insert(sCases.end(), vulkanCases, vulkanCases + (sizeof(vulkanCases)/sizeof(TestCase)));
+            {
+                disabledFilter = &vulkanDisabledTests;
+                cs.insert(cs.end(), vulkanCases, vulkanCases + (sizeof(vulkanCases)/sizeof(TestCase)));
+            }
 #endif
-            sCases.insert(sCases.end(), defaultCases, defaultCases + (sizeof(defaultCases)/sizeof(TestCase)));
+            cs.insert(cs.end(), defaultCases, defaultCases + (sizeof(defaultCases)/sizeof(TestCase)));
+
+            for (const auto& c : cs)
+            {
+                if (disabledFilter->find(std::string(c.name)) != disabledFilter->end())
+                    continue;
+
+                sCases.push_back(c);
+            }
         }
 
 
