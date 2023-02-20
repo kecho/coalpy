@@ -1,4 +1,5 @@
 #include <Config.h>
+#include "VulkanUtils.h"
 #if ENABLE_SDL_VULKAN
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
@@ -8,7 +9,6 @@
 #include <vulkan/vulkan_win32.h>
 #include <intrin.h>
 #endif
-#include "VulkanUtils.h"
 #include "VulkanQueues.h"
 #if defined(__linux__)
 #include <x86intrin.h>

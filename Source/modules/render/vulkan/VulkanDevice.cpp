@@ -5,10 +5,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 #endif
-#if defined(_WIN32)
-#include <windows.h>
-#include <vulkan/vulkan_win32.h>
-#endif
 #include "VulkanDescriptorSetPools.h"
 #include "VulkanDisplay.h"
 #include "VulkanResources.h"
