@@ -15,14 +15,14 @@ def buildUi(imgui, implot):
     implot.show_demo_window()
 
 def doRender(renderArgs):
-    #buildUi(renderArgs.imgui, renderArgs.implot)
+    buildUi(renderArgs.imgui, renderArgs.implot)
     cmdList = g.CommandList() 
     cmdList.dispatch(
         shader = s,
         constants = [float(1.0), float(0.0), float(1.0), float(1.0)],
         outputs = [renderArgs.window.display_texture, t1],
-        x = int(renderArgs.width/8),
-        y = int(renderArgs.height/8),
+        x = int((renderArgs.width + 7)/8),
+        y = int((renderArgs.height + 7)/8),
         z = 1)
     g.schedule(cmdList)
 

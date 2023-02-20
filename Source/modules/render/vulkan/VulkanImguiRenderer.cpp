@@ -2,9 +2,12 @@
 
 #if ENABLE_WIN_VULKAN
 #define VK_USE_PLATFORM_WIN32_KHR
+#elif ENABLE_SDL_VULKAN
+#include "SDLWindow.h"
+#include <backends/imgui_impl_sdl.h>
+#endif
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
-#endif
 
 #include "VulkanImguiRenderer.h"
 #include "VulkanDisplay.h"
@@ -66,9 +69,15 @@ VulkanImguiRenderer::VulkanImguiRenderer(const IimguiRendererDesc& desc)
     vulkanInitInfo.ImageCount = m_display.config().buffering;
     vulkanInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
-    #if ENABLE_WIN_VULKAN 
+#if ENABLE_WIN_VULKAN
     ImGui::GetPlatformIO().Platform_CreateVkSurface = &VulkanCreateVkSurface;
-    #endif
+#elif ENABLE_SDL_VULKAN
+    SDLWindow::SetEventCallback([](const SDL_Event* event)
+    {
+        return ImGui_ImplSDL2_ProcessEvent(event);
+    });
+    ImGui_ImplSDL2_InitForVulkan((SDL_Window*)desc.window->getHandle());
+#endif
 
     ImGui_ImplVulkan_Init(&vulkanInitInfo, m_vkRenderPass);
 
@@ -216,6 +225,9 @@ void VulkanImguiRenderer::setupSwapChain()
 void VulkanImguiRenderer::newFrame()
 {
     BaseImguiRenderer::newFrame();
+#if ENABLE_SDL_VULKAN
+    ImGui_ImplSDL2_NewFrame();
+#endif
     activate();
     ImGui_ImplVulkan_NewFrame();
     ImGui::NewFrame();

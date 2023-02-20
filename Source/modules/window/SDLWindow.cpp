@@ -72,6 +72,8 @@ void SDLWindow::dimensions(int& w, int& h) const
     SDL_GetWindowSize(m_window, &w, &h);
 }
 
+SDLEventCallback SDLWindow::s_callback = nullptr;
+
 void SDLWindow::run(const WindowRunArgs& args)
 {
     for (auto w : SDLWindow::s_allWindows)
@@ -82,12 +84,12 @@ void SDLWindow::run(const WindowRunArgs& args)
     {
         SDL_Event event;
         int onMessage = SDL_PollEvent(&event);
+        if (s_callback) s_callback(&event);
         if (args.listener != nullptr)
         {
             if (event.type == SDL_WINDOWEVENT)
             {
                 auto it = s_allWindows.find(event.window.windowID);
-                CPY_ASSERT(it != s_allWindows.end());
                 if (it != s_allWindows.end())
                 {
                     if (event.window.event == SDL_WINDOWEVENT_CLOSE)

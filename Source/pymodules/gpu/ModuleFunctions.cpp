@@ -328,8 +328,7 @@ PyObject* run(PyObject* self, PyObject* args)
             
             if (w && w->onRenderCallback != nullptr)
             {
-                Py_XINCREF(w->onRenderCallback);
-                PyObject* retObj = PyObject_CallOneArg(w->onRenderCallback, (PyObject*)renderArgs);
+                PyObject* retObj = PyObject_CallFunction(w->onRenderCallback, "O", (PyObject*)renderArgs);
                 //means an exception has been risen. Propagate up.
                 if (retObj == nullptr)
                 {

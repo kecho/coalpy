@@ -285,8 +285,7 @@ void VulkanDisplay::acquireNextImage()
     acquireImageInfo.fence = fencePool.get(m_presentFence);
     acquireImageInfo.deviceMask = 1;
     acquireImageInfo.timeout = ~0;
-    VK_OK(vkAcquireNextImage2KHR(m_device.vkDevice(), &acquireImageInfo, &m_activeImageIndex));
-
+    vkAcquireNextImage2KHR(m_device.vkDevice(), &acquireImageInfo, &m_activeImageIndex);
     waitOnImageFence();
 }
 
@@ -347,7 +346,8 @@ void VulkanDisplay::present()
     presentInfo.pSwapchains = &m_swapchain;
     presentInfo.swapchainCount = 1;
     presentInfo.pImageIndices = &m_activeImageIndex;
-    VK_OK(vkQueuePresentKHR(queue, &presentInfo));
+    if (vkQueuePresentKHR(queue, &presentInfo) != VK_SUCCESS)
+        return;
     acquireNextImage();
 }
 

@@ -63,8 +63,6 @@ void setupModule()
 
 #include <dlfcn.h>
 
-PyObject* PyObject_CallOneArg(PyObject*, PyObject*) { return nullptr; }
-
 void forceLinkUse()
 {
     coalpy::ByteBuffer bb;
