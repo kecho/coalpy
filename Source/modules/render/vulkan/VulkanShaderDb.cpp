@@ -2,6 +2,7 @@
 #include "VulkanShaderDb.h" 
 #include "SpirvReflectionData.h"
 #include "VulkanDevice.h"
+#include "VulkanUtils.h"
 #include "VulkanGc.h"
 #ifdef _WIN32
 #include <windows.h>
@@ -142,12 +143,19 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
             }
 
             VkDescriptorSetLayout layout = {};
-            VkDescriptorSetLayoutBindingFlagsCreateInfo layoutFlagsCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO, nullptr };
-            VkDescriptorSetLayoutCreateInfo layoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, &layoutFlagsCreateInfo };
+            VkDescriptorSetLayoutCreateInfo layoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, nullptr };
             layoutCreateInfo.bindingCount = (uint32_t)bindings.size();
             layoutCreateInfo.pBindings = bindings.data();
-            layoutFlagsCreateInfo.bindingCount = (uint32_t)bindingsFlags.size();
-            layoutFlagsCreateInfo.pBindingFlags = bindingsFlags.data();
+
+            VkDescriptorSetLayoutBindingFlagsCreateInfo layoutFlagsCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO, nullptr };
+            if ((vulkanDevice.enabledDeviceExts() & render::asFlag(render::VulkanDeviceExtensions::DescriptorIndexing)) != 0)
+            {
+                layoutFlagsCreateInfo.bindingCount = (uint32_t)bindingsFlags.size();
+                layoutFlagsCreateInfo.pBindingFlags = bindingsFlags.data();
+                layoutFlagsCreateInfo.pNext = layoutCreateInfo.pNext;
+                layoutCreateInfo.pNext = &layoutFlagsCreateInfo;
+            }
+
             VK_OK(vkCreateDescriptorSetLayout(vulkanDevice.vkDevice(), &layoutCreateInfo, nullptr, &layout));
             descriptorSetsInfos.push_back(VulkanDescriptorSetInfo { setData->set, layout });
             layouts.push_back(layout);
@@ -161,24 +169,6 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
     pipelineLayoutInfo.setLayoutCount = (int)layouts.size();
     pipelineLayoutInfo.pSetLayouts = layouts.data();
     VK_OK(vkCreatePipelineLayout(vulkanDevice.vkDevice(), &pipelineLayoutInfo, nullptr, &payload->pipelineLayout));
-
-    // Shader module
-    VkShaderModuleCreateInfo shaderModuleInfo = {};
-    shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    shaderModuleInfo.codeSize = (uint32_t)shaderState.shaderBlob->GetBufferSize();
-    shaderModuleInfo.pCode = (const uint32_t*)shaderState.shaderBlob->GetBufferPointer();
-    VK_OK(vkCreateShaderModule(vulkanDevice.vkDevice(), &shaderModuleInfo, nullptr, &payload->shaderModule));
-
-    // Compute pipeline
-    VkPipelineCache cache = {};
-    VkComputePipelineCreateInfo pipelineInfo = {};
-    pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-    pipelineInfo.layout = payload->pipelineLayout;
-    pipelineInfo.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    pipelineInfo.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-    pipelineInfo.stage.pName = shaderState.spirVReflectionData->mainFn.c_str();
-    pipelineInfo.stage.module = payload->shaderModule;
-    VK_OK(vkCreateComputePipelines(vulkanDevice.vkDevice(), cache, 1, &pipelineInfo, nullptr, &payload->pipeline));
 
     if (m_desc.spirvPrintReflectionInfo)
     {
@@ -202,6 +192,23 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
             std::cout << "}" << std::endl;
         }
     }
+
+    // Shader module
+    VkShaderModuleCreateInfo shaderModuleInfo = {};
+    shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    shaderModuleInfo.codeSize = (uint32_t)shaderState.shaderBlob->GetBufferSize();
+    shaderModuleInfo.pCode = (const uint32_t*)shaderState.shaderBlob->GetBufferPointer();
+    VK_OK(vkCreateShaderModule(vulkanDevice.vkDevice(), &shaderModuleInfo, nullptr, &payload->shaderModule));
+
+    // Compute pipeline
+    VkComputePipelineCreateInfo pipelineInfo = { VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO, nullptr };
+    pipelineInfo.layout = payload->pipelineLayout;
+    pipelineInfo.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    pipelineInfo.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    pipelineInfo.stage.pName = shaderState.spirVReflectionData->mainFn.c_str();
+    pipelineInfo.stage.module = payload->shaderModule;
+    VK_OK(vkCreateComputePipelines(vulkanDevice.vkDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &payload->pipeline));
+
     shaderState.spirVReflectionData->Release();
     shaderState.spirVReflectionData = nullptr;
 }
