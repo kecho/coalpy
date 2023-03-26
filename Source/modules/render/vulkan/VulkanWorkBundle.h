@@ -25,6 +25,7 @@ struct VulkanResourceDownloadState
     WorkType queueType = WorkType::Graphics;
     VulkanFenceHandle fenceValue;
     VulkanReadbackMemBlock memoryBlock;
+    uint64_t requestedSize;
     ResourceHandle resource;
     size_t rowPitch = 0;
     int width  = 0;

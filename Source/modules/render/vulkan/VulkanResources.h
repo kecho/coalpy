@@ -74,6 +74,7 @@ struct VulkanResource
     
     MemFlags memFlags;
     VkDeviceSize alignment;
+    VkDeviceSize requestSize;
     VkDeviceSize actualSize;
     VkDeviceMemory memory;
 };

@@ -1017,7 +1017,7 @@ namespace coalpy
             auto downloadStatus = device.getDownloadStatus(result.workHandle, numBuffer);
             CPY_ASSERT_MSG(downloadStatus.success(), "Invalid download");
             CPY_ASSERT_MSG(downloadStatus.downloadPtr != nullptr, "null download ptr");
-            CPY_ASSERT_MSG(downloadStatus.downloadByteSize == 4 * sizeof(int), "Invalid size");
+            CPY_ASSERT_FMT(downloadStatus.downloadByteSize == 4 * sizeof(int), "Invalid size, expected %d but found %d", sizeof(int), downloadStatus.downloadByteSize);
             if (downloadStatus.downloadPtr != nullptr)
             {
                 auto* ptr = (int*)downloadStatus.downloadPtr;

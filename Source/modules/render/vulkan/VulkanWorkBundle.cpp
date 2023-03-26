@@ -229,6 +229,7 @@ void VulkanWorkBundle::buildDownloadCmd(
     VulkanResourceDownloadState& downloadState = m_downloadStates[cmdInfo.commandDownloadIndex];
     downloadState.downloadKey = ResourceDownloadKey { downloadCmd->source, downloadCmd->mipLevel, downloadCmd->arraySlice };
     downloadState.memoryBlock = m_device.readbackPool().allocate(resource.actualSize);
+    downloadState.requestedSize = resource.requestSize;
     VkBuffer dstBuffer = resources.unsafeGetResource(downloadState.memoryBlock.buffer).bufferData.vkBuffer;
     if (resource.isBuffer())
     {

@@ -78,6 +78,7 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
 
     VkMemoryRequirements memReqs = {};
     vkGetBufferMemoryRequirements(m_device.vkDevice(), bufferData.vkBuffer, &memReqs);
+    resource.requestSize = createInfo.size;
     resource.actualSize = memReqs.size;
     resource.alignment = memReqs.alignment;
 
@@ -246,6 +247,7 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
 
     VkMemoryRequirements memReqs = {};
     vkGetImageMemoryRequirements(m_device.vkDevice(), textureData.vkImage, &memReqs);
+    resource.requestSize = memReqs.size;
     resource.actualSize = memReqs.size;
     resource.alignment = memReqs.alignment;
 

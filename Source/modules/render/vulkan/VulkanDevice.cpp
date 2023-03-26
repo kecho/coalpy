@@ -386,7 +386,7 @@ DownloadStatus VulkanDevice::getDownloadStatus(WorkHandle bundle, ResourceHandle
         return DownloadStatus {
             DownloadResult::Ok,
             downloadState.memoryBlock.mappedMemory,
-            downloadState.memoryBlock.size,
+            downloadState.requestedSize,
             downloadState.rowPitch,
             downloadState.width,
             downloadState.height,
