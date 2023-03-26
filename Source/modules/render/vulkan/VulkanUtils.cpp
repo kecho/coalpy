@@ -7,12 +7,9 @@
 #if defined(_WIN32)
 #include <windows.h>
 #include <vulkan/vulkan_win32.h>
-#include <intrin.h>
 #endif
 #include "VulkanQueues.h"
-#if defined(__linux__)
-#include <x86intrin.h>
-#endif
+#include <coalpy.core/BitMask.h>
 
 #include <string>
 #include <set>
@@ -172,7 +169,7 @@ void filterLayers(
     while (requestedLayers)
     {
         VulkanBitMask mask = (requestedLayers - 1ull) & ~requestedLayers;
-        int nextBit = _popcnt64(mask);
+        int nextBit = popCnt(mask);
         requestedLayers ^= (1ull << nextBit); 
         CPY_ASSERT(nextBit < infosCount);
         if (nextBit >= infosCount)

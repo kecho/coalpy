@@ -6,14 +6,10 @@
 #include "VulkanGc.h"
 #ifdef _WIN32
 #include <windows.h>
-#include <intrin.h>
 #endif
 #include <dxcapi.h>
 #include <iostream>
 
-#ifdef __linux__
-#include <x86intrin.h>
-#endif
 
 #if ENABLE_VULKAN
 
@@ -133,8 +129,7 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
                 binding.descriptorCount = reflectionBinding.count;
                 binding.stageFlags = stageFlags;
                 uint64_t& activeDescriptorBits = descriptorBitsSections[(int)reflectionBinding.binding / (int)SpirvRegisterTypeShiftCount];
-                activeDescriptorBits |= 1 << ((int)reflectionBinding.binding % (int)SpirvRegisterTypeShiftCount);
-                //TODO: bindless
+                activeDescriptorBits |= 1 << ((int)reflectionBinding.binding % (int)SpirvRegisterTypeShiftCount); //TODO: bindless
                 //if (reflectionBinding.count)
                 //{
                 //    flags |= VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
@@ -216,10 +211,10 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
 void SpirvPayload::nextDescriptorRange(uint64_t& mask, int& beginIndex, int& count)
 {
     uint64_t beginMask = mask ^ (mask | (mask - 1));
-    beginIndex = 64 - (int)__lzcnt64(beginMask);
+    beginIndex = 64 - lzCnt(beginMask);
     uint64_t endMask = mask + (1 << beginIndex);
     endMask = endMask ^ (endMask | (endMask - 1));
-    int endIndex = 64 - (int)__lzcnt64(endMask);
+    int endIndex = 64 - lzCnt(endMask);
     count =  endIndex - beginIndex;
     mask = mask & ~((1ull << endIndex) - 1ull);
 }
