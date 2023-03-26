@@ -968,7 +968,7 @@ namespace coalpy
         ShaderInlineDesc shaderDesc{ ShaderType::Compute, "uavShaderTest", "csMain", uavShaderTest };
         ShaderHandle shader = db.requestCompile(shaderDesc);
         db.resolve(shader);
-        CPY_ASSERT(db.isValid(shader));
+        CPY_ASSERT_MSG(db.isValid(shader), "Invalid shader");
 
         BufferDesc buffDesc;
         buffDesc.memFlags = (MemFlags)MemFlag_GpuRead;
@@ -1011,13 +1011,13 @@ namespace coalpy
         auto result = device.schedule(lists, 1, ScheduleFlags_GetWorkHandle); 
         CPY_ASSERT_MSG(result.success(), result.message.c_str());
         auto waitStatus = device.waitOnCpu(result.workHandle, -1);
-        CPY_ASSERT(waitStatus.success());
+        CPY_ASSERT_MSG(waitStatus.success(), "Wait failed");
 
         {
             auto downloadStatus = device.getDownloadStatus(result.workHandle, numBuffer);
-            CPY_ASSERT(downloadStatus.success());
-            CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
-            CPY_ASSERT(downloadStatus.downloadByteSize == 4 * sizeof(int));
+            CPY_ASSERT_MSG(downloadStatus.success(), "Invalid download");
+            CPY_ASSERT_MSG(downloadStatus.downloadPtr != nullptr, "null download ptr");
+            CPY_ASSERT_MSG(downloadStatus.downloadByteSize == 4 * sizeof(int), "Invalid size");
             if (downloadStatus.downloadPtr != nullptr)
             {
                 auto* ptr = (int*)downloadStatus.downloadPtr;
