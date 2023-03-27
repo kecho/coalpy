@@ -187,6 +187,8 @@ void VulkanDisplay::createSwapchain()
 
     vkDestroySwapchainKHR(m_device.vkDevice(), m_swapchain, nullptr);
     auto ret = vkCreateSwapchainKHR(m_device.vkDevice(), &swapInfo, nullptr, &m_swapchain);
+    if (ret != VK_SUCCESS)
+        std::cout << ret << std::endl;
     VK_OK(ret);
 
     uint32_t imageCounts = 0;
