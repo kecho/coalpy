@@ -181,8 +181,11 @@ void VulkanDisplay::createSwapchain()
     swapInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     swapInfo.presentMode = m_presentationMode;
     swapInfo.clipped = true;
-    swapInfo.oldSwapchain = m_swapchain;
-    m_swapchain = {};
+
+    //this is trouble. Avoiding using this recycling scheme. No idea how to make this work, vulkan keeps failing on vkCreateSwapChainKHR without furthter info.
+    swapInfo.oldSwapchain = VK_NULL_HANDLE;
+
+    vkDestroySwapchainKHR(m_device.vkDevice(), m_swapchain, nullptr);
     auto ret = vkCreateSwapchainKHR(m_device.vkDevice(), &swapInfo, nullptr, &m_swapchain);
     VK_OK(ret);
 
@@ -305,6 +308,7 @@ void VulkanDisplay::waitOnImageFence()
 
 void VulkanDisplay::presentBarrier(bool flushComputeTexture)
 {
+
     VulkanFencePool& fencePool = m_device.fencePool();
     VulkanQueues& queues = m_device.queues();
     VkQueue queue = queues.cmdQueue(WorkType::Graphics);
@@ -330,6 +334,7 @@ void VulkanDisplay::presentBarrier(bool flushComputeTexture)
     submitInfo.pCommandBuffers = &list.list;    
     VK_OK(vkQueueSubmit(queue, 1u, &submitInfo, fencePool.get(submitFence)));
 
+    //comment out this line to wait for fence on CPU, essentially syncing CPU to GPU every frame.
     //fencePool.waitOnCpu(submitFence);
     queues.deallocate(list, submitFence);
     fencePool.free(submitFence);
