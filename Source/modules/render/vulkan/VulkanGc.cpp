@@ -48,6 +48,8 @@ void VulkanGc::gatherGarbage(int quota)
             m_fencePool.addRef(fenceVal);
             m_garbage.push_back(g);
         }
+
+        //TODO: dont submit on the GC thread. Must submit signal at the end of a frame or a submit. Threading issues.
         VkQueue queue = m_device.queues().cmdQueue(WorkType::Graphics);
         VkFence fence = m_fencePool.get(fenceVal);
         VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };

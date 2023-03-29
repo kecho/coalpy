@@ -116,7 +116,7 @@ public:
     void release(ResourceTable handle);
 
 private:
-    VkImageViewCreateInfo createVulkanImageViewDescTemplate(const TextureDesc& desc, VkImage image) const;
+    VkImageViewCreateInfo createVulkanImageViewDescTemplate(const TextureDesc& desc, unsigned int descDepth, VkImage image) const;
     bool queryResources(const ResourceHandle* handles, int counts, std::vector<const VulkanResource*>& outResources) const;
     bool createBindings(VulkanResourceTable::Type tableType, const VulkanResource** resources, int counts, std::vector<VkDescriptorSetLayoutBinding>& outBindings) const;
 

@@ -6,6 +6,7 @@
 #include "VulkanGc.h"
 #include <coalpy.core/Assert.h>
 #include <coalpy.render/CommandDefs.h>
+#include <algorithm>
 #include <variant>
 
 namespace coalpy
@@ -141,7 +142,7 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
     return BufferResult { ResourceResult::Ok, { handle.handleId } };
 }
 
-VkImageViewCreateInfo VulkanResources::createVulkanImageViewDescTemplate(const TextureDesc& desc, VkImage image) const
+VkImageViewCreateInfo VulkanResources::createVulkanImageViewDescTemplate(const TextureDesc& desc, unsigned int descDepth, VkImage image) const
 {
     const bool isArray = (desc.type == TextureType::k2dArray || desc.type == TextureType::CubeMapArray);
     VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO, nullptr };
@@ -167,12 +168,47 @@ VkImageViewCreateInfo VulkanResources::createVulkanImageViewDescTemplate(const T
     
     viewInfo.format = getVkFormat(desc.format);
     viewInfo.components = {};
-    viewInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0u, desc.mipLevels, 0u, isArray ? desc.depth : 1 };
+    viewInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0u, desc.mipLevels, 0u, isArray ? descDepth : 1 };
     return viewInfo;
 }
 
 TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage resourceToAcquire, ResourceSpecialFlags specialFlags)
 {
+    const VkPhysicalDeviceLimits& limits = m_device.vkPhysicalDeviceProps().limits;
+    unsigned limitX, limitY, limitZ;
+    switch (desc.type)
+    {
+    case TextureType::k1d:
+        limitX = limits.maxImageDimension1D;
+        limitY = 1;
+        limitZ = 1;
+        break;
+    case TextureType::k2d:
+        limitX = limits.maxImageDimension2D;
+        limitY = limits.maxImageDimension2D;
+        limitZ = 1;
+        break;
+    case TextureType::k2dArray:
+    case TextureType::CubeMapArray:
+        limitX = limits.maxImageDimension2D;
+        limitY = limits.maxImageDimension2D;
+        limitZ = limits.maxImageArrayLayers;
+        break;
+    case TextureType::k3d:
+        limitX = limits.maxImageDimension3D;
+        limitY = limits.maxImageDimension3D;
+        limitZ = limits.maxImageDimension3D;
+        break;
+    case TextureType::CubeMap:
+        limitX = limits.maxImageDimension2D;
+        limitY = limits.maxImageDimension2D;
+        limitZ = 6;
+        break;
+    }
+    unsigned int descWidth = std::clamp(desc.width,   1u, limitX);
+    unsigned int descHeight = std::clamp(desc.height, 1u, limitY);
+    unsigned int descDepth = std::clamp(desc.depth,   1u, limitZ);
+
     std::unique_lock lock(m_mutex);
     ResourceHandle handle;
     VulkanResource& resource = m_container.allocate(handle);
@@ -209,9 +245,9 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
     }
 
     createInfo.format = getVkFormat(desc.format);
-    createInfo.extent = VkExtent3D { desc.width, desc.height, desc.type == TextureType::k3d ? desc.depth : 1 };
+    createInfo.extent = VkExtent3D { descWidth, descHeight, desc.type == TextureType::k3d ? descDepth : 1 };
     createInfo.mipLevels = desc.mipLevels;
-    createInfo.arrayLayers = isArray ? desc.depth : 1;
+    createInfo.arrayLayers = isArray ? descDepth : 1;
     createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     createInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
     createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; //not exposed, cant do async in coalpy yet.
@@ -223,7 +259,7 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
     resource.textureData.textureType = desc.type;
     resource.textureData.width = createInfo.extent.width;
     resource.textureData.height = createInfo.extent.height;
-    resource.textureData.depth = desc.depth;
+    resource.textureData.depth = descDepth;
     resource.textureData.format = desc.format;
 
     auto& textureData = resource.textureData;
@@ -276,7 +312,7 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
         return TextureResult  { ResourceResult::InternalApiFailure, Texture(), "Failed to bind memory into vkimage." };
     }
 
-    VkImageViewCreateInfo srvViewInfo = createVulkanImageViewDescTemplate(desc, textureData.vkImage);
+    VkImageViewCreateInfo srvViewInfo = createVulkanImageViewDescTemplate(desc, descDepth, textureData.vkImage);
     if ((resource.memFlags & MemFlag_GpuRead) != 0)
     {
         if (vkCreateImageView(m_device.vkDevice(), &srvViewInfo, nullptr, &textureData.vkSrvView) != VK_SUCCESS)
@@ -292,7 +328,7 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
     textureData.uavCounts = 0;
     if ((resource.memFlags & MemFlag_GpuWrite) != 0)
     {
-        VkImageViewCreateInfo uavViewInfo = createVulkanImageViewDescTemplate(desc, textureData.vkImage);
+        VkImageViewCreateInfo uavViewInfo = createVulkanImageViewDescTemplate(desc, descDepth, textureData.vkImage);
         for (int mip = 0; mip < std::min(desc.mipLevels, (unsigned)VulkanMaxMips); ++mip)
         {
             uavViewInfo.subresourceRange.baseMipLevel = mip;
@@ -307,7 +343,7 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
 
     m_workDb.registerResource(
         handle, desc.memFlags, ResourceGpuState::Default,
-        (int)desc.width, (int)desc.height, (int)createInfo.extent.depth,
+        (int)descWidth, (int)descHeight, (int)createInfo.extent.depth,
         createInfo.mipLevels, createInfo.arrayLayers);
     return TextureResult { ResourceResult::Ok, { handle.handleId } };
 }

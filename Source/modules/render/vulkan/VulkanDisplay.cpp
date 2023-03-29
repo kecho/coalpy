@@ -68,6 +68,7 @@ bool getPresentationMode(VkSurfaceKHR surface, VkPhysicalDevice device, VkPresen
 VulkanDisplay::VulkanDisplay(const DisplayConfig& config, VulkanDevice& device)
 : IDisplay(config), m_device(device), m_swapCount(0)
 {
+    setDims(config.width, config.height);
     m_surface = {};
     m_swapchain = {};
     m_presentationMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
@@ -130,15 +131,10 @@ void VulkanDisplay::destroySwapchain()
 void VulkanDisplay::createSwapchain()
 {
     if (m_swapchain)
-    {   
-        presentBarrier();
-        //Flush an acquired image. Unfortunately this is the best way i can find to flush the swap chain state.
-        VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR, nullptr };
-        presentInfo.pSwapchains = &m_swapchain;
-        presentInfo.swapchainCount = 1;
-        presentInfo.pImageIndices = &m_activeImageIndex;
-        VkQueue queue = m_device.queues().cmdQueue(WorkType::Graphics);
-        vkQueuePresentKHR(queue, &presentInfo); //Expecting an error here 'Out of date'
+    {
+        vkDeviceWaitIdle(m_device.vkDevice());
+        vkDestroySwapchainKHR(m_device.vkDevice(), m_swapchain, nullptr);
+        m_swapchain = VK_NULL_HANDLE;
     }
     
     VkSurfaceTransformFlagBitsKHR transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
@@ -185,7 +181,6 @@ void VulkanDisplay::createSwapchain()
     //this is trouble. Avoiding using this recycling scheme. No idea how to make this work, vulkan keeps failing on vkCreateSwapChainKHR without furthter info.
     swapInfo.oldSwapchain = VK_NULL_HANDLE;
 
-    vkDestroySwapchainKHR(m_device.vkDevice(), m_swapchain, nullptr);
     auto ret = vkCreateSwapchainKHR(m_device.vkDevice(), &swapInfo, nullptr, &m_swapchain);
     if (ret != VK_SUCCESS)
         std::cout << ret << std::endl;
@@ -273,10 +268,16 @@ void VulkanDisplay::copyToComputeTexture(VkCommandBuffer cmdBuffer)
     
 }
 
+void VulkanDisplay::setDims(unsigned int width, unsigned int height)
+{
+    const VkPhysicalDeviceLimits& limits = m_device.vkPhysicalDeviceProps().limits;
+    m_config.width = std::clamp(width, 1u, limits.maxImageDimension2D);
+    m_config.height = std::clamp(height, 1u, limits.maxImageDimension2D);
+}
+
 void VulkanDisplay::resize(unsigned int width, unsigned int height)
 {
-    m_config.width = width == 0 ? 1u : width;
-    m_config.height = height == 0 ? 1u : height;
+    setDims(width, height);
     createSwapchain(); //swap chain gets passed trhough old swapchain
 }
 
@@ -310,7 +311,6 @@ void VulkanDisplay::waitOnImageFence()
 
 void VulkanDisplay::presentBarrier(bool flushComputeTexture)
 {
-
     VulkanFencePool& fencePool = m_device.fencePool();
     VulkanQueues& queues = m_device.queues();
     VkQueue queue = queues.cmdQueue(WorkType::Graphics);
@@ -335,9 +335,6 @@ void VulkanDisplay::presentBarrier(bool flushComputeTexture)
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &list.list;    
     VK_OK(vkQueueSubmit(queue, 1u, &submitInfo, fencePool.get(submitFence)));
-
-    //comment out this line to wait for fence on CPU, essentially syncing CPU to GPU every frame.
-    //fencePool.waitOnCpu(submitFence);
     queues.deallocate(list, submitFence);
     fencePool.free(submitFence);
 

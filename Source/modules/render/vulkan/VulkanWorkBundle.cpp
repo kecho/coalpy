@@ -190,7 +190,7 @@ void VulkanWorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd*
         uint64_t destOffset =  0ull;
         if (copyCmd->fullCopy)
         {
-            sizeToCopy = src.actualSize;
+            sizeToCopy = src.requestSize;
         }
         else
         {
@@ -202,8 +202,8 @@ void VulkanWorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd*
             }
             else
             {
-                int dstRemainingSize = ((int)dst.actualSize - copyCmd->destX);
-                int srcRemainingSize = ((int)src.actualSize - copyCmd->sourceX);
+                int dstRemainingSize = ((int)dst.requestSize - copyCmd->destX);
+                int srcRemainingSize = ((int)src.requestSize - copyCmd->sourceX);
                 sizeToCopy = std::min(dstRemainingSize, srcRemainingSize);
             }
         }
@@ -234,7 +234,7 @@ void VulkanWorkBundle::buildDownloadCmd(
     if (resource.isBuffer())
     {
         VkBuffer srcBuffer = resource.bufferData.vkBuffer;
-        VkBufferCopy region = { 0ull, downloadState.memoryBlock.offset, resource.actualSize };
+        VkBufferCopy region = { 0ull, downloadState.memoryBlock.offset, resource.requestSize };
         vkCmdCopyBuffer(outList.list, srcBuffer, dstBuffer, 1, &region);
     }
     else

@@ -264,6 +264,7 @@ public:
             return;
 
         pyWindow->display->resize(w, h);
+        pyWindow->displayTexture->texture = pyWindow->display->texture();
     }
 
     virtual ~ModuleWindowListener()

@@ -61,7 +61,7 @@ public:
     VkInstance vkInstance() const { return m_vkInstance; }
     VkDevice vkDevice() const { return m_vkDevice; }
     VkPhysicalDevice vkPhysicalDevice() const { return m_vkPhysicalDevice; }
-
+    const VkPhysicalDeviceProperties& vkPhysicalDeviceProps() const { return m_vkPhysicalProps; }
     VulkanDescriptorSetPools& descriptorSetPools() { return *m_descriptorSetPools; }
     int graphicsFamilyQueueIndex() const { return m_queueFamIndex; }
 
@@ -88,6 +88,7 @@ private:
     VkInstance m_vkInstance;
     VkPhysicalDevice m_vkPhysicalDevice;
     VkPhysicalDeviceMemoryProperties m_vkMemProps;
+    VkPhysicalDeviceProperties m_vkPhysicalProps;
     VkDevice m_vkDevice;
     VulkanDescriptorSetPools* m_descriptorSetPools;
     VulkanQueues* m_queues;

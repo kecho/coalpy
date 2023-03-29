@@ -229,6 +229,7 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
     }
 
     vkGetPhysicalDeviceMemoryProperties(m_vkPhysicalDevice, &m_vkMemProps);
+    vkGetPhysicalDeviceProperties(m_vkPhysicalDevice, &m_vkPhysicalProps);
 
     m_fencePool = new VulkanFencePool(*this);
     m_eventPool = new VulkanEventPool(*this);

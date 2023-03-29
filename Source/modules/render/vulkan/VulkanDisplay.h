@@ -26,6 +26,7 @@ public:
     Format resolvedFormat() const { return m_resolvedFormat; }
 
 private:
+    void setDims(unsigned int width, unsigned int height);
     void createSwapchain();
     void destroySwapchain();
     void acquireNextImage();
