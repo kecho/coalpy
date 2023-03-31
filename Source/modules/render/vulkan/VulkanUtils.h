@@ -25,6 +25,8 @@ enum class VulkanExtensions : int
     Win32Surface,
     KHRSurface,
     DebugReport,
+    CustomBorderColorSampler,
+    MinMaxFilterSampler,
     Count
 };
 

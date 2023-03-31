@@ -42,7 +42,9 @@ static const ExtInfo g_ExtInfos[] = {
     ExtInfo(sdlGetExtensions),
     ExtInfo("VK_KHR_win32_surface"),
     ExtInfo("VK_KHR_surface"),
-    ExtInfo(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)
+    ExtInfo(VK_EXT_DEBUG_REPORT_EXTENSION_NAME),
+    ExtInfo(VK_EXT_SAMPLER_FILTER_MINMAX_EXTENSION_NAME),
+    ExtInfo(VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME)
 };
 static_assert((int)(sizeof(g_ExtInfos)/sizeof(ExtInfo)) == (int)VulkanExtensions::Count);
 

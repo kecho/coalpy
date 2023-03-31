@@ -354,6 +354,69 @@ TextureResult VulkanResources::recreateTexture(Texture texture, const TextureDes
     return TextureResult();
 }
 
+
+SamplerResult VulkanResources::createSampler (const SamplerDesc& config)
+{
+    VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO, nullptr };
+    
+    VkFilter filterType = {};
+    switch (config.type)
+    {
+    case FilterType::Point:
+    case FilterType::Min:
+    case FilterType::Max:
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        filterType = VK_FILTER_NEAREST;
+        break;
+    case FilterType::Linear:
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        filterType = VK_FILTER_LINEAR;
+        break;
+    }
+
+    auto translateAddress = [](TextureAddressMode address) -> VkSamplerAddressMode
+    {
+        switch (address)
+        {
+        case TextureAddressMode::Wrap:
+            return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        case TextureAddressMode::Mirror:
+            return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+        case TextureAddressMode::Clamp:
+            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        case TextureAddressMode::Border:
+            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        }
+
+        return {};
+    };
+
+    if (config.maxAnisoQuality > 2)
+        samplerInfo.anisotropyEnable = VK_TRUE;
+    
+    samplerInfo.magFilter = filterType;
+    samplerInfo.minFilter = filterType;
+    samplerInfo.addressModeU = translateAddress(config.addressU);
+    samplerInfo.addressModeV = translateAddress(config.addressV);
+    samplerInfo.addressModeW = translateAddress(config.addressW);
+    samplerInfo.mipLodBias = config.mipBias;
+    samplerInfo.maxAnisotropy = config.maxAnisoQuality;
+    samplerInfo.minLod = config.minLod;
+    samplerInfo.maxLod = config.maxLod;
+
+    VkSampler sampler;
+    VkResult result = vkCreateSampler(m_device.vkDevice(), &samplerInfo, nullptr, &sampler);
+    if (result != VK_SUCCESS)
+        return SamplerResult { ResourceResult::InvalidParameter, Sampler(), "Error creating sampler. Check device logging for further information." };
+
+    std::unique_lock lock(m_mutex);
+    ResourceHandle samplerHandle;
+    VulkanResource& resource = m_container.allocate(samplerHandle);
+    resource.type = VulkanResource::Type::Sampler;
+    resource.sampler = sampler;
+    return SamplerResult { ResourceResult::Ok, Sampler { samplerHandle.handleId } };
+}
+
 void VulkanResources::getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo)
 {
     const VulkanResource& resource = m_container[handle];
@@ -560,7 +623,10 @@ void VulkanResources::release(ResourceHandle handle)
     VulkanResource& resource = m_container[handle];
 
     if (resource.isBuffer())
+    {
         m_device.gc().deferRelease(resource.bufferData.vkBuffer, resource.bufferData.vkBufferView, resource.memory);
+        m_workDb.unregisterResource(handle);
+    }
     else if (resource.isTexture())
     {
         m_device.gc().deferRelease(
@@ -568,10 +634,10 @@ void VulkanResources::release(ResourceHandle handle)
             resource.textureData.vkUavViews, resource.textureData.uavCounts,
             resource.textureData.vkSrvView,
             resource.textureData.ownsImage ? resource.memory : VK_NULL_HANDLE);
+        m_workDb.unregisterResource(handle);
     }
-
-
-    m_workDb.unregisterResource(handle);
+    else if (resource.isSampler())
+        vkDestroySampler(m_device.vkDevice(), resource.sampler, nullptr);
     m_container.free(handle);
 }
 

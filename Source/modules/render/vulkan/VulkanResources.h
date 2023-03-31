@@ -35,7 +35,8 @@ struct VulkanResource
     enum class Type   
     {
         Buffer,
-        Texture
+        Texture,
+        Sampler
     };
 
     struct BufferData
@@ -67,16 +68,18 @@ struct VulkanResource
     {
         BufferData bufferData;
         TextureData textureData;
+        VkSampler sampler;
     };
 
     bool isBuffer() const { return type == Type::Buffer; }
     bool isTexture() const { return type == Type::Texture; }
+    bool isSampler() const { return type == Type::Sampler; }
     
-    MemFlags memFlags;
-    VkDeviceSize alignment;
-    VkDeviceSize requestSize;
-    VkDeviceSize actualSize;
-    VkDeviceMemory memory;
+    MemFlags memFlags = {};
+    VkDeviceSize alignment = {};
+    VkDeviceSize requestSize = {};
+    VkDeviceSize actualSize = {};
+    VkDeviceMemory memory = {};
 };
 
 struct VulkanResourceTable
@@ -106,6 +109,7 @@ public:
     BufferResult createBuffer(const BufferDesc& desc, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None);
     TextureResult createTexture(const TextureDesc& desc, VkImage resourceToAcquire = VK_NULL_HANDLE, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None);
     TextureResult recreateTexture(Texture texture, const TextureDesc& desc);
+    SamplerResult createSampler (const SamplerDesc& config);
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
     OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);
     VulkanResource& unsafeGetResource(ResourceHandle handle) { return m_container[handle]; }

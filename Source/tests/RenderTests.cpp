@@ -932,9 +932,10 @@ namespace coalpy
             float result = *((float*)downloadStatus.downloadPtr);
             CPY_ASSERT(std::abs(result - 0.5f) < 0.001f);
         }
+
+        device.release(status.workHandle);
         
         device.release(source);
-        device.release(status.workHandle);
         device.release(inputTable);
         device.release(dest);
         device.release(outputTable);
@@ -1987,7 +1988,6 @@ namespace coalpy
 
         static const std::set<std::string> vulkanDisabledTests =
         {
-            "textureSamplers",
             "appendConsumeBufferCreate",
             "appendConsumeBufferAppend",
             "copyTexture",

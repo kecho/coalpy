@@ -185,7 +185,11 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
       asFlag(VulkanExtensions::SDLExtensions)
     | asFlag(VulkanExtensions::Win32Surface)
     | asFlag(VulkanExtensions::KHRSurface)
-    | asFlag(VulkanExtensions::DebugReport);
+    | asFlag(VulkanExtensions::CustomBorderColorSampler)
+    | asFlag(VulkanExtensions::MinMaxFilterSampler);
+
+    if (((int)config.flags & (int)DeviceFlags::EnableDebug) != 0) 
+        extensions |= asFlag(VulkanExtensions::DebugReport);
 
     VulkanBitMask layers =
       asFlag(VulkanLayers::NVOptimus)
@@ -330,7 +334,7 @@ BufferResult  VulkanDevice::createBuffer (const BufferDesc& config)
 
 SamplerResult VulkanDevice::createSampler (const SamplerDesc& config)
 {
-    return SamplerResult();
+    return m_resources->createSampler(config);
 }
 
 InResourceTableResult VulkanDevice::createInResourceTable  (const ResourceTableDesc& config)
