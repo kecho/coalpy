@@ -62,7 +62,7 @@ struct SamplerDesc
     TextureAddressMode addressU = TextureAddressMode::Wrap;
     TextureAddressMode addressV = TextureAddressMode::Wrap;
     TextureAddressMode addressW = TextureAddressMode::Wrap;
-    float borderColor [4];
+    float borderColor [4] = {};
     float mipBias = 0.0f;
     float minLod = 0.0f;
     float maxLod = 8.0f;

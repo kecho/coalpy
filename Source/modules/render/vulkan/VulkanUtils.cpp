@@ -485,6 +485,10 @@ void createVulkanDevice(
     queueCreateInfo.pQueuePriorities = queuePrio.data();
     queueCreateInfo.flags = 0;
 
+    VkPhysicalDeviceVulkan12Features vulkanFeatures12 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES, nullptr };
+    VkPhysicalDeviceFeatures2 vulkanFeatures2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, &vulkanFeatures12 };
+    vkGetPhysicalDeviceFeatures2(physicalDevice, &vulkanFeatures2);
+
     // Device creation information
     VkDeviceCreateInfo createInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, nullptr };
     createInfo.queueCreateInfoCount = 1;
@@ -495,6 +499,7 @@ void createVulkanDevice(
     createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensionNames.size());
     createInfo.pEnabledFeatures = NULL;
     createInfo.flags = 0;
+    createInfo.pNext = &vulkanFeatures2;
 
     VkPhysicalDeviceMutableDescriptorTypeFeaturesVALVE valveF = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_VALVE, nullptr };
     VkPhysicalDeviceDescriptorIndexingFeatures indexingF = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES, nullptr };

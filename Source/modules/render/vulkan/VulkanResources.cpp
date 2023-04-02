@@ -4,8 +4,10 @@
 #include "WorkBundleDb.h"
 #include "VulkanFormats.h"
 #include "VulkanGc.h"
+#include "VulkanUtils.h"
 #include <coalpy.core/Assert.h>
 #include <coalpy.render/CommandDefs.h>
+#include <iostream>
 #include <algorithm>
 #include <variant>
 
@@ -404,6 +406,32 @@ SamplerResult VulkanResources::createSampler (const SamplerDesc& config)
     samplerInfo.minLod = config.minLod;
     samplerInfo.maxLod = config.maxLod;
 
+    VkSamplerReductionModeCreateInfo minMaxSamplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_REDUCTION_MODE_CREATE_INFO, nullptr };
+    if (config.type == FilterType::Min || config.type == FilterType::Max)
+    {
+        if (m_device.enabledExts() & asFlag(VulkanExtensions::MinMaxFilterSampler) != 0)
+        {
+            minMaxSamplerInfo.reductionMode = config.type == FilterType::Min ? VK_SAMPLER_REDUCTION_MODE_MIN : VK_SAMPLER_REDUCTION_MODE_MAX;
+            minMaxSamplerInfo.pNext = samplerInfo.pNext;
+            samplerInfo.pNext = &minMaxSamplerInfo;
+        }
+        else
+            std::cerr << "Error: Using a min max filter on sampler, but vulkan extension " << VK_EXT_SAMPLER_FILTER_MINMAX_EXTENSION_NAME << "not supported" << std::endl;
+    }
+
+    if ((config.borderColor[0] != 0.0f || config.borderColor[1] != 0.0f || config.borderColor[2] != 0.0f) && (m_device.enabledExts() & asFlag(VulkanExtensions::CustomBorderColorSampler) != 0))
+        std::cerr << "Error: using a border color, this device does not support custom border colors" << std::endl;
+
+    VkSamplerCustomBorderColorCreateInfoEXT borderColorConfig = { VK_STRUCTURE_TYPE_SAMPLER_CUSTOM_BORDER_COLOR_CREATE_INFO_EXT, nullptr };
+    if (m_device.enabledExts() & asFlag(VulkanExtensions::CustomBorderColorSampler) != 0)
+    {
+        for (int i = 0; i < 4; ++i)
+            borderColorConfig.customBorderColor.float32[i] = config.borderColor[i];
+        borderColorConfig.format = VK_FORMAT_R8G8B8A8_UNORM;
+        borderColorConfig.pNext = samplerInfo.pNext;
+        samplerInfo.pNext = &borderColorConfig;
+    }
+
     VkSampler sampler;
     VkResult result = vkCreateSampler(m_device.vkDevice(), &samplerInfo, nullptr, &sampler);
     if (result != VK_SUCCESS)
@@ -452,13 +480,17 @@ bool VulkanResources::queryResources(const ResourceHandle* handles, int counts, 
 
 bool VulkanResources::createBindings(VulkanResourceTable::Type tableType, const VulkanResource** resources, int counts, std::vector<VkDescriptorSetLayoutBinding>& outBindings) const
 {
+    const bool isSampler = tableType == VulkanResourceTable::Type::Sampler;
     const bool isRead = tableType == VulkanResourceTable::Type::In;
     auto flagToCheck = isRead ? MemFlag_GpuRead : MemFlag_GpuWrite;
     outBindings.reserve(counts);
     for (int i = 0; i < counts; ++i)
     {
         const VulkanResource& resource = *resources[i];
-        if ((resource.memFlags & flagToCheck) == 0)
+        if (!isSampler && ((resource.memFlags & flagToCheck) == 0))
+            return false;
+
+        if (isSampler && (resource.isBuffer() || resource.isTexture()))
             return false;
 
         outBindings.emplace_back();
@@ -471,6 +503,8 @@ bool VulkanResources::createBindings(VulkanResourceTable::Type tableType, const 
             binding.descriptorType = resource.bufferData.isStorageBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER : (isRead ? VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER);
         else if (resource.isTexture())
             binding.descriptorType = isRead ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+        else if (resource.isSampler())
+            binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
     }
 
     return true;
@@ -483,7 +517,8 @@ ResourceTable VulkanResources::createAndFillTable(
         const int* uavTargetMips,
         int counts, VkDescriptorSetLayout layout)
 {
-    bool isRead = tableType == VulkanResourceTable::Type::In;
+    const bool isSampler = tableType == VulkanResourceTable::Type::Sampler;
+    const bool isRead = tableType == VulkanResourceTable::Type::In;
 
     union DescriptorVariantInfo
     {
@@ -520,6 +555,7 @@ ResourceTable VulkanResources::createAndFillTable(
         DescriptorVariantInfo& variantInfo = variantInfos.back();
         if (resource.isBuffer())
         {
+            CPY_ASSERT(!isSampler)
             if (resource.bufferData.isStorageBuffer)
             {
                 auto& info = variantInfo.texelBufferInfo;
@@ -539,6 +575,7 @@ ResourceTable VulkanResources::createAndFillTable(
         }
         else if (resource.isTexture())
         {
+            CPY_ASSERT(!isSampler)
             auto& info = variantInfo.imageInfo;
             info = {};
             if (isRead)
@@ -547,6 +584,14 @@ ResourceTable VulkanResources::createAndFillTable(
                 info.imageView = uavTargetMips ? resource.textureData.vkUavViews[uavTargetMips[i]] : resource.textureData.vkUavViews[0];
             info.imageLayout = isRead ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL;
             write.descriptorType = isRead ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+            write.pImageInfo = &info;
+        }
+        else if (resource.isSampler())
+        {
+            auto& info = variantInfo.imageInfo;
+            info = {};
+            info.sampler = resource.sampler;
+            write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
             write.pImageInfo = &info;
         }
     }
@@ -573,9 +618,7 @@ InResourceTableResult VulkanResources::createInResourceTable(const ResourceTable
 
     VkDescriptorSetLayout layout = {};
     if (vkCreateDescriptorSetLayout(m_device.vkDevice(), &layoutInfo, nullptr, &layout) != VK_SUCCESS)
-    {
         return InResourceTableResult { ResourceResult::InvalidParameter, InResourceTable(), "Could not create descriptor set layout." };
-    }
 
     ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::In, resources.data(), bindings.data(), desc.uavTargetMips, (int)resources.size(), layout);
     m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, false);
@@ -599,13 +642,34 @@ OutResourceTableResult VulkanResources::createOutResourceTable(const ResourceTab
 
     VkDescriptorSetLayout layout = {};
     if (vkCreateDescriptorSetLayout(m_device.vkDevice(), &layoutInfo, nullptr, &layout) != VK_SUCCESS)
-    {
         return OutResourceTableResult { ResourceResult::InvalidParameter, OutResourceTable(), "Could not create descriptor set layout." };
-    }
 
     ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::Out, resources.data(), bindings.data(), desc.uavTargetMips, (int)resources.size(), layout);
     m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, true);
     return OutResourceTableResult { ResourceResult::Ok, OutResourceTable { handle.handleId } };
+}
+
+SamplerTableResult VulkanResources::createSamplerTable(const ResourceTableDesc& desc)
+{
+    std::unique_lock lock(m_mutex);
+    std::vector<const VulkanResource*> resources;
+    if (!queryResources(desc.resources, desc.resourcesCount, resources))
+            return SamplerTableResult { ResourceResult::InvalidHandle, SamplerTable(), "Passed an invalid sampler resource to table" };
+
+    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    if (!createBindings(VulkanResourceTable::Type::Sampler, resources.data(), (int)resources.size(), bindings))
+            return SamplerTableResult { ResourceResult::InvalidParameter, SamplerTable(), "All resources in Sampler Table must be a sampler." };
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, nullptr };
+    layoutInfo.bindingCount = (uint32_t)bindings.size();
+    layoutInfo.pBindings = bindings.data();
+
+    VkDescriptorSetLayout layout = {};
+    if (vkCreateDescriptorSetLayout(m_device.vkDevice(), &layoutInfo, nullptr, &layout) != VK_SUCCESS)
+        return SamplerTableResult { ResourceResult::InvalidParameter, SamplerTable(), "Could not create descriptor set layout for a sampler table." };
+
+    ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::Sampler, resources.data(), bindings.data(), desc.uavTargetMips, (int)resources.size(), layout);
+    return SamplerTableResult { ResourceResult::Ok, SamplerTable { handle.handleId } };
 }
 
 

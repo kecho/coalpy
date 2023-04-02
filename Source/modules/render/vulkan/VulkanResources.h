@@ -112,6 +112,7 @@ public:
     SamplerResult createSampler (const SamplerDesc& config);
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
     OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);
+    SamplerTableResult createSamplerTable(const ResourceTableDesc& desc);
     VulkanResource& unsafeGetResource(ResourceHandle handle) { return m_container[handle]; }
     VulkanResourceTable& unsafeGetTable(ResourceTable handle) { return m_tables[handle]; }
     void getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo);

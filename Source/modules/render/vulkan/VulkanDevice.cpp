@@ -349,7 +349,7 @@ OutResourceTableResult VulkanDevice::createOutResourceTable (const ResourceTable
 
 SamplerTableResult  VulkanDevice::createSamplerTable (const ResourceTableDesc& config)
 {
-    return SamplerTableResult();
+    return m_resources->createSamplerTable(config);
 }
 
 void VulkanDevice::getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo)
