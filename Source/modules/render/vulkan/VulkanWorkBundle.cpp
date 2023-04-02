@@ -119,6 +119,7 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
 
     fillDescriptors(SpirvRegisterType::t, computeCmd->inResourceTablesCounts, (const ResourceTable*)computeCmd->inResourceTables.data(data));
     fillDescriptors(SpirvRegisterType::u, computeCmd->outResourceTablesCounts, (const ResourceTable*)computeCmd->outResourceTables.data(data));
+    fillDescriptors(SpirvRegisterType::s, computeCmd->samplerTablesCounts, (const ResourceTable*)computeCmd->samplerTables.data(data));
     vkUpdateDescriptorSets(m_device.vkDevice(), writes.size(), writes.data(), copies.size(), copies.data());
 
     VkCommandBuffer cmdBuffer = outList.list;

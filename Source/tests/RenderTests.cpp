@@ -924,7 +924,7 @@ namespace coalpy
         CPY_ASSERT(waitStatus.success());
 
         DownloadStatus downloadStatus = device.getDownloadStatus(status.workHandle, dest);
-        CPY_ASSERT(downloadStatus.success());
+        CPY_ASSERT_FMT(downloadStatus.success(), "%d", downloadStatus.result);
 
         CPY_ASSERT(downloadStatus.downloadPtr != nullptr);
         if (downloadStatus.downloadPtr)
