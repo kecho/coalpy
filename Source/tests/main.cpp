@@ -56,7 +56,12 @@ struct Filters
     std::set<std::string> cases;
 } gFilters;
 
-void runSuite(CreateSuiteFn createFn)
+struct SuiteStats
+{
+    int casesRan = 0;
+};
+
+void runSuite(CreateSuiteFn createFn, SuiteStats& stats)
 {
     g_errors = 0;
     SmartPtr<TestSuite> suite = createFn();
@@ -76,6 +81,7 @@ void runSuite(CreateSuiteFn createFn)
         if (!gFilters.cases.empty() && gFilters.cases.find(caseData.name) == gFilters.cases.end())
             continue;
 
+        ++stats.casesRan;
         sw.start();
         int prevErr = g_errors;
         caseData.fn(*context);
@@ -199,9 +205,16 @@ int main(int argc, char* argv[])
     while (keepRunning)
     {
         AssertSystem::setAssertHandler(assertHandler);
+        SuiteStats stats;
         for (int i = 0; i < suiteCounts; ++i)
         {
-            runSuite(g_suites[i]);
+            runSuite(g_suites[i], stats);
+        }
+
+        if ((!gFilters.cases.empty() || !gFilters.suites.empty()) && stats.casesRan == 0)
+        {
+            std::cerr << "No tests ran. Check test filters (-s and -t)." << std::endl;
+            ++g_totalErrors;
         }
 
         std::cout << (g_totalErrors == 0 ? "SUCCESS" : "FAIL") << std::endl;
