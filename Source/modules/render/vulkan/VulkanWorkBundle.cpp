@@ -222,17 +222,18 @@ void VulkanWorkBundle::buildCopyCmd(const unsigned char* data, const AbiCopyCmd*
 
         auto zAsSlice = [](TextureType t) { return t == TextureType::k2dArray || t == TextureType::CubeMapArray || t == TextureType::CubeMap; };
         const bool srcZAsSlice = zAsSlice(src.textureData.textureType);
+        const bool dstZAsSlice = zAsSlice(dst.textureData.textureType);
         int srcSliceId = srcZAsSlice ? copyCmd->sourceZ : 0;
-        int dstSliceId = zAsSlice(dst.textureData.textureType) ? copyCmd->destZ : 0;
+        int dstSliceId = dstZAsSlice ? copyCmd->destZ   : 0;
 
         VkImageCopy region = {};
         
         int szX = copyCmd->sizeX < 0 ? (std::min(src.textureData.width  - copyCmd->sourceX, src.textureData.width   - copyCmd->destX)) : copyCmd->sizeX;
         int szY = copyCmd->sizeY < 0 ? (std::min(src.textureData.height - copyCmd->sourceY, src.textureData.height  - copyCmd->destY)) : copyCmd->sizeY;
         int szZ = copyCmd->sizeZ < 0 ? (std::min(src.textureData.depth  - copyCmd->sourceZ, src.textureData.depth   - copyCmd->destZ)) : copyCmd->sizeZ;
-        region.srcOffset = VkOffset3D { copyCmd->sourceX, copyCmd->sourceY, srcSliceId };
+        region.srcOffset = VkOffset3D { copyCmd->sourceX, copyCmd->sourceY, srcZAsSlice ? 0 : copyCmd->sourceZ };
         region.srcSubresource = VkImageSubresourceLayers { VK_IMAGE_ASPECT_COLOR_BIT, (uint32_t)copyCmd->srcMipLevel, (uint32_t)srcSliceId, 1u };
-        region.dstOffset = VkOffset3D { copyCmd->destX, copyCmd->destX, dstSliceId };
+        region.dstOffset = VkOffset3D { copyCmd->destX, copyCmd->destX, dstZAsSlice ? 0 : copyCmd->destZ };
         region.dstSubresource = VkImageSubresourceLayers { VK_IMAGE_ASPECT_COLOR_BIT, (uint32_t)copyCmd->dstMipLevel, (uint32_t)dstSliceId, 1u };
         region.extent = VkExtent3D { (uint32_t)szX, (uint32_t)szY, srcZAsSlice ? (uint32_t)szZ : 1u };
 

@@ -345,8 +345,9 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
 
     m_workDb.registerResource(
         handle, desc.memFlags, ResourceGpuState::Default,
-        (int)descWidth, (int)descHeight, (int)createInfo.extent.depth,
+        (int)descWidth, (int)descHeight, (int)descDepth,
         createInfo.mipLevels, createInfo.arrayLayers);
+
     return TextureResult { ResourceResult::Ok, { handle.handleId } };
 }
 
