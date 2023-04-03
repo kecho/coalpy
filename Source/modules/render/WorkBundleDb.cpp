@@ -292,7 +292,13 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         for (int i = 0; i < cmd->inResourceTablesCounts; ++i)
         {
             if (!processTable(inTables[i], context, false, processTableAllocations))
+            {
+                std::stringstream ss;
+                ss << "compute command list error, error processing in table " << i; 
+                context.errorMsg = ss.str();
+                context.errorType = ScheduleErrorType::InvalidResource;
                 return false;
+            }
         }
     }
 
@@ -301,7 +307,13 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         for (int i = 0; i < cmd->outResourceTablesCounts; ++i)
         {
             if (!processTable(outTables[i], context, false, processTableAllocations))
+            {
+                std::stringstream ss;
+                ss << "compute command list error, error processing out table " << i; 
+                context.errorMsg = ss.str();
+                context.errorType = ScheduleErrorType::InvalidResource;
                 return false;
+            }
         }
     }
 
@@ -310,7 +322,13 @@ bool processCompute(const AbiComputeCmd* cmd, const unsigned char* data, WorkBui
         for (int i = 0; i < cmd->samplerTablesCounts; ++i)
         {
             if (!processTable(samplerTables[i], context, true, processTableAllocations))
+            { 
+                std::stringstream ss;
+                ss << "compute command list error, error processing sampler table " << i; 
+                context.errorMsg = ss.str();
+                context.errorType = ScheduleErrorType::InvalidResource;
                 return false;
+            }
         }
     }
 
@@ -449,10 +467,22 @@ bool processCopy(const AbiCopyCmd* cmd, const unsigned char* data, WorkBuildCont
     else
     {
         if (!fitsInCopyCmd(cmd->source, "Source", cmd->sourceX, cmd->sourceY, cmd->sourceZ, cmd->srcMipLevel))
+        {
+            std::stringstream ss;
+            ss << "copy command error, out of bounds. Check sourceX, sourceY, sourceZ, srcMipLevel of resource  " << cmd->source.handleId;
+            context.errorMsg = ss.str();
+            context.errorType = ScheduleErrorType::OutOfBounds;
             return false;
+        }
 
         if (!fitsInCopyCmd(cmd->destination, "Destination", cmd->destX, cmd->destY, cmd->destZ, cmd->dstMipLevel))
+        {
+            std::stringstream ss;
+            ss << "copy command error, out of bounds. Check destX, destY, destZ, dstMipLevel of resource  " << cmd->destination.handleId;
+            context.errorMsg = ss.str();
+            context.errorType = ScheduleErrorType::OutOfBounds;
             return false;
+        }
     }
 
     return true;

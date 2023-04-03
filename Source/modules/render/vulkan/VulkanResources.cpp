@@ -669,6 +669,7 @@ SamplerTableResult VulkanResources::createSamplerTable(const ResourceTableDesc& 
         return SamplerTableResult { ResourceResult::InvalidParameter, SamplerTable(), "Could not create descriptor set layout for a sampler table." };
 
     ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::Sampler, resources.data(), bindings.data(), desc.uavTargetMips, (int)resources.size(), layout);
+    m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, false);
     return SamplerTableResult { ResourceResult::Ok, SamplerTable { handle.handleId } };
 }
 
