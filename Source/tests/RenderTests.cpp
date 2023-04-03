@@ -1990,7 +1990,6 @@ namespace coalpy
         {
             "appendConsumeBufferCreate",
             "appendConsumeBufferAppend",
-            "copyTexture",
             "copyTextureArrayAndMips",
             "collectGpuMarkers"
         };

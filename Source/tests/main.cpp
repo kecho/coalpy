@@ -63,7 +63,8 @@ void runSuite(CreateSuiteFn createFn)
     if (!gFilters.suites.empty() && gFilters.suites.find(suite->name()) == gFilters.suites.end())
         return;
 
-    printf("[%s]\n", suite->name());
+    if (gFilters.cases.empty())
+        printf("[%s]\n", suite->name());
 
     TestContext* context = suite->createContext();
     int caseCount = 0;
@@ -83,7 +84,8 @@ void runSuite(CreateSuiteFn createFn)
         float runningTime = (float)sw.timeMicroSeconds() / 1000.0f;
         printf("%d: %s (%.3fms) - %s\n", i, caseData.name, runningTime, success ? "PASS" : "FAIL");
     }
-    printf("\n");
+    if (gFilters.cases.empty())
+        printf("\n");
     suite->destroyContext(context);
     g_totalErrors += g_errors;
     g_errors = 0;
