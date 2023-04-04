@@ -50,19 +50,6 @@ Dx12CounterPool::Dx12CounterPool(Dx12Device& device)
     m_uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 }
 
-D3D12_UNORDERED_ACCESS_VIEW_DESC Dx12CounterPool::uavDesc(Dx12CounterHandle handle) const
-{
-    const bool isValid = handle.valid() && m_counters.contains(handle);
-    CPY_ASSERT(isValid);
-    if (!isValid)
-        return {};
-
-    D3D12_UNORDERED_ACCESS_VIEW_DESC uav = m_uavDesc;
-    uav.Buffer.FirstElement = (handle.handleId * D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT) / 4;
-    uav.Buffer.NumElements = 1u;
-    return uav;
-}
-
 Dx12CounterHandle Dx12CounterPool::allocate()
 {
     Dx12CounterHandle handle;

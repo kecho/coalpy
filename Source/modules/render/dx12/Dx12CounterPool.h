@@ -30,7 +30,6 @@ public:
     Dx12CounterHandle allocate();
     void free(Dx12CounterHandle);
     int counterOffset(Dx12CounterHandle handle) const;
-    D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc(Dx12CounterHandle handle) const;
 
 private:
     struct CounterSlot
