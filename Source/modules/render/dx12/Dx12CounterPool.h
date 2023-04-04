@@ -4,6 +4,7 @@
 #include <coalpy.core/SmartPtr.h>
 #include <coalpy.core/HandleContainer.h>
 #include <d3d12.h>
+#include <shared_mutex>
 
 namespace coalpy
 {
@@ -32,6 +33,8 @@ public:
     int counterOffset(Dx12CounterHandle handle) const;
 
 private:
+    mutable std::shared_mutex m_mutex;
+
     struct CounterSlot
     {
         int offset = 0;

@@ -52,6 +52,8 @@ Dx12CounterPool::Dx12CounterPool(Dx12Device& device)
 
 Dx12CounterHandle Dx12CounterPool::allocate()
 {
+    std::unique_lock lock(m_mutex);
+
     Dx12CounterHandle handle;
     CounterSlot& slot = m_counters.allocate(handle);
     if (handle.valid())
@@ -62,6 +64,7 @@ Dx12CounterHandle Dx12CounterPool::allocate()
 
 int Dx12CounterPool::counterOffset(Dx12CounterHandle handle) const
 {
+    std::shared_lock lock(m_mutex);
     const bool isValid = handle.valid() && m_counters.contains(handle);
     CPY_ASSERT(isValid);
     if (!isValid)
@@ -72,6 +75,8 @@ int Dx12CounterPool::counterOffset(Dx12CounterHandle handle) const
 
 void Dx12CounterPool::free(Dx12CounterHandle handle)
 {
+    std::unique_lock lock(m_mutex);
+
     const bool isValid = handle.valid() && m_counters.contains(handle);
     CPY_ASSERT(isValid);
     if (!isValid)
