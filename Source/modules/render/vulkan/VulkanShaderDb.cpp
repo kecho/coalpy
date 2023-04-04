@@ -9,7 +9,8 @@
 #endif
 #include <dxcapi.h>
 #include <iostream>
-
+#include <string>
+#include <unordered_map>
 
 #if ENABLE_VULKAN
 
@@ -59,6 +60,24 @@ VulkanShaderDb::VulkanShaderDb(const ShaderDbDesc& desc)
 {
 }
 
+
+static const char* processCounterByName(
+    SpvReflectDescriptorBinding& reflectionBinding)
+{
+    if (reflectionBinding.resource_type != SPV_REFLECT_RESOURCE_FLAG_UAV)
+        return nullptr;
+
+    if (reflectionBinding.descriptor_type != SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER)
+        return nullptr;
+
+    static const int counterValLen = 12; //12 strlen("counter.var.")
+    const char* result = strstr(reflectionBinding.name, "counter.var.");
+    if (!result)
+        return nullptr;
+
+    return result + counterValLen;
+}
+
 void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderState& shaderState)
 {
     if (shaderState.spirVReflectionData == nullptr)
@@ -89,6 +108,7 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
     // Create descriptor layouts
     auto* payload = new SpirvPayload;
     shaderState.payload = payload;
+    std::unordered_map<std::string, SpvReflectDescriptorBinding*> bindingToCounterMap;
     std::vector<VkDescriptorSetLayout> layouts;
     {
         std::vector<VulkanDescriptorSetInfo> descriptorSetsInfos;
@@ -108,16 +128,54 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
                           << ". Set won't be bound, and it wil be ignored." << std::endl;
                 continue;
             }
+            std::unordered_map<std::string, SpvReflectDescriptorBinding*> bindingCounter;
             uint64_t* descriptorBitsSections = payload->activeDescriptors[setData->set];
+            uint64_t& activeCountersBitMask = payload->activeCountersBitMask[setData->set];
             for (int b = 0; b < (int)setData->binding_count; ++b)
             {
                 SpvReflectDescriptorBinding& reflectionBinding = *setData->bindings[b];
                 if (reflectionBinding.binding >= ((uint32_t)SpirvRegisterType::Count * (uint32_t)SpirvRegisterTypeShiftCount))
                 {
-                    std::cerr << "Spir binding out of range. We can only utilize up to " << SpirvRegisterTypeShiftCount 
+                    std::cerr << "Spirv binding out of range. We can only utilize up to " << SpirvRegisterTypeShiftCount 
                               << " per register type. Binding wil be ignored." << std::endl;
                     continue;
                 }
+                
+                SpirvRegisterType implicitRegisterType = (SpirvRegisterType)((int)reflectionBinding.binding / (int)SpirvRegisterTypeShiftCount);
+                if (implicitRegisterType < SpirvRegisterType::b || implicitRegisterType >= SpirvRegisterType::Count)
+                {
+                    std::cerr << " Coalpy could not implicitely figure out the register type to map to hlsl for descriptor bining " << reflectionBinding.binding
+                              << " on descriptor set " << setData->set << std::endl;
+                    continue;
+                }
+
+                const char* counterOwner = processCounterByName(reflectionBinding);
+                if (counterOwner != nullptr && implicitRegisterType != SpirvRegisterType::b)
+                {
+                    std::cerr << " Coalpy stuffs append consume counters in the first 32 bindings of descriptor set 0 (reserved for constant buffers)."
+                              << " Binding with name " << reflectionBinding.name << " has been parsed as a counter. "
+                              << " This binding lives out of the range of register space0. This means you have too many constant buffer resources" << std::endl;
+                    continue;
+                }
+
+                if (counterOwner != nullptr)
+                {
+                    bindingCounter[std::string(counterOwner)] = &reflectionBinding;
+                    activeCountersBitMask |= 1 << reflectionBinding.binding;
+                }
+                else if (!bindingCounter.empty())
+                {
+                    auto bindingCounterIt = bindingCounter.find(std::string(reflectionBinding.name));
+                    if (bindingCounterIt != bindingCounter.end())
+                    {
+                        const int uavOffset = SpirvRegisterTypeOffset(SpirvRegisterType::u);
+                        if (reflectionBinding.binding < uavOffset || reflectionBinding.binding >= (uavOffset + SpirvRegisterTypeShiftCount))
+                            std::cerr << "Failed to connect counter of binding " << reflectionBinding.name << " with binding slot " << reflectionBinding.binding << std::endl;
+                        else
+                            payload->activeCounterRegister[reflectionBinding.binding - uavOffset] = bindingCounterIt->second->binding;
+                    }
+                }
+                
                 bindings.emplace_back();
                 bindingsFlags.emplace_back();
                 VkDescriptorSetLayoutBinding& binding = bindings.back();
@@ -128,7 +186,7 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
                 binding.descriptorType = (VkDescriptorType)reflectionBinding.descriptor_type;
                 binding.descriptorCount = reflectionBinding.count;
                 binding.stageFlags = stageFlags;
-                uint64_t& activeDescriptorBits = descriptorBitsSections[(int)reflectionBinding.binding / (int)SpirvRegisterTypeShiftCount];
+                uint64_t& activeDescriptorBits = descriptorBitsSections[(int)implicitRegisterType];
                 activeDescriptorBits |= 1 << ((int)reflectionBinding.binding % (int)SpirvRegisterTypeShiftCount); //TODO: bindless
                 //if (reflectionBinding.count)
                 //{
@@ -170,8 +228,8 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
         std::cout << "SPIRV Reflection:" << shaderState.debugName << "{" << std::endl;
         for (int i = 0; i < (int)shaderState.spirVReflectionData->descriptorSets.size(); ++i)
         {
-            std::cout << "\tDescriptor set - " << i << std::endl;
             SpvReflectDescriptorSet* setData = shaderState.spirVReflectionData->descriptorSets[i];
+            std::cout << "\tDescriptor set - " << setData->set << std::endl;
             for (int b = 0; b < (int)setData->binding_count; ++b)
             {
                 SpvReflectDescriptorBinding* binding = setData->bindings[b];
