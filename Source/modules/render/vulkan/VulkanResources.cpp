@@ -502,12 +502,19 @@ bool VulkanResources::queryResources(const ResourceHandle* handles, int counts, 
     return true;
 }
 
-bool VulkanResources::createBindings(VulkanResourceTable::Type tableType, const VulkanResource** resources, int counts, std::vector<VkDescriptorSetLayoutBinding>& outBindings) const
+bool VulkanResources::createBindings(
+    VulkanResourceTable::Type tableType,
+    const VulkanResource** resources,
+    int counts,
+    std::vector<VkDescriptorSetLayoutBinding>& outBindings,
+    int& descriptorsBegin, int& descriptorsEnd,
+    int& countersBegin, int& countersEnd) const
 {
     const bool isSampler = tableType == VulkanResourceTable::Type::Sampler;
     const bool isRead = tableType == VulkanResourceTable::Type::In;
     auto flagToCheck = isRead ? MemFlag_GpuRead : MemFlag_GpuWrite;
     outBindings.reserve(counts);
+    descriptorsBegin = descriptorsEnd = countersBegin = countersEnd = 0;
     for (int i = 0; i < counts; ++i)
     {
         const VulkanResource& resource = *resources[i];
@@ -531,15 +538,39 @@ bool VulkanResources::createBindings(VulkanResourceTable::Type tableType, const 
             binding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
     }
 
+    descriptorsEnd = (int)outBindings.size();
+    countersBegin = countersEnd = descriptorsEnd;
+    //Process counters if any resource has one for append consume
+    if (tableType == VulkanResourceTable::Type::Out)
+    {
+        for (int i = 0; i < counts; ++i)
+        {
+            const VulkanResource& resource = *resources[i];
+            if (!resource.isBuffer() || !resource.counterHandle.valid())
+                continue;
+
+            uint32_t bindingIndex = (uint32_t)outBindings.size();
+            outBindings.emplace_back();
+            VkDescriptorSetLayoutBinding& counterBinding = outBindings.back();
+            counterBinding = {};
+            counterBinding.binding = bindingIndex;
+            counterBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+            counterBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            ++countersEnd;
+        }
+    }
+
+    countersEnd = (int)outBindings.size();
     return true;
 }
 
 ResourceTable VulkanResources::createAndFillTable(
         VulkanResourceTable::Type tableType,
         const VulkanResource** resources,
-        const VkDescriptorSetLayoutBinding* bindings,
         const int* uavTargetMips,
-        int counts, VkDescriptorSetLayout layout)
+        VkDescriptorSetLayout layout,
+        const VkDescriptorSetLayoutBinding* bindings,
+        int descriptorsBegin, int descriptorsEnd, int countersBegin, int countersEnd)
 {
     const bool isSampler = tableType == VulkanResourceTable::Type::Sampler;
     const bool isRead = tableType == VulkanResourceTable::Type::In;
@@ -556,18 +587,23 @@ ResourceTable VulkanResources::createAndFillTable(
     table.type = tableType;
     table.layout = layout;
     table.descriptors = m_device.descriptorSetPools().allocate(layout);
-    table.counts = counts;
+    table.descriptorsBegin = descriptorsBegin;
+    table.descriptorsEnd = descriptorsEnd;
+    table.countersBegin = countersBegin;
+    table.countersEnd = countersEnd;
 
+    int totalDescriptors = table.descriptorsCount() + table.countersCount();
     std::vector<VkWriteDescriptorSet> writes;
     std::vector<DescriptorVariantInfo> variantInfos;
-    writes.reserve(counts);
-    variantInfos.reserve(counts);
+    writes.resize(totalDescriptors);
+    variantInfos.resize(totalDescriptors);
 
-    for (int i = 0; i < (int)counts; ++i)
+    int nextCounter = 0;
+    VulkanCounterPool& counterPool = m_device.counterPool();
+    for (int i = descriptorsBegin; i < (int)descriptorsEnd; ++i)
     {
         const VulkanResource& resource = *resources[i];
-        writes.emplace_back();
-        VkWriteDescriptorSet& write = writes.back();
+        VkWriteDescriptorSet& write = writes[i];
         write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr };
         write.dstSet = table.descriptors.descriptors;
         write.dstBinding = i;
@@ -575,8 +611,7 @@ ResourceTable VulkanResources::createAndFillTable(
         write.descriptorCount = 1;
         write.descriptorType = bindings[i].descriptorType;
         
-        variantInfos.emplace_back();
-        DescriptorVariantInfo& variantInfo = variantInfos.back();
+        DescriptorVariantInfo& variantInfo = variantInfos[i];
         if (resource.isBuffer())
         {
             CPY_ASSERT(!isSampler)
@@ -595,6 +630,20 @@ ResourceTable VulkanResources::createAndFillTable(
                 info = resource.bufferData.vkBufferView;
                 write.descriptorType = isRead ? VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
                 write.pTexelBufferView = &info;
+            }
+
+            if (tableType == VulkanResourceTable::Type::Out && resource.counterHandle.valid())
+            {
+                CPY_ASSERT((countersBegin + nextCounter) < totalDescriptors);
+                DescriptorVariantInfo& counterVariantInfo = variantInfos[countersBegin + nextCounter];
+                VkWriteDescriptorSet& counterWrite = writes[countersBegin + nextCounter];
+                auto& info = variantInfo.texelBufferInfo;
+                info.buffer = counterPool.resource();
+                info.offset = counterPool.counterOffset(resource.counterHandle);
+                info.range = sizeof(uint32_t);
+                counterWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                counterWrite.pBufferInfo = &info;
+                ++nextCounter;
             }
         }
         else if (resource.isTexture())
@@ -632,8 +681,9 @@ InResourceTableResult VulkanResources::createInResourceTable(const ResourceTable
     if (!queryResources(desc.resources, desc.resourcesCount, resources))
             return InResourceTableResult { ResourceResult::InvalidHandle, InResourceTable(), "Passed an invalid resource to in resource table" };
 
+    int descriptorsBegin, descriptorsEnd, countersBegin, countersEnd;
     std::vector<VkDescriptorSetLayoutBinding> bindings;
-    if (!createBindings(VulkanResourceTable::Type::In, resources.data(), (int)resources.size(), bindings))
+    if (!createBindings(VulkanResourceTable::Type::In, resources.data(), (int)resources.size(), bindings, descriptorsBegin, descriptorsEnd, countersBegin, countersEnd))
             return InResourceTableResult { ResourceResult::InvalidParameter, InResourceTable(), "All resources in InTable must have the flag GpuRead." };
 
     VkDescriptorSetLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, nullptr };
@@ -644,7 +694,7 @@ InResourceTableResult VulkanResources::createInResourceTable(const ResourceTable
     if (vkCreateDescriptorSetLayout(m_device.vkDevice(), &layoutInfo, nullptr, &layout) != VK_SUCCESS)
         return InResourceTableResult { ResourceResult::InvalidParameter, InResourceTable(), "Could not create descriptor set layout." };
 
-    ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::In, resources.data(), bindings.data(), desc.uavTargetMips, (int)resources.size(), layout);
+    ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::In, resources.data(), desc.uavTargetMips, layout, bindings.data(), descriptorsBegin, descriptorsEnd, countersBegin, countersEnd);
     m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, false);
     return InResourceTableResult { ResourceResult::Ok, InResourceTable { handle.handleId } };
 }
@@ -657,7 +707,8 @@ OutResourceTableResult VulkanResources::createOutResourceTable(const ResourceTab
             return OutResourceTableResult { ResourceResult::InvalidHandle, OutResourceTable(), "Passed an invalid resource to out resource table" };
 
     std::vector<VkDescriptorSetLayoutBinding> bindings;
-    if (!createBindings(VulkanResourceTable::Type::Out, resources.data(), (int)resources.size(), bindings))
+    int descriptorsBegin, descriptorsEnd, countersBegin, countersEnd;
+    if (!createBindings(VulkanResourceTable::Type::Out, resources.data(), (int)resources.size(), bindings, descriptorsBegin, descriptorsEnd, countersBegin, countersEnd))
             return OutResourceTableResult { ResourceResult::InvalidParameter, OutResourceTable(), "All resources in InTable must have the flag GpuWrite." };
 
     VkDescriptorSetLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, nullptr };
@@ -668,7 +719,7 @@ OutResourceTableResult VulkanResources::createOutResourceTable(const ResourceTab
     if (vkCreateDescriptorSetLayout(m_device.vkDevice(), &layoutInfo, nullptr, &layout) != VK_SUCCESS)
         return OutResourceTableResult { ResourceResult::InvalidParameter, OutResourceTable(), "Could not create descriptor set layout." };
 
-    ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::Out, resources.data(), bindings.data(), desc.uavTargetMips, (int)resources.size(), layout);
+    ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::Out, resources.data(), desc.uavTargetMips, layout, bindings.data(), descriptorsBegin, descriptorsEnd, countersBegin, countersEnd);
     m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, true);
     return OutResourceTableResult { ResourceResult::Ok, OutResourceTable { handle.handleId } };
 }
@@ -681,7 +732,8 @@ SamplerTableResult VulkanResources::createSamplerTable(const ResourceTableDesc& 
             return SamplerTableResult { ResourceResult::InvalidHandle, SamplerTable(), "Passed an invalid sampler resource to table" };
 
     std::vector<VkDescriptorSetLayoutBinding> bindings;
-    if (!createBindings(VulkanResourceTable::Type::Sampler, resources.data(), (int)resources.size(), bindings))
+    int descriptorsBegin, descriptorsEnd, countersBegin, countersEnd;
+    if (!createBindings(VulkanResourceTable::Type::Sampler, resources.data(), (int)resources.size(), bindings, descriptorsBegin, descriptorsEnd, countersBegin, countersEnd))
             return SamplerTableResult { ResourceResult::InvalidParameter, SamplerTable(), "All resources in Sampler Table must be a sampler." };
 
     VkDescriptorSetLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, nullptr };
@@ -692,7 +744,7 @@ SamplerTableResult VulkanResources::createSamplerTable(const ResourceTableDesc& 
     if (vkCreateDescriptorSetLayout(m_device.vkDevice(), &layoutInfo, nullptr, &layout) != VK_SUCCESS)
         return SamplerTableResult { ResourceResult::InvalidParameter, SamplerTable(), "Could not create descriptor set layout for a sampler table." };
 
-    ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::Sampler, resources.data(), bindings.data(), desc.uavTargetMips, (int)resources.size(), layout);
+    ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::Sampler, resources.data(), desc.uavTargetMips, layout, bindings.data(), descriptorsBegin, descriptorsEnd, countersBegin, countersEnd);
     m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, false);
     return SamplerTableResult { ResourceResult::Ok, SamplerTable { handle.handleId } };
 }

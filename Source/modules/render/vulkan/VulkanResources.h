@@ -95,7 +95,12 @@ struct VulkanResourceTable
     Type type = Type::In;
     VkDescriptorSetLayout layout;
     VulkanDescriptorTable descriptors;
-    int counts = 0;
+    int countersBegin = 0;
+    int countersEnd = 0;
+    int descriptorsBegin = 0;
+    int descriptorsEnd = 0;
+    int descriptorsCount() const { return descriptorsEnd - descriptorsBegin; }
+    int countersCount() const { return countersBegin - countersEnd; }
 };
 
 class VulkanResources
@@ -127,14 +132,20 @@ public:
 private:
     VkImageViewCreateInfo createVulkanImageViewDescTemplate(const TextureDesc& desc, unsigned int descDepth, VkImage image) const;
     bool queryResources(const ResourceHandle* handles, int counts, std::vector<const VulkanResource*>& outResources) const;
-    bool createBindings(VulkanResourceTable::Type tableType, const VulkanResource** resources, int counts, std::vector<VkDescriptorSetLayoutBinding>& outBindings) const;
+    bool createBindings(
+        VulkanResourceTable::Type tableType,
+        const VulkanResource** resources, int counts,
+        std::vector<VkDescriptorSetLayoutBinding>& outBindings,
+        int& descriptorsBegin, int& descriptorsEnd,
+        int& countersBegin, int& countersEnd) const;
 
     ResourceTable createAndFillTable(
         VulkanResourceTable::Type tableType,
         const VulkanResource** resources,
-        const VkDescriptorSetLayoutBinding* bindings,
         const int* uavTargetMips,
-        int counts, VkDescriptorSetLayout layout);
+        VkDescriptorSetLayout layout,
+        const VkDescriptorSetLayoutBinding* bindings,
+        int descriptorsBegin, int descriptorsEnd, int countersBegin, int countersEnd);
 
     std::mutex m_mutex;
     VulkanDevice& m_device;

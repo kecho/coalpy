@@ -55,17 +55,17 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
                 const VulkanResourceTable& table = resources.unsafeGetTable(tableHandle);
                 int startBinding, bindingCounts;                
                 SpirvPayload::nextDescriptorRange(activeMask, startBinding, bindingCounts);
-                if (startBinding >= (int)table.counts)
+                if (startBinding >= (int)table.descriptorsCount())
                     continue;
 
                 copies.emplace_back();
                 VkCopyDescriptorSet& copy = copies.back();
                 copy = { VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, nullptr };
                 copy.srcSet = table.descriptors.descriptors;
-                copy.srcBinding = startBinding;
+                copy.srcBinding = table.descriptorsBegin + startBinding;
                 copy.dstSet = sets[i];
                 copy.dstBinding = (uint32_t)SpirvRegisterTypeOffset(type) + startBinding;
-                copy.descriptorCount = std::min(bindingCounts, (int)table.counts);
+                copy.descriptorCount = std::min(bindingCounts, (int)table.descriptorsCount());
             }
         }
     };
