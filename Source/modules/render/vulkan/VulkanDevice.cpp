@@ -247,6 +247,15 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
 
     m_gc->start();
     
+    //register counter as a buffer handle
+    {
+        BufferDesc bufferDesc;
+        bufferDesc.format = Format::RGBA_32_UINT;
+        bufferDesc.elementCount = 1;
+        bufferDesc.memFlags = (MemFlags)0u;
+        m_countersBuffer = m_resources->createBuffer(bufferDesc, m_counterPool->resource(), ResourceSpecialFlag_None);
+    }
+
     testApiFuncs();
 }
 
@@ -268,6 +277,8 @@ VulkanDevice::~VulkanDevice()
             readbackPool().free(dl.second.memoryBlock);
 
     m_queues->releaseResources();
+
+    m_resources->release(m_countersBuffer);
 
     delete m_readbackPool;
     m_readbackPool = nullptr;
@@ -333,7 +344,7 @@ TextureResult VulkanDevice::recreateTexture(Texture texture, const TextureDesc& 
 
 BufferResult  VulkanDevice::createBuffer (const BufferDesc& config)
 {
-    return m_resources->createBuffer(config);
+    return m_resources->createBuffer(config, VK_NULL_HANDLE);
 }
 
 SamplerResult VulkanDevice::createSampler (const SamplerDesc& config)

@@ -42,6 +42,7 @@ struct VulkanResource
 
     struct BufferData
     {
+        bool ownsBuffer;
         bool isStorageBuffer;
         VkBufferView vkBufferView;
         VkBuffer vkBuffer;
@@ -108,7 +109,8 @@ public:
     VulkanResources(VulkanDevice& device, WorkBundleDb& workDb);
     ~VulkanResources();
 
-    BufferResult createBuffer(const BufferDesc& desc, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None);
+    BufferResult createBuffer(const BufferDesc& desc, VkBuffer resourceToAcquire = VK_NULL_HANDLE, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None);
+    BufferResult createBuffer(const BufferDesc& desc, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None) { return createBuffer(desc, VK_NULL_HANDLE, specialFlags); }
     TextureResult createTexture(const TextureDesc& desc, VkImage resourceToAcquire = VK_NULL_HANDLE, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None);
     TextureResult recreateTexture(Texture texture, const TextureDesc& desc);
     SamplerResult createSampler (const SamplerDesc& config);

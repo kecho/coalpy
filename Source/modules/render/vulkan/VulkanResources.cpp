@@ -25,7 +25,7 @@ VulkanResources::~VulkanResources()
 {
 }
 
-BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpecialFlags specialFlags)
+BufferResult VulkanResources::createBuffer(const BufferDesc& desc, VkBuffer resourceToAcquire, ResourceSpecialFlags specialFlags)
 {
     std::unique_lock lock(m_mutex);
     ResourceHandle handle;
@@ -82,10 +82,20 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
 
     resource.type = VulkanResource::Type::Buffer;
     resource.handle = handle;
-    if (vkCreateBuffer(m_device.vkDevice(), &createInfo, nullptr, &bufferData.vkBuffer) != VK_SUCCESS)
+
+    if (resourceToAcquire == VK_NULL_HANDLE)
     {
-        m_container.free(handle);
-        return BufferResult  { ResourceResult::InvalidParameter, Buffer(), "Failed to create buffer." };
+        if (vkCreateBuffer(m_device.vkDevice(), &createInfo, nullptr, &bufferData.vkBuffer) != VK_SUCCESS)
+        {
+            m_container.free(handle);
+            return BufferResult  { ResourceResult::InvalidParameter, Buffer(), "Failed to create buffer." };
+        }
+        bufferData.ownsBuffer = true;
+    }
+    else
+    {
+        bufferData.ownsBuffer = false;
+        bufferData.vkBuffer = resourceToAcquire;
     }
 
     VkMemoryRequirements memReqs = {};
@@ -106,19 +116,20 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
     allocInfo.allocationSize = memReqs.size;
     if (!m_device.findMemoryType(memReqs.memoryTypeBits, memProperties, allocInfo.memoryTypeIndex)) 
     {
-        vkDestroyBuffer(m_device.vkDevice(), bufferData.vkBuffer, nullptr);
+        if (bufferData.ownsBuffer)
+            vkDestroyBuffer(m_device.vkDevice(), bufferData.vkBuffer, nullptr);
         m_container.free(handle);
         return BufferResult  { ResourceResult::InternalApiFailure, Buffer(), "Failed to find a correct category of memory for this buffer." };
     }
 
-    if (vkAllocateMemory(m_device.vkDevice(), &allocInfo, nullptr, &resource.memory) != VK_SUCCESS)
+    if (bufferData.ownsBuffer && vkAllocateMemory(m_device.vkDevice(), &allocInfo, nullptr, &resource.memory) != VK_SUCCESS)
     {
         vkDestroyBuffer(m_device.vkDevice(), bufferData.vkBuffer, nullptr);
         m_container.free(handle);
         return BufferResult  { ResourceResult::InternalApiFailure, Buffer(), "Failed to allocating buffer memory." };
     }
 
-    if (vkBindBufferMemory(m_device.vkDevice(), bufferData.vkBuffer, resource.memory, 0u) != VK_SUCCESS)
+    if (bufferData.ownsBuffer && vkBindBufferMemory(m_device.vkDevice(), bufferData.vkBuffer, resource.memory, 0u) != VK_SUCCESS)
     {
         vkDestroyBuffer(m_device.vkDevice(), bufferData.vkBuffer, nullptr);
         vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
@@ -138,18 +149,20 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
         bufferViewInfo.range = createInfo.size;
         if (vkCreateBufferView(m_device.vkDevice(), &bufferViewInfo, nullptr, &bufferData.vkBufferView) != VK_SUCCESS)
         {
-            vkDestroyBuffer(m_device.vkDevice(), bufferData.vkBuffer, nullptr);
-            vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
+            if (bufferData.ownsBuffer)
+            {
+                vkDestroyBuffer(m_device.vkDevice(), bufferData.vkBuffer, nullptr);
+                vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
+            }
             m_container.free(handle);
             return BufferResult  { ResourceResult::InvalidParameter, Buffer(), "Failed to create buffer view for standard buffer." };
         }
     }
 
-    Buffer counterBuffer; //TODO implement counter / append consume buffer. Investigate how its done in vulkan.
     m_workDb.registerResource(
         handle, desc.memFlags, ResourceGpuState::Default, 
         bufferData.size, 1, 1,
-        1, 1, counterBuffer);
+        1, 1, resource.counterHandle.valid() ? m_device.countersBuffer() : Buffer());
     return BufferResult { ResourceResult::Ok, { handle.handleId } };
 }
 
@@ -303,7 +316,8 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
     allocInfo.allocationSize = memReqs.size;
     if (!m_device.findMemoryType(memReqs.memoryTypeBits, 0u, allocInfo.memoryTypeIndex)) 
     {
-        vkDestroyImage(m_device.vkDevice(), textureData.vkImage, nullptr);
+        if (textureData.ownsImage)
+            vkDestroyImage(m_device.vkDevice(), textureData.vkImage, nullptr);
         m_container.free(handle);
         return TextureResult { ResourceResult::InternalApiFailure, Texture(), "Failed to find a correct category of memory for this texture." };
     }
@@ -699,7 +713,11 @@ void VulkanResources::release(ResourceHandle handle)
 
     if (resource.isBuffer())
     {
-        m_device.gc().deferRelease(resource.bufferData.vkBuffer, resource.bufferData.vkBufferView, resource.memory, resource.counterHandle);
+        m_device.gc().deferRelease(
+            resource.bufferData.ownsBuffer ? resource.bufferData.vkBuffer : VK_NULL_HANDLE,
+            resource.bufferData.vkBufferView,
+            resource.bufferData.ownsBuffer ? resource.memory : VK_NULL_HANDLE,
+            resource.counterHandle);
         m_workDb.unregisterResource(handle);
     }
     else if (resource.isTexture())

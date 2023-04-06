@@ -106,10 +106,10 @@ void VulkanGc::deleteVulkanObjects(Object& obj)
     case Type::Buffer:
         {
             BufferData& bufferData = obj.bufferData;
-            if (bufferData.bufferView) { 
-                vkDestroyBufferView(m_device.vkDevice(), bufferData.bufferView, nullptr); }
-            if (bufferData.buffer) {
-                vkDestroyBuffer(m_device.vkDevice(), bufferData.buffer, nullptr); }
+            if (bufferData.bufferView)
+                vkDestroyBufferView(m_device.vkDevice(), bufferData.bufferView, nullptr);
+            if (bufferData.buffer)
+                vkDestroyBuffer(m_device.vkDevice(), bufferData.buffer, nullptr);
             if (obj.counterHandle.valid())
                 m_device.counterPool().free(obj.counterHandle);
         }

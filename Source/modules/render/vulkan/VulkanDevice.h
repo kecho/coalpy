@@ -78,6 +78,8 @@ public:
     VulkanGc& gc() { return *m_gc; }
     WorkBundleDb& workDb() { return m_workDb; }
 
+    Buffer countersBuffer() const { return m_countersBuffer; }
+
     BitMask enabledLayers() const { return m_Layers; }
     BitMask enabledExts() const { return m_Extensions; }
     BitMask enabledDeviceExts() const { return m_DeviceExtensions; }
@@ -101,8 +103,10 @@ private:
     VulkanCounterPool* m_counterPool;
     VulkanGc* m_gc;
     VulkanWorkInformationMap* m_vulkanWorkInfos;
-    int m_queueFamIndex;
 
+    Buffer m_countersBuffer;
+
+    int m_queueFamIndex;
     void testApiFuncs();
 
     BitMask m_Layers = {};
