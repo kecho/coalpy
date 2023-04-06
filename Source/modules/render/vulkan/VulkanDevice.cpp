@@ -269,8 +269,6 @@ VulkanDevice::~VulkanDevice()
 
     m_queues->releaseResources();
 
-    delete m_counterPool;
-    m_counterPool = nullptr;
     delete m_readbackPool;
     m_readbackPool = nullptr;
     delete m_descriptorSetPools;
@@ -279,6 +277,8 @@ VulkanDevice::~VulkanDevice()
     m_resources = nullptr;
     delete m_gc;
     m_gc = nullptr;
+    delete m_counterPool;
+    m_counterPool = nullptr;
     delete m_queues;
     m_queues = nullptr;
     delete m_eventPool;

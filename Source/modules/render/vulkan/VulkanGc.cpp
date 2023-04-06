@@ -110,6 +110,8 @@ void VulkanGc::deleteVulkanObjects(Object& obj)
                 vkDestroyBufferView(m_device.vkDevice(), bufferData.bufferView, nullptr); }
             if (bufferData.buffer) {
                 vkDestroyBuffer(m_device.vkDevice(), bufferData.buffer, nullptr); }
+            if (obj.counterHandle.valid())
+                m_device.counterPool().free(obj.counterHandle);
         }
         break;
     case Type::Texture:
@@ -165,11 +167,12 @@ void VulkanGc::deferRelease(VkImage image, VkImageView* uavs, int uavCounts, VkI
     }
 }
 
-void VulkanGc::deferRelease(VkBuffer buffer, VkBufferView bufferView, VkDeviceMemory memory)
+void VulkanGc::deferRelease(VkBuffer buffer, VkBufferView bufferView, VkDeviceMemory memory, VulkanCounterHandle counterHandle)
 {
     Object obj;
     obj.type = Type::Buffer;
     obj.memory = memory;
+    obj.counterHandle = counterHandle;
     auto& data = obj.bufferData;
     data.buffer = buffer;
     data.bufferView = bufferView;

@@ -36,6 +36,9 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
     if ((desc.memFlags & MemFlag_GpuWrite) != 0 && (desc.memFlags & MemFlag_GpuRead) != 0 && (specialFlags & ResourceSpecialFlag_CpuReadback) != 0)
         return BufferResult  { ResourceResult::InvalidHandle, Buffer(), "Unsupported special flags combined with mem flags." };
 
+    if (desc.isAppendConsume && desc.type == BufferType::Raw)
+        return BufferResult { ResourceResult::InvalidParameter, Buffer(), "Append consume buffers cannot be of type raw." };
+
     VkBufferCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     createInfo.usage |= desc.isConstantBuffer ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : (VkBufferUsageFlags)0u;
@@ -70,7 +73,13 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, ResourceSpeci
     createInfo.pQueueFamilyIndices = &desfaultQueueFam;
 
     auto& bufferData = resource.bufferData;
-    CPY_ASSERT_MSG(!desc.isAppendConsume, "Append consume not supported by vulkan yet");
+    if (desc.isAppendConsume)
+    {
+        resource.counterHandle = m_device.counterPool().allocate();
+        if (!resource.counterHandle.valid())
+            return BufferResult { ResourceResult::InternalApiFailure, Buffer(), "Could not allocate counter. Too many append consume buffers declared." };
+    }
+
     resource.type = VulkanResource::Type::Buffer;
     resource.handle = handle;
     if (vkCreateBuffer(m_device.vkDevice(), &createInfo, nullptr, &bufferData.vkBuffer) != VK_SUCCESS)
@@ -690,7 +699,7 @@ void VulkanResources::release(ResourceHandle handle)
 
     if (resource.isBuffer())
     {
-        m_device.gc().deferRelease(resource.bufferData.vkBuffer, resource.bufferData.vkBufferView, resource.memory);
+        m_device.gc().deferRelease(resource.bufferData.vkBuffer, resource.bufferData.vkBufferView, resource.memory, resource.counterHandle);
         m_workDb.unregisterResource(handle);
     }
     else if (resource.isTexture())

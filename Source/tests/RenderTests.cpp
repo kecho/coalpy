@@ -1988,7 +1988,6 @@ namespace coalpy
 
         static const std::set<std::string> vulkanDisabledTests =
         {
-            "appendConsumeBufferCreate",
             "appendConsumeBufferAppend",
             "collectGpuMarkers"
         };

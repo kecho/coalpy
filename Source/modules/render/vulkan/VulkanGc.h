@@ -8,6 +8,7 @@
 #include <atomic>
 #include "VulkanFencePool.h"
 #include "VulkanResources.h"
+#include "VulkanCounterPool.h"
 
 namespace coalpy
 {
@@ -26,7 +27,7 @@ public:
     void start();
     void stop();
     void deferRelease(VkImage image, VkImageView* uavs, int uavCounts, VkImageView srv, VkDeviceMemory memory);
-    void deferRelease(VkBuffer buffer, VkBufferView bufferView, VkDeviceMemory memory);
+    void deferRelease(VkBuffer buffer, VkBufferView bufferView, VkDeviceMemory memory, VulkanCounterHandle counterHandle);
     void deferRelease(VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkShaderModule shaderModule);
     void flush();
 
@@ -60,6 +61,7 @@ private:
     {
         Type type;
         VkDeviceMemory memory;
+        VulkanCounterHandle counterHandle;
         union
         {
             BufferData bufferData;

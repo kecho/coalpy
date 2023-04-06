@@ -5,6 +5,7 @@
 #include <coalpy.core/Formats.h>
 #include <vulkan/vulkan.h>
 #include "VulkanDescriptorSetPools.h"
+#include "VulkanCounterPool.h"
 #include <vector>
 #include <mutex>
 
@@ -75,6 +76,7 @@ struct VulkanResource
     bool isTexture() const { return type == Type::Texture; }
     bool isSampler() const { return type == Type::Sampler; }
     
+    VulkanCounterHandle counterHandle;
     MemFlags memFlags = {};
     VkDeviceSize alignment = {};
     VkDeviceSize requestSize = {};
