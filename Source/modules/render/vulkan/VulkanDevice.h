@@ -23,6 +23,7 @@ class VulkanDescriptorSetPools;
 class VulkanReadbackBufferPool;
 class VulkanResources;
 class VulkanQueues;
+class VulkanCounterPool;
 class VulkanEventPool;
 class VulkanFencePool;
 class VulkanGc;
@@ -73,6 +74,7 @@ public:
     VulkanResources& resources() { return *m_resources; }
     VulkanEventPool& eventPool() { return *m_eventPool; }
     VulkanFencePool& fencePool() { return *m_fencePool; }
+    VulkanCounterPool& counterPool() { return *m_counterPool; }
     VulkanGc& gc() { return *m_gc; }
     WorkBundleDb& workDb() { return m_workDb; }
 
@@ -96,6 +98,7 @@ private:
     VulkanReadbackBufferPool* m_readbackPool;
     VulkanEventPool* m_eventPool;
     VulkanFencePool* m_fencePool;
+    VulkanCounterPool* m_counterPool;
     VulkanGc* m_gc;
     VulkanWorkInformationMap* m_vulkanWorkInfos;
     int m_queueFamIndex;

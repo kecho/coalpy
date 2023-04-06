@@ -13,6 +13,7 @@
 #include "VulkanQueues.h"
 #include "VulkanEventPool.h"
 #include "VulkanFencePool.h"
+#include "VulkanCounterPool.h"
 #include "VulkanGc.h"
 #include "VulkanUtils.h"
 #include <coalpy.render/ShaderDefs.h>
@@ -242,6 +243,7 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
     m_resources = new VulkanResources(*this, m_workDb);
     m_descriptorSetPools = new VulkanDescriptorSetPools(*this);
     m_readbackPool = new VulkanReadbackBufferPool(*this);
+    m_counterPool = new VulkanCounterPool(*this);
 
     m_gc->start();
     
@@ -267,6 +269,8 @@ VulkanDevice::~VulkanDevice()
 
     m_queues->releaseResources();
 
+    delete m_counterPool;
+    m_counterPool = nullptr;
     delete m_readbackPool;
     m_readbackPool = nullptr;
     delete m_descriptorSetPools;
