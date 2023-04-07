@@ -130,6 +130,8 @@ public:
     void release(ResourceTable handle);
 
 private:
+    void releaseResourceInternal(ResourceHandle handle, VulkanResource& resource);
+    void releaseTableInternal(ResourceTable handle, VulkanResourceTable& table);
     VkImageViewCreateInfo createVulkanImageViewDescTemplate(const TextureDesc& desc, unsigned int descDepth, VkImage image) const;
     bool queryResources(const ResourceHandle* handles, int counts, std::vector<const VulkanResource*>& outResources) const;
     bool createBindings(

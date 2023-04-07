@@ -23,6 +23,15 @@ VulkanResources::VulkanResources(VulkanDevice& device, WorkBundleDb& workDb)
 
 VulkanResources::~VulkanResources()
 {
+    m_container.forEach([this](ResourceHandle handle, VulkanResource& resource)
+    {
+        releaseResourceInternal(handle, resource);
+    });
+
+    m_tables.forEach([this](ResourceTable handle, VulkanResourceTable& table)
+    {
+        releaseTableInternal(handle, table);
+    });
 }
 
 BufferResult VulkanResources::createBuffer(const BufferDesc& desc, VkBuffer resourceToAcquire, ResourceSpecialFlags specialFlags)
@@ -756,19 +765,8 @@ SamplerTableResult VulkanResources::createSamplerTable(const ResourceTableDesc& 
 }
 
 
-void VulkanResources::release(ResourceHandle handle)
+void VulkanResources::releaseResourceInternal(ResourceHandle handle, VulkanResource& resource)
 {
-    CPY_ASSERT(handle.valid());
-    if (!handle.valid())
-        return;
-
-    CPY_ASSERT(m_container.contains(handle));
-    if (!m_container.contains(handle))
-        return;
-
-    std::unique_lock lock(m_mutex);
-    VulkanResource& resource = m_container[handle];
-
     if (resource.isBuffer())
     {
         m_device.gc().deferRelease(
@@ -789,7 +787,29 @@ void VulkanResources::release(ResourceHandle handle)
     }
     else if (resource.isSampler())
         vkDestroySampler(m_device.vkDevice(), resource.sampler, nullptr);
+}
+
+void VulkanResources::release(ResourceHandle handle)
+{
+    CPY_ASSERT(handle.valid());
+    if (!handle.valid())
+        return;
+
+    CPY_ASSERT(m_container.contains(handle));
+    if (!m_container.contains(handle))
+        return;
+
+    std::unique_lock lock(m_mutex);
+    VulkanResource& resource = m_container[handle];
+    releaseResourceInternal(handle, resource);
     m_container.free(handle);
+}
+
+void VulkanResources::releaseTableInternal(ResourceTable handle, VulkanResourceTable& table)
+{
+    vkDestroyDescriptorSetLayout(m_device.vkDevice(), table.layout, nullptr);
+    m_workDb.unregisterTable(handle);
+    m_device.descriptorSetPools().free(table.descriptors);
 }
 
 void VulkanResources::release(ResourceTable handle)
@@ -804,9 +824,7 @@ void VulkanResources::release(ResourceTable handle)
 
     std::unique_lock lock(m_mutex);
     VulkanResourceTable& table = m_tables[handle];
-    vkDestroyDescriptorSetLayout(m_device.vkDevice(), table.layout, nullptr);
-    m_device.descriptorSetPools().free(table.descriptors);
-    m_workDb.unregisterTable(handle);
+    releaseTableInternal(handle, table);
     m_tables.free(handle);
 }
 

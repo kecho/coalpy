@@ -319,12 +319,45 @@ void VulkanWorkBundle::buildDownloadCmd(
 
 void VulkanWorkBundle::buildCopyAppendConsumeCounter(const unsigned char* data, const AbiCopyAppendConsumeCounter* abiCmd, const CommandInfo& cmdInfo, VulkanList& outList)
 {
-    //TODO: implement
+    VulkanResources& resources = m_device.resources();
+    VulkanResource& sourceResource = resources.unsafeGetResource(abiCmd->source);
+    VulkanResource& destinationResource = resources.unsafeGetResource(abiCmd->destination);
+    int destinationOffset = abiCmd->destinationOffset;
+    CPY_ASSERT(sourceResource.isBuffer());
+    CPY_ASSERT(sourceResource.counterHandle.valid());
+    CPY_ASSERT(destinationResource.isBuffer());
+    if (destinationResource.isBuffer() && sourceResource.isBuffer() && sourceResource.counterHandle.valid())
+    {
+        VkBufferCopy region = {
+            (VkDeviceSize)m_device.counterPool().counterOffset(sourceResource.counterHandle),
+            (VkDeviceSize)destinationOffset,
+            (VkDeviceSize)sizeof(uint32_t)
+        };
+        vkCmdCopyBuffer(outList.list, m_device.counterPool().resource(), destinationResource.bufferData.vkBuffer, 1, &region);
+    }
 }
 
 void VulkanWorkBundle::buildClearAppendConsumeCounter(const unsigned char* data, const AbiClearAppendConsumeCounter* abiCmd, const CommandInfo& cmdInfo, VulkanList& outList)
 {
-    //TODO: implement
+    VulkanResources& resources = m_device.resources();
+    VulkanResource& destinationResource = resources.unsafeGetResource(abiCmd->source);
+    CPY_ASSERT(cmdInfo.uploadBufferOffset < m_uploadMemBlock.uploadSize);
+    CPY_ASSERT(4u <= (m_uploadMemBlock.uploadSize - cmdInfo.uploadBufferOffset));
+    if (destinationResource.isBuffer())
+    {
+        //TODO: this can be jobified.
+        {
+            memcpy(((unsigned char*)m_uploadMemBlock.mappedBuffer) + cmdInfo.uploadBufferOffset, &abiCmd->counter, 4u);
+        }
+
+        VkBufferCopy region = {
+            (VkDeviceSize)(m_uploadMemBlock.offset + cmdInfo.uploadBufferOffset),
+            (VkDeviceSize)m_device.counterPool().counterOffset(destinationResource.counterHandle),
+            (VkDeviceSize)sizeof(uint32_t)
+        };
+        VulkanResource& sourceResource = resources.unsafeGetResource(m_uploadMemBlock.buffer);
+        vkCmdCopyBuffer(outList.list, sourceResource.bufferData.vkBuffer, m_device.counterPool().resource(), 1, &region);
+    }
 }
 
 void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, VulkanList& outList, std::vector<VulkanEventHandle>& events, VulkanFenceHandle fenceValue)

@@ -282,10 +282,10 @@ VulkanDevice::~VulkanDevice()
 
     delete m_readbackPool;
     m_readbackPool = nullptr;
-    delete m_descriptorSetPools;
-    m_descriptorSetPools = nullptr;
     delete m_resources;
     m_resources = nullptr;
+    delete m_descriptorSetPools;
+    m_descriptorSetPools = nullptr;
     delete m_gc;
     m_gc = nullptr;
     delete m_counterPool;
