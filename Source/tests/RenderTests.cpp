@@ -1148,6 +1148,7 @@ namespace coalpy
         CPY_ASSERT(db.isValid(shader));
 
         BufferDesc bufferDesc;
+        bufferDesc.type = BufferType::Structured;
         bufferDesc.format = Format::R32_SINT;
         bufferDesc.isAppendConsume = true;
         bufferDesc.elementCount = 10;

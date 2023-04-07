@@ -555,7 +555,7 @@ bool VulkanResources::createBindings(
             counterBinding = {};
             counterBinding.binding = bindingIndex;
             counterBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-            counterBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+            counterBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
             counterBinding.descriptorCount = 1;
             ++countersEnd;
         }
@@ -639,12 +639,14 @@ ResourceTable VulkanResources::createAndFillTable(
                 DescriptorVariantInfo& counterVariantInfo = variantInfos[countersBegin + nextCounter];
                 VkWriteDescriptorSet& counterWrite = writes[countersBegin + nextCounter];
                 counterWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr };
-                auto& info = counterVariantInfo.texelBufferInfo;
-                info = counterPool.counterOffset(resource.counterHandle);
-                counterWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+                auto& info = counterVariantInfo.storageBufferInfo;
+                info.buffer = counterPool.resource();
+                info.offset = counterPool.counterOffset(resource.counterHandle);
+                info.range = sizeof(uint32_t);
+                counterWrite.pBufferInfo = &info;
+                counterWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 counterWrite.dstSet = table.descriptors.descriptors;
                 counterWrite.dstBinding = countersBegin + nextCounter;
-                counterWrite.pTexelBufferView = &info;
                 counterWrite.dstArrayElement = 0;
                 counterWrite.descriptorCount = 1;
                 ++nextCounter;
