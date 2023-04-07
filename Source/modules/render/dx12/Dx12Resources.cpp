@@ -459,8 +459,8 @@ Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpeci
 
 Dx12ResourceInitResult Dx12Buffer::init()
 {
-    if (m_buffDesc.type == BufferType::Raw && m_buffDesc.isAppendConsume)
-        return Dx12ResourceInitResult{ ResourceResult::InvalidParameter, "Append consume buffers cannot be of type raw." };
+    if (m_buffDesc.type != BufferType::Structured && m_buffDesc.isAppendConsume)
+        return Dx12ResourceInitResult{ ResourceResult::InvalidParameter, "Append consume buffers can only be of type structured." };
 
     auto parentResult = Dx12Resource::init();
     if (!parentResult.success())

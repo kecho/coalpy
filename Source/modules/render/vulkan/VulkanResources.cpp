@@ -45,8 +45,8 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, VkBuffer reso
     if ((desc.memFlags & MemFlag_GpuWrite) != 0 && (desc.memFlags & MemFlag_GpuRead) != 0 && (specialFlags & ResourceSpecialFlag_CpuReadback) != 0)
         return BufferResult  { ResourceResult::InvalidHandle, Buffer(), "Unsupported special flags combined with mem flags." };
 
-    if (desc.isAppendConsume && desc.type == BufferType::Raw)
-        return BufferResult { ResourceResult::InvalidParameter, Buffer(), "Append consume buffers cannot be of type raw." };
+    if (desc.isAppendConsume && desc.type != BufferType::Structured)
+        return BufferResult { ResourceResult::InvalidParameter, Buffer(), "Append consume buffers can only be of type Structured." };
 
     VkBufferCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

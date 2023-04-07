@@ -1104,6 +1104,7 @@ namespace coalpy
         IDevice& device = *renderTestCtx.device;
 
         BufferDesc bufferDesc;
+        bufferDesc.type = BufferType::Structured;
         bufferDesc.isAppendConsume = true;
         bufferDesc.elementCount = 10;
         
