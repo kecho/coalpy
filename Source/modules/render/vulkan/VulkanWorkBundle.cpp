@@ -67,6 +67,29 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
                 copy.dstBinding = (uint32_t)SpirvRegisterTypeOffset(type) + startBinding;
                 copy.descriptorCount = std::min(bindingCounts, (int)table.descriptorsCount());
             }
+
+            uint64_t activeCounters = shaderPayload.activeCountersBitMask[i];
+            int counterTable = 0;
+            while (type == SpirvRegisterType::u && activeCounters)
+            {
+                ResourceTable tableHandle = tables[i];
+                const VulkanResourceTable& table = resources.unsafeGetTable(tableHandle);
+                if (counterTable >= table.countersEnd)
+                    break;
+                int startBinding, bindingCounts; 
+                SpirvPayload::nextDescriptorRange(activeCounters, startBinding, bindingCounts);
+                for (int b = 0; b < bindingCounts; ++b)
+                {
+                    copies.emplace_back();
+                    VkCopyDescriptorSet& copy = copies.back();
+                    copy = { VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, nullptr };
+                    copy.srcSet = table.descriptors.descriptors;
+                    copy.srcBinding = table.countersBegin + counterTable++;
+                    copy.dstSet = sets[i];
+                    copy.dstBinding = shaderPayload.activeCounterRegister[startBinding + b];
+                    copy.descriptorCount = 1;
+                }
+            }
         }
     };
 
@@ -294,6 +317,16 @@ void VulkanWorkBundle::buildDownloadCmd(
     m_device.fencePool().addRef(fenceValue);
 }
 
+void VulkanWorkBundle::buildCopyAppendConsumeCounter(const unsigned char* data, const AbiCopyAppendConsumeCounter* abiCmd, const CommandInfo& cmdInfo, VulkanList& outList)
+{
+    //TODO: implement
+}
+
+void VulkanWorkBundle::buildClearAppendConsumeCounter(const unsigned char* data, const AbiClearAppendConsumeCounter* abiCmd, const CommandInfo& cmdInfo, VulkanList& outList)
+{
+    //TODO: implement
+}
+
 void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, VulkanList& outList, std::vector<VulkanEventHandle>& events, VulkanFenceHandle fenceValue)
 {
     CPY_ASSERT(cmdList->isFinalized());
@@ -351,14 +384,14 @@ void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdLis
             break;
         case AbiCmdTypes::CopyAppendConsumeCounter:
             {
-                //const auto* abiCmd = (const AbiCopyAppendConsumeCounter*)cmdBlob;
-                //buildCopyAppendConsumeCounter(listData, abiCmd, cmdInfo, outList);
+                const auto* abiCmd = (const AbiCopyAppendConsumeCounter*)cmdBlob;
+                buildCopyAppendConsumeCounter(listData, abiCmd, cmdInfo, outList);
             }
             break;
         case AbiCmdTypes::ClearAppendConsumeCounter:
             {
-                //const auto* abiCmd = (const AbiClearAppendConsumeCounter*)cmdBlob;
-                //buildClearAppendConsumeCounter(listData, abiCmd, cmdInfo, outList);
+                const auto* abiCmd = (const AbiClearAppendConsumeCounter*)cmdBlob;
+                buildClearAppendConsumeCounter(listData, abiCmd, cmdInfo, outList);
             }
             break;
         case AbiCmdTypes::BeginMarker:

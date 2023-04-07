@@ -48,6 +48,8 @@ private:
     void buildUploadCmd(const unsigned char* data, const AbiUploadCmd* uploadCmd, const CommandInfo& cmdInfo, VulkanList& outList);
     void buildCopyCmd(const unsigned char* data, const AbiCopyCmd* copyCmd, const CommandInfo& cmdInfo, VulkanList& outList);
     void buildDownloadCmd(const unsigned char* data, const AbiDownloadCmd* downloadCmd,const CommandInfo& cmdInfo, VulkanFenceHandle fenceValue, VulkanList& outList);
+    void buildCopyAppendConsumeCounter(const unsigned char* data, const AbiCopyAppendConsumeCounter* abiCmd, const CommandInfo& cmdInfo, VulkanList& outList);
+    void buildClearAppendConsumeCounter(const unsigned char* data, const AbiClearAppendConsumeCounter* abiCmd, const CommandInfo& cmdInfo, VulkanList& outList);
         
     void buildCommandList(int listIndex, const CommandList* cmdList, WorkType workType, VulkanList& list, std::vector<VulkanEventHandle>& events, VulkanFenceHandle fenceValue);
 

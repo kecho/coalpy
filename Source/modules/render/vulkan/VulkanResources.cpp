@@ -555,7 +555,8 @@ bool VulkanResources::createBindings(
             counterBinding = {};
             counterBinding.binding = bindingIndex;
             counterBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-            counterBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            counterBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+            counterBinding.descriptorCount = 1;
             ++countersEnd;
         }
     }
@@ -578,8 +579,8 @@ ResourceTable VulkanResources::createAndFillTable(
     union DescriptorVariantInfo
     {
         VkDescriptorImageInfo imageInfo;
-        VkDescriptorBufferInfo texelBufferInfo;
-        VkBufferView bufferInfo;
+        VkDescriptorBufferInfo storageBufferInfo;
+        VkBufferView texelBufferInfo;
     };
 
     ResourceTable handle;
@@ -617,7 +618,7 @@ ResourceTable VulkanResources::createAndFillTable(
             CPY_ASSERT(!isSampler)
             if (resource.bufferData.isStorageBuffer)
             {
-                auto& info = variantInfo.texelBufferInfo;
+                auto& info = variantInfo.storageBufferInfo;
                 info.buffer = resource.bufferData.vkBuffer;
                 info.offset = 0u;
                 info.range = resource.bufferData.size;
@@ -626,7 +627,7 @@ ResourceTable VulkanResources::createAndFillTable(
             }
             else
             {
-                auto& info = variantInfo.bufferInfo;
+                auto& info = variantInfo.texelBufferInfo;
                 info = resource.bufferData.vkBufferView;
                 write.descriptorType = isRead ? VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
                 write.pTexelBufferView = &info;
@@ -637,12 +638,15 @@ ResourceTable VulkanResources::createAndFillTable(
                 CPY_ASSERT((countersBegin + nextCounter) < totalDescriptors);
                 DescriptorVariantInfo& counterVariantInfo = variantInfos[countersBegin + nextCounter];
                 VkWriteDescriptorSet& counterWrite = writes[countersBegin + nextCounter];
-                auto& info = variantInfo.texelBufferInfo;
-                info.buffer = counterPool.resource();
-                info.offset = counterPool.counterOffset(resource.counterHandle);
-                info.range = sizeof(uint32_t);
-                counterWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                counterWrite.pBufferInfo = &info;
+                counterWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr };
+                auto& info = counterVariantInfo.texelBufferInfo;
+                info = counterPool.counterOffset(resource.counterHandle);
+                counterWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+                counterWrite.dstSet = table.descriptors.descriptors;
+                counterWrite.dstBinding = countersBegin + nextCounter;
+                counterWrite.pTexelBufferView = &info;
+                counterWrite.dstArrayElement = 0;
+                counterWrite.descriptorCount = 1;
                 ++nextCounter;
             }
         }

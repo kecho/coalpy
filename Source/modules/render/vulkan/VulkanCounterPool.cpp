@@ -4,7 +4,7 @@
 #include "VulkanDevice.h"
 
 //Alignment for buffer counter
-#define D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT 4069 
+#define D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT 256
 
 namespace coalpy
 {
@@ -15,7 +15,7 @@ VulkanCounterPool::VulkanCounterPool(VulkanDevice& device)
 : m_device(device)
 {
     VkBufferCreateInfo createInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, nullptr };
-    createInfo.usage = (VkBufferUsageFlags)(VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+    createInfo.usage = (VkBufferUsageFlags)(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
     createInfo.size = D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT * MaxCounters;
     createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; //not exposed, cant do async in coalpy yet.
     createInfo.queueFamilyIndexCount = 1;
@@ -54,20 +54,28 @@ VulkanCounterHandle VulkanCounterPool::allocate()
     VulkanCounterHandle handle;
     CounterSlot& slot = m_counters.allocate(handle);
     if (handle.valid())
+    {
         slot.offset = handle.handleId * D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT;
+        VkBufferViewCreateInfo bufferViewInfo = { VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO, nullptr };
+        bufferViewInfo.buffer = m_resource;
+        bufferViewInfo.format = VK_FORMAT_R32_UINT;
+        bufferViewInfo.offset = (VkDeviceSize)slot.offset;
+        bufferViewInfo.range = sizeof(uint32_t);
+        VK_OK(vkCreateBufferView(m_device.vkDevice(), &bufferViewInfo, nullptr, &slot.bufferView))
+    }
 
     return handle;
 }
 
-int VulkanCounterPool::counterOffset(VulkanCounterHandle handle) const
+VkBufferView VulkanCounterPool::counterOffset(VulkanCounterHandle handle) const
 {
     std::shared_lock lock(m_mutex);
     const bool isValid = handle.valid() && m_counters.contains(handle);
     CPY_ASSERT(isValid);
     if (!isValid)
-        return 0;
+        return VK_NULL_HANDLE;
 
-    return m_counters[handle].offset;
+    return m_counters[handle].bufferView;
 }
 
 void VulkanCounterPool::free(VulkanCounterHandle handle)
@@ -79,6 +87,7 @@ void VulkanCounterPool::free(VulkanCounterHandle handle)
     if (!isValid)
         return;
 
+    vkDestroyBufferView(m_device.vkDevice(), m_counters[handle].bufferView, nullptr);
     m_counters.free(handle);
 }
 

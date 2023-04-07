@@ -100,7 +100,7 @@ struct VulkanResourceTable
     int descriptorsBegin = 0;
     int descriptorsEnd = 0;
     int descriptorsCount() const { return descriptorsEnd - descriptorsBegin; }
-    int countersCount() const { return countersBegin - countersEnd; }
+    int countersCount() const { return countersEnd - countersBegin; }
 };
 
 class VulkanResources

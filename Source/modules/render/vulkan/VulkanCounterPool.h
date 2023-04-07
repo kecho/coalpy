@@ -27,13 +27,14 @@ public:
 
     VulkanCounterHandle allocate();
     void free(VulkanCounterHandle handle);
-    int counterOffset(VulkanCounterHandle handle) const;
+    VkBufferView counterOffset(VulkanCounterHandle handle) const;
 
 private:
     mutable std::shared_mutex m_mutex;
 
     struct CounterSlot
     {
+        VkBufferView bufferView;
         int offset = 0;
     };
 
