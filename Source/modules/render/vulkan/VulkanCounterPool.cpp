@@ -3,9 +3,6 @@
 #include "VulkanCounterPool.h"
 #include "VulkanDevice.h"
 
-//Alignment for buffer counter
-#define D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT 4096
-
 namespace coalpy
 {
 namespace render
@@ -14,9 +11,10 @@ namespace render
 VulkanCounterPool::VulkanCounterPool(VulkanDevice& device)
 : m_device(device)
 {
+    const VkPhysicalDeviceLimits& limits = m_device.vkPhysicalDeviceProps().limits;
     VkBufferCreateInfo createInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, nullptr };
     createInfo.usage = (VkBufferUsageFlags)(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-    createInfo.size = D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT * MaxCounters;
+    createInfo.size = limits.minStorageBufferOffsetAlignment * MaxCounters;
     createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; //not exposed, cant do async in coalpy yet.
     createInfo.queueFamilyIndexCount = 1;
     uint32_t desfaultQueueFam = m_device.graphicsFamilyQueueIndex();
@@ -53,9 +51,9 @@ VulkanCounterHandle VulkanCounterPool::allocate()
     std::unique_lock lock(m_mutex);
     VulkanCounterHandle handle;
     CounterSlot& slot = m_counters.allocate(handle);
+    const VkPhysicalDeviceLimits& limits = m_device.vkPhysicalDeviceProps().limits;
     if (handle.valid())
-        slot.offset = handle.handleId * D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT;
-
+        slot.offset = handle.handleId * limits.minStorageBufferOffsetAlignment;
     return handle;
 }
 

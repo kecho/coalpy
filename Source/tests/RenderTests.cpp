@@ -1154,6 +1154,12 @@ namespace coalpy
         bufferDesc.isAppendConsume = true;
         bufferDesc.elementCount = 10;
         
+        Buffer acDummybuffer = device.createBuffer(bufferDesc);
+        CPY_ASSERT(acDummybuffer.valid());
+
+        Buffer acDummy2buffer = device.createBuffer(bufferDesc);
+        CPY_ASSERT(acDummybuffer.valid());
+
         Buffer acbuffer = device.createBuffer(bufferDesc);
         CPY_ASSERT(acbuffer.valid());
     
