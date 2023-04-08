@@ -814,20 +814,55 @@ void VulkanResources::releaseResourceInternal(ResourceHandle handle, VulkanResou
 
     if (resource.isBuffer())
     {
-        m_device.gc().deferRelease(
-            resource.bufferData.ownsBuffer ? resource.bufferData.vkBuffer : VK_NULL_HANDLE,
-            resource.bufferData.vkBufferView,
-            resource.bufferData.ownsBuffer ? resource.memory : VK_NULL_HANDLE,
-            resource.counterHandle);
+        if ((resource.specialFlags & ResourceSpecialFlag_NoDeferDelete) != 0)
+        {
+            m_device.gc().deferRelease(
+                resource.bufferData.ownsBuffer ? resource.bufferData.vkBuffer : VK_NULL_HANDLE,
+                resource.bufferData.vkBufferView,
+                resource.bufferData.ownsBuffer ? resource.memory : VK_NULL_HANDLE,
+                resource.counterHandle);
+        }
+        else
+        {
+            if (resource.bufferData.vkBufferView)
+                vkDestroyBufferView(m_device.vkDevice(), resource.bufferData.vkBufferView, nullptr);
+            if (resource.bufferData.ownsBuffer)
+            {
+                if (resource.bufferData.vkBuffer)
+                    vkDestroyBuffer(m_device.vkDevice(), resource.bufferData.vkBuffer, nullptr);
+                if (resource.memory)
+                    vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
+            }
+        }
         m_workDb.unregisterResource(handle);
     }
     else if (resource.isTexture())
     {
-        m_device.gc().deferRelease(
-            resource.textureData.ownsImage ? resource.textureData.vkImage : VK_NULL_HANDLE,
-            resource.textureData.vkUavViews, resource.textureData.uavCounts,
-            resource.textureData.vkSrvView,
-            resource.textureData.ownsImage ? resource.memory : VK_NULL_HANDLE);
+        if ((resource.specialFlags & ResourceSpecialFlag_NoDeferDelete) != 0)
+        {
+            m_device.gc().deferRelease(
+                resource.textureData.ownsImage ? resource.textureData.vkImage : VK_NULL_HANDLE,
+                resource.textureData.vkUavViews, resource.textureData.uavCounts,
+                resource.textureData.vkSrvView,
+                resource.textureData.ownsImage ? resource.memory : VK_NULL_HANDLE);
+        }
+        else
+        {
+            for (int i = 0; i < resource.textureData.uavCounts; ++i)
+            {
+                if (resource.textureData.vkUavViews[i])
+                    vkDestroyImageView(m_device.vkDevice(), resource.textureData.vkUavViews[i], nullptr);
+            }
+            if (resource.textureData.vkSrvView)
+                vkDestroyImageView(m_device.vkDevice(), resource.textureData.vkSrvView, nullptr);
+            if (resource.bufferData.ownsBuffer)
+            {
+                if (resource.textureData.vkImage)
+                    vkDestroyImage(m_device.vkDevice(), resource.textureData.vkImage, nullptr);
+                if (resource.memory)
+                    vkFreeMemory(m_device.vkDevice(), resource.memory, nullptr);
+            }
+        }
         m_workDb.unregisterResource(handle);
     }
     else if (resource.isSampler())
