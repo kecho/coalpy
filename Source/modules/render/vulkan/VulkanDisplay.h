@@ -35,6 +35,7 @@ private:
     void presentBarrier(bool flushComputeTexture = false);
 
     std::vector<VkSurfaceFormatKHR> m_surfaceFormats;
+    VkSurfaceCapabilitiesKHR m_surfaceCaps;
     VkSurfaceKHR m_surface;
     VkSwapchainKHR m_swapchain;
     VulkanDevice& m_device;

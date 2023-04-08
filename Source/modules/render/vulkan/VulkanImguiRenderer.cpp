@@ -81,6 +81,7 @@ VulkanImguiRenderer::VulkanImguiRenderer(const IimguiRendererDesc& desc)
 
     ImGui_ImplVulkan_Init(&vulkanInitInfo, m_vkRenderPass);
 
+    initSampler();
     initFontTextures();
     setupSwapChain();
 
@@ -106,6 +107,15 @@ VulkanImguiRenderer::~VulkanImguiRenderer()
         vkDestroyDescriptorPool(m_device.vkDevice(), m_vkDescriptorPool, nullptr);
     if (m_vkRenderPass)
         vkDestroyRenderPass(m_device.vkDevice(), m_vkRenderPass, nullptr);
+
+    m_device.release(m_sampler);
+}
+
+void VulkanImguiRenderer::initSampler()
+{
+    SamplerDesc desc;
+    desc.type = FilterType::Linear;
+    m_sampler = m_device.createSampler(desc);
 }
 
 void VulkanImguiRenderer::initFontTextures()
@@ -233,8 +243,30 @@ void VulkanImguiRenderer::newFrame()
     ImGui::NewFrame();
 }
 
+void VulkanImguiRenderer::flushGarbage()
+{
+    int sz = (int)m_garbageTextures.size();
+    for (int i = 0; i < sz;)
+    {
+        GarbageObject& obj = m_garbageTextures[i];
+        m_device.fencePool().updateState(obj.fence);
+        if (!m_device.fencePool().isSignaled(obj.fence))
+        {
+            ++i;
+            continue;
+        }
+
+        m_device.fencePool().free(obj.fence);
+        VK_OK(vkFreeDescriptorSets(m_device.vkDevice(), m_vkDescriptorPool, 1, &obj.textureDescriptor));
+        m_garbageTextures[i] = m_garbageTextures[m_garbageTextures.size() - 1];
+        m_garbageTextures.pop_back();
+        sz = (int)m_garbageTextures.size();
+    }
+}
+
 void VulkanImguiRenderer::render()
 {
+    flushGarbage();
     setupSwapChain();
 
     ImGui::Render();
@@ -282,16 +314,47 @@ void VulkanImguiRenderer::render()
 
 ImTextureID VulkanImguiRenderer::registerTexture(Texture texture)
 {
-    return {};
+    auto it = m_textures.find(texture);
+    if (it == m_textures.end())
+    {
+        VkSampler sampler = m_device.resources().unsafeGetResource(m_sampler).sampler;
+        VulkanResource& textureResource = m_device.resources().unsafeGetResource(texture);
+        if (!textureResource.isTexture() || !textureResource.textureData.vkSrvView)
+            return {};
+
+        VkDescriptorSet set = ImGui_ImplVulkan_AddTexture(sampler, textureResource.textureData.vkSrvView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_textures[texture] = set;
+        return (ImTextureID)set;
+    }
+    else
+    {
+        return (ImTextureID)(it->second);
+    }
 }
 
 void VulkanImguiRenderer::unregisterTexture(Texture texture)
 {
+    auto it = m_textures.find(texture);
+    if (it == m_textures.end())
+        return;
+    GarbageObject obj;
+    obj.textureDescriptor = it->second;
+    obj.fence = m_device.fencePool().allocate();
+    m_garbageTextures.push_back(obj);
+    m_textures.erase(it);
+
+    // Signal fence
+    VkQueue queue = m_device.queues().cmdQueue(WorkType::Graphics);
+    VkFence fence = m_device.fencePool().get(obj.fence);
+    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };
+    submitInfo.commandBufferCount = 0;
+    submitInfo.pCommandBuffers = nullptr;
+    VK_OK(vkQueueSubmit(queue, 1u, &submitInfo, fence));
 }
 
 bool VulkanImguiRenderer::isTextureRegistered(Texture texture) const
 {
-    return false;
+    return m_textures.find(texture) != m_textures.end();
 }
 
 }

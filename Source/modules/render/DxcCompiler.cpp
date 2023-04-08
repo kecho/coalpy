@@ -368,12 +368,13 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
     const wchar_t* profile = smTargets[(int)args.type];
 
     const bool outputSpirV = m_desc.platform == render::DevicePlat::Vulkan;
+    const bool generatePdb = !outputSpirV  && args.generatePdb;
 
     std::vector<LPCWSTR> arguments;
     arguments.push_back(DXC_ARG_WARNINGS_ARE_ERRORS);
     arguments.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
     arguments.push_back(DXC_ARG_ENABLE_STRICTNESS);
-    if (args.generatePdb)
+    if (generatePdb)
         arguments.push_back(DXC_ARG_DEBUG);
 
     std::vector<std::wstring> paths;
@@ -463,7 +464,7 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
 
             SmartPtr<IDxcBlob> pdbOut;
             SmartPtr<IDxcBlobUtf16> pdbName;
-            if (args.generatePdb)
+            if (generatePdb)
             {
                 DX_OK(results->GetOutput(
                     DXC_OUT_PDB,

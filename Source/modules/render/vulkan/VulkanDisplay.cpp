@@ -68,7 +68,6 @@ bool getPresentationMode(VkSurfaceKHR surface, VkPhysicalDevice device, VkPresen
 VulkanDisplay::VulkanDisplay(const DisplayConfig& config, VulkanDevice& device)
 : IDisplay(config), m_device(device), m_swapCount(0)
 {
-    setDims(config.width, config.height);
     m_surface = {};
     m_swapchain = {};
     m_presentationMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
@@ -95,6 +94,13 @@ VulkanDisplay::VulkanDisplay(const DisplayConfig& config, VulkanDevice& device)
 
     if (!m_surface)
         return;
+
+    VK_OK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+        m_device.vkPhysicalDevice(),
+        m_surface,
+        &m_surfaceCaps));
+
+    setDims(config.width, config.height);
 
     uint32_t formatsCount = 0;
     VK_OK(vkGetPhysicalDeviceSurfaceFormatsKHR(m_device.vkPhysicalDevice(), m_surface, &formatsCount, nullptr));
@@ -270,9 +276,8 @@ void VulkanDisplay::copyToComputeTexture(VkCommandBuffer cmdBuffer)
 
 void VulkanDisplay::setDims(unsigned int width, unsigned int height)
 {
-    const VkPhysicalDeviceLimits& limits = m_device.vkPhysicalDeviceProps().limits;
-    m_config.width = std::clamp(width, 1u, limits.maxImageDimension2D);
-    m_config.height = std::clamp(height, 1u, limits.maxImageDimension2D);
+    m_config.width = std::clamp(width, 1u, m_surfaceCaps.maxImageExtent.width);
+    m_config.height = std::clamp(height, 1u, m_surfaceCaps.maxImageExtent.height);
 }
 
 void VulkanDisplay::resize(unsigned int width, unsigned int height)
