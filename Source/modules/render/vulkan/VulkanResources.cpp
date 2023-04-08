@@ -338,6 +338,9 @@ TextureResult VulkanResources::createTextureInternal(ResourceHandle handle, cons
     resource.memFlags = desc.memFlags;
     resource.specialFlags = specialFlags;
 
+    if (desc.recreatable)
+        resource.specialFlags = (ResourceSpecialFlags)((int)resource.specialFlags | (int)ResourceSpecialFlag_TrackTables);
+
     if ((desc.memFlags & MemFlag_GpuRead) != 0)
         createInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
@@ -468,6 +471,66 @@ TextureResult VulkanResources::createTextureInternal(ResourceHandle handle, cons
     return TextureResult { ResourceResult::Ok, { handle.handleId } };
 }
 
+union DescriptorVariantInfo
+{
+    VkDescriptorImageInfo imageInfo;
+    VkDescriptorBufferInfo storageBufferInfo;
+    VkBufferView texelBufferInfo;
+};
+
+static void prepareDescriptorWriteOp(
+    VulkanResourceTable::Type tableType,
+    VkWriteDescriptorSet& write,
+    DescriptorVariantInfo& variantInfo,
+    const VulkanResource& resource,
+    int uavTargetMip)
+{
+    const bool isSampler = tableType == VulkanResourceTable::Type::Sampler;
+    const bool isRead = tableType == VulkanResourceTable::Type::In;
+    if (resource.isBuffer())
+    {
+        CPY_ASSERT(!isSampler)
+        if (resource.bufferData.isStorageBuffer)
+        {
+            auto& info = variantInfo.storageBufferInfo;
+            info.buffer = resource.bufferData.vkBuffer;
+            info.offset = 0u;
+            info.range = resource.bufferData.size;
+            write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            write.pBufferInfo = &info;
+        }
+        else
+        {
+            auto& info = variantInfo.texelBufferInfo;
+            info = resource.bufferData.vkBufferView;
+            write.descriptorType = isRead ? VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+            write.pTexelBufferView = &info;
+        }
+    
+    }
+    else if (resource.isTexture())
+    {
+        CPY_ASSERT(!isSampler)
+        auto& info = variantInfo.imageInfo;
+        info = {};
+        if (isRead)
+            info.imageView = resource.textureData.vkSrvView;
+        else
+            info.imageView = resource.textureData.vkUavViews[uavTargetMip];
+        info.imageLayout = isRead ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL;
+        write.descriptorType = isRead ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+        write.pImageInfo = &info;
+    }
+    else if (resource.isSampler())
+    {
+        auto& info = variantInfo.imageInfo;
+        info = {};
+        info.sampler = resource.sampler;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+        write.pImageInfo = &info;
+    }
+}
+
 TextureResult VulkanResources::recreateTexture(Texture texture, const TextureDesc& desc, VkImage resourceToAcquire)
 {
     std::unique_lock lock(m_mutex);
@@ -483,9 +546,53 @@ TextureResult VulkanResources::recreateTexture(Texture texture, const TextureDes
         return TextureResult  { ResourceResult::InvalidParameter, Texture(), "Texture resource must be recreatable." };
 
     ResourceSpecialFlags oldFlags = resource.specialFlags;
+    std::set<ResourceTable> trackedTables = resource.trackedTables;
     releaseResourceInternal(handle, resource);
     resource = {};
-    return createTextureInternal(handle, desc, resourceToAcquire, oldFlags); 
+    TextureResult result = createTextureInternal(handle, desc, resourceToAcquire, oldFlags); 
+    if (!result.success())
+        return result;
+
+    VulkanResource& newResource = m_container[handle];
+    std::vector<VkWriteDescriptorSet> descriptorWrites;
+    std::vector<DescriptorVariantInfo> variantInfos;
+    descriptorWrites.reserve(trackedTables.size());
+    variantInfos.reserve(trackedTables.size());
+    for (ResourceTable tableHandle : trackedTables)
+    {
+        if (!m_tables.contains(tableHandle))
+        {
+            std::cerr << "A table handle has been deleted but resource is still tracking. This can potentially lead to garbage data in resource tables" << std::endl;
+            continue;
+        }
+        VulkanResourceTable& table = m_tables[tableHandle];
+        auto it = table.trackedResources.find(handle);
+        if (it == table.trackedResources.end())
+        {
+            std::cerr << "A table handle has been deleted but resource is still tracking. This can potentially lead to garbage data in resource tables" << std::endl;
+            continue;
+        }
+
+        descriptorWrites.emplace_back();
+        variantInfos.emplace_back();
+        VkWriteDescriptorSet& write = descriptorWrites.back();
+        DescriptorVariantInfo& variantInfo = variantInfos.back();
+        write = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr };
+        write.dstSet = table.descriptors.descriptors;
+        write.dstBinding = it->second;
+        write.dstArrayElement = 0;
+        write.descriptorCount = 1;
+
+        //TODO: support recreation of mip
+        prepareDescriptorWriteOp(table.type, write, variantInfo, newResource, 0);
+    }
+
+    if (!descriptorWrites.empty())
+        vkUpdateDescriptorSets(m_device.vkDevice(), (uint32_t)descriptorWrites.size(), descriptorWrites.data(), 0u, nullptr);
+
+    //update the tracked tables
+    m_container[handle].trackedTables = std::move(trackedTables);
+    return result;
 }
 
 TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage resourceToAcquire, ResourceSpecialFlags specialFlags)
@@ -603,16 +710,6 @@ ResourceTable VulkanResources::createAndFillTable(
         const VkDescriptorSetLayoutBinding* bindings,
         int descriptorsBegin, int descriptorsEnd, int countersBegin, int countersEnd)
 {
-    const bool isSampler = tableType == VulkanResourceTable::Type::Sampler;
-    const bool isRead = tableType == VulkanResourceTable::Type::In;
-
-    union DescriptorVariantInfo
-    {
-        VkDescriptorImageInfo imageInfo;
-        VkDescriptorBufferInfo storageBufferInfo;
-        VkBufferView texelBufferInfo;
-    };
-
     ResourceTable handle;
     VulkanResourceTable& table = m_tables.allocate(handle);
     table.type = tableType;
@@ -643,66 +740,26 @@ ResourceTable VulkanResources::createAndFillTable(
         write.descriptorType = bindings[i].descriptorType;
         
         DescriptorVariantInfo& variantInfo = variantInfos[i];
-        if (resource.isBuffer())
+        if (resource.isBuffer() && tableType == VulkanResourceTable::Type::Out && resource.counterHandle.valid())
         {
-            CPY_ASSERT(!isSampler)
-            if (resource.bufferData.isStorageBuffer)
-            {
-                auto& info = variantInfo.storageBufferInfo;
-                info.buffer = resource.bufferData.vkBuffer;
-                info.offset = 0u;
-                info.range = resource.bufferData.size;
-                write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                write.pBufferInfo = &info;
-            }
-            else
-            {
-                auto& info = variantInfo.texelBufferInfo;
-                info = resource.bufferData.vkBufferView;
-                write.descriptorType = isRead ? VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
-                write.pTexelBufferView = &info;
-            }
+            CPY_ASSERT((countersBegin + nextCounter) < totalDescriptors);
+            DescriptorVariantInfo& counterVariantInfo = variantInfos[countersBegin + nextCounter];
+            VkWriteDescriptorSet& counterWrite = writes[countersBegin + nextCounter];
+            counterWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr };
+            auto& info = counterVariantInfo.storageBufferInfo;
+            info.buffer = counterPool.resource();
+            info.offset = counterPool.counterOffset(resource.counterHandle);
+            info.range = sizeof(uint32_t);
+            counterWrite.pBufferInfo = &info;
+            counterWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            counterWrite.dstSet = table.descriptors.descriptors;
+            counterWrite.dstBinding = countersBegin + nextCounter;
+            counterWrite.dstArrayElement = 0;
+            counterWrite.descriptorCount = 1;
+            ++nextCounter;
+        }
 
-            if (tableType == VulkanResourceTable::Type::Out && resource.counterHandle.valid())
-            {
-                CPY_ASSERT((countersBegin + nextCounter) < totalDescriptors);
-                DescriptorVariantInfo& counterVariantInfo = variantInfos[countersBegin + nextCounter];
-                VkWriteDescriptorSet& counterWrite = writes[countersBegin + nextCounter];
-                counterWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr };
-                auto& info = counterVariantInfo.storageBufferInfo;
-                info.buffer = counterPool.resource();
-                info.offset = counterPool.counterOffset(resource.counterHandle);
-                info.range = sizeof(uint32_t);
-                counterWrite.pBufferInfo = &info;
-                counterWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                counterWrite.dstSet = table.descriptors.descriptors;
-                counterWrite.dstBinding = countersBegin + nextCounter;
-                counterWrite.dstArrayElement = 0;
-                counterWrite.descriptorCount = 1;
-                ++nextCounter;
-            }
-        }
-        else if (resource.isTexture())
-        {
-            CPY_ASSERT(!isSampler)
-            auto& info = variantInfo.imageInfo;
-            info = {};
-            if (isRead)
-                info.imageView = resource.textureData.vkSrvView;
-            else
-                info.imageView = uavTargetMips ? resource.textureData.vkUavViews[uavTargetMips[i]] : resource.textureData.vkUavViews[0];
-            info.imageLayout = isRead ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL;
-            write.descriptorType = isRead ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-            write.pImageInfo = &info;
-        }
-        else if (resource.isSampler())
-        {
-            auto& info = variantInfo.imageInfo;
-            info = {};
-            info.sampler = resource.sampler;
-            write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-            write.pImageInfo = &info;
-        }
+        prepareDescriptorWriteOp(tableType, write, variantInfo, resource, uavTargetMips ? uavTargetMips[i] : 0);
     }
 
     vkUpdateDescriptorSets(m_device.vkDevice(), (uint32_t)writes.size(), writes.data(), 0u, nullptr);
