@@ -52,6 +52,7 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, VkBuffer reso
     createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     createInfo.usage |= desc.isConstantBuffer ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : (VkBufferUsageFlags)0u;
     resource.memFlags = desc.memFlags;
+    resource.specialFlags = specialFlags;
     resource.bufferData.isStorageBuffer = false;
     if (desc.type == BufferType::Standard)
     {
@@ -252,6 +253,7 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
     createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     
     resource.memFlags = desc.memFlags;
+    resource.specialFlags = specialFlags;
 
     if ((desc.memFlags & MemFlag_GpuRead) != 0)
         createInfo.usage |= VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
@@ -689,6 +691,21 @@ ResourceTable VulkanResources::createAndFillTable(
     return handle;
 }
 
+void VulkanResources::trackResources(const ResourceHandle* resourceHandles, const VulkanResource** resources, int count, ResourceTable table)
+{
+    VulkanResourceTable& tableContainer = m_tables[table];
+    for (int i = 0; i < count; ++i)
+    {
+        const VulkanResource& resource = *resources[i];
+        if ((resource.specialFlags & ResourceSpecialFlag_TrackTables) == 0)
+            continue;
+
+        std::set<ResourceTable>& trackedTables = const_cast<std::set<ResourceTable>&>(resource.trackedTables);
+        trackedTables.insert(table);
+        tableContainer.trackedResources.insert(resourceHandles[i]);
+    }
+}
+
 InResourceTableResult VulkanResources::createInResourceTable(const ResourceTableDesc& desc)
 {
     std::unique_lock lock(m_mutex);
@@ -710,6 +727,7 @@ InResourceTableResult VulkanResources::createInResourceTable(const ResourceTable
         return InResourceTableResult { ResourceResult::InvalidParameter, InResourceTable(), "Could not create descriptor set layout." };
 
     ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::In, resources.data(), desc.uavTargetMips, layout, bindings.data(), descriptorsBegin, descriptorsEnd, countersBegin, countersEnd);
+    trackResources(desc.resources, resources.data(), (int)resources.size(), handle);
     m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, false);
     return InResourceTableResult { ResourceResult::Ok, InResourceTable { handle.handleId } };
 }
@@ -735,6 +753,7 @@ OutResourceTableResult VulkanResources::createOutResourceTable(const ResourceTab
         return OutResourceTableResult { ResourceResult::InvalidParameter, OutResourceTable(), "Could not create descriptor set layout." };
 
     ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::Out, resources.data(), desc.uavTargetMips, layout, bindings.data(), descriptorsBegin, descriptorsEnd, countersBegin, countersEnd);
+    trackResources(desc.resources, resources.data(), (int)resources.size(), handle);
     m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, true);
     return OutResourceTableResult { ResourceResult::Ok, OutResourceTable { handle.handleId } };
 }
@@ -760,13 +779,20 @@ SamplerTableResult VulkanResources::createSamplerTable(const ResourceTableDesc& 
         return SamplerTableResult { ResourceResult::InvalidParameter, SamplerTable(), "Could not create descriptor set layout for a sampler table." };
 
     ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::Sampler, resources.data(), desc.uavTargetMips, layout, bindings.data(), descriptorsBegin, descriptorsEnd, countersBegin, countersEnd);
+    trackResources(desc.resources, resources.data(), (int)resources.size(), handle);
     m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, false);
     return SamplerTableResult { ResourceResult::Ok, SamplerTable { handle.handleId } };
 }
 
-
 void VulkanResources::releaseResourceInternal(ResourceHandle handle, VulkanResource& resource)
 {
+    for (ResourceTable table : resource.trackedTables)
+    {
+        VulkanResourceTable& tableContainer = m_tables[table];
+        tableContainer.trackedResources.erase(handle);
+    }
+    resource.trackedTables.clear();
+
     if (resource.isBuffer())
     {
         m_device.gc().deferRelease(
@@ -787,6 +813,7 @@ void VulkanResources::releaseResourceInternal(ResourceHandle handle, VulkanResou
     }
     else if (resource.isSampler())
         vkDestroySampler(m_device.vkDevice(), resource.sampler, nullptr);
+
 }
 
 void VulkanResources::release(ResourceHandle handle)
@@ -807,9 +834,17 @@ void VulkanResources::release(ResourceHandle handle)
 
 void VulkanResources::releaseTableInternal(ResourceTable handle, VulkanResourceTable& table)
 {
+    for (ResourceHandle resourceHandle : table.trackedResources)
+    {
+        VulkanResource& resource = m_container[resourceHandle];
+        resource.trackedTables.erase(handle);
+    }
+
     vkDestroyDescriptorSetLayout(m_device.vkDevice(), table.layout, nullptr);
     m_workDb.unregisterTable(handle);
     m_device.descriptorSetPools().free(table.descriptors);
+
+    table.trackedResources.clear();
 }
 
 void VulkanResources::release(ResourceTable handle)

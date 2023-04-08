@@ -7,6 +7,7 @@
 #include "VulkanDescriptorSetPools.h"
 #include "VulkanCounterPool.h"
 #include <vector>
+#include <set>
 #include <mutex>
 
 namespace coalpy
@@ -20,7 +21,7 @@ enum ResourceSpecialFlags : int
     //unused:
     //ResourceSpecialFlag_NoDeferDelete = 1 << 0,
     //ResourceSpecialFlag_CanDenyShaderResources = 1 << 1,
-    //ResourceSpecialFlag_TrackTables = 1 << 2,
+    ResourceSpecialFlag_TrackTables = 1 << 2,
     ResourceSpecialFlag_CpuReadback = 1 << 3,
     ResourceSpecialFlag_CpuUpload = 1 << 4,
     ResourceSpecialFlag_EnableColorAttachment = 1 << 5,
@@ -79,10 +80,13 @@ struct VulkanResource
     
     VulkanCounterHandle counterHandle;
     MemFlags memFlags = {};
+    ResourceSpecialFlags specialFlags = {};
     VkDeviceSize alignment = {};
     VkDeviceSize requestSize = {};
     VkDeviceSize actualSize = {};
     VkDeviceMemory memory = {};
+
+    std::set<ResourceTable> trackedTables;
 };
 
 struct VulkanResourceTable
@@ -101,6 +105,7 @@ struct VulkanResourceTable
     int descriptorsEnd = 0;
     int descriptorsCount() const { return descriptorsEnd - descriptorsBegin; }
     int countersCount() const { return countersEnd - countersBegin; }
+    std::set<ResourceHandle> trackedResources;
 };
 
 class VulkanResources
@@ -132,6 +137,7 @@ public:
 private:
     void releaseResourceInternal(ResourceHandle handle, VulkanResource& resource);
     void releaseTableInternal(ResourceTable handle, VulkanResourceTable& table);
+    void trackResources(const ResourceHandle* resourceHandles, const VulkanResource** resources, int count, ResourceTable table); 
     VkImageViewCreateInfo createVulkanImageViewDescTemplate(const TextureDesc& desc, unsigned int descDepth, VkImage image) const;
     bool queryResources(const ResourceHandle* handles, int counts, std::vector<const VulkanResource*>& outResources) const;
     bool createBindings(
