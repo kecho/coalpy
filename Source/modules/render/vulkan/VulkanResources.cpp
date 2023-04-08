@@ -205,9 +205,97 @@ VkImageViewCreateInfo VulkanResources::createVulkanImageViewDescTemplate(const T
     viewInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0u, desc.mipLevels, 0u, isArray ? descDepth : 1 };
     return viewInfo;
 }
-
-TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage resourceToAcquire, ResourceSpecialFlags specialFlags)
+SamplerResult VulkanResources::createSampler (const SamplerDesc& config)
 {
+    VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO, nullptr };
+    
+    VkFilter filterType = {};
+    switch (config.type)
+    {
+    case FilterType::Point:
+    case FilterType::Min:
+    case FilterType::Max:
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        filterType = VK_FILTER_NEAREST;
+        break;
+    case FilterType::Linear:
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        filterType = VK_FILTER_LINEAR;
+        break;
+    }
+
+    auto translateAddress = [](TextureAddressMode address) -> VkSamplerAddressMode
+    {
+        switch (address)
+        {
+        case TextureAddressMode::Wrap:
+            return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        case TextureAddressMode::Mirror:
+            return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+        case TextureAddressMode::Clamp:
+            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        case TextureAddressMode::Border:
+            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        }
+
+        return {};
+    };
+
+    if (config.maxAnisoQuality > 2)
+        samplerInfo.anisotropyEnable = VK_TRUE;
+    
+    samplerInfo.magFilter = filterType;
+    samplerInfo.minFilter = filterType;
+    samplerInfo.addressModeU = translateAddress(config.addressU);
+    samplerInfo.addressModeV = translateAddress(config.addressV);
+    samplerInfo.addressModeW = translateAddress(config.addressW);
+    samplerInfo.mipLodBias = config.mipBias;
+    samplerInfo.maxAnisotropy = config.maxAnisoQuality;
+    samplerInfo.minLod = config.minLod;
+    samplerInfo.maxLod = config.maxLod;
+
+    VkSamplerReductionModeCreateInfo minMaxSamplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_REDUCTION_MODE_CREATE_INFO, nullptr };
+    if (config.type == FilterType::Min || config.type == FilterType::Max)
+    {
+        if (m_device.enabledExts() & asFlag(VulkanExtensions::MinMaxFilterSampler) != 0)
+        {
+            minMaxSamplerInfo.reductionMode = config.type == FilterType::Min ? VK_SAMPLER_REDUCTION_MODE_MIN : VK_SAMPLER_REDUCTION_MODE_MAX;
+            minMaxSamplerInfo.pNext = samplerInfo.pNext;
+            samplerInfo.pNext = &minMaxSamplerInfo;
+        }
+        else
+            std::cerr << "Error: Using a min max filter on sampler, but vulkan extension " << VK_EXT_SAMPLER_FILTER_MINMAX_EXTENSION_NAME << "not supported" << std::endl;
+    }
+
+    if ((config.borderColor[0] != 0.0f || config.borderColor[1] != 0.0f || config.borderColor[2] != 0.0f) && (m_device.enabledExts() & asFlag(VulkanExtensions::CustomBorderColorSampler) != 0))
+        std::cerr << "Error: using a border color, this device does not support custom border colors" << std::endl;
+
+    VkSamplerCustomBorderColorCreateInfoEXT borderColorConfig = { VK_STRUCTURE_TYPE_SAMPLER_CUSTOM_BORDER_COLOR_CREATE_INFO_EXT, nullptr };
+    if (m_device.enabledExts() & asFlag(VulkanExtensions::CustomBorderColorSampler) != 0)
+    {
+        for (int i = 0; i < 4; ++i)
+            borderColorConfig.customBorderColor.float32[i] = config.borderColor[i];
+        borderColorConfig.format = VK_FORMAT_R8G8B8A8_UNORM;
+        borderColorConfig.pNext = samplerInfo.pNext;
+        samplerInfo.pNext = &borderColorConfig;
+    }
+
+    VkSampler sampler;
+    VkResult result = vkCreateSampler(m_device.vkDevice(), &samplerInfo, nullptr, &sampler);
+    if (result != VK_SUCCESS)
+        return SamplerResult { ResourceResult::InvalidParameter, Sampler(), "Error creating sampler. Check device logging for further information." };
+
+    std::unique_lock lock(m_mutex);
+    ResourceHandle samplerHandle;
+    VulkanResource& resource = m_container.allocate(samplerHandle);
+    resource.type = VulkanResource::Type::Sampler;
+    resource.sampler = sampler;
+    return SamplerResult { ResourceResult::Ok, Sampler { samplerHandle.handleId } };
+}
+
+TextureResult VulkanResources::createTextureInternal(ResourceHandle handle, const TextureDesc& desc, VkImage resourceToAcquire, ResourceSpecialFlags specialFlags)
+{
+    VulkanResource& resource = m_container[handle];
     const VkPhysicalDeviceLimits& limits = m_device.vkPhysicalDeviceProps().limits;
     unsigned limitX, limitY, limitZ;
     switch (desc.type)
@@ -243,11 +331,6 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
     unsigned int descHeight = std::clamp(desc.height, 1u, limitY);
     unsigned int descDepth = std::clamp(desc.depth,   1u, limitZ);
 
-    std::unique_lock lock(m_mutex);
-    ResourceHandle handle;
-    VulkanResource& resource = m_container.allocate(handle);
-    if (!handle.valid())
-        return TextureResult  { ResourceResult::InvalidHandle, Texture(), "Not enough slots." };
 
     VkImageCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -385,99 +468,35 @@ TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage re
     return TextureResult { ResourceResult::Ok, { handle.handleId } };
 }
 
-TextureResult VulkanResources::recreateTexture(Texture texture, const TextureDesc& desc)
+TextureResult VulkanResources::recreateTexture(Texture texture, const TextureDesc& desc, VkImage resourceToAcquire)
 {
     std::unique_lock lock(m_mutex);
-    return TextureResult();
+    ResourceHandle handle = texture;
+    if (!handle.valid() || !m_container.contains(handle))
+        return TextureResult  { ResourceResult::InvalidHandle, Texture(), "recreateTexture requires a proper handle." };
+
+    VulkanResource& resource = m_container[handle];
+    if (!resource.isTexture())
+        return TextureResult  { ResourceResult::InvalidHandle, Texture(), "recreateTexture must be a valid texture resource." };
+
+    if (!desc.recreatable || (resource.specialFlags & ResourceSpecialFlag_TrackTables) == 0)
+        return TextureResult  { ResourceResult::InvalidParameter, Texture(), "Texture resource must be recreatable." };
+
+    ResourceSpecialFlags oldFlags = resource.specialFlags;
+    releaseResourceInternal(handle, resource);
+    resource = {};
+    return createTextureInternal(handle, desc, resourceToAcquire, oldFlags); 
 }
 
-
-SamplerResult VulkanResources::createSampler (const SamplerDesc& config)
+TextureResult VulkanResources::createTexture(const TextureDesc& desc, VkImage resourceToAcquire, ResourceSpecialFlags specialFlags)
 {
-    VkSamplerCreateInfo samplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO, nullptr };
-    
-    VkFilter filterType = {};
-    switch (config.type)
-    {
-    case FilterType::Point:
-    case FilterType::Min:
-    case FilterType::Max:
-        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-        filterType = VK_FILTER_NEAREST;
-        break;
-    case FilterType::Linear:
-        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        filterType = VK_FILTER_LINEAR;
-        break;
-    }
-
-    auto translateAddress = [](TextureAddressMode address) -> VkSamplerAddressMode
-    {
-        switch (address)
-        {
-        case TextureAddressMode::Wrap:
-            return VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        case TextureAddressMode::Mirror:
-            return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
-        case TextureAddressMode::Clamp:
-            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        case TextureAddressMode::Border:
-            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-        }
-
-        return {};
-    };
-
-    if (config.maxAnisoQuality > 2)
-        samplerInfo.anisotropyEnable = VK_TRUE;
-    
-    samplerInfo.magFilter = filterType;
-    samplerInfo.minFilter = filterType;
-    samplerInfo.addressModeU = translateAddress(config.addressU);
-    samplerInfo.addressModeV = translateAddress(config.addressV);
-    samplerInfo.addressModeW = translateAddress(config.addressW);
-    samplerInfo.mipLodBias = config.mipBias;
-    samplerInfo.maxAnisotropy = config.maxAnisoQuality;
-    samplerInfo.minLod = config.minLod;
-    samplerInfo.maxLod = config.maxLod;
-
-    VkSamplerReductionModeCreateInfo minMaxSamplerInfo = { VK_STRUCTURE_TYPE_SAMPLER_REDUCTION_MODE_CREATE_INFO, nullptr };
-    if (config.type == FilterType::Min || config.type == FilterType::Max)
-    {
-        if (m_device.enabledExts() & asFlag(VulkanExtensions::MinMaxFilterSampler) != 0)
-        {
-            minMaxSamplerInfo.reductionMode = config.type == FilterType::Min ? VK_SAMPLER_REDUCTION_MODE_MIN : VK_SAMPLER_REDUCTION_MODE_MAX;
-            minMaxSamplerInfo.pNext = samplerInfo.pNext;
-            samplerInfo.pNext = &minMaxSamplerInfo;
-        }
-        else
-            std::cerr << "Error: Using a min max filter on sampler, but vulkan extension " << VK_EXT_SAMPLER_FILTER_MINMAX_EXTENSION_NAME << "not supported" << std::endl;
-    }
-
-    if ((config.borderColor[0] != 0.0f || config.borderColor[1] != 0.0f || config.borderColor[2] != 0.0f) && (m_device.enabledExts() & asFlag(VulkanExtensions::CustomBorderColorSampler) != 0))
-        std::cerr << "Error: using a border color, this device does not support custom border colors" << std::endl;
-
-    VkSamplerCustomBorderColorCreateInfoEXT borderColorConfig = { VK_STRUCTURE_TYPE_SAMPLER_CUSTOM_BORDER_COLOR_CREATE_INFO_EXT, nullptr };
-    if (m_device.enabledExts() & asFlag(VulkanExtensions::CustomBorderColorSampler) != 0)
-    {
-        for (int i = 0; i < 4; ++i)
-            borderColorConfig.customBorderColor.float32[i] = config.borderColor[i];
-        borderColorConfig.format = VK_FORMAT_R8G8B8A8_UNORM;
-        borderColorConfig.pNext = samplerInfo.pNext;
-        samplerInfo.pNext = &borderColorConfig;
-    }
-
-    VkSampler sampler;
-    VkResult result = vkCreateSampler(m_device.vkDevice(), &samplerInfo, nullptr, &sampler);
-    if (result != VK_SUCCESS)
-        return SamplerResult { ResourceResult::InvalidParameter, Sampler(), "Error creating sampler. Check device logging for further information." };
-
     std::unique_lock lock(m_mutex);
-    ResourceHandle samplerHandle;
-    VulkanResource& resource = m_container.allocate(samplerHandle);
-    resource.type = VulkanResource::Type::Sampler;
-    resource.sampler = sampler;
-    return SamplerResult { ResourceResult::Ok, Sampler { samplerHandle.handleId } };
+    ResourceHandle handle;
+    m_container.allocate(handle);
+    if (!handle.valid())
+        return TextureResult  { ResourceResult::InvalidHandle, Texture(), "Not enough slots." };
+
+    return createTextureInternal(handle, desc, resourceToAcquire, specialFlags);
 }
 
 void VulkanResources::getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo)
@@ -691,7 +710,7 @@ ResourceTable VulkanResources::createAndFillTable(
     return handle;
 }
 
-void VulkanResources::trackResources(const ResourceHandle* resourceHandles, const VulkanResource** resources, int count, ResourceTable table)
+void VulkanResources::trackResources(const VulkanResource** resources, int count, ResourceTable table)
 {
     VulkanResourceTable& tableContainer = m_tables[table];
     for (int i = 0; i < count; ++i)
@@ -702,7 +721,7 @@ void VulkanResources::trackResources(const ResourceHandle* resourceHandles, cons
 
         std::set<ResourceTable>& trackedTables = const_cast<std::set<ResourceTable>&>(resource.trackedTables);
         trackedTables.insert(table);
-        tableContainer.trackedResources.insert(resourceHandles[i]);
+        tableContainer.trackedResources[resource.handle] = i;
     }
 }
 
@@ -727,7 +746,7 @@ InResourceTableResult VulkanResources::createInResourceTable(const ResourceTable
         return InResourceTableResult { ResourceResult::InvalidParameter, InResourceTable(), "Could not create descriptor set layout." };
 
     ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::In, resources.data(), desc.uavTargetMips, layout, bindings.data(), descriptorsBegin, descriptorsEnd, countersBegin, countersEnd);
-    trackResources(desc.resources, resources.data(), (int)resources.size(), handle);
+    trackResources(resources.data(), (int)resources.size(), handle);
     m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, false);
     return InResourceTableResult { ResourceResult::Ok, InResourceTable { handle.handleId } };
 }
@@ -753,7 +772,7 @@ OutResourceTableResult VulkanResources::createOutResourceTable(const ResourceTab
         return OutResourceTableResult { ResourceResult::InvalidParameter, OutResourceTable(), "Could not create descriptor set layout." };
 
     ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::Out, resources.data(), desc.uavTargetMips, layout, bindings.data(), descriptorsBegin, descriptorsEnd, countersBegin, countersEnd);
-    trackResources(desc.resources, resources.data(), (int)resources.size(), handle);
+    trackResources(resources.data(), (int)resources.size(), handle);
     m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, true);
     return OutResourceTableResult { ResourceResult::Ok, OutResourceTable { handle.handleId } };
 }
@@ -779,7 +798,7 @@ SamplerTableResult VulkanResources::createSamplerTable(const ResourceTableDesc& 
         return SamplerTableResult { ResourceResult::InvalidParameter, SamplerTable(), "Could not create descriptor set layout for a sampler table." };
 
     ResourceTable handle = createAndFillTable(VulkanResourceTable::Type::Sampler, resources.data(), desc.uavTargetMips, layout, bindings.data(), descriptorsBegin, descriptorsEnd, countersBegin, countersEnd);
-    trackResources(desc.resources, resources.data(), (int)resources.size(), handle);
+    trackResources(resources.data(), (int)resources.size(), handle);
     m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, false);
     return SamplerTableResult { ResourceResult::Ok, SamplerTable { handle.handleId } };
 }
@@ -834,9 +853,9 @@ void VulkanResources::release(ResourceHandle handle)
 
 void VulkanResources::releaseTableInternal(ResourceTable handle, VulkanResourceTable& table)
 {
-    for (ResourceHandle resourceHandle : table.trackedResources)
+    for (auto it : table.trackedResources)
     {
-        VulkanResource& resource = m_container[resourceHandle];
+        VulkanResource& resource = m_container[it.first];
         resource.trackedTables.erase(handle);
     }
 

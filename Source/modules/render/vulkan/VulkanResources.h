@@ -105,7 +105,7 @@ struct VulkanResourceTable
     int descriptorsEnd = 0;
     int descriptorsCount() const { return descriptorsEnd - descriptorsBegin; }
     int countersCount() const { return countersEnd - countersBegin; }
-    std::set<ResourceHandle> trackedResources;
+    std::unordered_map<ResourceHandle, int> trackedResources;
 };
 
 class VulkanResources
@@ -122,7 +122,7 @@ public:
     BufferResult createBuffer(const BufferDesc& desc, VkBuffer resourceToAcquire = VK_NULL_HANDLE, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None);
     BufferResult createBuffer(const BufferDesc& desc, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None) { return createBuffer(desc, VK_NULL_HANDLE, specialFlags); }
     TextureResult createTexture(const TextureDesc& desc, VkImage resourceToAcquire = VK_NULL_HANDLE, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None);
-    TextureResult recreateTexture(Texture texture, const TextureDesc& desc);
+    TextureResult recreateTexture(Texture texture, const TextureDesc& desc, VkImage resourceToAcquire = VK_NULL_HANDLE);
     SamplerResult createSampler (const SamplerDesc& config);
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
     OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);
@@ -135,9 +135,10 @@ public:
     void release(ResourceTable handle);
 
 private:
+    TextureResult createTextureInternal(ResourceHandle handle, const TextureDesc& desc, VkImage resourceToAcquire, ResourceSpecialFlags specialFlags);
     void releaseResourceInternal(ResourceHandle handle, VulkanResource& resource);
     void releaseTableInternal(ResourceTable handle, VulkanResourceTable& table);
-    void trackResources(const ResourceHandle* resourceHandles, const VulkanResource** resources, int count, ResourceTable table); 
+    void trackResources(const VulkanResource** resources, int count, ResourceTable table); 
     VkImageViewCreateInfo createVulkanImageViewDescTemplate(const TextureDesc& desc, unsigned int descDepth, VkImage image) const;
     bool queryResources(const ResourceHandle* handles, int counts, std::vector<const VulkanResource*>& outResources) const;
     bool createBindings(
