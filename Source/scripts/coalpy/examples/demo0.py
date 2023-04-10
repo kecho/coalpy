@@ -9,6 +9,7 @@ settings = gpu.get_settings()
 settings.adapter_index = 0
 settings.shader_model = "sm6_1"
 settings.dump_shader_pdbs = True
+settings.graphics_api = "vulkan"
 gpu.init()
 
 info = gpu.get_current_adapter_info()

@@ -6,6 +6,7 @@
 #include "VulkanBarriers.h"
 #include "VulkanUtils.h"
 #include "VulkanFormats.h"
+#include "VulkanMarkerCollector.h"
 #include <coalpy.core/Assert.h>
 #include <vector>
 #include <unordered_map>
@@ -430,21 +431,20 @@ void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdLis
         case AbiCmdTypes::BeginMarker:
             {
                 /*
-                const auto* abiCmd = (const AbiBeginMarker*)cmdBlob;
                 Dx12PixApi* pixApi = m_device.getPixApi();
                 if (pixApi)
                 {
                     const char* str = abiCmd->str.data(listData);
                     pixApi->pixBeginEventOnCommandList(&outList, 0xffff00ff, str);
                 }
-
-                Dx12MarkerCollector& markerCollector = m_device.markerCollector();
+                */
+                const auto* abiCmd = (const AbiBeginMarker*)cmdBlob;
+                VulkanMarkerCollector& markerCollector = m_device.markerCollector();
                 if (markerCollector.isActive())
                 {
                     const char* str = abiCmd->str.data(listData);
-                    markerCollector.beginMarker(outList, str);
+                    markerCollector.beginMarker(outList.list, str);
                 }
-                */
             }
             break;
         case AbiCmdTypes::EndMarker:
@@ -453,11 +453,11 @@ void VulkanWorkBundle::buildCommandList(int listIndex, const CommandList* cmdLis
                 Dx12PixApi* pixApi = m_device.getPixApi();
                 if (pixApi)
                     pixApi->pixEndEventOnCommandList(&outList);
-
-                Dx12MarkerCollector& markerCollector = m_device.markerCollector();
-                if (markerCollector.isActive())
-                    markerCollector.endMarker(outList);
                 */
+
+                VulkanMarkerCollector& markerCollector = m_device.markerCollector();
+                if (markerCollector.isActive())
+                    markerCollector.endMarker(outList.list);
             }
             break;
         default:

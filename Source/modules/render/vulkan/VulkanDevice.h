@@ -27,6 +27,7 @@ class VulkanCounterPool;
 class VulkanEventPool;
 class VulkanFencePool;
 class VulkanGc;
+class VulkanMarkerCollector;
 struct VulkanWorkInformationMap;
 
 class VulkanDevice : public TDevice<VulkanDevice>
@@ -75,6 +76,7 @@ public:
     VulkanEventPool& eventPool() { return *m_eventPool; }
     VulkanFencePool& fencePool() { return *m_fencePool; }
     VulkanCounterPool& counterPool() { return *m_counterPool; }
+    VulkanMarkerCollector& markerCollector() { return *m_markerCollector; }
     VulkanGc& gc() { return *m_gc; }
     WorkBundleDb& workDb() { return m_workDb; }
 
@@ -103,6 +105,7 @@ private:
     VulkanCounterPool* m_counterPool;
     VulkanGc* m_gc;
     VulkanWorkInformationMap* m_vulkanWorkInfos;
+    VulkanMarkerCollector* m_markerCollector;
 
     Buffer m_countersBuffer;
 

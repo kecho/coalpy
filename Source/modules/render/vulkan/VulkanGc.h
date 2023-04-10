@@ -29,12 +29,13 @@ public:
     void deferRelease(VkImage image, VkImageView* uavs, int uavCounts, VkImageView srv, VkDeviceMemory memory);
     void deferRelease(VkBuffer buffer, VkBufferView bufferView, VkDeviceMemory memory, VulkanCounterHandle counterHandle);
     void deferRelease(VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkShaderModule shaderModule);
+    void deferRelease(VkQueryPool queryPool);
     void flush();
 
 private:
     enum class Type
     {    
-        None, Buffer, Texture, ComputePipeline
+        None, Buffer, Texture, ComputePipeline, QueryPool
     };
 
     struct BufferData
@@ -67,6 +68,7 @@ private:
             BufferData bufferData;
             TextureData textureData;
             ComputePipelineData computeData;
+            VkQueryPool queryPool;
         };
     };
 

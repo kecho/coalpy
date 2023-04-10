@@ -137,6 +137,8 @@ void VulkanGc::deleteVulkanObjects(Object& obj)
             if (data.pipelineLayout)
                 vkDestroyPipelineLayout(m_device.vkDevice(), data.pipelineLayout, nullptr);
         }
+    case Type::QueryPool:
+        vkDestroyQueryPool(m_device.vkDevice(), obj.queryPool, nullptr);
         break;
     default:
         return;
@@ -193,6 +195,19 @@ void VulkanGc::deferRelease(VkPipelineLayout pipelineLayout, VkPipeline pipeline
     data.pipeline = pipeline;
     data.shaderModule = shaderModule;
     
+    {
+        std::unique_lock lock(m_gcMutex);
+        m_pendingDeletion.push(obj);
+    }
+}
+
+void VulkanGc::deferRelease(VkQueryPool queryPool)
+{
+    Object obj;
+    obj.type = Type::QueryPool;
+    obj.memory = VK_NULL_HANDLE;
+    obj.queryPool = queryPool;
+
     {
         std::unique_lock lock(m_gcMutex);
         m_pendingDeletion.push(obj);

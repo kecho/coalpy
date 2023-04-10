@@ -16,6 +16,7 @@
 #include "VulkanCounterPool.h"
 #include "VulkanGc.h"
 #include "VulkanUtils.h"
+#include "VulkanMarkerCollector.h"
 #include <coalpy.render/ShaderDefs.h>
 #include <iostream>
 #include <set>
@@ -244,6 +245,7 @@ VulkanDevice::VulkanDevice(const DeviceConfig& config)
     m_descriptorSetPools = new VulkanDescriptorSetPools(*this);
     m_readbackPool = new VulkanReadbackBufferPool(*this);
     m_counterPool = new VulkanCounterPool(*this);
+    m_markerCollector = new VulkanMarkerCollector(*this);
 
     m_gc->start();
     
@@ -280,6 +282,8 @@ VulkanDevice::~VulkanDevice()
 
     m_resources->release(m_countersBuffer);
 
+    delete m_markerCollector;
+    m_markerCollector = nullptr;
     delete m_readbackPool;
     m_readbackPool = nullptr;
     delete m_resources;
@@ -325,11 +329,12 @@ bool VulkanDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags pro
 
 void VulkanDevice::beginCollectMarkers(int maxQueryBytes)
 {
+    m_markerCollector->beginCollection(maxQueryBytes);
 }
 
 MarkerResults VulkanDevice::endCollectMarkers()
 {
-    return {};
+    return m_markerCollector->endCollection();
 }
 
 TextureResult VulkanDevice::createTexture(const TextureDesc& desc)
