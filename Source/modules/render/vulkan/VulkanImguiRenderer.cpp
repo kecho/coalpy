@@ -284,7 +284,19 @@ void VulkanImguiRenderer::render()
     vkBeginCommandBuffer(list.list, &beginInfo);
 
     BarrierRequest barrierRequest = { m_display.texture(), ResourceGpuState::Rtv };
-    inlineApplyBarriers(m_device, &barrierRequest, 1, list.list);
+
+    std::vector<BarrierRequest> barriers;
+    barriers.reserve(m_textures.size() + 1);
+    barriers.push_back(barrierRequest);
+    for (auto it : m_textures)
+    {
+        barriers.emplace_back();
+        BarrierRequest& b = barriers.back();
+        b.resource = it.first;
+        b.state = ResourceGpuState::Srv;
+    }
+
+    inlineApplyBarriers(m_device, barriers.data(), (int)barriers.size(), list.list);
 
     VkRenderPassBeginInfo info = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO , nullptr};
     info.renderPass = m_vkRenderPass;
@@ -293,7 +305,6 @@ void VulkanImguiRenderer::render()
     info.renderArea.extent.height = m_cachedHeight;
     info.clearValueCount = 0;
     vkCmdBeginRenderPass(list.list, &info, VK_SUBPASS_CONTENTS_INLINE);
-
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), list.list);
 
     vkCmdEndRenderPass(list.list);

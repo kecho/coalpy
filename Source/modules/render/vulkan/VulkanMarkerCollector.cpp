@@ -38,6 +38,7 @@ void VulkanMarkerCollector::beginCollection(int byteCount)
         createInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
         createInfo.queryCount = queryCount;
         VK_OK(vkCreateQueryPool(m_device.vkDevice(), &createInfo, nullptr, &m_queryPool));
+        m_queryHeapBytes = byteCount;
 
         BufferDesc bufferDesc;
         bufferDesc.format = Format::R32_UINT;
