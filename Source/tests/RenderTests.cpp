@@ -1972,7 +1972,6 @@ namespace coalpy
 
     const TestCase* RenderTestSuite::getCases(int& caseCounts) const
     {
-
         static const TestCase defaultCases[] = {
             { "createBuffer",  testCreateBuffer },
             { "createTexture", testCreateTexture },

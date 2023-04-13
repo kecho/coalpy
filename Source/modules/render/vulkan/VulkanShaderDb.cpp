@@ -210,12 +210,32 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
             }
 
             VK_OK(vkCreateDescriptorSetLayout(vulkanDevice.vkDevice(), &layoutCreateInfo, nullptr, &layout));
-            descriptorSetsInfos.push_back(VulkanDescriptorSetInfo { setData->set, layout });
-            layouts.push_back(layout);
+            if (setData->set >= layouts.size())
+            {
+                descriptorSetsInfos.resize(setData->set + 1, {});
+                layouts.resize(setData->set + 1, VK_NULL_HANDLE);
+            }
+            descriptorSetsInfos[setData->set] = VulkanDescriptorSetInfo { setData->set, layout };
+            layouts[setData->set] = layout;
         }
         payload->descriptorSetsInfos = std::move(descriptorSetsInfos);
     }
 
+    //Patch layouts that are null
+    {
+        for (uint32_t set = 0; set < (uint32_t)layouts.size(); ++set)
+        {
+            auto& layout = layouts[set];
+            if (layout != VK_NULL_HANDLE)
+                continue;
+            
+            VkDescriptorSetLayoutCreateInfo layoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, nullptr };
+            VK_OK(vkCreateDescriptorSetLayout(vulkanDevice.vkDevice(), &layoutCreateInfo, nullptr, &layout));
+
+            payload->descriptorSetsInfos[set] = VulkanDescriptorSetInfo { set, layout };
+        }
+    }
+    
     // Create layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
