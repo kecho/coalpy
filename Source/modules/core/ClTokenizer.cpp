@@ -132,6 +132,8 @@ bool ClTokenizer::parseFloat(const std::string& p, float& output, int& charsPars
 std::vector<std::string> ClTokenizer::splitString(const std::string& s, char splitChar)
 {
     std::vector<std::string> split;
+    if (s.empty())
+        return split;
 
     std::stringstream tmp;
     const char* cs = s.c_str();

@@ -6,6 +6,15 @@
 namespace coalpy
 {
 
+enum TestPlatforms : unsigned
+{
+    TestPlatformDx12 = 1 << (unsigned)render::DevicePlat::Dx12,
+    TestPlatformVulkan = 1 << (unsigned)render::DevicePlat::Vulkan
+};
+
+bool parseTestPlatforms(const std::string& arg, TestPlatforms& outPlatforms);
+render::DevicePlat nextPlatform(TestPlatforms& platforms);
+
 class TestContext
 {
 public:
@@ -21,19 +30,25 @@ struct TestCase
     TestFn fn;
 };
 
-class TestSuite
-{
-public:
-    virtual ~TestSuite() {}
-    virtual const char* name() const = 0;
-    virtual const TestCase* getCases(int& caseCounts) const = 0;
-    virtual TestContext* createContext () { return new TestContext(); }
-    virtual void destroyContext(TestContext* context) { delete context; }
+typedef TestContext* (*CreateContextFn)();
+typedef void (*DestroyContextFn)(TestContext*);
 
-    void AddRef() { ++m_ref; }
-    void Release() { --m_ref; if (m_ref == 0) delete this; }
-private:
-    int m_ref = 0;
+struct TestCaseFilter
+{
+    const char* caseName;
+    TestPlatforms supportedPlatforms;
+};
+
+struct TestSuiteDesc
+{
+    const char* name = {};
+    const TestCase* cases = {};
+    int casesCount = 0;
+    const TestCaseFilter* filters = {};
+    int filterCounts = 0;
+    CreateContextFn createContextFn = {};
+    DestroyContextFn destroyContextFn = {};
+    TestPlatforms supportedRenderPlatforms = {};
 };
 
 struct ApplicationContext

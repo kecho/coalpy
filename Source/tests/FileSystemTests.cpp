@@ -246,52 +246,50 @@ void testFileWatcher(TestContext& ctx)
 
 }
 
-class FileSystemTestSuite : public TestSuite
+static const TestCase* createCases(int& caseCounts)
 {
-public:
-    virtual const char* name() const { return "filesystem"; }
-    virtual const TestCase* getCases(int& caseCounts) const
-    {
-        static TestCase sCases[] = {
-            { "createDeleteDir", testCreateDeleteDir },
-            { "fileReadWrite", testFileReadWrite },
-            { "fileWatcher", testFileWatcher }
-        };
+    static TestCase sCases[] = {
+        { "createDeleteDir", testCreateDeleteDir },
+        { "fileReadWrite", testFileReadWrite },
+        { "fileWatcher", testFileWatcher }
+    };
 
-        caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
-        return sCases;
-    }
+    caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
+    return sCases;
+}
 
-    virtual TestContext* createContext()
-    {
-        auto testContext = new FileSystemContext();
-
-        {
-            TaskSystemDesc desc;
-            desc.threadPoolSize = 8;
-            testContext->ts = ITaskSystem::create(desc);
-        }
-
-        {
-            FileSystemDesc desc { testContext->ts };
-            testContext->fs = IFileSystem::create(desc);
-        }
-
-        return testContext;
-    }
-
-    virtual void destroyContext(TestContext* context)
-    {
-        auto testContext = static_cast<FileSystemContext*>(context);
-        delete testContext->fs;
-        delete testContext->ts;
-        delete testContext;
-    }
-};
-
-TestSuite* fileSystemSuite()
+static TestContext* createContext()
 {
-    return new FileSystemTestSuite;
+    auto testContext = new FileSystemContext();
+
+    {
+        TaskSystemDesc desc;
+        desc.threadPoolSize = 8;
+        testContext->ts = ITaskSystem::create(desc);
+    }
+
+    {
+        FileSystemDesc desc { testContext->ts };
+        testContext->fs = IFileSystem::create(desc);
+    }
+
+    return testContext;
+}
+
+static void destroyContext(TestContext* context)
+{
+    auto testContext = static_cast<FileSystemContext*>(context);
+    delete testContext->fs;
+    delete testContext->ts;
+    delete testContext;
+}
+
+void fileSystemSuite(TestSuiteDesc& suite)
+{
+    suite.name = "filesystem";
+    suite.cases = createCases(suite.casesCount);
+    suite.createContextFn = createContext;
+    suite.destroyContextFn = destroyContext;
 }
 
 }

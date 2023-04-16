@@ -8,6 +8,7 @@
 #include <coalpy.render/../../Config.h>
 #include <string>
 #include <string.h>
+#include <unordered_map>
 #include <set>
 #include <atomic>
 #include "testsystem.h"
@@ -19,16 +20,16 @@
 
 using namespace coalpy;
 
-typedef TestSuite*(*CreateSuiteFn)();
+typedef void (*CreateSuiteFn)(TestSuiteDesc&);
 
 namespace coalpy
 {
 
-extern TestSuite* coreSuite();
-extern TestSuite* fileSystemSuite();
-extern TestSuite* taskSystemSuite();
-extern TestSuite* shaderSuite();
-extern TestSuite* renderSuite();
+extern void coreSuite(TestSuiteDesc& suite);
+extern void fileSystemSuite(TestSuiteDesc& suite);
+extern void taskSystemSuite(TestSuiteDesc& suite);
+extern void shaderSuite(TestSuiteDesc& suite);
+extern void renderSuite(TestSuiteDesc& suite);
 
 }
 
@@ -61,26 +62,38 @@ struct SuiteStats
     int casesRan = 0;
 };
 
-void runSuite(CreateSuiteFn createFn, SuiteStats& stats)
+void runSuiteOnPlatform(const TestSuiteDesc& suite, const char* currPlatform, uint32_t platformBit, SuiteStats& stats)
 {
-    g_errors = 0;
-    SmartPtr<TestSuite> suite = createFn();
-    if (!gFilters.suites.empty() && gFilters.suites.find(suite->name()) == gFilters.suites.end())
-        return;
+    std::unordered_map<std::string, TestPlatforms> platformFilters;
+    for (int i = 0; i < suite.filterCounts; ++i)
+        platformFilters[std::string(suite.filters[i].caseName)] = suite.filters[i].supportedPlatforms;
 
-    if (gFilters.cases.empty())
-        printf("[%s]\n", suite->name());
-
-    TestContext* context = suite->createContext();
-    int caseCount = 0;
-    const TestCase* cases = suite->getCases(caseCount);
-    Stopwatch sw;
-    for (int i = 0; i < caseCount; ++i)
+    std::vector<const TestCase*> cases;
+    for (int i = 0; i < suite.casesCount; ++i)
     {
-        const TestCase& caseData = cases[i];
+        const TestCase& caseData = suite.cases[i];
         if (!gFilters.cases.empty() && gFilters.cases.find(caseData.name) == gFilters.cases.end())
             continue;
 
+        auto filterFound = platformFilters.find(caseData.name);
+        if (filterFound != platformFilters.end() && (filterFound->second & platformBit) == 0)
+            continue;
+        cases.push_back(&caseData);
+    }
+
+    if (!cases.empty())
+        if (currPlatform == nullptr)
+            printf("[%s]\n", suite.name);
+        else
+            printf("[%s][%s]\n", suite.name, currPlatform);
+
+    static TestContext sEmptyContext = {};
+    TestContext* context = suite.createContextFn ? suite.createContextFn() : &sEmptyContext;
+    int caseCount = 0;
+    Stopwatch sw;
+    for (int i = 0; i < cases.size(); ++i)
+    {
+        const TestCase& caseData = *cases[i];
         ++stats.casesRan;
         sw.start();
         int prevErr = g_errors;
@@ -92,8 +105,36 @@ void runSuite(CreateSuiteFn createFn, SuiteStats& stats)
     }
     if (gFilters.cases.empty())
         printf("\n");
-    suite->destroyContext(context);
+    if (suite.destroyContextFn && context != &sEmptyContext)
+        suite.destroyContextFn(context);
     g_totalErrors += g_errors;
+}
+
+void runSuite(CreateSuiteFn createFn, SuiteStats& stats, const ApplicationContext& ctx, TestPlatforms platforms)
+{
+    g_errors = 0;
+    TestSuiteDesc suite ;
+    createFn(suite);
+    if (!gFilters.suites.empty() && gFilters.suites.find(suite.name) == gFilters.suites.end())
+        return;
+
+    TestPlatforms actualPlatforms = (TestPlatforms)(suite.supportedRenderPlatforms & platforms);
+    if (actualPlatforms == 0) //no multi platforms
+    {
+        ApplicationContext::set(ctx);
+        runSuiteOnPlatform(suite, nullptr, 0u, stats);
+    }
+    else
+    {
+        while (actualPlatforms)
+        {
+            render::DevicePlat plat = nextPlatform(actualPlatforms);
+            ApplicationContext platformContext = ctx;
+            platformContext.graphicsApi = plat;
+            ApplicationContext::set(platformContext);
+            runSuiteOnPlatform(suite, render::getDevicePlatName(plat), 1u << (int)plat, stats);
+        }
+    }
     g_errors = 0;
 }
 
@@ -117,17 +158,13 @@ bool prepareCli(ClParser& p, ArgParameters& params)
     CliSwitch(gid, "quiet mode, only report test outcome. Doesnt print error details", "q", "quiet", Bool, ArgParameters, quietMode);
     CliSwitch(gid, "Comma separated suite filters", "s", "suites", String, ArgParameters, suitefilter);
     CliSwitch(gid, "Comma separated test case filters", "t", "tests", String, ArgParameters, testfilter);
-    CliSwitch(gid, "Graphics api (dx12, vulkan or default)", "g", "gapi", String, ArgParameters, graphicsApi);
+    CliSwitch(gid, "Comma separated graphics apis (dx12, vulkan or default)", "g", "gapi", String, ArgParameters, graphicsApi);
     CliSwitch(gid, "Run indefinitely iterations of the tests. Ideal to stress test things.", "e", "forever", Bool, ArgParameters, forever);
     return true;
 }
 
 int main(int argc, char* argv[])
 {
-    ApplicationContext appCtx;
-    appCtx.argc = argc;
-    appCtx.argv = argv;
-    
     ArgParameters params;
     ClParser p;
     if (!prepareCli(p, params))
@@ -155,19 +192,12 @@ int main(int argc, char* argv[])
     auto platform = render::DevicePlat::Vulkan;
     #endif
 
-    if (!strcmp(params.graphicsApi, "dx12"))
-        platform = render::DevicePlat::Dx12;
-    else if (!strcmp(params.graphicsApi, "vulkan"))
-        platform = render::DevicePlat::Vulkan;
-    else if (strcmp(params.graphicsApi,"default") && strcmp(params.graphicsApi,""))
+    TestPlatforms platforms = {};
+    if (!parseTestPlatforms(params.graphicsApi, platforms))
     {
-        std::cerr << "Undefined graphics api requested." << std::endl;
+        std::cerr << "Valid platforms must be 'dx12', 'vulkan' comma separated" << std::endl;
         return -1;
     }
-
-    appCtx.graphicsApi = platform;
-
-    ApplicationContext::set(appCtx);
 
     int suiteCounts = (int)(sizeof(g_suites)/sizeof(g_suites[0]));
     if (params.printTests)
@@ -175,14 +205,13 @@ int main(int argc, char* argv[])
         
         for (int i = 0; i < suiteCounts; ++i)
         {
-            TestSuite* suite = g_suites[i]();
-            printf("%s:\n", suite->name());
+            TestSuiteDesc suite;
+            g_suites[i](suite);
+            printf("%s:\n", suite.name);
             int caseCount = 0;
-            const TestCase* cases = suite->getCases(caseCount);
-            for (int j = 0; j < caseCount; ++j)
-                printf("   %s\n", cases[j].name);
+            for (int j = 0; j < suite.casesCount; ++j)
+                printf("   %s\n", suite.cases[j].name);
             printf("\n");
-            delete suite;
         }
         return 0;
     }
@@ -201,6 +230,10 @@ int main(int argc, char* argv[])
             gFilters.cases.insert(s);
     }
 
+    ApplicationContext appCtx;
+    appCtx.argc = argc;
+    appCtx.argv = argv;
+    
     bool keepRunning = true;
     while (keepRunning)
     {
@@ -208,7 +241,7 @@ int main(int argc, char* argv[])
         SuiteStats stats;
         for (int i = 0; i < suiteCounts; ++i)
         {
-            runSuite(g_suites[i], stats);
+            runSuite(g_suites[i], stats, appCtx, platforms);
         }
 
         if ((!gFilters.cases.empty() || !gFilters.suites.empty()) && stats.casesRan == 0)

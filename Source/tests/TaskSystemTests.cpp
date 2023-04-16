@@ -169,43 +169,41 @@ void testTaskYield(TestContext& ctx)
 
 }
 
-class TaskSystemTestSuite : public TestSuite
+static const TestCase* createCases(int& caseCounts)
 {
-public:
-    virtual const char* name() const { return "tasksystem"; }
-    virtual const TestCase* getCases(int& caseCounts) const
-    {
-        static TestCase sCases[] = {
-            { "simpleParallel", testParallel0 },
-            { "simpleParallelRestart", testParallel0 },
-            { "dependencies", testTaskDeps },
-            { "yield", testTaskYield }
-        };
+    static TestCase sCases[] = {
+        { "simpleParallel", testParallel0 },
+        { "simpleParallelRestart", testParallel0 },
+        { "dependencies", testTaskDeps },
+        { "yield", testTaskYield }
+    };
 
-        caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
-        return sCases;
-    }
+    caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
+    return sCases;
+}
 
-    virtual TestContext* createContext()
-    {
-        auto testContext = new TaskSystemContext();
-        TaskSystemDesc desc;
-        desc.threadPoolSize = 8;
-        testContext->ts = ITaskSystem::create(desc);
-        return testContext;
-    }
-
-    virtual void destroyContext(TestContext* context)
-    {
-        auto testContext = static_cast<TaskSystemContext*>(context);
-        delete testContext->ts;
-        delete testContext;
-    }
-};
-
-TestSuite* taskSystemSuite()
+static TestContext* createContext()
 {
-    return new TaskSystemTestSuite();
+    auto testContext = new TaskSystemContext();
+    TaskSystemDesc desc;
+    desc.threadPoolSize = 8;
+    testContext->ts = ITaskSystem::create(desc);
+    return testContext;
+}
+
+static void destroyContext(TestContext* context)
+{
+    auto testContext = static_cast<TaskSystemContext*>(context);
+    delete testContext->ts;
+    delete testContext;
+}
+
+void taskSystemSuite(TestSuiteDesc& suite)
+{
+    suite.name = "tasksystem";
+    suite.cases = createCases(suite.casesCount);
+    suite.createContextFn = createContext;
+    suite.destroyContextFn = destroyContext;
 }
 
 }

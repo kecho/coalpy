@@ -250,70 +250,76 @@ void testFileWatch(TestContext& ctx)
     testContext.end();
 }
 
-class ShaderSuite : public TestSuite
+static const TestCase* createCases(int& caseCounts)
 {
-public:
-    virtual const char* name() const { return "shader"; }
-    virtual const TestCase* getCases(int& caseCounts) const
-    {
-        static TestCase sCases[] = {
-            { "dxcTestSimpleDxcCompile", dxcTestSimpleDxcCompile },
-            { "dxcTestManyParallelDxcCompile", dxcTestParallelDxcCompile },
-            { "dxcTestManySerialDxcCompile", dxcTestManySerialDxcCompile },
-            { "shaderDbCompile", shaderDbCompile },
-            { "testFilewatch", testFileWatch }
-        };
+    static TestCase sCases[] = {
+        { "dxcTestSimpleDxcCompile", dxcTestSimpleDxcCompile },
+        { "dxcTestManyParallelDxcCompile", dxcTestParallelDxcCompile },
+        { "dxcTestManySerialDxcCompile", dxcTestManySerialDxcCompile },
+        { "shaderDbCompile", shaderDbCompile },
+        { "testFilewatch", testFileWatch }
+    };
 
-        caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
-        return sCases;
-    }
+    caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
+    return sCases;
+}
 
-    virtual TestContext* createContext()
-    {
-        #if defined(_WIN32)
-            auto platform = render::DevicePlat::Dx12;
-        #elif defined(__linux__)
-            auto platform = render::DevicePlat::Vulkan;
-        #else
-            #error "Platform not supported"
-        #endif
-        
-        auto testContext = new ShaderServiceContext();
-        std::string resourceDir = ApplicationContext::get().resourceRootDir();
-
-        {
-            TaskSystemDesc desc;
-            desc.threadPoolSize = 8;
-            testContext->ts = ITaskSystem::create(desc);
-        }
-
-        {
-            FileSystemDesc desc { testContext->ts };
-            testContext->fs = IFileSystem::create(desc);
-        }
-
-        {
-            ShaderDbDesc desc = { platform, resourceDir.c_str(), testContext->fs, testContext->ts, nullptr };
-            testContext->dbDesc = desc;
-            testContext->db = IShaderDb::create(desc);
-        }
-
-        return testContext;
-    }
-
-    virtual void destroyContext(TestContext* context)
-    {
-        auto testContext = static_cast<ShaderServiceContext*>(context);
-        delete testContext->db;
-        delete testContext->fs;
-        delete testContext->ts;
-        delete testContext;
-    }
-};
-
-TestSuite* shaderSuite()
+static TestContext* createContext()
 {
-    return new ShaderSuite;
+    #if defined(_WIN32)
+        auto platform = render::DevicePlat::Dx12;
+    #elif defined(__linux__)
+        auto platform = render::DevicePlat::Vulkan;
+    #else
+        #error "Platform not supported"
+    #endif
+    
+    auto testContext = new ShaderServiceContext();
+    std::string resourceDir = ApplicationContext::get().resourceRootDir();
+
+    {
+        TaskSystemDesc desc;
+        desc.threadPoolSize = 8;
+        testContext->ts = ITaskSystem::create(desc);
+    }
+
+    {
+        FileSystemDesc desc { testContext->ts };
+        testContext->fs = IFileSystem::create(desc);
+    }
+
+    {
+        ShaderDbDesc desc = { platform, resourceDir.c_str(), testContext->fs, testContext->ts, nullptr };
+        testContext->dbDesc = desc;
+        testContext->db = IShaderDb::create(desc);
+    }
+
+    return testContext;
+}
+
+static void destroyContext(TestContext* context)
+{
+    auto testContext = static_cast<ShaderServiceContext*>(context);
+    delete testContext->db;
+    delete testContext->fs;
+    delete testContext->ts;
+    delete testContext;
+}
+
+void shaderSuite(TestSuiteDesc& suite)
+{
+    suite.name = "shader";
+    suite.cases = createCases(suite.casesCount);
+    suite.createContextFn = createContext;
+    suite.destroyContextFn = destroyContext;
+    unsigned supportedPlatforms = 0;
+#if ENABLE_DX12
+    supportedPlatforms |= TestPlatformDx12;
+#endif
+#if ENABLE_VULKAN
+    supportedPlatforms |= TestPlatformVulkan;
+#endif
+    suite.supportedRenderPlatforms = (TestPlatforms)supportedPlatforms;
 }
 
 }

@@ -46,27 +46,21 @@ void testHashStream(TestContext& ctx)
     CPY_ASSERT(hsA.val() != hsC.val());
 }
 
-
-class CoreTestSuite : public TestSuite
+static TestCase* createCases(int& caseCounts)
 {
-public:
-    virtual const char* name() const { return "core"; }
-    virtual const TestCase* getCases(int& caseCounts) const
-    {
-        static TestCase sCases[] = {
-            { "byteBuffer", testByteBuffer },
-            { "hashstream", testHashStream }
-        };
+    static TestCase sCases[] = {
+        { "byteBuffer", testByteBuffer },
+        { "hashstream", testHashStream }
+    };
 
-        caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
-        return sCases;
-    }
-};
+    caseCounts = (int)(sizeof(sCases) / sizeof(TestCase));
+    return sCases;
+}
 
-
-TestSuite* coreSuite()
+void coreSuite(TestSuiteDesc& suite)
 {
-    return new CoreTestSuite;
+    suite.name = "core";
+    suite.cases = createCases(suite.casesCount);
 }
 
 }
