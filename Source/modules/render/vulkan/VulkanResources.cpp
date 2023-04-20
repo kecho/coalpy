@@ -872,7 +872,7 @@ void VulkanResources::releaseResourceInternal(ResourceHandle handle, VulkanResou
 
     if (resource.isBuffer())
     {
-        if ((resource.specialFlags & ResourceSpecialFlag_NoDeferDelete) != 0)
+        if ((resource.specialFlags & ResourceSpecialFlag_NoDeferDelete) == 0)
         {
             m_device.gc().deferRelease(
                 resource.bufferData.ownsBuffer ? resource.bufferData.vkBuffer : VK_NULL_HANDLE,
@@ -896,7 +896,7 @@ void VulkanResources::releaseResourceInternal(ResourceHandle handle, VulkanResou
     }
     else if (resource.isTexture())
     {
-        if ((resource.specialFlags & ResourceSpecialFlag_NoDeferDelete) != 0)
+        if ((resource.specialFlags & ResourceSpecialFlag_NoDeferDelete) == 0)
         {
             m_device.gc().deferRelease(
                 resource.textureData.ownsImage ? resource.textureData.vkImage : VK_NULL_HANDLE,
