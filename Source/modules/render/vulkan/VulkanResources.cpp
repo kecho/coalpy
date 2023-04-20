@@ -547,6 +547,7 @@ TextureResult VulkanResources::recreateTexture(Texture texture, const TextureDes
 
     ResourceSpecialFlags oldFlags = resource.specialFlags;
     std::set<ResourceTable> trackedTables = resource.trackedTables;
+    resource.trackedTables.clear(); //clear these so we dont remove the resources from the table.
     releaseResourceInternal(handle, resource);
     resource = {};
     TextureResult result = createTextureInternal(handle, desc, resourceToAcquire, oldFlags); 
