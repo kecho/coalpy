@@ -1,8 +1,0 @@
-{
-	"enable_debug_device":	true,
-	"dump_shader_pdbs":	false,
-	"adapter_index":	1,
-	"graphics_api":	"vulkan",
-	"shader_model":	"sm6_5",
-	"spirv_debug_reflection":	true
-}
