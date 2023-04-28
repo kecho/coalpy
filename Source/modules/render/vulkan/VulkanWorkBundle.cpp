@@ -8,6 +8,7 @@
 #include "VulkanFormats.h"
 #include "VulkanMarkerCollector.h"
 #include <coalpy.core/Assert.h>
+#include <coalpy.core/BitMask.h>
 #include <vector>
 #include <unordered_map>
 #include <string.h>
@@ -54,19 +55,21 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
             {
                 ResourceTable tableHandle = tables[i];
                 const VulkanResourceTable& table = resources.unsafeGetTable(tableHandle);
-                int startBinding, bindingCounts;                
-                SpirvPayload::nextDescriptorRange(activeMask, startBinding, bindingCounts);
-                if (startBinding >= (int)table.descriptorsCount())
+
+                uint64_t lsbMask = ~(activeMask - 1ull);
+                unsigned binding = popCnt((activeMask & lsbMask) - 1ull);
+                activeMask ^= (1ull << binding);
+                if (binding >= (int)table.descriptorsCount())
                     continue;
 
                 copies.emplace_back();
                 VkCopyDescriptorSet& copy = copies.back();
                 copy = { VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, nullptr };
                 copy.srcSet = table.descriptors.descriptors;
-                copy.srcBinding = table.descriptorsBegin + startBinding;
+                copy.srcBinding = table.descriptorsBegin + binding;
                 copy.dstSet = sets[i];
-                copy.dstBinding = (uint32_t)SpirvRegisterTypeOffset(type) + startBinding;
-                copy.descriptorCount = std::min(bindingCounts, (int)table.descriptorsCount());
+                copy.dstBinding = (uint32_t)SpirvRegisterTypeOffset(type) + binding;
+                copy.descriptorCount = 1u;
             }
 
             uint64_t activeCounters = shaderPayload.activeCountersBitMask[i];
@@ -77,19 +80,18 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
                 const VulkanResourceTable& table = resources.unsafeGetTable(tableHandle);
                 if (counterTable >= table.countersEnd)
                     break;
-                int startBinding, bindingCounts; 
-                SpirvPayload::nextDescriptorRange(activeCounters, startBinding, bindingCounts);
-                for (int b = 0; b < bindingCounts; ++b)
-                {
-                    copies.emplace_back();
-                    VkCopyDescriptorSet& copy = copies.back();
-                    copy = { VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, nullptr };
-                    copy.srcSet = table.descriptors.descriptors;
-                    copy.srcBinding = table.countersBegin + counterTable++;
-                    copy.dstSet = sets[i];
-                    copy.dstBinding = shaderPayload.activeCounterRegister[startBinding + b];
-                    copy.descriptorCount = 1;
-                }
+
+                uint64_t lsbMask = ~(activeCounters - 1ull);
+                unsigned binding = popCnt((activeCounters & lsbMask) - 1ull);
+                activeCounters ^= (1ull << binding);
+                copies.emplace_back();
+                VkCopyDescriptorSet& copy = copies.back();
+                copy = { VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, nullptr };
+                copy.srcSet = table.descriptors.descriptors;
+                copy.srcBinding = table.countersBegin + counterTable++;
+                copy.dstSet = sets[i];
+                copy.dstBinding = shaderPayload.activeCounterRegister[binding];
+                copy.descriptorCount = 1;
             }
         }
     };
@@ -114,7 +116,7 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
         write.pBufferInfo = &cbuffer;
         
         cbuffer.buffer = resources.unsafeGetResource(m_uploadMemBlock.buffer).bufferData.vkBuffer;
-        cbuffer.offset = cmdInfo.uploadBufferOffset;
+        cbuffer.offset = m_uploadMemBlock.offset + cmdInfo.uploadBufferOffset;
         cbuffer.range = alignedSize;
     }
     else if (computeCmd->constantCounts > 0)

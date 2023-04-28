@@ -246,6 +246,8 @@ void VulkanDisplay::copyToComputeTexture(VkCommandBuffer cmdBuffer)
 {
     VulkanResources& resources = m_device.resources();
     Texture destination = m_textures[m_activeImageIndex];
+    if (!destination.valid())
+        return;
 
     BarrierRequest barriers[2] = {
         { m_computeTexture, ResourceGpuState::CopySrc },
@@ -316,6 +318,9 @@ void VulkanDisplay::waitOnImageFence()
 
 void VulkanDisplay::presentBarrier(bool flushComputeTexture)
 {
+    if (!m_textures[m_activeImageIndex].valid())
+        return;
+
     VulkanFencePool& fencePool = m_device.fencePool();
     VulkanQueues& queues = m_device.queues();
     VkQueue queue = queues.cmdQueue(WorkType::Graphics);

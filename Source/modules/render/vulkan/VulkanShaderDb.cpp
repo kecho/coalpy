@@ -286,17 +286,6 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
     shaderState.spirVReflectionData = nullptr;
 }
 
-void SpirvPayload::nextDescriptorRange(uint64_t& mask, int& beginIndex, int& count)
-{
-    uint64_t beginMask = mask ^ (mask | (mask - 1));
-    beginIndex = 64 - lzCnt(beginMask);
-    uint64_t endMask = mask + (1 << beginIndex);
-    endMask = endMask ^ (endMask | (endMask - 1));
-    int endIndex = 64 - lzCnt(endMask);
-    count =  endIndex - beginIndex;
-    mask = mask & ~((1ull << endIndex) - 1ull);
-}
-
 void VulkanShaderDb::onDestroyPayload(ShaderState& shaderState)
 {
     ShaderGPUPayload payload = shaderState.payload;

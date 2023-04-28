@@ -411,7 +411,7 @@ TextureResult VulkanResources::createTextureInternal(ResourceHandle handle, cons
     VkMemoryAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memReqs.size;
-    if (!m_device.findMemoryType(memReqs.memoryTypeBits, 0u, allocInfo.memoryTypeIndex)) 
+    if (textureData.ownsImage && !m_device.findMemoryType(memReqs.memoryTypeBits, 0u, allocInfo.memoryTypeIndex))
     {
         if (textureData.ownsImage)
             vkDestroyImage(m_device.vkDevice(), textureData.vkImage, nullptr);
