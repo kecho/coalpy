@@ -10,6 +10,13 @@ namespace coalpy
 namespace render
 {
 
+
+struct ImguiContexts
+{
+    ImGuiContext* imgui;
+    ImPlotContext* implot;
+};
+
 class BaseImguiRenderer : public IimguiRenderer
 {
 public:
@@ -19,13 +26,11 @@ public:
     virtual void newFrame() override;
     virtual void activate() override;
     virtual void render() override;
-    virtual void endFrame() override;
 
 protected:
     void setCoalpyStyle();
     IimguiRendererDesc m_desc;
-    ImGuiContext* m_context;
-    ImPlotContext* m_plotContext;
+    ImguiContexts m_contexts;
     int m_windowHookId;
 };
 

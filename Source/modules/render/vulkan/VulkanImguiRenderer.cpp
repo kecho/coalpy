@@ -238,7 +238,6 @@ void VulkanImguiRenderer::newFrame()
 #if ENABLE_SDL_VULKAN
     ImGui_ImplSDL2_NewFrame();
 #endif
-    activate();
     ImGui_ImplVulkan_NewFrame();
     ImGui::NewFrame();
 }

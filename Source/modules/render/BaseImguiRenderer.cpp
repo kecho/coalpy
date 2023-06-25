@@ -18,15 +18,24 @@ namespace coalpy
 namespace render
 {
 
+ImguiContexts setContext(const ImguiContexts& ctx)
+{
+    ImguiContexts oldCtx = {};
+    oldCtx.imgui = ImGui::GetCurrentContext();
+    oldCtx.implot = ImPlot::GetCurrentContext();
+
+    ImGui::SetCurrentContext(ctx.imgui);
+    ImPlot::SetCurrentContext(ctx.implot);
+
+    return oldCtx;
+}
+
 BaseImguiRenderer::BaseImguiRenderer(const IimguiRendererDesc& desc)
 : m_desc(desc)
 {
-    auto oldContext = ImGui::GetCurrentContext();
-    auto oldPlotContext = ImPlot::GetCurrentContext();
-    m_context = ImGui::CreateContext();
-    m_plotContext = ImPlot::CreateContext();
-    ImGui::SetCurrentContext(m_context);
-    ImPlot::SetCurrentContext(m_plotContext);
+    m_contexts.imgui = ImGui::CreateContext();
+    m_contexts.implot = ImPlot::CreateContext();
+    setContext(m_contexts);
 
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -41,7 +50,10 @@ BaseImguiRenderer::BaseImguiRenderer(const IimguiRendererDesc& desc)
     m_windowHookId = win32window->addHook(
         [this](HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) -> LRESULT
         {
-            return ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
+            ImguiContexts oldCtx = setContext(m_contexts);
+            auto id = ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
+            setContext(oldCtx);
+            return id;
         });
     #endif
 }
@@ -53,10 +65,10 @@ BaseImguiRenderer::~BaseImguiRenderer()
     static_cast<Win32Window*>(m_desc.window)->removeHook(m_windowHookId);
     #endif
 
-    ImGui::SetCurrentContext(m_context);
-    ImPlot::SetCurrentContext(m_plotContext);
+    auto oldCtx = setContext(m_contexts);
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
+    setContext(oldCtx);
 }
 
 void BaseImguiRenderer::setCoalpyStyle()
@@ -124,6 +136,7 @@ void BaseImguiRenderer::setCoalpyStyle()
 
 void BaseImguiRenderer::newFrame()
 {
+    activate();
     #if ENABLE_WIN32_WINDOW
     ImGui_ImplWin32_NewFrame();
     #endif
@@ -131,17 +144,11 @@ void BaseImguiRenderer::newFrame()
 
 void BaseImguiRenderer::activate()
 {
-    ImGui::SetCurrentContext(m_context);
-    ImPlot::SetCurrentContext(m_plotContext);
+    setContext(m_contexts);
 }
 
 void BaseImguiRenderer::render()
 {
-}
-
-void BaseImguiRenderer::endFrame()
-{
-    activate();
 }
 
 

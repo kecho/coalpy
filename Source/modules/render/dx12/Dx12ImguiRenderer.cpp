@@ -31,7 +31,6 @@ Dx12imguiRenderer::Dx12imguiRenderer(const IimguiRendererDesc& desc)
 , m_cachedSwapVersion(-1)
 , m_graphicsFence(((Dx12Device*)desc.device)->queues().getFence(WorkType::Graphics))
 {
-
     m_rtv = m_device.descriptors().allocateRtv();
 
     {
@@ -76,7 +75,6 @@ Dx12imguiRenderer::~Dx12imguiRenderer()
 void Dx12imguiRenderer::newFrame()
 {
     BaseImguiRenderer::newFrame();
-    activate();
     ImGui_ImplDX12_NewFrame();
     ImGui::NewFrame();
 }
