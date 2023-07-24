@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <title>coalpy.gpu Python API</title>
+        <link rel="stylesheet" href="coalpy_docs_style.css"/>
+    </head>
+    <body>
+        <div class="sidebar">
+            <ul>
+                <li>
+                    <div class="treelink">
+                        <div class="treedot">+</div>
+                        <span>List2</span>
+                    </div>
+                    <ul>
+                        <li>
+                            <div class="treelink">
+                                <div class="treedot">+</div>
+                                <span>A</span>
+                            </div>
+                            <ul>
+                                <li><div class="treelink">A</div></li>
+                                <li><div class="treelink">B</div></li>
+                                <li><div class="treelink">C</div></li>
+                            </ul>
+                        </li>
+                        <li><div class="treelink">B</div></li>
+                        <li><div class="treelink">C</div></li>
+                    </ul>
+                </li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+                <li>List</li>
+            </ul>
+        </div>
+        
+        <div class="content">
+            <h1>MyFunction()</h1>
+            <p>
+            Test function.
+            </p>
+        
+        </div>
+        <script>
+                g_sidebar = document.getElementsByClassName("sidebar")[0];
+                g_sidebar_ul = g_sidebar.getElementsByTagName("ul")[0];
+                g_sidebar_lis = g_sidebar_ul.getElementsByTagName("li")
+                for (var i = 0; i < g_sidebar_lis.length; ++i)
+                {
+                    var licontent = g_sidebar_lis[i].getElementsByClassName("treelink")[0];
+                    if (licontent == null)
+                        continue;
+                    
+                    var licontentDot = licontent.getElementsByClassName("treedot")[0];
+                    licontent.parentLi = g_sidebar_lis[i];
+                    licontent.dot = licontentDot == undefined ? null : licontentDot;
+                    licontent.addEventListener("click",
+                    function()
+                    {
+                        var children = this.parentLi.getElementsByTagName("ul")[0];
+                        if (children == undefined || children == null)
+                            return;
+
+                        if (children.style.display == 'none')
+                        {
+                            if (this.dot != null) this.dot.innerHTML = "+";
+                            children.style.display = 'block';
+                        }
+                        else
+                        {
+                            if (this.dot != null) this.dot.innerHTML = "-";
+                            children.style.display = 'none';
+                        }
+                    });
+                }
+        </script>
+    </body>
+</html>

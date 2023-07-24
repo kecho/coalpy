@@ -1,0 +1,29 @@
+.content {
+    padding-left: 390px;
+}
+
+.sidebar
+{
+    display: block;
+    cursor: pointer;
+    font-family: 'Consolas';
+    float: left;
+    width: 340px;
+    height: 100%;
+    position: fixed;
+    overflow-y: auto;
+    margin-left: 20px;
+    padding-right: 20px;
+}
+
+.sidebar ul
+{
+    list-style-type: none;
+}
+
+.treedot
+{
+    float: left;
+    margin-right:10px;
+}
+
