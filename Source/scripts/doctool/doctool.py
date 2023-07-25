@@ -31,9 +31,8 @@ def html_header(module_name):
                             continue;
                         
                         var licontentDot = licontent.getElementsByClassName("treedot")[0];
-                        licontent.parentLi = g_sidebar_lis[i];
-                        licontent.dot = licontentDot == undefined ? null : licontentDot;
-                        licontent.addEventListener("click",
+                        licontentDot.parentLi = g_sidebar_lis[i];
+                        licontentDot.addEventListener("click",
                         function()
                         {
                             var children = this.parentLi.getElementsByTagName("ul")[0];
@@ -42,19 +41,18 @@ def html_header(module_name):
 
                             if (children.style.display == 'none')
                             {
-                                if (this.dot != null) this.dot.innerHTML = "-";
+                                this.innerHTML = "-";
                                 children.style.display = 'block';
                             }
                             else
                             {
-                                if (this.dot != null) this.dot.innerHTML = "+";
+                                this.innerHTML = "+";
                                 children.style.display = 'none';
                             }
                         });
                     }
 
                     g_names = g_sidebar_ul.getElementsByClassName("treename");
-                    console.log(g_names)
                     for (var i = 0; i < g_names.length; ++i)
                         g_names[i].addEventListener("click", function() { goToAnchor(this.innerHTML); });
                 });
