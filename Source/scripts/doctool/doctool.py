@@ -14,6 +14,13 @@ def html_header(module_name):
         <script>
                 document.addEventListener('DOMContentLoaded', function()
                 {
+                    function goToAnchor(anchor)
+                    {
+                        var loc = document.location.toString().split('#')[0];
+                        document.location = loc + '#' + anchor;
+                        return false;
+                    }
+
                     g_sidebar = document.getElementsByClassName("sidebar")[0];
                     g_sidebar_ul = g_sidebar.getElementsByTagName("ul")[0];
                     g_sidebar_lis = g_sidebar_ul.getElementsByTagName("li")
@@ -45,13 +52,18 @@ def html_header(module_name):
                             }
                         });
                     }
+
+                    g_names = g_sidebar_ul.getElementsByClassName("treename");
+                    console.log(g_names)
+                    for (var i = 0; i < g_names.length; ++i)
+                        g_names[i].addEventListener("click", function() { goToAnchor(this.innerHTML); });
                 });
         </script>
     </head>
 """ % (module_name), end="")
 
 def html_doc_bar_item_name(name, can_expand=True, is_expanded=True):
-    return """<div class="treelink"><div class="treedot">%s</div><span>%s</span></div>""" % (('-' if is_expanded else '+') if can_expand else "", name)
+    return """<div class="treelink"><div class="treedot">%s</div><span class="treename">%s</span></div>""" % (('-' if is_expanded else '+') if can_expand else "", name)
 
 def html_class_doc_bar(class_name, class_obj, lvl = 0):
     allsymbols = dir(class_obj)
@@ -154,7 +166,7 @@ def html_doc_bar(mod):
         </div>""", end="")
 
 def html_recurse_doc(parent_name, obj_name, obj):
-    outs = "<h3>%s</h3>" % (parent_name + obj_name)
+    outs = """<h3 id="%s">%s</h3>""" % (obj_name, parent_name + obj_name)
     outs += "<pre>%s</pre>" % (obj.__doc__)
     outs += "<br/>"
     allsymbols = dir(obj)
