@@ -1,5 +1,6 @@
 .content {
-    padding-left: 390px;
+    padding-left: 490px;
+    font-family: 'Consolas';
 }
 
 .sidebar
@@ -8,7 +9,7 @@
     cursor: pointer;
     font-family: 'Consolas';
     float: left;
-    width: 340px;
+    width: 440px;
     height: 100%;
     position: fixed;
     overflow-y: auto;
