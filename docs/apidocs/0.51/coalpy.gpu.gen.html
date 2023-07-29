@@ -47,7 +47,6 @@
                     }
 
                     g_names = g_sidebar_ul.getElementsByClassName("treename");
-                    console.log(g_names)
                     for (var i = 0; i < g_names.length; ++i)
                         g_names[i].addEventListener("click", function() { goToAnchor(this.innerHTML); });
                 });

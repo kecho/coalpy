@@ -1,4 +1,11 @@
-.content {
+html
+{
+    background-color: #252a34;
+    color: #fff;
+}
+
+.content
+{
     padding-left: 490px;
     font-family: 'Consolas';
 }
