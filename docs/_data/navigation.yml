@@ -2,6 +2,6 @@ main:
   - title: Tutorial
     url: /tutorial
   - title: API Docs
-    url: /coalpy.gpu.html
+    url: /apidocs/0.50/coalpy.gpu.html
   - title: GitHub
     url: https://github.com/kecho/coalpy

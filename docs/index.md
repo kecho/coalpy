@@ -6,7 +6,7 @@ excerpt: >
 ---
 
 Welcome to CoalPy! This python library will let you write quickly and effortlessly high performance GPU code.
-To install and get started (ensure you use python3.9):
+To install and get started (ensure you use python3.11):
 
 ```bash
 python -m pip install coalpy

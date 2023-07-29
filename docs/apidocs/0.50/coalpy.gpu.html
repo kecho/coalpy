@@ -273,37 +273,11 @@
                     </li>
                     <li><div class="treelink"><div class="treedot">-</div><span class="treename">InResourceTable</span></div>
                     </li>
-                    <li><div class="treelink"><div class="treedot">+</div><span class="treename">MarkerResults</span></div>
-            <ul style="display:none">
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">markers</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">timestamp_buffer</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">timestamp_frequency</span></div>
-            </li>
-        </ul>
+                    <li><div class="treelink"><div class="treedot">-</div><span class="treename">MarkerResults</span></div>
                     </li>
                     <li><div class="treelink"><div class="treedot">-</div><span class="treename">OutResourceTable</span></div>
                     </li>
-                    <li><div class="treelink"><div class="treedot">+</div><span class="treename">RenderArgs</span></div>
-            <ul style="display:none">
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">delta_time</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">height</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">imgui</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">implot</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">render_time</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">user_data</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">width</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">window</span></div>
-            </li>
-        </ul>
+                    <li><div class="treelink"><div class="treedot">-</div><span class="treename">RenderArgs</span></div>
                     </li>
                     <li><div class="treelink"><div class="treedot">+</div><span class="treename">ResourceDownloadRequest</span></div>
             <ul style="display:none">
@@ -323,18 +297,6 @@
                     </li>
                     <li><div class="treelink"><div class="treedot">+</div><span class="treename">Settings</span></div>
             <ul style="display:none">
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">adapter_index</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">dump_shader_pdbs</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">enable_debug_device</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">graphics_api</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">shader_model</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">spirv_debug_reflection</span></div>
-            </li>
             <li><div class="treelink"><div class="treedot">-</div><span class="treename">save</span></div>
             </li>
         </ul>
@@ -357,20 +319,12 @@
             </li>
         </ul>
             </li>
-            <li><div class="treelink"><div class="treedot">+</div><span class="treename">ObjReaderConfig</span></div>
-            <ul>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">triangulate</span></div>
-            </li>
-        </ul>
+            <li><div class="treelink"><div class="treedot">-</div><span class="treename">ObjReaderConfig</span></div>
             </li>
         </ul>
                     </li>
                     <li><div class="treelink"><div class="treedot">+</div><span class="treename">Window</span></div>
             <ul style="display:none">
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">display_texture</span></div>
-            </li>
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">user_data</span></div>
-            </li>
             <li><div class="treelink"><div class="treedot">-</div><span class="treename">get_key_state</span></div>
             </li>
             <li><div class="treelink"><div class="treedot">-</div><span class="treename">get_mouse_position</span></div>
@@ -381,8 +335,6 @@
                     </li>
                     <li><div class="treelink"><div class="treedot">+</div><span class="treename">exception_object</span></div>
             <ul style="display:none">
-            <li><div class="treelink"><div class="treedot">-</div><span class="treename">args</span></div>
-            </li>
             <li><div class="treelink"><div class="treedot">-</div><span class="treename">add_note</span></div>
             </li>
             <li><div class="treelink"><div class="treedot">-</div><span class="treename">with_traceback</span></div>
@@ -442,20 +394,20 @@
             </ul>
         </div>
         <div class="content">
-<h3 id="coalpy.gpu">coalpy.gpu</h3><pre> << coalpy >> Compute Abstraction Layer for Python 
+<div id="coalpy.gpu" class="h3title">coalpy.gpu</div><pre> << coalpy >> Compute Abstraction Layer for Python 
  by Kleber A Garcia 2021 (c). 
 coalpy is a compute abstraction layer for python. It brings
 advanced rendering features focused on compute shaders and an easy interface
 to create graphical applications, without dealing with graphics APIs complexity.
 Start by creating a shader, create a window, passing an onRender function, create a command list
 and start using your GPU!
-</pre><br/><h3 id="add_data_path">coalpy.gpu.add_data_path</h3><pre>
+</pre><br/><div id="add_data_path" class="h3title">coalpy.gpu.add_data_path</div><div class="subtitle">function</div><pre>
     Adds a path to load shader / texture files / shader includes from.
     
     Parameters:
         path (str or Module):  If str it will be a path to be used. If a module, it will find the source folder of the module's __init__.py file, and use this source as the path.
                                path priorities are based on the order of how they were added.
-    </pre><br/><h3 id="begin_collect_markers">coalpy.gpu.begin_collect_markers</h3><pre>
+    </pre><br/><div id="begin_collect_markers" class="h3title">coalpy.gpu.begin_collect_markers</div><div class="subtitle">function</div><pre>
     Call this surrounding all your schedules to define a 'frame'.
     Once you call end_collect_markers you can extract the results for further processing.
 
@@ -466,37 +418,37 @@ and start using your GPU!
 
     Parameters:
         max_query_bytes (int)(optional): default value 56kb. Maximum amount of marker data to obtain.   
-    </pre><br/><h3 id="end_collect_markers">coalpy.gpu.end_collect_markers</h3><pre>
+    </pre><br/><div id="end_collect_markers" class="h3title">coalpy.gpu.end_collect_markers</div><div class="subtitle">function</div><pre>
     Ends marker collection. See gpu.begin_collect_markers
 
     Returns:
         marker_results (see g.MarkerResults)
-    </pre><br/><h3 id="get_adapters">coalpy.gpu.get_adapters</h3><pre>
+    </pre><br/><div id="get_adapters" class="h3title">coalpy.gpu.get_adapters</div><div class="subtitle">function</div><pre>
     Lists all gpu graphics cards found in the system.
 
     Returns:
         adapters (Array of tuple): Each element in the list is a tuple of type (i : int, name : Str)
-    </pre><br/><h3 id="get_current_adapter_info">coalpy.gpu.get_current_adapter_info</h3><pre>
+    </pre><br/><div id="get_current_adapter_info" class="h3title">coalpy.gpu.get_current_adapter_info</div><div class="subtitle">function</div><pre>
     Gets the currently active GPU adapter, as a tuple of (i : int, name : Str).
 
     Returns:
         adapter (tuple): Element as tuple of type (i : int, name : str)
-    </pre><br/><h3 id="get_settings">coalpy.gpu.get_settings</h3><pre>
+    </pre><br/><div id="get_settings" class="h3title">coalpy.gpu.get_settings</div><div class="subtitle">function</div><pre>
     Returns an object containing all the settings loaded for the coalpy.gpu module.
 
     Returns:
         Object: object containing all the settings loaded for coalpy.gpu
-    </pre><br/><h3 id="init">coalpy.gpu.init</h3><pre>
+    </pre><br/><div id="init" class="h3title">coalpy.gpu.init</div><div class="subtitle">function</div><pre>
         Initializes the device, if it hasn't been initialized.
         Call this function to explicitely initialize the device. Only here any configuration changes will be applied.
         If this function is not called, initialization of the adapter happens upon the first usage (implicitely).
         Any modifications to the settings (such as graphics API or adapter index) won't be applied until the application restarts.
-    </pre><br/><h3 id="run">coalpy.gpu.run</h3><pre>Runs window rendering callbacks. This function blocks until all the existing windows are closed. Window objects must be created and referenced prior. Use the Window object to configure / specify callbacks and this function to run all the event loops for windows.</pre><br/><h3 id="schedule">coalpy.gpu.schedule</h3><pre>
+    </pre><br/><div id="run" class="h3title">coalpy.gpu.run</div><div class="subtitle">function</div><pre>Runs window rendering callbacks. This function blocks until all the existing windows are closed. Window objects must be created and referenced prior. Use the Window object to configure / specify callbacks and this function to run all the event loops for windows.</pre><br/><div id="schedule" class="h3title">coalpy.gpu.schedule</div><div class="subtitle">function</div><pre>
     Submits an array of CommandList objects to the GPU to run shader work on.
 
     Parameters:
         command_lists (array of CommandList or a single CommandList object): an array of CommandList objects or a single CommandList object to run in the GPU. CommandList can be resubmitted through more calls of schedule.
-    </pre><br/><h3 id="Buffer">coalpy.gpu.Buffer</h3><pre>
+    </pre><br/><div id="Buffer" class="h3title">coalpy.gpu.Buffer</div><div class="subtitle">type</div><pre>
     Class that represents a Buffer GPU resource.
 
     Constructor:
@@ -508,21 +460,21 @@ and start using your GPU!
         stride (int): stride count in case of Structured type
         is_constant_buffer (Bool) : True if this can be used as a constant buffer. False otherwise.
         is_append_consume (Bool) : True if this can be used as an append consume buffer in the GPU. False otherwise. This wont work for raw buffers.
-    </pre><br/><h3 id="CommandList">coalpy.gpu.CommandList</h3><pre>Class that represents a stream of commands. Takes no arguments for constructor. CommandList objects can be uploaded
+    </pre><br/><div id="CommandList" class="h3title">coalpy.gpu.CommandList</div><div class="subtitle">type</div><pre>Class that represents a stream of commands. Takes no arguments for constructor. CommandList objects can be uploaded
 via coalpy.gpu.schedule. CommandList objects can be resubmitted as many times
-and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.CommandList.begin_marker</h3><pre>
+and can be reused to avoid cost.</pre><br/><div id="begin_marker" class="h3title">coalpy.gpu.CommandList.begin_marker</div><div class="subtitle">function</div><pre>
     Sets a string marker. Must be paired with a call to end_marker. Markers can also be nested.
     You can use renderdoc / pix to explore the resulting frame's markers.
     
     Parameters:
         name (str): string text of the marker to be used.
-</pre><br/><h3 id="clear_append_consume_counter">coalpy.gpu.CommandList.clear_append_consume_counter</h3><pre>
+</pre><br/><div id="clear_append_consume_counter" class="h3title">coalpy.gpu.CommandList.clear_append_consume_counter</div><div class="subtitle">function</div><pre>
     Clears the append consume counter of a Buffer that was created with the is_append_consume flag set to true.
 
     Parameters:
         source (Buffer): source Buffer object
         clear_value (int)(optional): integer value with the clear count. By default is 0.
-</pre><br/><h3 id="copy_append_consume_counter">coalpy.gpu.CommandList.copy_append_consume_counter</h3><pre>
+</pre><br/><div id="copy_append_consume_counter" class="h3title">coalpy.gpu.CommandList.copy_append_consume_counter</div><div class="subtitle">function</div><pre>
     Copies the counter of an append consume buffer to a destination resource.
     The destination must be a buffer that holds at least 4 bytes (considering the offset).
 
@@ -530,7 +482,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
         source (Buffer): source Buffer object, must have is_append_consume flag to True.
         destination (Buffer): Destination buffer to hold value.
         destination_offset (int)(optional): integer value with the destination's buffer offset, in bytes.
-</pre><br/><h3 id="copy_resource">coalpy.gpu.CommandList.copy_resource</h3><pre>
+</pre><br/><div id="copy_resource" class="h3title">coalpy.gpu.CommandList.copy_resource</div><div class="subtitle">function</div><pre>
     copy_resource method, copies one resource to another.
     Both source and destination must be the same type (either Buffer or textures).
     Parameters:
@@ -539,7 +491,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
         source_offset (tuple or int): if texture copy, a tuple with x, y, z offsets and mipLevel must be specified. If Buffer copy, it must be a single integer with the byte offset for the source Buffer.
         destination_offset (tuple or int): if texture copy, a tuple with x, y, z offsets and mipLevel must be specified. If Buffer copy, it must be a single integer with the byte offset for the destianation Buffer.
         size (tuple or int): if texture a tuple with the x, y and z size. If Buffer just an int with the proper byte size. Default covers the entire size.
-</pre><br/><h3 id="dispatch">coalpy.gpu.CommandList.dispatch</h3><pre>
+</pre><br/><div id="dispatch" class="h3title">coalpy.gpu.CommandList.dispatch</div><div class="subtitle">function</div><pre>
     Dispatch method, which executes a compute shader with resources bound.
     
     Parameters:
@@ -569,9 +521,9 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
         indirect_args (Buffer)(optional): a single object of type Buffer, which contains the x, y and z groups packed tightly as 3 ints. 
                                   If this buffer is provided, the x, y and z arguments are ignored.
-</pre><br/><h3 id="end_marker">coalpy.gpu.CommandList.end_marker</h3><pre>
+</pre><br/><div id="end_marker" class="h3title">coalpy.gpu.CommandList.end_marker</div><div class="subtitle">function</div><pre>
     Finishes the scope of a marker. Must have a corresponding begin_marker.
-</pre><br/><h3 id="upload_resource">coalpy.gpu.CommandList.upload_resource</h3><pre>
+</pre><br/><div id="upload_resource" class="h3title">coalpy.gpu.CommandList.upload_resource</div><div class="subtitle">function</div><pre>
     upload_resource method. Uploads an python array [], an array.array or any buffer protocol compatible object to a gpu resource.
     
     Parameters:
@@ -579,13 +531,13 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
         destination (Texture or Buffer): a destination object of type Texture or Buffer.
         size (tuple): if texture upload, a tuple with the x, y and z size of the box to copy of the source buffer. If a Buffer upload, then this parameter gets ignored.
         destination_offset (tuple or int): if texture copy, a tuple with x, y, z offsets and mipLevel must be specified. If Buffer copy, it must be a single integer with the byte offset for the destianation Buffer.
-</pre><br/><h3 id="ImguiBuilder">coalpy.gpu.ImguiBuilder</h3><pre>
+</pre><br/><div id="ImguiBuilder" class="h3title">coalpy.gpu.ImguiBuilder</div><div class="subtitle">type</div><pre>
     Imgui builder class. Use this class' methods to build a Dear ImGUI on a specified window.
     To utilize you need to instantiate a Window object. In its constructor set use_imgui to True (which is by default).
     On the on_render function, you will receive a RenderArgs object. There will be a ImguiBuilder object in the imgui member that you can now
     query to construct your user interface.
     Coalpy does not support creation of a ImguiBuilder object, it will always be passed as an argument on the RenderArgs of the window.
-    </pre><br/><h3 id="begin">coalpy.gpu.ImguiBuilder.begin</h3><pre>
+    </pre><br/><div id="begin" class="h3title">coalpy.gpu.ImguiBuilder.begin</div><div class="subtitle">function</div><pre>
     Begin method, starts the scope of a ImGUI interface. This method must have a corresponding end at some point denoting 
     denoting the scope of all functions required.
 
@@ -599,7 +551,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         returns a boolean, True if the X for closing this panel was pressed, False otherwise.
-</pre><br/><h3 id="begin_combo">coalpy.gpu.ImguiBuilder.begin_combo</h3><pre>
+</pre><br/><div id="begin_combo" class="h3title">coalpy.gpu.ImguiBuilder.begin_combo</div><div class="subtitle">function</div><pre>
     begins a combo box. Must be paired with an end_combo call.
     To insert items, use selectable() between begin_combo/end_combo
 
@@ -609,20 +561,20 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         If value returned is true, must call end_combo.
-</pre><br/><h3 id="begin_main_menu_bar">coalpy.gpu.ImguiBuilder.begin_main_menu_bar</h3><pre>
+</pre><br/><div id="begin_main_menu_bar" class="h3title">coalpy.gpu.ImguiBuilder.begin_main_menu_bar</div><div class="subtitle">function</div><pre>
     Starts the scope of a main menu at the top of the window. Use the MainMenu and BeginMenu/EndMenu functions to add / remove components.
     Must be paired with a end_main_menu_bar method.
 
     Returns:
         if returns true, call end_main_menu_bar. If returns false means its not rendered.
-</pre><br/><h3 id="begin_menu">coalpy.gpu.ImguiBuilder.begin_menu</h3><pre>
+</pre><br/><div id="begin_menu" class="h3title">coalpy.gpu.ImguiBuilder.begin_menu</div><div class="subtitle">function</div><pre>
     Starts a menu item in the menu bar. Must be paird with an end_menu method.
     Parameters:
         label (str): name of this menu item. Can recursively have more menu items.
 
     Returns:
         if returns true, call end_menu. If returns false means its not rendered.
-</pre><br/><h3 id="begin_tab_bar">coalpy.gpu.ImguiBuilder.begin_tab_bar</h3><pre>
+</pre><br/><div id="begin_tab_bar" class="h3title">coalpy.gpu.ImguiBuilder.begin_tab_bar</div><div class="subtitle">function</div><pre>
     create and append into a TabBar
     
     Parameters:
@@ -631,7 +583,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Return:
         bool
-</pre><br/><h3 id="begin_tab_item">coalpy.gpu.ImguiBuilder.begin_tab_item</h3><pre>
+</pre><br/><div id="begin_tab_item" class="h3title">coalpy.gpu.ImguiBuilder.begin_tab_item</div><div class="subtitle">function</div><pre>
     create a Tab. Returns true if the Tab is selected.
     
     Parameters:
@@ -641,7 +593,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
         
     Return:
         bool
-</pre><br/><h3 id="button">coalpy.gpu.ImguiBuilder.button</h3><pre>
+</pre><br/><div id="button" class="h3title">coalpy.gpu.ImguiBuilder.button</div><div class="subtitle">function</div><pre>
     Draws a button.
 
     Parameters:
@@ -649,7 +601,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if button was pressed, false otherwise.
-</pre><br/><h3 id="checkbox">coalpy.gpu.ImguiBuilder.checkbox</h3><pre>
+</pre><br/><div id="checkbox" class="h3title">coalpy.gpu.ImguiBuilder.checkbox</div><div class="subtitle">function</div><pre>
     Draws a checkbox ui item.
 
     Parameters:
@@ -658,7 +610,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         The new bool value that the user set. Feed this value back on v on the next call to see a proper state update.
-</pre><br/><h3 id="collapsing_header">coalpy.gpu.ImguiBuilder.collapsing_header</h3><pre>
+</pre><br/><div id="collapsing_header" class="h3title">coalpy.gpu.ImguiBuilder.collapsing_header</div><div class="subtitle">function</div><pre>
     Returns the state of a header label (collapsed or non collapsed).
 
     Parameters:
@@ -667,21 +619,21 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if open, False otherwise.
-</pre><br/><h3 id="dockbuilder_add_node">coalpy.gpu.ImguiBuilder.dockbuilder_add_node</h3><pre>
+</pre><br/><div id="dockbuilder_add_node" class="h3title">coalpy.gpu.ImguiBuilder.dockbuilder_add_node</div><div class="subtitle">function</div><pre>
     Parameters:
         node_id (int)
         flags (int): see coalpy.gpu.ImGuiDockNodeFlags
 
     Returns:
         dock_id added.
-</pre><br/><h3 id="dockbuilder_dock_window">coalpy.gpu.ImguiBuilder.dockbuilder_dock_window</h3><pre>
+</pre><br/><div id="dockbuilder_dock_window" class="h3title">coalpy.gpu.ImguiBuilder.dockbuilder_dock_window</div><div class="subtitle">function</div><pre>
     Parameters:
         window_name (str)
         node_id (int)
-</pre><br/><h3 id="dockbuilder_finish">coalpy.gpu.ImguiBuilder.dockbuilder_finish</h3><pre>
+</pre><br/><div id="dockbuilder_finish" class="h3title">coalpy.gpu.ImguiBuilder.dockbuilder_finish</div><div class="subtitle">function</div><pre>
     Parameters:
         node_id (int)
-</pre><br/><h3 id="dockbuilder_node_exists">coalpy.gpu.ImguiBuilder.dockbuilder_node_exists</h3><pre>
+</pre><br/><div id="dockbuilder_node_exists" class="h3title">coalpy.gpu.ImguiBuilder.dockbuilder_node_exists</div><div class="subtitle">function</div><pre>
     Tests wether a dockspace exists. Ideal to setup dock layout at init.
     Use an id or a string.
 
@@ -691,21 +643,21 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if it exists, False otherwise
-</pre><br/><h3 id="dockbuilder_remove_child_nodes">coalpy.gpu.ImguiBuilder.dockbuilder_remove_child_nodes</h3><pre>
+</pre><br/><div id="dockbuilder_remove_child_nodes" class="h3title">coalpy.gpu.ImguiBuilder.dockbuilder_remove_child_nodes</div><div class="subtitle">function</div><pre>
     Parameters:
         node_id (int)
-</pre><br/><h3 id="dockbuilder_remove_node">coalpy.gpu.ImguiBuilder.dockbuilder_remove_node</h3><pre>
+</pre><br/><div id="dockbuilder_remove_node" class="h3title">coalpy.gpu.ImguiBuilder.dockbuilder_remove_node</div><div class="subtitle">function</div><pre>
     Parameters:
         node_id (int)
-</pre><br/><h3 id="dockbuilder_set_node_pos">coalpy.gpu.ImguiBuilder.dockbuilder_set_node_pos</h3><pre>
+</pre><br/><div id="dockbuilder_set_node_pos" class="h3title">coalpy.gpu.ImguiBuilder.dockbuilder_set_node_pos</div><div class="subtitle">function</div><pre>
     Parameters:
         node_id (int)
         pos (tuple 2)
-</pre><br/><h3 id="dockbuilder_set_node_size">coalpy.gpu.ImguiBuilder.dockbuilder_set_node_size</h3><pre>
+</pre><br/><div id="dockbuilder_set_node_size" class="h3title">coalpy.gpu.ImguiBuilder.dockbuilder_set_node_size</div><div class="subtitle">function</div><pre>
     Parameters:
         node_id (int)
         size (tuple 2)
-</pre><br/><h3 id="dockbuilder_split_node">coalpy.gpu.ImguiBuilder.dockbuilder_split_node</h3><pre>
+</pre><br/><div id="dockbuilder_split_node" class="h3title">coalpy.gpu.ImguiBuilder.dockbuilder_split_node</div><div class="subtitle">function</div><pre>
     Parameters:
         node_id (int)
         split_dir (int): see coalpy.gpu.ImGuiDir 
@@ -713,7 +665,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
     
     Returns:
         tuple 2: (dock_id_at_dir, dock_id_opposite_dir)
-</pre><br/><h3 id="dockspace">coalpy.gpu.ImguiBuilder.dockspace</h3><pre>
+</pre><br/><div id="dockspace" class="h3title">coalpy.gpu.ImguiBuilder.dockspace</div><div class="subtitle">function</div><pre>
     Creates an explicit dockspace
 
     Parameters:
@@ -722,42 +674,42 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         dockspace_id (int): id of the dockspace used.
-</pre><br/><h3 id="end">coalpy.gpu.ImguiBuilder.end</h3><pre>
+</pre><br/><div id="end" class="h3title">coalpy.gpu.ImguiBuilder.end</div><div class="subtitle">function</div><pre>
     End method. Must be paired with a corresponding begin method.
-</pre><br/><h3 id="end_combo">coalpy.gpu.ImguiBuilder.end_combo</h3><pre>
+</pre><br/><div id="end_combo" class="h3title">coalpy.gpu.ImguiBuilder.end_combo</div><div class="subtitle">function</div><pre>
     Ends a combo box. Must be paired with an begin_combo call only if it returns true..
-</pre><br/><h3 id="end_main_menu_bar">coalpy.gpu.ImguiBuilder.end_main_menu_bar</h3><pre>
+</pre><br/><div id="end_main_menu_bar" class="h3title">coalpy.gpu.ImguiBuilder.end_main_menu_bar</div><div class="subtitle">function</div><pre>
     End method for main menu bar. Must be paired with a begin_main_menu_bar method.
     
     Only call this if begin_main_menu_bar returns true.
-</pre><br/><h3 id="end_menu">coalpy.gpu.ImguiBuilder.end_menu</h3><pre>
+</pre><br/><div id="end_menu" class="h3title">coalpy.gpu.ImguiBuilder.end_menu</div><div class="subtitle">function</div><pre>
     End method for menu item. Must be paired with a begin_menu method.
     Only call this if begin_menu returns true.
-</pre><br/><h3 id="end_tab_bar">coalpy.gpu.ImguiBuilder.end_tab_bar</h3><pre>
+</pre><br/><div id="end_tab_bar" class="h3title">coalpy.gpu.ImguiBuilder.end_tab_bar</div><div class="subtitle">function</div><pre>
     only call EndTabBar() if BeginTabBar() returns true!
-</pre><br/><h3 id="end_tab_item">coalpy.gpu.ImguiBuilder.end_tab_item</h3><pre>
+</pre><br/><div id="end_tab_item" class="h3title">coalpy.gpu.ImguiBuilder.end_tab_item</div><div class="subtitle">function</div><pre>
     only call EndTabItem() if BeginTabItem() returns true!
-</pre><br/><h3 id="get_cursor_pos">coalpy.gpu.ImguiBuilder.get_cursor_pos</h3><pre>
+</pre><br/><div id="get_cursor_pos" class="h3title">coalpy.gpu.ImguiBuilder.get_cursor_pos</div><div class="subtitle">function</div><pre>
     Cursor position in window coordinates (relative to window position)
 
     Returns:
         Mouse pos (tuple x, y)
-</pre><br/><h3 id="get_cursor_screen_pos">coalpy.gpu.ImguiBuilder.get_cursor_screen_pos</h3><pre>
+</pre><br/><div id="get_cursor_screen_pos" class="h3title">coalpy.gpu.ImguiBuilder.get_cursor_screen_pos</div><div class="subtitle">function</div><pre>
     Cursor position in OS coordinates (absolute to OS)
 
     Returns:
         Mouse pos (tuple x, y)
-</pre><br/><h3 id="get_id">coalpy.gpu.ImguiBuilder.get_id</h3><pre>
+</pre><br/><div id="get_id" class="h3title">coalpy.gpu.ImguiBuilder.get_id</div><div class="subtitle">function</div><pre>
     Parameters:
         name (str)
     Returns:
         int (id)
-</pre><br/><h3 id="get_item_rect_size">coalpy.gpu.ImguiBuilder.get_item_rect_size</h3><pre>
+</pre><br/><div id="get_item_rect_size" class="h3title">coalpy.gpu.ImguiBuilder.get_item_rect_size</div><div class="subtitle">function</div><pre>
     Get prev items rec size
     
     Return:
         size (tuple 2 float)
-</pre><br/><h3 id="get_key_name">coalpy.gpu.ImguiBuilder.get_key_name</h3><pre>
+</pre><br/><div id="get_key_name" class="h3title">coalpy.gpu.ImguiBuilder.get_key_name</div><div class="subtitle">function</div><pre>
     [DEBUG] returns English name of the key. Those names a provided for debugging purpose and are not meant to be saved persistently not compared.
 
     Parameters:
@@ -765,7 +717,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         Gets the key name (str)
-</pre><br/><h3 id="get_key_pressed_amount">coalpy.gpu.ImguiBuilder.get_key_pressed_amount</h3><pre>
+</pre><br/><div id="get_key_pressed_amount" class="h3title">coalpy.gpu.ImguiBuilder.get_key_pressed_amount</div><div class="subtitle">function</div><pre>
     uses provided repeat rate/delay. return a count, most often 0 or 1 but might be >1 if RepeatRate is small enough that DeltaTime > RepeatRate
 
     Parameters:
@@ -775,42 +727,42 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         int, see comments
-</pre><br/><h3 id="get_mouse_pos">coalpy.gpu.ImguiBuilder.get_mouse_pos</h3><pre>
+</pre><br/><div id="get_mouse_pos" class="h3title">coalpy.gpu.ImguiBuilder.get_mouse_pos</div><div class="subtitle">function</div><pre>
     Gets the absolute mouse position
 
     Returns:
         Mouse pos (tuple x, y)
-</pre><br/><h3 id="get_viewport_work_pos">coalpy.gpu.ImguiBuilder.get_viewport_work_pos</h3><pre>
+</pre><br/><div id="get_viewport_work_pos" class="h3title">coalpy.gpu.ImguiBuilder.get_viewport_work_pos</div><div class="subtitle">function</div><pre>
     Work Area: Position of the viewport minus task bars, menus bars, status bars (>= Pos)
 
     Returns:
         tuple (x, y)
-</pre><br/><h3 id="get_viewport_work_size">coalpy.gpu.ImguiBuilder.get_viewport_work_size</h3><pre>
+</pre><br/><div id="get_viewport_work_size" class="h3title">coalpy.gpu.ImguiBuilder.get_viewport_work_size</div><div class="subtitle">function</div><pre>
     Work Area: Size of the viewport minus task bars, menu bars, status bars (<= Size)
 
     Returns:
         tuple (x, y)
-</pre><br/><h3 id="get_window_content_region_max">coalpy.gpu.ImguiBuilder.get_window_content_region_max</h3><pre>
+</pre><br/><div id="get_window_content_region_max" class="h3title">coalpy.gpu.ImguiBuilder.get_window_content_region_max</div><div class="subtitle">function</div><pre>
     Get the remaining content region
 
     Return:
         region min (tuple 2 float)
-</pre><br/><h3 id="get_window_content_region_min">coalpy.gpu.ImguiBuilder.get_window_content_region_min</h3><pre>
+</pre><br/><div id="get_window_content_region_min" class="h3title">coalpy.gpu.ImguiBuilder.get_window_content_region_min</div><div class="subtitle">function</div><pre>
     Get the remaining content region
 
     Return:
         region min (tuple 2 float)
-</pre><br/><h3 id="get_window_pos">coalpy.gpu.ImguiBuilder.get_window_pos</h3><pre>
+</pre><br/><div id="get_window_pos" class="h3title">coalpy.gpu.ImguiBuilder.get_window_pos</div><div class="subtitle">function</div><pre>
     Gets the current window pos 
 
     Returns:
         Window pos (tuple x, y)
-</pre><br/><h3 id="get_window_size">coalpy.gpu.ImguiBuilder.get_window_size</h3><pre>
+</pre><br/><div id="get_window_size" class="h3title">coalpy.gpu.ImguiBuilder.get_window_size</div><div class="subtitle">function</div><pre>
     Gets the current window size
 
     Returns:
         Window size (tuple x, y)
-</pre><br/><h3 id="image">coalpy.gpu.ImguiBuilder.image</h3><pre>
+</pre><br/><div id="image" class="h3title">coalpy.gpu.ImguiBuilder.image</div><div class="subtitle">function</div><pre>
     Draws an image
 
     Parameters:
@@ -820,7 +772,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
         uv1 (tuple)(optional): uv coordinate of top  (default (1.0, 1.0))
         tint_col (tuple): size 4 tuple with image tint color (default (1,1,1,1)).
         border_col (tuple): size 4 tuple with background color (default (0,0,0,0)).
-</pre><br/><h3 id="image_button">coalpy.gpu.ImguiBuilder.image_button</h3><pre>
+</pre><br/><div id="image_button" class="h3title">coalpy.gpu.ImguiBuilder.image_button</div><div class="subtitle">function</div><pre>
     Draws an image button
 
     Parameters:
@@ -834,7 +786,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Return:
         True if button is pressed, false otherwise
-</pre><br/><h3 id="input_float">coalpy.gpu.ImguiBuilder.input_float</h3><pre>
+</pre><br/><div id="input_float" class="h3title">coalpy.gpu.ImguiBuilder.input_float</div><div class="subtitle">function</div><pre>
     Draws a box to input a single float value.
     
     Parameters:
@@ -846,7 +798,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         The new float value that the user set. Feed this value back on v on the next call to see a proper state update.
-</pre><br/><h3 id="input_float3">coalpy.gpu.ImguiBuilder.input_float3</h3><pre>
+</pre><br/><div id="input_float3" class="h3title">coalpy.gpu.ImguiBuilder.input_float3</div><div class="subtitle">function</div><pre>
     Draws a box to input a float2 value.
     
     Parameters:
@@ -858,7 +810,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         The new float2 value that the user set. Feed this value back on v on the next call to see a proper state update.
-</pre><br/><h3 id="input_float4">coalpy.gpu.ImguiBuilder.input_float4</h3><pre>
+</pre><br/><div id="input_float4" class="h3title">coalpy.gpu.ImguiBuilder.input_float4</div><div class="subtitle">function</div><pre>
     Draws a box to input a float4 value.
     
     Parameters:
@@ -870,7 +822,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         The new float4 value that the user set. Feed this value back on v on the next call to see a proper state update.
-</pre><br/><h3 id="input_text">coalpy.gpu.ImguiBuilder.input_text</h3><pre>
+</pre><br/><div id="input_text" class="h3title">coalpy.gpu.ImguiBuilder.input_text</div><div class="subtitle">function</div><pre>
     Draws a box for input text.
     
     Parameters:
@@ -879,12 +831,12 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         The new str value that the user set. Feed this value back on v on the next call to see a proper state update.
-</pre><br/><h3 id="is_item_hovered">coalpy.gpu.ImguiBuilder.is_item_hovered</h3><pre>
+</pre><br/><div id="is_item_hovered" class="h3title">coalpy.gpu.ImguiBuilder.is_item_hovered</div><div class="subtitle">function</div><pre>
     flags (int): see coalpy.gpu.ImGuiHoveredFlags
 
     Returns:
         True if is hovered, false otherwise
- </pre><br/><h3 id="is_key_down">coalpy.gpu.ImguiBuilder.is_key_down</h3><pre>
+ </pre><br/><div id="is_key_down" class="h3title">coalpy.gpu.ImguiBuilder.is_key_down</div><div class="subtitle">function</div><pre>
     is key being held.
 
     Parameters:
@@ -892,7 +844,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if pressed, False otherwise
-</pre><br/><h3 id="is_key_pressed">coalpy.gpu.ImguiBuilder.is_key_pressed</h3><pre>
+</pre><br/><div id="is_key_pressed" class="h3title">coalpy.gpu.ImguiBuilder.is_key_pressed</div><div class="subtitle">function</div><pre>
     was key pressed (went from !Down to Down)? if repeat=true, uses io.KeyRepeatDelay / KeyRepeatRate
 
     Parameters: 
@@ -901,7 +853,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if pressed, False otherwise
-</pre><br/><h3 id="is_key_released">coalpy.gpu.ImguiBuilder.is_key_released</h3><pre>
+</pre><br/><div id="is_key_released" class="h3title">coalpy.gpu.ImguiBuilder.is_key_released</div><div class="subtitle">function</div><pre>
     was key released (went from Down to !Down)?
     
     Parameters:
@@ -909,7 +861,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if released, False otherwise
-</pre><br/><h3 id="is_mouse_clicked">coalpy.gpu.ImguiBuilder.is_mouse_clicked</h3><pre>
+</pre><br/><div id="is_mouse_clicked" class="h3title">coalpy.gpu.ImguiBuilder.is_mouse_clicked</div><div class="subtitle">function</div><pre>
     Get mouse button state clicked
 
     Parameters:
@@ -917,7 +869,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if button is clicked, False otherwise
-</pre><br/><h3 id="is_mouse_double_clicked">coalpy.gpu.ImguiBuilder.is_mouse_double_clicked</h3><pre>
+</pre><br/><div id="is_mouse_double_clicked" class="h3title">coalpy.gpu.ImguiBuilder.is_mouse_double_clicked</div><div class="subtitle">function</div><pre>
     Get mouse button state double clicked
 
     Parameters:
@@ -925,7 +877,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if button is double clicked, False otherwise
-</pre><br/><h3 id="is_mouse_down">coalpy.gpu.ImguiBuilder.is_mouse_down</h3><pre>
+</pre><br/><div id="is_mouse_down" class="h3title">coalpy.gpu.ImguiBuilder.is_mouse_down</div><div class="subtitle">function</div><pre>
     Get mouse button state down
 
     Parameters:
@@ -933,7 +885,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if button is down, False otherwise
-</pre><br/><h3 id="is_mouse_released">coalpy.gpu.ImguiBuilder.is_mouse_released</h3><pre>
+</pre><br/><div id="is_mouse_released" class="h3title">coalpy.gpu.ImguiBuilder.is_mouse_released</div><div class="subtitle">function</div><pre>
     Get mouse button state released
 
     Parameters:
@@ -941,7 +893,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if button is released, False otherwise
-</pre><br/><h3 id="is_window_focused">coalpy.gpu.ImguiBuilder.is_window_focused</h3><pre>
+</pre><br/><div id="is_window_focused" class="h3title">coalpy.gpu.ImguiBuilder.is_window_focused</div><div class="subtitle">function</div><pre>
     Returns boolean with current window focused.
 
     Parameters:
@@ -949,7 +901,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if window is focused, false otherwise
-</pre><br/><h3 id="is_window_hovered">coalpy.gpu.ImguiBuilder.is_window_hovered</h3><pre>
+</pre><br/><div id="is_window_hovered" class="h3title">coalpy.gpu.ImguiBuilder.is_window_hovered</div><div class="subtitle">function</div><pre>
     Returns boolean with current window hovered status.
 
     Parameters:
@@ -957,7 +909,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if window is hovered, false otherwise
-</pre><br/><h3 id="menu_item">coalpy.gpu.ImguiBuilder.menu_item</h3><pre>
+</pre><br/><div id="menu_item" class="h3title">coalpy.gpu.ImguiBuilder.menu_item</div><div class="subtitle">function</div><pre>
     Parameters:
         label (str) : label of this menu item.
         shortcut (str): short cut key for this menu item.
@@ -965,24 +917,24 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if activated. False otherwise.
-</pre><br/><h3 id="new_line">coalpy.gpu.ImguiBuilder.new_line</h3><pre>
+</pre><br/><div id="new_line" class="h3title">coalpy.gpu.ImguiBuilder.new_line</div><div class="subtitle">function</div><pre>
     Draws new line.
-</pre><br/><h3 id="pop_id">coalpy.gpu.ImguiBuilder.pop_id</h3><pre>
+</pre><br/><div id="pop_id" class="h3title">coalpy.gpu.ImguiBuilder.pop_id</div><div class="subtitle">function</div><pre>
     Pops a corresponding name for a scope. Must be paired with a push_id.
-</pre><br/><h3 id="push_id">coalpy.gpu.ImguiBuilder.push_id</h3><pre>
+</pre><br/><div id="push_id" class="h3title">coalpy.gpu.ImguiBuilder.push_id</div><div class="subtitle">function</div><pre>
     Pushes a custom id name for a scope. 
     See (docs/FAQ.md or http://dearimgui.org/faq) for more details about how ID are handled in dear imgui.
     This call to push_id must be paired with a corresponding pop_id call.
 
     Parameters:
         text (str): The identifier for this id stack scope.
-</pre><br/><h3 id="same_line">coalpy.gpu.ImguiBuilder.same_line</h3><pre>
+</pre><br/><div id="same_line" class="h3title">coalpy.gpu.ImguiBuilder.same_line</div><div class="subtitle">function</div><pre>
     Sets the same line for drawing next item.
 
     Parameters:
         offset_from_start_x (float)(optional): offset from the start of this x
         spacing (float)(optional): spacing amount
-</pre><br/><h3 id="selectable">coalpy.gpu.ImguiBuilder.selectable</h3><pre>
+</pre><br/><div id="selectable" class="h3title">coalpy.gpu.ImguiBuilder.selectable</div><div class="subtitle">function</div><pre>
     Draws a selectable item. 
 
     Parameters:
@@ -991,40 +943,40 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if item is selected, false otherwise.
-</pre><br/><h3 id="separator">coalpy.gpu.ImguiBuilder.separator</h3><pre>
+</pre><br/><div id="separator" class="h3title">coalpy.gpu.ImguiBuilder.separator</div><div class="subtitle">function</div><pre>
     Draw a separator.
-</pre><br/><h3 id="set_next_frame_want_capture_keyboard">coalpy.gpu.ImguiBuilder.set_next_frame_want_capture_keyboard</h3><pre>
+</pre><br/><div id="set_next_frame_want_capture_keyboard" class="h3title">coalpy.gpu.ImguiBuilder.set_next_frame_want_capture_keyboard</div><div class="subtitle">function</div><pre>
     Override io.WantCaptureKeyboard flag next frame (said flag is left for your application to handle, typically when true it instructs your app to ignore inputs). e.g. force capture keyboard when your widget is being hovered. This is equivalent to setting "io.WantCaptureKeyboard = want_capture_keyboard"; after the next NewFrame() call.
 
     Parameters:
         want_capture_keyboard (bool)
-</pre><br/><h3 id="set_tab_item_closed">coalpy.gpu.ImguiBuilder.set_tab_item_closed</h3><pre>
+</pre><br/><div id="set_tab_item_closed" class="h3title">coalpy.gpu.ImguiBuilder.set_tab_item_closed</div><div class="subtitle">function</div><pre>
     notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.
 
     Parameters:
         label (str): tab or docked window label
-</pre><br/><h3 id="set_tooltip">coalpy.gpu.ImguiBuilder.set_tooltip</h3><pre>
+</pre><br/><div id="set_tooltip" class="h3title">coalpy.gpu.ImguiBuilder.set_tooltip</div><div class="subtitle">function</div><pre>
     Sets tooltip of prev item
 
     Parameters:
         text (str) text of tooltip
-</pre><br/><h3 id="set_window_dock">coalpy.gpu.ImguiBuilder.set_window_dock</h3><pre>
+</pre><br/><div id="set_window_dock" class="h3title">coalpy.gpu.ImguiBuilder.set_window_dock</div><div class="subtitle">function</div><pre>
     Parameters:
         window_name (str)
         dock_id (int)
-</pre><br/><h3 id="set_window_focus">coalpy.gpu.ImguiBuilder.set_window_focus</h3><pre>
+</pre><br/><div id="set_window_focus" class="h3title">coalpy.gpu.ImguiBuilder.set_window_focus</div><div class="subtitle">function</div><pre>
     Sets the current windows focused.
-</pre><br/><h3 id="set_window_size">coalpy.gpu.ImguiBuilder.set_window_size</h3><pre>
+</pre><br/><div id="set_window_size" class="h3title">coalpy.gpu.ImguiBuilder.set_window_size</div><div class="subtitle">function</div><pre>
     Sets the current window size
 
     Parameters:
         size (tuple x, y): the window size to set
-</pre><br/><h3 id="settings_loaded">coalpy.gpu.ImguiBuilder.settings_loaded</h3><pre>
+</pre><br/><div id="settings_loaded" class="h3title">coalpy.gpu.ImguiBuilder.settings_loaded</div><div class="subtitle">function</div><pre>
     Returns:
         True if the .ini settings have been loaded, False otherwise
-</pre><br/><h3 id="show_demo_window">coalpy.gpu.ImguiBuilder.show_demo_window</h3><pre>
+</pre><br/><div id="show_demo_window" class="h3title">coalpy.gpu.ImguiBuilder.show_demo_window</div><div class="subtitle">function</div><pre>
     Shows the demo window.
-</pre><br/><h3 id="slider_float">coalpy.gpu.ImguiBuilder.slider_float</h3><pre>
+</pre><br/><div id="slider_float" class="h3title">coalpy.gpu.ImguiBuilder.slider_float</div><div class="subtitle">function</div><pre>
     Draws a slider for a float value.
 
     Parameters:
@@ -1036,7 +988,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         The new float value that the user set. Feed this value back on v on the next call to see a proper state update.
-</pre><br/><h3 id="tab_item_button">coalpy.gpu.ImguiBuilder.tab_item_button</h3><pre>
+</pre><br/><div id="tab_item_button" class="h3title">coalpy.gpu.ImguiBuilder.tab_item_button</div><div class="subtitle">function</div><pre>
     create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
 
     label (str): name
@@ -1044,19 +996,19 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Return:
         bool
-</pre><br/><h3 id="text">coalpy.gpu.ImguiBuilder.text</h3><pre>
+</pre><br/><div id="text" class="h3title">coalpy.gpu.ImguiBuilder.text</div><div class="subtitle">function</div><pre>
     Draws a box with solid text.
 
     Parameters:
         text (str): the label value to display
-</pre><br/><h3 id="tree_node">coalpy.gpu.ImguiBuilder.tree_node</h3><pre>
+</pre><br/><div id="tree_node" class="h3title">coalpy.gpu.ImguiBuilder.tree_node</div><div class="subtitle">function</div><pre>
     Parameters:
         label (str): label of tree node
         flags (int) see coalpy.gpu.ImGuiTreeNodeFlags
 
     Return:
         bool - Note: must call tree_pop if return is True
-</pre><br/><h3 id="tree_node_with_id">coalpy.gpu.ImguiBuilder.tree_node_with_id</h3><pre>
+</pre><br/><div id="tree_node_with_id" class="h3title">coalpy.gpu.ImguiBuilder.tree_node_with_id</div><div class="subtitle">function</div><pre>
     Parameters:
         id (int): int identifier
         text (str): text of node
@@ -1064,15 +1016,15 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Return:
         bool - Note: must call tree_pop if return is True
-</pre><br/><h3 id="tree_pop">coalpy.gpu.ImguiBuilder.tree_pop</h3><pre>
+</pre><br/><div id="tree_pop" class="h3title">coalpy.gpu.ImguiBuilder.tree_pop</div><div class="subtitle">function</div><pre>
     Must be called if tree_node returns True.
-</pre><br/><h3 id="ImplotBuilder">coalpy.gpu.ImplotBuilder</h3><pre>
+</pre><br/><div id="ImplotBuilder" class="h3title">coalpy.gpu.ImplotBuilder</div><div class="subtitle">type</div><pre>
     Implot builder class. Use this class' methods to build a Dear Implot on a specified window.
     To utilize you need to instantiate a Window object. In its constructor set use_imgui to True (which is by default).
     On the on_render function, you will receive a RenderArgs object. There will be a ImplotBuilder object in the implot member that you can now
     query to construct your plots.
     Coalpy does not support creation of a ImplotBuilder object, it will always be passed as an argument on the RenderArgs of the window.
-    </pre><br/><h3 id="begin_plot">coalpy.gpu.ImplotBuilder.begin_plot</h3><pre>
+    </pre><br/><div id="begin_plot" class="h3title">coalpy.gpu.ImplotBuilder.begin_plot</div><div class="subtitle">function</div><pre>
     Starts a 2D plotting context. If this function returns true, EndPlot() MUST
     be called! You are encouraged to use the following convention:
    
@@ -1093,10 +1045,10 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
     Returns:
         True if is open, False otherwise
         
-</pre><br/><h3 id="end_plot">coalpy.gpu.ImplotBuilder.end_plot</h3><pre>
+</pre><br/><div id="end_plot" class="h3title">coalpy.gpu.ImplotBuilder.end_plot</div><div class="subtitle">function</div><pre>
     Only call EndPlot() if BeginPlot() returns true! Typically called at the end
     of an if statement conditioned on BeginPlot(). See example above.
-</pre><br/><h3 id="plot_line">coalpy.gpu.ImplotBuilder.plot_line</h3><pre>
+</pre><br/><div id="plot_line" class="h3title">coalpy.gpu.ImplotBuilder.plot_line</div><div class="subtitle">function</div><pre>
     Parameters:
         label (str)
         values (byte object, or numpy array): array must be contiguous floating point values (x, y) laid down in memory. object must implement buffer protocol.
@@ -1105,7 +1057,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Note:
         value is treated as a circular buffer, that is, elements are read in order from offset to count using modulus index.
-</pre><br/><h3 id="plot_shaded">coalpy.gpu.ImplotBuilder.plot_shaded</h3><pre>
+</pre><br/><div id="plot_shaded" class="h3title">coalpy.gpu.ImplotBuilder.plot_shaded</div><div class="subtitle">function</div><pre>
     Parameters:
         label (str)
         values (byte object, or numpy array): array must be contiguous floating point values (x, y) laid down in memory. object must implement buffer protocol.
@@ -1115,7 +1067,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Note:
         value is treated as a circular buffer, that is, elements are read in order from offset to count using modulus index.
-</pre><br/><h3 id="setup_axes">coalpy.gpu.ImplotBuilder.setup_axes</h3><pre>
+</pre><br/><div id="setup_axes" class="h3title">coalpy.gpu.ImplotBuilder.setup_axes</div><div class="subtitle">function</div><pre>
     Sets the label and/or flags for primary X and Y axes (shorthand for two calls to SetupAxis).
 
     Parameters:
@@ -1123,30 +1075,34 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
         y_label (str)
         x_flags (int)(optional): see coalpy.gpu.ImPlotAxisFlags 
         y_flags (int)(optional): see coalpy.gpu.ImPlotAxisFlags
-</pre><br/><h3 id="setup_axis_limits">coalpy.gpu.ImplotBuilder.setup_axis_limits</h3><pre>
+</pre><br/><div id="setup_axis_limits" class="h3title">coalpy.gpu.ImplotBuilder.setup_axis_limits</div><div class="subtitle">function</div><pre>
     Parameters:
         axis (int): see coalpy.gpu.ImAxis 
         v_min (float)
         v_max (float)
         cond (int)(optional): see coalpy.gpu.ImPlotCond , default is Once 
-</pre><br/><h3 id="show_demo_window">coalpy.gpu.ImplotBuilder.show_demo_window</h3><pre>
+</pre><br/><div id="show_demo_window" class="h3title">coalpy.gpu.ImplotBuilder.show_demo_window</div><div class="subtitle">function</div><pre>
     Shows the demo window.
-</pre><br/><h3 id="InResourceTable">coalpy.gpu.InResourceTable</h3><pre>
+</pre><br/><div id="InResourceTable" class="h3title">coalpy.gpu.InResourceTable</div><div class="subtitle">type</div><pre>
     Input resource table. Use this to specify the inputs of a dispatch call in CommandList.
 
     Constructor:
         name (str): name / identifier of this resource table.
         resource_list: array of Texture or Buffer to be specified. Each position in the table correspods to a t# register in hlsl.
-    </pre><br/><h3 id="MarkerResults">coalpy.gpu.MarkerResults</h3><pre>
+    </pre><br/><div id="MarkerResults" class="h3title">coalpy.gpu.MarkerResults</div><div class="subtitle">type</div><pre>
         Result object with GPU marker data.
-    </pre><br/><div>markers</div><br/><div>timestamp_buffer</div><br/><div>timestamp_frequency</div><br/><h3 id="OutResourceTable">coalpy.gpu.OutResourceTable</h3><pre>
+    </pre><br/><table class="membertable"><tr><td>markers</td><td>
+        List of marker tuples. Each tuple has (name, parent_marker_index, begin_timestamp_index, end_timestamp_index).
+        Time stamp are measured in ticks and stored in the GPU buffer member timestamp_buffer.
+        A common practice is to store this result, along with the buffer, and poll it using a DownloadResourceRequest object.
+        Once timestamps are available on CPU, divide timestamp by timestamp_frequency member to obtain time in seconds.</td></tr><tr><td>timestamp_buffer</td><td>GPU buffer (uin64 elements) with time stamp ticks.</td></tr><tr><td>timestamp_frequency</td><td>Frequency in ticks/secs. Divide timestamp ticks by frequency to obtain time in seconds.</td></tr></table><div id="OutResourceTable" class="h3title">coalpy.gpu.OutResourceTable</div><div class="subtitle">type</div><pre>
     Output resource table. Use this to specify a table of unordered access views (outputs) of a dispatch call in CommandList.
 
     Constructor:
         name (str): name / identifier of this resource table.
         resource_list: array of Texture or Buffer to be specified. Each position in the table correspods to a u# register in hlsl.
-    </pre><br/><h3 id="RenderArgs">coalpy.gpu.RenderArgs</h3><pre>Parameters passed in the on_render function of a window.
-</pre><br/><div>delta_time</div><br/><div>height</div><br/><div>imgui</div><br/><div>implot</div><br/><div>render_time</div><br/><div>user_data</div><br/><div>width</div><br/><div>window</div><br/><h3 id="ResourceDownloadRequest">coalpy.gpu.ResourceDownloadRequest</h3><pre>
+    </pre><br/><div id="RenderArgs" class="h3title">coalpy.gpu.RenderArgs</div><div class="subtitle">type</div><pre>Parameters passed in the on_render function of a window.
+</pre><br/><table class="membertable"><tr><td>delta_time</td><td>Delta time from previous frame in milliseconds</td></tr><tr><td>height</td><td>The current height of this window.</td></tr><tr><td>imgui</td><td>The ImguiBuilder object, used to build a Dear Imgui. For more info read on Window constructor,  ImguiBuilder and its methods.</td></tr><tr><td>implot</td><td>The ImplotBuilder object, used to build a Dear Implot. For more info read on Window constructor,  ImplotBuilder and its methods.</td></tr><tr><td>render_time</td><td>Total rendering time from the start of this application, in milliseconds</td></tr><tr><td>user_data</td><td>Custom user_data object set in the Window object. You can store here your view user data such as texture / buffers / shaders.</td></tr><tr><td>width</td><td>The current width of this window.</td></tr><tr><td>window</td><td>The window object being rendered.</td></tr></table><div id="ResourceDownloadRequest" class="h3title">coalpy.gpu.ResourceDownloadRequest</div><div class="subtitle">type</div><pre>
     Class that represents a GPU -> CPU resource download request.
     This class can be used to read the memory of a resource in the CPU synchorneously or asynchronesouly (throug polling).
 
@@ -1154,7 +1110,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
         resource (Texture or Buffer): The resource to bind and read from the GPU.
         slice_index : If the resource is a texture array, gets the slice index. If out of range or not a texture array, an exception is thrown. Default value is 0.
         mip_level : If the resource is a texture, gets the mip level. If the mip level is out of range or not a texture, an exception is thrown. Default value is 0.
-    </pre><br/><h3 id="data_as_bytearray">coalpy.gpu.ResourceDownloadRequest.data_as_bytearray</h3><pre> returns the data as a bytearray. This Byte array is internally cached and referenced by the ResourceDownload object.</pre><br/><h3 id="data_byte_row_pitch">coalpy.gpu.ResourceDownloadRequest.data_byte_row_pitch</h3><pre> Assuming the data is ready, this method returns the row pitch (in case the resource is a texture).</pre><br/><h3 id="is_ready">coalpy.gpu.ResourceDownloadRequest.is_ready</h3><pre> Polls the GPU (internally a fence) to check if the data is ready. When doing async this method can be used to query until we have data ready.</pre><br/><h3 id="resolve">coalpy.gpu.ResourceDownloadRequest.resolve</h3><pre>Waits for binary data of the texture to be downloaded. This method will block the CPU until the GPU has finished downloading the data. After this call, check availability with is_ready and then get the data as desired. </pre><br/><h3 id="Sampler">coalpy.gpu.Sampler</h3><pre>
+    </pre><br/><div id="data_as_bytearray" class="h3title">coalpy.gpu.ResourceDownloadRequest.data_as_bytearray</div><div class="subtitle">function</div><pre> returns the data as a bytearray. This Byte array is internally cached and referenced by the ResourceDownload object.</pre><br/><div id="data_byte_row_pitch" class="h3title">coalpy.gpu.ResourceDownloadRequest.data_byte_row_pitch</div><div class="subtitle">function</div><pre> Assuming the data is ready, this method returns the row pitch (in case the resource is a texture).</pre><br/><div id="is_ready" class="h3title">coalpy.gpu.ResourceDownloadRequest.is_ready</div><div class="subtitle">function</div><pre> Polls the GPU (internally a fence) to check if the data is ready. When doing async this method can be used to query until we have data ready.</pre><br/><div id="resolve" class="h3title">coalpy.gpu.ResourceDownloadRequest.resolve</div><div class="subtitle">function</div><pre>Waits for binary data of the texture to be downloaded. This method will block the CPU until the GPU has finished downloading the data. After this call, check availability with is_ready and then get the data as desired. </pre><br/><div id="Sampler" class="h3title">coalpy.gpu.Sampler</div><div class="subtitle">type</div><pre>
     Class that represents a Sampler GPU resource.
 
     Constructor:
@@ -1166,13 +1122,13 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
         min_lod (float): Minimum texture mip.
         max_lod (float): Maximum texture mip.
         max_aniso (int): maximum quality for anisotropic filtering.
-    </pre><br/><h3 id="SamplerTable">coalpy.gpu.SamplerTable</h3><pre>
+    </pre><br/><div id="SamplerTable" class="h3title">coalpy.gpu.SamplerTable</div><div class="subtitle">type</div><pre>
     Sampler table. Use this to specify a table of Samplers to be used in a CommandList and shader.
 
     Constructor:
         name (str): name / identifier of this sampler table.
         samplers: array of Samplers to be specified.
-    </pre><br/><h3 id="Settings">coalpy.gpu.Settings</h3><pre>None</pre><br/><div>adapter_index</div><br/><div>dump_shader_pdbs</div><br/><div>enable_debug_device</div><br/><div>graphics_api</div><br/><div>shader_model</div><br/><div>spirv_debug_reflection</div><br/><h3 id="save">coalpy.gpu.Settings.save</h3><pre>
+    </pre><br/><div id="Settings" class="h3title">coalpy.gpu.Settings</div><div class="subtitle">type</div><pre>None</pre><br/><table class="membertable"><tr><td>adapter_index</td><td>Current adapter index to use.</td></tr><tr><td>dump_shader_pdbs</td><td>Dumps shader pdbs for debugging. Only works on dx12.</td></tr><tr><td>enable_debug_device</td><td>Enables debug device settings for dx12 or vulkan (verbose device warnings).</td></tr><tr><td>graphics_api</td><td>Graphics api to use. Valid strings are "dx12" or "vulkan" case sensitive.</td></tr><tr><td>shader_model</td><td>HLSL shader model to use. Can be sm6_0, sm6_1, sm6_2, sm6_3, sm6_4, sm6_5. The system will try and find the maximum possible</td></tr><tr><td>spirv_debug_reflection</td><td>For vulkan, prints out spirv reflection information. Has no effect in other render APIs</td></tr></table><div id="save" class="h3title">coalpy.gpu.Settings.save</div><div class="subtitle">function</div><pre>
     Saves settings to a file.
 
     Parameters:
@@ -1181,7 +1137,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
             which is the default settings read at module boot.
     Returns:
         True if successful, False if it failed.
-</pre><br/><h3 id="Shader">coalpy.gpu.Shader</h3><pre>
+</pre><br/><div id="Shader" class="h3title">coalpy.gpu.Shader</div><div class="subtitle">type</div><pre>
     Class that represents a shader.
 
     Constructor:
@@ -1190,7 +1146,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
         main_function (str)(optional): entry point of shader. Default is 'main'.
         defines (array of str): an array of strings with defines for the shader. Utilize the = sign to set the definition inside the shader. I.e. ["HDR_LIGHTING=1"] will create the define HDR_LIGHTING inside the shader to a value of 1
         source_code (str): text file with the source. If source is set, file will be ignored and the shader will be created from source.
-    </pre><br/><h3 id="is_valid">coalpy.gpu.Shader.is_valid</h3><pre>Returns true if this is a valid shader, false otherwise.</pre><br/><h3 id="resolve">coalpy.gpu.Shader.resolve</h3><pre>Waits for shader compilation to be finished. Resolve is mostly implicitely called upon any operation requiring the shader's definition.</pre><br/><h3 id="Texture">coalpy.gpu.Texture</h3><pre>
+    </pre><br/><div id="is_valid" class="h3title">coalpy.gpu.Shader.is_valid</div><div class="subtitle">function</div><pre>Returns true if this is a valid shader, false otherwise.</pre><br/><div id="resolve" class="h3title">coalpy.gpu.Shader.resolve</div><div class="subtitle">function</div><pre>Waits for shader compilation to be finished. Resolve is mostly implicitely called upon any operation requiring the shader's definition.</pre><br/><div id="Texture" class="h3title">coalpy.gpu.Texture</div><div class="subtitle">type</div><pre>
     Class that represents a Texture GPU resource.
 
     Constructor:
@@ -1203,12 +1159,12 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
         depth (int): the depth of the texture if k2dArray or k3d. Default is 1.
         mip_levels (int): number of mips supported on this texture.
         file (str): Load a texture file name (jpeg or png). All other parameters will be ignored when the file name set.
-    </pre><br/><h3 id="TinyObjLoader">coalpy.gpu.TinyObjLoader</h3><pre>
-    </pre><br/><h3 id="ObjReader">coalpy.gpu.TinyObjLoader.ObjReader</h3><pre>None</pre><br/><h3 id="ParseFromFile">coalpy.gpu.TinyObjLoader.ObjReader.ParseFromFile</h3><pre>
+    </pre><br/><div id="TinyObjLoader" class="h3title">coalpy.gpu.TinyObjLoader</div><div class="subtitle">type</div><pre>
+    </pre><br/><div id="ObjReader" class="h3title">coalpy.gpu.TinyObjLoader.ObjReader</div><div class="subtitle">type</div><pre>None</pre><br/><div id="ParseFromFile" class="h3title">coalpy.gpu.TinyObjLoader.ObjReader.ParseFromFile</div><div class="subtitle">function</div><pre>
     Parameters:
         filename (str): file to load
         option (ObjReaderConfig): configuration
-</pre><br/><h3 id="ObjReaderConfig">coalpy.gpu.TinyObjLoader.ObjReaderConfig</h3><pre>None</pre><br/><div>triangulate</div><br/><h3 id="Window">coalpy.gpu.Window</h3><pre>
+</pre><br/><div id="ObjReaderConfig" class="h3title">coalpy.gpu.TinyObjLoader.ObjReaderConfig</div><div class="subtitle">type</div><pre>None</pre><br/><table class="membertable"><tr><td>triangulate</td><td></td></tr></table><div id="Window" class="h3title">coalpy.gpu.Window</div><div class="subtitle">type</div><pre>
     Class that represnts a window.
 
     Constructor:
@@ -1218,7 +1174,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
         on_render (function): Rendering function. The function has 1 argument of type RenderArgs and no return. See RenderArgs for more info.
         use_imgui (Boolean): (True by default), set to True, and during on_render the render_args object will contain an imgui object. Use this object to render imgui into the window.
                             The ImguiBuilder object will contain the definition of all the available parameters.
-                </pre><br/><div>display_texture</div><br/><div>user_data</div><br/><h3 id="get_key_state">coalpy.gpu.Window.get_key_state</h3><pre>
+                </pre><br/><table class="membertable"><tr><td>display_texture</td><td>Display Texture. Use this as the output texture in CommmandList dispatch command to write directly to the window.</td></tr><tr><td>user_data</td><td>Set this user data so its accessible during on_render callback. You can put here the custom state of your window.</td></tr></table><div id="get_key_state" class="h3title">coalpy.gpu.Window.get_key_state</div><div class="subtitle">function</div><pre>
     Gets the pressed state of a queried key. For a list of keys see coalpy.gpu.Keys.
 
     Parameters:
@@ -1226,7 +1182,7 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
     Returns:
         True if the queried key is pressed. False otherwise.
-</pre><br/><h3 id="get_mouse_position">coalpy.gpu.Window.get_mouse_position</h3><pre>
+</pre><br/><div id="get_mouse_position" class="h3title">coalpy.gpu.Window.get_mouse_position</div><div class="subtitle">function</div><pre>
     Gets the mouse position relative to the current window. This function will also give you the mouse coordinates even if the mouse is outside of the window.
 
     Returns:
@@ -1234,12 +1190,12 @@ and can be reused to avoid cost.</pre><br/><h3 id="begin_marker">coalpy.gpu.Comm
 
         The pixelX and pixelY represent the pixel index (0 based to get_size()).
         The normalizedX and normalizedY are the pixel centered coordinates in x and y [0, 1] respectively, i.e.  (x + 0.5)/ (window's width).
-</pre><br/><h3 id="get_size">coalpy.gpu.Window.get_size</h3><pre>
+</pre><br/><div id="get_size" class="h3title">coalpy.gpu.Window.get_size</div><div class="subtitle">function</div><pre>
     Returns:
         returns a touple with the current size of the window (width, height)
-</pre><br/><h3 id="exception_object">coalpy.gpu.exception_object</h3><pre>None</pre><br/><div>args</div><br/><h3 id="add_note">coalpy.gpu.exception_object.add_note</h3><pre>Exception.add_note(note) --
-    add a note to the exception</pre><br/><h3 id="with_traceback">coalpy.gpu.exception_object.with_traceback</h3><pre>Exception.with_traceback(tb) --
-    set self.__traceback__ to tb and return self.</pre><br/><h3 id="BufferType">coalpy.gpu.BufferType</h3><pre>Type of buffer. Use enum values located at coalpy.gpu.BufferType</pre><br/><div>Raw</div><br/><div>Standard</div><br/><div>Structured</div><br/><h3 id="DeviceFlags">coalpy.gpu.DeviceFlags</h3><pre>Flags utilized for device creation.</pre><br/><div>EnableDebug</div><br/><h3 id="FilterType">coalpy.gpu.FilterType</h3><pre>Filter types for samplers enumeration. Use enum values located at coalpy.gpu.FilterType</pre><br/><div>Anisotropic</div><br/><div>Linear</div><br/><div>Max</div><br/><div>Min</div><br/><div>Point</div><br/><h3 id="Format">coalpy.gpu.Format</h3><pre>Formats supported for Textures and Standard Buffers.</pre><br/><div>BGRA_8_UNORM</div><br/><div>BGRA_8_UNORM_SRGB</div><br/><div>D16_UNORM</div><br/><div>D32_FLOAT</div><br/><div>R16_FLOAT</div><br/><div>R16_SINT</div><br/><div>R16_SNORM</div><br/><div>R16_TYPELESS</div><br/><div>R16_UINT</div><br/><div>R16_UNORM</div><br/><div>R32_FLOAT</div><br/><div>R32_SINT</div><br/><div>R32_TYPELESS</div><br/><div>R32_UINT</div><br/><div>R8_SINT</div><br/><div>R8_SNORM</div><br/><div>R8_TYPELESS</div><br/><div>R8_UINT</div><br/><div>R8_UNORM</div><br/><div>RG16_FLOAT</div><br/><div>RG16_SINT</div><br/><div>RG16_SNORM</div><br/><div>RG16_TYPELESS</div><br/><div>RG16_UINT</div><br/><div>RG16_UNORM</div><br/><div>RGBA_16_FLOAT</div><br/><div>RGBA_16_SINT</div><br/><div>RGBA_16_SNORM</div><br/><div>RGBA_16_TYPELESS</div><br/><div>RGBA_16_UINT</div><br/><div>RGBA_16_UNORM</div><br/><div>RGBA_32_FLOAT</div><br/><div>RGBA_32_SINT</div><br/><div>RGBA_32_TYPELESS</div><br/><div>RGBA_32_UINT</div><br/><div>RGBA_8_SINT</div><br/><div>RGBA_8_SNORM</div><br/><div>RGBA_8_TYPELESS</div><br/><div>RGBA_8_UINT</div><br/><div>RGBA_8_UNORM</div><br/><div>RGBA_8_UNORM_SRGB</div><br/><div>RGB_32_FLOAT</div><br/><div>RGB_32_SINT</div><br/><div>RGB_32_TYPELESS</div><br/><div>RGB_32_UINT</div><br/><div>RG_32_FLOAT</div><br/><div>RG_32_SINT</div><br/><div>RG_32_TYPELESS</div><br/><div>RG_32_UINT</div><br/><h3 id="ImAxis">coalpy.gpu.ImAxis</h3><pre></pre><br/><div>COUNT</div><br/><div>X1</div><br/><div>X2</div><br/><div>X3</div><br/><div>Y1</div><br/><div>Y2</div><br/><div>Y3</div><br/><h3 id="ImGuiDir">coalpy.gpu.ImGuiDir</h3><pre></pre><br/><div>COUNT</div><br/><div>Down</div><br/><div>Left</div><br/><div>Right</div><br/><div>Up</div><br/><h3 id="ImGuiDockNodeFlags">coalpy.gpu.ImGuiDockNodeFlags</h3><pre>Flags for docking</pre><br/><div>AutoHideTabBar</div><br/><div>KeepAliveOnly</div><br/><div>NoDockingInCentralNode</div><br/><div>NoResize</div><br/><div>NoSplit</div><br/><div>PassthruCentralNode</div><br/><h3 id="ImGuiFocusedFlags">coalpy.gpu.ImGuiFocusedFlags</h3><pre>ImGUI Focused flags</pre><br/><div>AnyWindow</div><br/><div>ChildWindows</div><br/><div>DockHierarchy</div><br/><div>NoPopupHierarchy</div><br/><div>RootAndChildWindows</div><br/><div>RootWindow</div><br/><h3 id="ImGuiHoveredFlags">coalpy.gpu.ImGuiHoveredFlags</h3><pre>Flags for IsHovered</pre><br/><div>AllowWhenBlockedByActiveItem</div><br/><div>AllowWhenBlockedByPopup</div><br/><div>AllowWhenDisabled</div><br/><div>AllowWhenOverlapped</div><br/><div>AnyWindow</div><br/><div>ChildWindows</div><br/><div>DockHierarchy</div><br/><div>NoNavOverride</div><br/><div>NoPopupHierarchy</div><br/><div>RectOnly</div><br/><div>RootAndChildWindows</div><br/><div>RootWindow</div><br/><h3 id="ImGuiKey">coalpy.gpu.ImGuiKey</h3><pre></pre><br/><div>A</div><br/><div>Apostrophe</div><br/><div>B</div><br/><div>Backslash</div><br/><div>Backspace</div><br/><div>C</div><br/><div>COUNT</div><br/><div>CapsLock</div><br/><div>Comma</div><br/><div>D</div><br/><div>Delete</div><br/><div>DownArrow</div><br/><div>E</div><br/><div>End</div><br/><div>Enter</div><br/><div>Equal</div><br/><div>Escape</div><br/><div>F</div><br/><div>F1</div><br/><div>F10</div><br/><div>F11</div><br/><div>F12</div><br/><div>F2</div><br/><div>F3</div><br/><div>F4</div><br/><div>F5</div><br/><div>F6</div><br/><div>F7</div><br/><div>F8</div><br/><div>F9</div><br/><div>G</div><br/><div>GamepadBack</div><br/><div>GamepadDpadDown</div><br/><div>GamepadDpadLeft</div><br/><div>GamepadDpadRight</div><br/><div>GamepadDpadUp</div><br/><div>GamepadFaceDown</div><br/><div>GamepadFaceLeft</div><br/><div>GamepadFaceRight</div><br/><div>GamepadFaceUp</div><br/><div>GamepadL1</div><br/><div>GamepadL2</div><br/><div>GamepadL3</div><br/><div>GamepadLStickDown</div><br/><div>GamepadLStickLeft</div><br/><div>GamepadLStickRight</div><br/><div>GamepadLStickUp</div><br/><div>GamepadR1</div><br/><div>GamepadR2</div><br/><div>GamepadR3</div><br/><div>GamepadRStickDown</div><br/><div>GamepadRStickLeft</div><br/><div>GamepadRStickRight</div><br/><div>GamepadRStickUp</div><br/><div>GamepadStart</div><br/><div>GraveAccent</div><br/><div>H</div><br/><div>Home</div><br/><div>I</div><br/><div>Insert</div><br/><div>J</div><br/><div>K</div><br/><div>Keypad0</div><br/><div>Keypad1</div><br/><div>Keypad2</div><br/><div>Keypad3</div><br/><div>Keypad4</div><br/><div>Keypad5</div><br/><div>Keypad6</div><br/><div>Keypad7</div><br/><div>Keypad8</div><br/><div>Keypad9</div><br/><div>KeypadAdd</div><br/><div>KeypadDecimal</div><br/><div>KeypadDivide</div><br/><div>KeypadEnter</div><br/><div>KeypadEqual</div><br/><div>KeypadMultiply</div><br/><div>KeypadSubtract</div><br/><div>L</div><br/><div>LeftAlt</div><br/><div>LeftArrow</div><br/><div>LeftBracket</div><br/><div>LeftCtrl</div><br/><div>LeftShift</div><br/><div>LeftSuper</div><br/><div>M</div><br/><div>Menu</div><br/><div>Minus</div><br/><div>ModAlt</div><br/><div>ModCtrl</div><br/><div>ModShift</div><br/><div>ModSuper</div><br/><div>N</div><br/><div>None</div><br/><div>NumLock</div><br/><div>O</div><br/><div>P</div><br/><div>PageDown</div><br/><div>PageUp</div><br/><div>Pause</div><br/><div>Period</div><br/><div>PrintScreen</div><br/><div>Q</div><br/><div>R</div><br/><div>RightAlt</div><br/><div>RightArrow</div><br/><div>RightBracket</div><br/><div>RightCtrl</div><br/><div>RightShift</div><br/><div>RightSuper</div><br/><div>S</div><br/><div>ScrollLock</div><br/><div>Semicolon</div><br/><div>Slash</div><br/><div>Space</div><br/><div>T</div><br/><div>Tab</div><br/><div>U</div><br/><div>UpArrow</div><br/><div>V</div><br/><div>W</div><br/><div>X</div><br/><div>Y</div><br/><div>Z</div><br/><div>k0</div><br/><div>k1</div><br/><div>k2</div><br/><div>k3</div><br/><div>k4</div><br/><div>k5</div><br/><div>k6</div><br/><div>k7</div><br/><div>k8</div><br/><div>k9</div><br/><h3 id="ImGuiMouseButton">coalpy.gpu.ImGuiMouseButton</h3><pre></pre><br/><div>COUNT</div><br/><div>Left</div><br/><div>Middle</div><br/><div>Right</div><br/><h3 id="ImGuiTabBarFlags">coalpy.gpu.ImGuiTabBarFlags</h3><pre></pre><br/><div>AutoSelectNewTabs</div><br/><div>FittingPolicyDefault_</div><br/><div>FittingPolicyMask_</div><br/><div>FittingPolicyResizeDown</div><br/><div>FittingPolicyScroll</div><br/><div>NoCloseWithMiddleMouseButton</div><br/><div>NoTabListScrollingButtons</div><br/><div>NoTooltip</div><br/><div>Reorderable</div><br/><div>TabListPopupButton</div><br/><h3 id="ImGuiTabItemFlags">coalpy.gpu.ImGuiTabItemFlags</h3><pre></pre><br/><div>Leading</div><br/><div>NoCloseWithMiddleMouseButton</div><br/><div>NoPushId</div><br/><div>NoReorder</div><br/><div>NoTooltip</div><br/><div>SetSelected</div><br/><div>Trailing</div><br/><div>UnsavedDocument</div><br/><h3 id="ImGuiTreeNodeFlags">coalpy.gpu.ImGuiTreeNodeFlags</h3><pre></pre><br/><div>AllowItemOverlap</div><br/><div>Bullet</div><br/><div>CollapsingHeader</div><br/><div>DefaultOpen</div><br/><div>FramePadding</div><br/><div>Framed</div><br/><div>Leaf</div><br/><div>NavLeftJumpsBackHere</div><br/><div>NoAutoOpenOnLog</div><br/><div>NoTreePushOnOpen</div><br/><div>OpenOnArrow</div><br/><div>OpenOnDoubleClick</div><br/><div>Selected</div><br/><div>SpanAvailWidth</div><br/><div>SpanFullWidth</div><br/><h3 id="ImGuiWindowFlags">coalpy.gpu.ImGuiWindowFlags</h3><pre>ImGUI Window flags</pre><br/><div>AlwaysAutoResize</div><br/><div>AlwaysHorizontalScrollbar</div><br/><div>AlwaysUseWindowPadding</div><br/><div>AlwaysVerticalScrollbar</div><br/><div>HorizontalScrollbar</div><br/><div>MenuBar</div><br/><div>NoBackground</div><br/><div>NoBringToFrontOnFocus</div><br/><div>NoCollapse</div><br/><div>NoDocking</div><br/><div>NoFocusOnAppearing</div><br/><div>NoMouseInputs</div><br/><div>NoMove</div><br/><div>NoNavFocus</div><br/><div>NoNavInputs</div><br/><div>NoResize</div><br/><div>NoSavedSettings</div><br/><div>NoScrollWithMouse</div><br/><div>NoScrollbar</div><br/><div>NoTitleBar</div><br/><div>UnsavedDocument</div><br/><h3 id="ImPlotAxisFlags">coalpy.gpu.ImPlotAxisFlags</h3><pre></pre><br/><div>AutoFit</div><br/><div>AuxDefault</div><br/><div>Foreground</div><br/><div>Invert</div><br/><div>Lock</div><br/><div>LockMax</div><br/><div>LockMin</div><br/><div>LogScale</div><br/><div>NoDeforations</div><br/><div>NoGridLines</div><br/><div>NoInitialFit</div><br/><div>NoLabel</div><br/><div>NoMenus</div><br/><div>NoTickLabels</div><br/><div>NoTickMarks</div><br/><div>Opposite</div><br/><div>RangeFit</div><br/><div>Time</div><br/><h3 id="ImPlotCond">coalpy.gpu.ImPlotCond</h3><pre></pre><br/><div>Always</div><br/><div>None</div><br/><div>Once</div><br/><h3 id="ImPlotFlags">coalpy.gpu.ImPlotFlags</h3><pre></pre><br/><div>AntiAliased</div><br/><div>CanvasOnly</div><br/><div>Crosshairs</div><br/><div>Equal</div><br/><div>NoBoxSelect</div><br/><div>NoChild</div><br/><div>NoFrame</div><br/><div>NoInputs</div><br/><div>NoLegend</div><br/><div>NoMenus</div><br/><div>NoMouseText</div><br/><div>NoTitle</div><br/><h3 id="Keys">coalpy.gpu.Keys</h3><pre>Enumeration of keyboard / mouse input keys. To be used with the input_state object from the Window. Use enum values located at coalpy.gpu.Keys</pre><br/><div>A</div><br/><div>B</div><br/><div>Backslash</div><br/><div>Backspace</div><br/><div>C</div><br/><div>Comma</div><br/><div>D</div><br/><div>Dot</div><br/><div>Down</div><br/><div>E</div><br/><div>Enter</div><br/><div>F</div><br/><div>F1</div><br/><div>F10</div><br/><div>F11</div><br/><div>F12</div><br/><div>F2</div><br/><div>F3</div><br/><div>F4</div><br/><div>F5</div><br/><div>F6</div><br/><div>F7</div><br/><div>F8</div><br/><div>F9</div><br/><div>G</div><br/><div>H</div><br/><div>I</div><br/><div>J</div><br/><div>K</div><br/><div>L</div><br/><div>Left</div><br/><div>LeftAlt</div><br/><div>LeftBrac</div><br/><div>LeftControl</div><br/><div>LeftShift</div><br/><div>M</div><br/><div>MouseCenter</div><br/><div>MouseLeft</div><br/><div>MouseLeftDouble</div><br/><div>MouseRight</div><br/><div>MouseRightDouble</div><br/><div>N</div><br/><div>O</div><br/><div>P</div><br/><div>Q</div><br/><div>R</div><br/><div>Right</div><br/><div>RightAlt</div><br/><div>RightBrac</div><br/><div>RightControl</div><br/><div>RightShift</div><br/><div>S</div><br/><div>Semicolon</div><br/><div>Slash</div><br/><div>Space</div><br/><div>T</div><br/><div>U</div><br/><div>Up</div><br/><div>V</div><br/><div>W</div><br/><div>X</div><br/><div>Y</div><br/><div>Z</div><br/><div>k0</div><br/><div>k1</div><br/><div>k2</div><br/><div>k3</div><br/><div>k4</div><br/><div>k5</div><br/><div>k6</div><br/><div>k7</div><br/><div>k8</div><br/><div>k9</div><br/><h3 id="MemFlags">coalpy.gpu.MemFlags</h3><pre>Memory access enumerations. Use enum values located at coalpy.gpu.MemFlags</pre><br/><div>GpuRead</div><br/><div>GpuWrite</div><br/><h3 id="TextureAddressMode">coalpy.gpu.TextureAddressMode</h3><pre>Address behaviour of texture coordinates enumeration. Use enum values located at coalpy.gpu.TextureAddressMode</pre><br/><div>Border</div><br/><div>Clamp</div><br/><div>Mirror</div><br/><div>Wrap</div><br/><h3 id="TextureType">coalpy.gpu.TextureType</h3><pre>Type of texture enumeration. Use enum values located at coalpy.gpu.TextureType</pre><br/><div>CubeMap</div><br/><div>CubeMapArray</div><br/><div>k1d</div><br/><div>k2d</div><br/><div>k2dArray</div><br/><div>k3d</div><br/>
+</pre><br/><div id="exception_object" class="h3title">coalpy.gpu.exception_object</div><div class="subtitle">type</div><pre>None</pre><br/><table class="membertable"><tr><td>args</td><td>None</td></tr></table><div id="add_note" class="h3title">coalpy.gpu.exception_object.add_note</div><div class="subtitle">function</div><pre>Exception.add_note(note) --
+    add a note to the exception</pre><br/><div id="with_traceback" class="h3title">coalpy.gpu.exception_object.with_traceback</div><div class="subtitle">function</div><pre>Exception.with_traceback(tb) --
+    set self.__traceback__ to tb and return self.</pre><br/><div id="BufferType" class="h3title">coalpy.gpu.BufferType</div><div class="subtitle">enum</div><pre>Type of buffer. Use enum values located at coalpy.gpu.BufferType</pre><br/><table class="membertable"><tr><td>Raw</td><td>Raw byte buffer.</td></tr><tr><td>Standard</td><td>Standard buffer. Obeys the format specified when sampling / writting into it.</td></tr><tr><td>Structured</td><td>Structured buffer, requires stride parameter.</td></tr></table><div id="DeviceFlags" class="h3title">coalpy.gpu.DeviceFlags</div><div class="subtitle">enum</div><pre>Flags utilized for device creation.</pre><br/><table class="membertable"><tr><td>EnableDebug</td><td>Enable debug drivers for current device.</td></tr></table><div id="FilterType" class="h3title">coalpy.gpu.FilterType</div><div class="subtitle">enum</div><pre>Filter types for samplers enumeration. Use enum values located at coalpy.gpu.FilterType</pre><br/><table class="membertable"><tr><td>Anisotropic</td><td>High quality anisotropic filter type.</td></tr><tr><td>Linear</td><td>Bilinear/trilinear filter type.</td></tr><tr><td>Max</td><td>Min value of neighborhood filter type.</td></tr><tr><td>Min</td><td>Max value of neighborhood filter type.</td></tr><tr><td>Point</td><td>Point (nearest neighbor) filter type.</td></tr></table><div id="Format" class="h3title">coalpy.gpu.Format</div><div class="subtitle">enum</div><pre>Formats supported for Textures and Standard Buffers.</pre><br/><table class="membertable"><tr><td>BGRA_8_UNORM</td><td></td></tr><tr><td>BGRA_8_UNORM_SRGB</td><td></td></tr><tr><td>D16_UNORM</td><td></td></tr><tr><td>D32_FLOAT</td><td></td></tr><tr><td>R16_FLOAT</td><td></td></tr><tr><td>R16_SINT</td><td></td></tr><tr><td>R16_SNORM</td><td></td></tr><tr><td>R16_TYPELESS</td><td></td></tr><tr><td>R16_UINT</td><td></td></tr><tr><td>R16_UNORM</td><td></td></tr><tr><td>R32_FLOAT</td><td></td></tr><tr><td>R32_SINT</td><td></td></tr><tr><td>R32_TYPELESS</td><td></td></tr><tr><td>R32_UINT</td><td></td></tr><tr><td>R8_SINT</td><td></td></tr><tr><td>R8_SNORM</td><td></td></tr><tr><td>R8_TYPELESS</td><td></td></tr><tr><td>R8_UINT</td><td></td></tr><tr><td>R8_UNORM</td><td></td></tr><tr><td>RG16_FLOAT</td><td></td></tr><tr><td>RG16_SINT</td><td></td></tr><tr><td>RG16_SNORM</td><td></td></tr><tr><td>RG16_TYPELESS</td><td></td></tr><tr><td>RG16_UINT</td><td></td></tr><tr><td>RG16_UNORM</td><td></td></tr><tr><td>RGBA_16_FLOAT</td><td></td></tr><tr><td>RGBA_16_SINT</td><td></td></tr><tr><td>RGBA_16_SNORM</td><td></td></tr><tr><td>RGBA_16_TYPELESS</td><td></td></tr><tr><td>RGBA_16_UINT</td><td></td></tr><tr><td>RGBA_16_UNORM</td><td></td></tr><tr><td>RGBA_32_FLOAT</td><td></td></tr><tr><td>RGBA_32_SINT</td><td></td></tr><tr><td>RGBA_32_TYPELESS</td><td></td></tr><tr><td>RGBA_32_UINT</td><td></td></tr><tr><td>RGBA_8_SINT</td><td></td></tr><tr><td>RGBA_8_SNORM</td><td></td></tr><tr><td>RGBA_8_TYPELESS</td><td></td></tr><tr><td>RGBA_8_UINT</td><td></td></tr><tr><td>RGBA_8_UNORM</td><td></td></tr><tr><td>RGBA_8_UNORM_SRGB</td><td></td></tr><tr><td>RGB_32_FLOAT</td><td></td></tr><tr><td>RGB_32_SINT</td><td></td></tr><tr><td>RGB_32_TYPELESS</td><td></td></tr><tr><td>RGB_32_UINT</td><td></td></tr><tr><td>RG_32_FLOAT</td><td></td></tr><tr><td>RG_32_SINT</td><td></td></tr><tr><td>RG_32_TYPELESS</td><td></td></tr><tr><td>RG_32_UINT</td><td></td></tr></table><div id="ImAxis" class="h3title">coalpy.gpu.ImAxis</div><div class="subtitle">enum</div><pre>None</pre><br/><table class="membertable"><tr><td>COUNT</td><td></td></tr><tr><td>X1</td><td>enabled by default</td></tr><tr><td>X2</td><td>disabled by default</td></tr><tr><td>X3</td><td>disabled by default</td></tr><tr><td>Y1</td><td>enabled by default</td></tr><tr><td>Y2</td><td>disabled by default</td></tr><tr><td>Y3</td><td>disabled by default</td></tr></table><div id="ImGuiDir" class="h3title">coalpy.gpu.ImGuiDir</div><div class="subtitle">enum</div><pre>None</pre><br/><table class="membertable"><tr><td>COUNT</td><td></td></tr><tr><td>Down</td><td></td></tr><tr><td>Left</td><td></td></tr><tr><td>Right</td><td></td></tr><tr><td>Up</td><td></td></tr></table><div id="ImGuiDockNodeFlags" class="h3title">coalpy.gpu.ImGuiDockNodeFlags</div><div class="subtitle">enum</div><pre>Flags for docking</pre><br/><table class="membertable"><tr><td>AutoHideTabBar</td><td>Tab bar will automatically hide when there is a single window in the dock node.</td></tr><tr><td>KeepAliveOnly</td><td>Don't display the dockspace node but keep it alive. Windows docked into this dockspace node won't be undocked.</td></tr><tr><td>NoDockingInCentralNode</td><td>Disable docking inside the Central Node, which will be always kept empty.</td></tr><tr><td>NoResize</td><td>Disable resizing node using the splitter/separators. Useful with programmatically setup dockspaces.</td></tr><tr><td>NoSplit</td><td>Disable splitting the node into smaller nodes. Useful e.g. when embedding dockspaces into a main root one (the root one may have splitting disabled to reduce confusion). Note: when turned off, existing splits will be preserved.</td></tr><tr><td>PassthruCentralNode</td><td>Enable passthru dockspace: 1) DockSpace() will render a ImGuiCol_WindowBg background covering everything excepted the Central Node when empty. Meaning the host window should probably use SetNextWindowBgAlpha(0.0f) prior to Begin() when using this. 2) When Central Node is empty: let inputs pass-through + won't display a DockingEmptyBg background. See demo for details.</td></tr></table><div id="ImGuiFocusedFlags" class="h3title">coalpy.gpu.ImGuiFocusedFlags</div><div class="subtitle">enum</div><pre>ImGUI Focused flags</pre><br/><table class="membertable"><tr><td>AnyWindow</td><td>Return true if any window is focused. Important: If you are trying to tell how to dispatch your low-level inputs, do NOT use this. Use 'io.WantCaptureMouse' instead! Please read the FAQ!</td></tr><tr><td>ChildWindows</td><td>Return true if any children of the window is focused</td></tr><tr><td>DockHierarchy</td><td>Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)</td></tr><tr><td>NoPopupHierarchy</td><td>Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow)</td></tr><tr><td>RootAndChildWindows</td><td>All the windows.</td></tr><tr><td>RootWindow</td><td>Test from root window (top most parent of the current hierarchy)</td></tr></table><div id="ImGuiHoveredFlags" class="h3title">coalpy.gpu.ImGuiHoveredFlags</div><div class="subtitle">enum</div><pre>Flags for IsHovered</pre><br/><table class="membertable"><tr><td>AllowWhenBlockedByActiveItem</td><td>Return true even if an active item is blocking access to this item/window. Useful for Drag and Drop patterns.</td></tr><tr><td>AllowWhenBlockedByPopup</td><td>Return true even if a popup window is normally blocking access to this item/window</td></tr><tr><td>AllowWhenDisabled</td><td>IsItemHovered() only: Return true even if the item is disabled</td></tr><tr><td>AllowWhenOverlapped</td><td>IsItemHovered() only: Return true even if the position is obstructed or overlapped by another window</td></tr><tr><td>AnyWindow</td><td>IsWindowHovered() only: Return true if any window is hovered</td></tr><tr><td>ChildWindows</td><td>"IsWindowHovered() only: Return true if any children of the window is hovered</td></tr><tr><td>DockHierarchy</td><td>IsWindowHovered() only: Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)</td></tr><tr><td>NoNavOverride</td><td>Disable using gamepad/keyboard navigation state when active, always query mouse.</td></tr><tr><td>NoPopupHierarchy</td><td>IsWindowHovered() only: Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow)</td></tr><tr><td>RectOnly</td><td>ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenOverlapped</td></tr><tr><td>RootAndChildWindows</td><td>ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows</td></tr><tr><td>RootWindow</td><td>IsWindowHovered() only: Test from root window (top most parent of the current hierarchy)</td></tr></table><div id="ImGuiKey" class="h3title">coalpy.gpu.ImGuiKey</div><div class="subtitle">enum</div><pre>None</pre><br/><table class="membertable"><tr><td>A</td><td></td></tr><tr><td>Apostrophe</td><td></td></tr><tr><td>B</td><td></td></tr><tr><td>Backslash</td><td></td></tr><tr><td>Backspace</td><td></td></tr><tr><td>C</td><td></td></tr><tr><td>COUNT</td><td></td></tr><tr><td>CapsLock</td><td></td></tr><tr><td>Comma</td><td></td></tr><tr><td>D</td><td></td></tr><tr><td>Delete</td><td></td></tr><tr><td>DownArrow</td><td></td></tr><tr><td>E</td><td></td></tr><tr><td>End</td><td></td></tr><tr><td>Enter</td><td></td></tr><tr><td>Equal</td><td></td></tr><tr><td>Escape</td><td></td></tr><tr><td>F</td><td></td></tr><tr><td>F1</td><td></td></tr><tr><td>F10</td><td></td></tr><tr><td>F11</td><td></td></tr><tr><td>F12</td><td></td></tr><tr><td>F2</td><td></td></tr><tr><td>F3</td><td></td></tr><tr><td>F4</td><td></td></tr><tr><td>F5</td><td></td></tr><tr><td>F6</td><td></td></tr><tr><td>F7</td><td></td></tr><tr><td>F8</td><td></td></tr><tr><td>F9</td><td></td></tr><tr><td>G</td><td></td></tr><tr><td>GamepadBack</td><td></td></tr><tr><td>GamepadDpadDown</td><td></td></tr><tr><td>GamepadDpadLeft</td><td></td></tr><tr><td>GamepadDpadRight</td><td></td></tr><tr><td>GamepadDpadUp</td><td></td></tr><tr><td>GamepadFaceDown</td><td></td></tr><tr><td>GamepadFaceLeft</td><td></td></tr><tr><td>GamepadFaceRight</td><td></td></tr><tr><td>GamepadFaceUp</td><td></td></tr><tr><td>GamepadL1</td><td></td></tr><tr><td>GamepadL2</td><td></td></tr><tr><td>GamepadL3</td><td></td></tr><tr><td>GamepadLStickDown</td><td></td></tr><tr><td>GamepadLStickLeft</td><td></td></tr><tr><td>GamepadLStickRight</td><td></td></tr><tr><td>GamepadLStickUp</td><td></td></tr><tr><td>GamepadR1</td><td></td></tr><tr><td>GamepadR2</td><td></td></tr><tr><td>GamepadR3</td><td></td></tr><tr><td>GamepadRStickDown</td><td></td></tr><tr><td>GamepadRStickLeft</td><td></td></tr><tr><td>GamepadRStickRight</td><td></td></tr><tr><td>GamepadRStickUp</td><td></td></tr><tr><td>GamepadStart</td><td></td></tr><tr><td>GraveAccent</td><td></td></tr><tr><td>H</td><td></td></tr><tr><td>Home</td><td></td></tr><tr><td>I</td><td></td></tr><tr><td>Insert</td><td></td></tr><tr><td>J</td><td></td></tr><tr><td>K</td><td></td></tr><tr><td>Keypad0</td><td></td></tr><tr><td>Keypad1</td><td></td></tr><tr><td>Keypad2</td><td></td></tr><tr><td>Keypad3</td><td></td></tr><tr><td>Keypad4</td><td></td></tr><tr><td>Keypad5</td><td></td></tr><tr><td>Keypad6</td><td></td></tr><tr><td>Keypad7</td><td></td></tr><tr><td>Keypad8</td><td></td></tr><tr><td>Keypad9</td><td></td></tr><tr><td>KeypadAdd</td><td></td></tr><tr><td>KeypadDecimal</td><td></td></tr><tr><td>KeypadDivide</td><td></td></tr><tr><td>KeypadEnter</td><td></td></tr><tr><td>KeypadEqual</td><td></td></tr><tr><td>KeypadMultiply</td><td></td></tr><tr><td>KeypadSubtract</td><td></td></tr><tr><td>L</td><td></td></tr><tr><td>LeftAlt</td><td></td></tr><tr><td>LeftArrow</td><td></td></tr><tr><td>LeftBracket</td><td></td></tr><tr><td>LeftCtrl</td><td></td></tr><tr><td>LeftShift</td><td></td></tr><tr><td>LeftSuper</td><td></td></tr><tr><td>M</td><td></td></tr><tr><td>Menu</td><td></td></tr><tr><td>Minus</td><td></td></tr><tr><td>ModAlt</td><td></td></tr><tr><td>ModCtrl</td><td></td></tr><tr><td>ModShift</td><td></td></tr><tr><td>ModSuper</td><td></td></tr><tr><td>N</td><td></td></tr><tr><td>None</td><td></td></tr><tr><td>NumLock</td><td></td></tr><tr><td>O</td><td></td></tr><tr><td>P</td><td></td></tr><tr><td>PageDown</td><td></td></tr><tr><td>PageUp</td><td></td></tr><tr><td>Pause</td><td></td></tr><tr><td>Period</td><td></td></tr><tr><td>PrintScreen</td><td></td></tr><tr><td>Q</td><td></td></tr><tr><td>R</td><td></td></tr><tr><td>RightAlt</td><td></td></tr><tr><td>RightArrow</td><td></td></tr><tr><td>RightBracket</td><td></td></tr><tr><td>RightCtrl</td><td></td></tr><tr><td>RightShift</td><td></td></tr><tr><td>RightSuper</td><td></td></tr><tr><td>S</td><td></td></tr><tr><td>ScrollLock</td><td></td></tr><tr><td>Semicolon</td><td></td></tr><tr><td>Slash</td><td></td></tr><tr><td>Space</td><td></td></tr><tr><td>T</td><td></td></tr><tr><td>Tab</td><td></td></tr><tr><td>U</td><td></td></tr><tr><td>UpArrow</td><td></td></tr><tr><td>V</td><td></td></tr><tr><td>W</td><td></td></tr><tr><td>X</td><td></td></tr><tr><td>Y</td><td></td></tr><tr><td>Z</td><td></td></tr><tr><td>k0</td><td></td></tr><tr><td>k1</td><td></td></tr><tr><td>k2</td><td></td></tr><tr><td>k3</td><td></td></tr><tr><td>k4</td><td></td></tr><tr><td>k5</td><td></td></tr><tr><td>k6</td><td></td></tr><tr><td>k7</td><td></td></tr><tr><td>k8</td><td></td></tr><tr><td>k9</td><td></td></tr></table><div id="ImGuiMouseButton" class="h3title">coalpy.gpu.ImGuiMouseButton</div><div class="subtitle">enum</div><pre>None</pre><br/><table class="membertable"><tr><td>COUNT</td><td></td></tr><tr><td>Left</td><td></td></tr><tr><td>Middle</td><td></td></tr><tr><td>Right</td><td></td></tr></table><div id="ImGuiTabBarFlags" class="h3title">coalpy.gpu.ImGuiTabBarFlags</div><div class="subtitle">enum</div><pre>None</pre><br/><table class="membertable"><tr><td>AutoSelectNewTabs</td><td>Automatically select new tabs when they appear</td></tr><tr><td>FittingPolicyDefault_</td><td></td></tr><tr><td>FittingPolicyMask_</td><td></td></tr><tr><td>FittingPolicyResizeDown</td><td>Resize tabs when they don't fit</td></tr><tr><td>FittingPolicyScroll</td><td>Add scroll buttons when tabs don't fit</td></tr><tr><td>NoCloseWithMiddleMouseButton</td><td>Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.</td></tr><tr><td>NoTabListScrollingButtons</td><td>Disable scrolling buttons (apply when fitting policy is ImGuiTabBarFlags_FittingPolicyScroll)</td></tr><tr><td>NoTooltip</td><td>Disable tooltips when hovering a tab</td></tr><tr><td>Reorderable</td><td>Allow manually dragging tabs to re-order them + New tabs are appended at the end of list</td></tr><tr><td>TabListPopupButton</td><td>Disable buttons to open the tab list popup</td></tr></table><div id="ImGuiTabItemFlags" class="h3title">coalpy.gpu.ImGuiTabItemFlags</div><div class="subtitle">enum</div><pre>None</pre><br/><table class="membertable"><tr><td>Leading</td><td>Enforce the tab position to the left of the tab bar (after the tab list popup button)</td></tr><tr><td>NoCloseWithMiddleMouseButton</td><td>Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.</td></tr><tr><td>NoPushId</td><td>Don't call PushID(tab->ID)/PopID() on BeginTabItem()/EndTabItem()</td></tr><tr><td>NoReorder</td><td>Disable reordering this tab or having another tab cross over this tab</td></tr><tr><td>NoTooltip</td><td>Disable tooltip for the given tab</td></tr><tr><td>SetSelected</td><td>Trigger flag to programmatically make the tab selected when calling BeginTabItem()</td></tr><tr><td>Trailing</td><td>the tab position to the right of the tab bar (before the scrolling buttons)</td></tr><tr><td>UnsavedDocument</td><td>Display a dot next to the title + tab is selected when clicking the X + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.</td></tr></table><div id="ImGuiTreeNodeFlags" class="h3title">coalpy.gpu.ImGuiTreeNodeFlags</div><div class="subtitle">enum</div><pre>None</pre><br/><table class="membertable"><tr><td>AllowItemOverlap</td><td>Hit testing to allow subsequent widgets to overlap this one</td></tr><tr><td>Bullet</td><td>Display a bullet instead of arrow</td></tr><tr><td>CollapsingHeader</td><td>ImGuiTreeNodeFlags_NoAutoOpenOnLog</td></tr><tr><td>DefaultOpen</td><td>Default node to be open</td></tr><tr><td>FramePadding</td><td>// Use FramePadding (even for an unframed text node) to vertically align text baseline to regular widget height. Equivalent to calling AlignTextToFramePadding().</td></tr><tr><td>Framed</td><td>Draw frame with background (e.g. for CollapsingHeader)</td></tr><tr><td>Leaf</td><td>No collapsing, no arrow (use as a convenience for leaf nodes).</td></tr><tr><td>NavLeftJumpsBackHere</td><td>// (WIP) Nav: left direction may move to this TreeNode() from any of its child (items submitted between TreeNode and TreePop)</td></tr><tr><td>NoAutoOpenOnLog</td><td>Don't automatically and temporarily open node when Logging is active (by default logging will automatically open tree nodes)</td></tr><tr><td>NoTreePushOnOpen</td><td>Don't do a TreePush() when open (e.g. for CollapsingHeader) = no extra indent nor pushing on ID stack</td></tr><tr><td>OpenOnArrow</td><td>Only open when clicking on the arrow part. If ImGuiTreeNodeFlags_OpenOnDoubleClick is also set, single-click arrow or double-click all box to open.</td></tr><tr><td>OpenOnDoubleClick</td><td>Need double-click to open node</td></tr><tr><td>Selected</td><td>Draw as selected</td></tr><tr><td>SpanAvailWidth</td><td>// Extend hit box to the right-most edge, even if not framed. This is not the default in order to allow adding other items on the same line. In the future we may refactor the hit system to be front-to-back, allowing natural overlaps and then this can become the default.</td></tr><tr><td>SpanFullWidth</td><td>// Extend hit box to the left-most and right-most edges (bypass the indented area).</td></tr></table><div id="ImGuiWindowFlags" class="h3title">coalpy.gpu.ImGuiWindowFlags</div><div class="subtitle">enum</div><pre>ImGUI Window flags</pre><br/><table class="membertable"><tr><td>AlwaysAutoResize</td><td>Resize every window to its content every frame</td></tr><tr><td>AlwaysHorizontalScrollbar</td><td>Always show horizontal scrollbar (even if ContentSize.x < Size.x)</td></tr><tr><td>AlwaysUseWindowPadding</td><td>Ensure child windows without border uses style.WindowPadding (ignored by default for non-bordered child windows, because more convenient)</td></tr><tr><td>AlwaysVerticalScrollbar</td><td>Always show vertical scrollbar (even if ContentSize.y < Size.y)</td></tr><tr><td>HorizontalScrollbar</td><td>Allow horizontal scrollbar to appear (off by default). You may use SetNextWindowContentSize(ImVec2(width,0.0f)); prior to calling Begin() to specify width. Read code in imgui_demo in the "Horizontal Scrolling" section.</td></tr><tr><td>MenuBar</td><td>Has a menu-bar</td></tr><tr><td>NoBackground</td><td>Disable drawing background color (WindowBg, etc.) and outside border. Similar as using SetNextWindowBgAlpha(0.0f).</td></tr><tr><td>NoBringToFrontOnFocus</td><td>Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus)</td></tr><tr><td>NoCollapse</td><td>Disable user collapsing window by double-clicking on it. Also referred to as Window Menu Button (e.g. within a docking node).</td></tr><tr><td>NoDocking</td><td>Disable docking of this window</td></tr><tr><td>NoFocusOnAppearing</td><td>Disable taking focus when transitioning from hidden to visible state</td></tr><tr><td>NoMouseInputs</td><td>Disable catching mouse, hovering test with pass through.</td></tr><tr><td>NoMove</td><td>Disable user moving the window</td></tr><tr><td>NoNavFocus</td><td>No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by CTRL+TAB)</td></tr><tr><td>NoNavInputs</td><td>No gamepad/keyboard navigation within the window</td></tr><tr><td>NoResize</td><td>Disable user resizing with the lower-right grip</td></tr><tr><td>NoSavedSettings</td><td>Never load/save settings in .ini file</td></tr><tr><td>NoScrollWithMouse</td><td>Disable user vertically scrolling with mouse wheel. On child window, mouse wheel will be forwarded to the parent unless NoScrollbar is also set.</td></tr><tr><td>NoScrollbar</td><td>Disable scrollbars (window can still scroll with mouse or programmatically)</td></tr><tr><td>NoTitleBar</td><td>Disable title-bar</td></tr><tr><td>UnsavedDocument</td><td>Display a dot next to the title. When used in a tab/docking context, tab is selected when clicking the X + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.</td></tr></table><div id="ImPlotAxisFlags" class="h3title">coalpy.gpu.ImPlotAxisFlags</div><div class="subtitle">enum</div><pre>None</pre><br/><table class="membertable"><tr><td>AutoFit</td><td>axis will be auto-fitting to data extents</td></tr><tr><td>AuxDefault</td><td></td></tr><tr><td>Foreground</td><td>d lines will be displayed in the foreground (i.e. on top of data) in stead of the background</td></tr><tr><td>Invert</td><td> the axis will be inverted</td></tr><tr><td>Lock</td><td></td></tr><tr><td>LockMax</td><td>the axis maximum value will be locked when panning/zooming</td></tr><tr><td>LockMin</td><td>the axis minimum value will be locked when panning/zooming</td></tr><tr><td>LogScale</td><td> logartithmic (base 10) axis scale will be used (mutually exclusive with ImPlotAxisFlags_Time</td></tr><tr><td>NoDeforations</td><td></td></tr><tr><td>NoGridLines</td><td>rid lines will be displayed</td></tr><tr><td>NoInitialFit</td><td>will not be initially fit to data extents on the first rendered frame</td></tr><tr><td>NoLabel</td><td>the axis label will not be displayed (axis labels also hidden if the supplied string name is NULL</td></tr><tr><td>NoMenus</td><td>the user will not be able to open context menus with right-click</td></tr><tr><td>NoTickLabels</td><td>xt labels will be displayed</td></tr><tr><td>NoTickMarks</td><td>ick marks will be displayed</td></tr><tr><td>Opposite</td><td>xis ticks and labels will be rendered on conventionally opposite side (i.e, right or top</td></tr><tr><td>RangeFit</td><td>xis will only fit points if the point is in the visible range of the **orthogonal** axis</td></tr><tr><td>Time</td><td>   axis will display date/time formatted labels (mutually exclusive with ImPlotAxisFlags_LogScale</td></tr></table><div id="ImPlotCond" class="h3title">coalpy.gpu.ImPlotCond</div><div class="subtitle">enum</div><pre>None</pre><br/><table class="membertable"><tr><td>Always</td><td>No condition (always set the variable)</td></tr><tr><td>None</td><td>No condition (always set the variable), same as _Always</td></tr><tr><td>Once</td><td>Set the variable once per runtime session (only the first call will succeed)</td></tr></table><div id="ImPlotFlags" class="h3title">coalpy.gpu.ImPlotFlags</div><div class="subtitle">enum</div><pre>None</pre><br/><table class="membertable"><tr><td>AntiAliased</td><td>pot items will be software anti-aliased (not recommended for high density plots, prefer MSAA) </td></tr><tr><td>CanvasOnly</td><td></td></tr><tr><td>Crosshairs</td><td> the default mouse cursor will be replaced with a crosshair when hovered </td></tr><tr><td>Equal</td><td> x and y axes pairs will be constrained to have the same units/pixel </td></tr><tr><td>NoBoxSelect</td><td> the user will not be able to box-select </td></tr><tr><td>NoChild</td><td> a child window region will not be used to capture mouse scroll (can boost performance for single ImGui window applications) </td></tr><tr><td>NoFrame</td><td> the ImGui frame will not be rendered </td></tr><tr><td>NoInputs</td><td> the user will not be able to interact with the plot </td></tr><tr><td>NoLegend</td><td> the legend will not be displayed </td></tr><tr><td>NoMenus</td><td> the user will not be able to open context menus </td></tr><tr><td>NoMouseText</td><td> the mouse position, in plot coordinates, will not be displayed inside of the plot </td></tr><tr><td>NoTitle</td><td> the plot title will not be displayed (titles are also hidden if preceeded by double hashes, e.g. "##MyPlot") </td></tr></table><div id="Keys" class="h3title">coalpy.gpu.Keys</div><div class="subtitle">enum</div><pre>Enumeration of keyboard / mouse input keys. To be used with the input_state object from the Window. Use enum values located at coalpy.gpu.Keys</pre><br/><table class="membertable"><tr><td>A</td><td>A key enumeration.</td></tr><tr><td>B</td><td>B key enumeration.</td></tr><tr><td>Backslash</td><td>Backslash key enumeration.</td></tr><tr><td>Backspace</td><td>Backspace key enumeration.</td></tr><tr><td>C</td><td>C key enumeration.</td></tr><tr><td>Comma</td><td>Comma key enumeration.</td></tr><tr><td>D</td><td>D key enumeration.</td></tr><tr><td>Dot</td><td>Dot key enumeration.</td></tr><tr><td>Down</td><td>Down key enumeration.</td></tr><tr><td>E</td><td>E key enumeration.</td></tr><tr><td>Enter</td><td>Enter key enumeration.</td></tr><tr><td>F</td><td>F key enumeration.</td></tr><tr><td>F1</td><td>F1 key enumeration.</td></tr><tr><td>F10</td><td>F10 key enumeration.</td></tr><tr><td>F11</td><td>F11 key enumeration.</td></tr><tr><td>F12</td><td>F12 key enumeration.</td></tr><tr><td>F2</td><td>F2 key enumeration.</td></tr><tr><td>F3</td><td>F3 key enumeration.</td></tr><tr><td>F4</td><td>F4 key enumeration.</td></tr><tr><td>F5</td><td>F5 key enumeration.</td></tr><tr><td>F6</td><td>F6 key enumeration.</td></tr><tr><td>F7</td><td>F7 key enumeration.</td></tr><tr><td>F8</td><td>F8 key enumeration.</td></tr><tr><td>F9</td><td>F9 key enumeration.</td></tr><tr><td>G</td><td>G key enumeration.</td></tr><tr><td>H</td><td>H key enumeration.</td></tr><tr><td>I</td><td>I key enumeration.</td></tr><tr><td>J</td><td>J key enumeration.</td></tr><tr><td>K</td><td>K key enumeration.</td></tr><tr><td>L</td><td>L key enumeration.</td></tr><tr><td>Left</td><td>Left key enumeration.</td></tr><tr><td>LeftAlt</td><td>LeftAlt key enumeration.</td></tr><tr><td>LeftBrac</td><td>LeftBrac key enumeration.</td></tr><tr><td>LeftControl</td><td>LeftControl key enumeration.</td></tr><tr><td>LeftShift</td><td>LeftShift key enumeration.</td></tr><tr><td>M</td><td>M key enumeration.</td></tr><tr><td>MouseCenter</td><td>MouseCenter key enumeration.</td></tr><tr><td>MouseLeft</td><td>MouseLeft key enumeration.</td></tr><tr><td>MouseLeftDouble</td><td>MouseLeftDouble key enumeration.</td></tr><tr><td>MouseRight</td><td>MouseRight key enumeration.</td></tr><tr><td>MouseRightDouble</td><td>MouseRightDouble key enumeration.</td></tr><tr><td>N</td><td>N key enumeration.</td></tr><tr><td>O</td><td>O key enumeration.</td></tr><tr><td>P</td><td>P key enumeration.</td></tr><tr><td>Q</td><td>Q key enumeration.</td></tr><tr><td>R</td><td>R key enumeration.</td></tr><tr><td>Right</td><td>Right key enumeration.</td></tr><tr><td>RightAlt</td><td>RightAlt key enumeration.</td></tr><tr><td>RightBrac</td><td>RightBrac key enumeration.</td></tr><tr><td>RightControl</td><td>RightControl key enumeration.</td></tr><tr><td>RightShift</td><td>RightShift key enumeration.</td></tr><tr><td>S</td><td>S key enumeration.</td></tr><tr><td>Semicolon</td><td>Semicolon key enumeration.</td></tr><tr><td>Slash</td><td>Slash key enumeration.</td></tr><tr><td>Space</td><td>Space key enumeration.</td></tr><tr><td>T</td><td>T key enumeration.</td></tr><tr><td>U</td><td>U key enumeration.</td></tr><tr><td>Up</td><td>Up key enumeration.</td></tr><tr><td>V</td><td>V key enumeration.</td></tr><tr><td>W</td><td>W key enumeration.</td></tr><tr><td>X</td><td>X key enumeration.</td></tr><tr><td>Y</td><td>Y key enumeration.</td></tr><tr><td>Z</td><td>Z key enumeration.</td></tr><tr><td>k0</td><td>k0 key enumeration.</td></tr><tr><td>k1</td><td>k1 key enumeration.</td></tr><tr><td>k2</td><td>k2 key enumeration.</td></tr><tr><td>k3</td><td>k3 key enumeration.</td></tr><tr><td>k4</td><td>k4 key enumeration.</td></tr><tr><td>k5</td><td>k5 key enumeration.</td></tr><tr><td>k6</td><td>k6 key enumeration.</td></tr><tr><td>k7</td><td>k7 key enumeration.</td></tr><tr><td>k8</td><td>k8 key enumeration.</td></tr><tr><td>k9</td><td>k9 key enumeration.</td></tr></table><div id="MemFlags" class="h3title">coalpy.gpu.MemFlags</div><div class="subtitle">enum</div><pre>Memory access enumerations. Use enum values located at coalpy.gpu.MemFlags</pre><br/><table class="membertable"><tr><td>GpuRead</td><td>Specify flag for resource read access from InResourceTable / SRVs</td></tr><tr><td>GpuWrite</td><td>Specify flag for resource write access from an OutResourceTable / UAV</td></tr></table><div id="TextureAddressMode" class="h3title">coalpy.gpu.TextureAddressMode</div><div class="subtitle">enum</div><pre>Address behaviour of texture coordinates enumeration. Use enum values located at coalpy.gpu.TextureAddressMode</pre><br/><table class="membertable"><tr><td>Border</td><td>Samples a border when UVs are in the edge. Set the border color in the sampler object.</td></tr><tr><td>Clamp</td><td>Clamps the UV coordinates at the edges. </td></tr><tr><td>Mirror</td><td>Applies UV mirroring when UV coordinates go into the next edge. </td></tr><tr><td>Wrap</td><td>Repeats samples when UV coordinates exceed range.</td></tr></table><div id="TextureType" class="h3title">coalpy.gpu.TextureType</div><div class="subtitle">enum</div><pre>Type of texture enumeration. Use enum values located at coalpy.gpu.TextureType</pre><br/><table class="membertable"><tr><td>CubeMap</td><td>Cube map texture.</td></tr><tr><td>CubeMapArray</td><td>Array of cube maps. Use the Depth as the number of cube maps supported in an array.</td></tr><tr><td>k1d</td><td>One dimensional texture. Width & depth defaults to 1.</td></tr><tr><td>k2d</td><td>Two dimensional texture. Depth defaults to 1.</td></tr><tr><td>k2dArray</td><td>Two dimensional array texture.</td></tr><tr><td>k3d</td><td>Volume texture type.</td></tr></table>
 
         </div>
 

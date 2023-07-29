@@ -32,10 +32,43 @@ html
 .treedot
 {
     float: left;
+    color:#00ff03;
     margin-right:10px;
+}
+
+.treelink
+{
+    color:#b7b7ff;
 }
 
 .treename
 {
+}
+
+.membertable
+{
+    font-size:12px;
+}
+
+.h3title
+{
+    color:#b7b7ff;
+    padding-top:20px;
+    font-size:20px;
+}
+
+.subtitle
+{
+    color:#00ff03;
+    font-size:10px;
+}
+
+.head
+{
+    float:top;
+}
+.foot
+{
+    float:bottom;
 }
 
