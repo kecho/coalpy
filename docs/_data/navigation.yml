@@ -9,9 +9,11 @@ main:
 tutorialbar:
   - title: 0 - Introduction
     url: /tutorial-intro
-  - title: 1 - Getting Started
-    url: /tutorial-start
-  - title: 2 - Simple Effect
+  - title: 1 - A first Kernel
+    url: /tutorial-kernel
+  - title: 2 - Simple Window 
+    url: /tutorial-window
+  - title: 3 - Simple Effect
     url: /tutorial-effect
-  - title: 3 - Configuration
+  - title: 4 - Configuration
     url: /tutorial-config

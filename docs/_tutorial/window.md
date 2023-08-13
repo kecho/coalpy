@@ -1,33 +1,14 @@
 ---
-permalink: /tutorial-start
-title: "Getting Started with _CoalPy_"
+permalink: /tutorial-window
+title: "Creating a simple Window with _CoalPy_"
 layout: "single"
 toc: true
 sidebar:
   nav: "tutorialbar"
 ---
 
-## Installation
-
-There are multiple ways to install __CoalPy__. The easiest is through python PiP package manager:
-
-```
-pip install coalpy
-```
-
-Alternatively, you can download the prebuilt binaries in the release links of the [github repository here](https://github.com/kecho/coalpy/releases)
-
-## Test it works!
- 
-To test it works on your machine, run the following python module, which is an example of a GPU application built using coalpy:
-
-```
-py coalpy.examples.seascape 
-```
-
-## Create a Window
-
-If we desire to view any data in coalpy, we have to create a window. The following script creates a window, and is the minimal application to display something to the screen:
+To visualize any realtime graphics work in _CoalPy_, we have to create a window.
+The following script creates a window, and is the minimal application to display something to the screen:
 
 ```python
 # import the library

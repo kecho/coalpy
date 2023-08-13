@@ -7,7 +7,7 @@ sidebar:
   nav: "tutorialbar"
 ---
 
-Once the [getting started](tutorial-start) tutorial is finished, we can now add more interesting effects to our window effect application.
+Once the [Simple Window](tutorial-window) tutorial is finished, we can now add more interesting effects to our window effect application.
 We will also add a simple editor user interface to begin with the Imgui integration.
 
 # Add a color picker UI
