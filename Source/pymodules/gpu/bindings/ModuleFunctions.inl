@@ -5,7 +5,7 @@ COALPY_FN(get_settings, getSettings,
     Returns an object containing all the settings loaded for the coalpy.gpu module.
 
     Returns:
-        Object: object containing all the settings loaded for coalpy.gpu
+        Object (Settings): object containing all the settings loaded for coalpy.gpu of type Settings.
     )"
 )
 

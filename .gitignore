@@ -6,4 +6,4 @@ t2-output
 tags
 imgui.ini
 .shader_pdb
-
+docs/_site/*

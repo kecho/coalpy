@@ -1204,6 +1204,160 @@ PyObject* treePop(PyObject* self, PyObject* vargs, PyObject* kwds)
     Py_RETURN_NONE;
 }
 
+PyObject* colorEdit3(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    ModuleState& moduleState = parentModule(self);
+    CHECK_IMGUI
+
+    char* label = nullptr;
+    PyObject* c = nullptr;
+    int flags = 0;
+
+    static char* argnames[] = { "label", "col", "flags", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "sO|i", argnames, &label, &c, &flags))
+        return nullptr;
+
+    float colVal[3];
+    if (!getTupleValuesFloat(c, colVal, 3, 3)) 
+    {
+        PyErr_SetString(moduleState.exObj(), "Cannot parse col value. Must be a tuple or list of length 3");
+        return nullptr;
+    }
+
+    if (ImGui::ColorEdit3(label, colVal, flags))
+        return Py_BuildValue("(fff)", colVal[0], colVal[1], colVal[2]);
+    else
+        Py_RETURN_NONE;
+}
+
+
+PyObject* colorEdit4(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    ModuleState& moduleState = parentModule(self);
+    CHECK_IMGUI
+
+    char* label = nullptr;
+    PyObject* c = nullptr;
+    int flags = 0;
+
+    static char* argnames[] = { "label", "col", "flags", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "sO|i", argnames, &label, &c, &flags))
+        return nullptr;
+
+    float colVal[4];
+    if (!getTupleValuesFloat(c, colVal, 4, 4)) 
+    {
+        PyErr_SetString(moduleState.exObj(), "Cannot parse col value. Must be a tuple or list of length 4");
+        return nullptr;
+    }
+
+    if (ImGui::ColorEdit4(label, colVal, flags))
+        return Py_BuildValue("(ffff)", colVal[0], colVal[1], colVal[2], colVal[3]);
+    else
+        Py_RETURN_NONE;
+}
+
+PyObject* colorPicker3(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    ModuleState& moduleState = parentModule(self);
+    CHECK_IMGUI
+
+    char* label = nullptr;
+    PyObject* c = nullptr;
+    int flags = 0;
+
+    static char* argnames[] = { "label", "col", "flags", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "sO|i", argnames, &label, &c, &flags))
+        return nullptr;
+
+    float colVal[3];
+    if (!getTupleValuesFloat(c, colVal, 3, 3)) 
+    {
+        PyErr_SetString(moduleState.exObj(), "Cannot parse col value. Must be a tuple or list of length 3");
+        return nullptr;
+    }
+
+    if (ImGui::ColorPicker3(label, colVal, flags))
+        return Py_BuildValue("(fff)", colVal[0], colVal[1], colVal[2]);
+    else
+        Py_RETURN_NONE;
+}
+
+PyObject* colorPicker4(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    ModuleState& moduleState = parentModule(self);
+    CHECK_IMGUI
+
+    char* label = nullptr;
+    PyObject* c = nullptr;
+    int flags = 0;
+
+    static char* argnames[] = { "label", "col", "flags", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "sO|i", argnames, &label, &c, &flags))
+        return nullptr;
+
+    float colVal[4];
+    if (!getTupleValuesFloat(c, colVal, 4, 4)) 
+    {
+        PyErr_SetString(moduleState.exObj(), "Cannot parse col value. Must be a tuple or list of length 4");
+        return nullptr;
+    }
+
+    if (ImGui::ColorPicker4(label, colVal, flags))
+        return Py_BuildValue("(ffff)", colVal[0], colVal[1], colVal[2], colVal[3]);
+    else
+        Py_RETURN_NONE;
+}
+
+PyObject* colorButton(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    ModuleState& moduleState = parentModule(self);
+    CHECK_IMGUI
+
+    char* label = nullptr;
+    PyObject* c = nullptr;
+    PyObject* s = nullptr;
+    int flags = 0;
+
+    static char* argnames[] = { "desc_id", "col", "flags", "size", nullptr };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "sO|iO", argnames, &label, &c, &flags, &s))
+        return nullptr;
+
+    float sz[2] = { 0.0f, 0.0f };
+    if (s != nullptr && !getTupleValuesFloat(s, sz, 2, 2)) 
+    {
+        PyErr_SetString(moduleState.exObj(), "Cannot parse size value. Must be a tuple or list of length 4");
+        return nullptr;
+    }
+
+    float colVal[4];
+    if (!getTupleValuesFloat(c, colVal, 4, 4)) 
+    {
+        PyErr_SetString(moduleState.exObj(), "Cannot parse col value. Must be a tuple or list of length 4");
+        return nullptr;
+    }
+
+    ImVec2 sizeArg(sz[0], sz[1]);
+    ImVec4 colArg(colVal[0], colVal[1], colVal[2], colVal[3]);
+    if (ImGui::ColorButton(label, colArg, flags, sizeArg))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyObject* setColorEditOptions(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    static char* argnames[] = { "flags", nullptr };
+    int flags = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &flags))
+        return nullptr;
+
+    ImGui::SetColorEditOptions(flags);
+    Py_RETURN_NONE;
+}
+
+
 }//methods
 
 }//gpu

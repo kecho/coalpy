@@ -1,7 +1,17 @@
 main:
   - title: Tutorial
-    url: /tutorial
+    url: /tutorial-intro
   - title: API Docs
     url: /apidocs/0.50/coalpy.gpu.html
   - title: GitHub
     url: https://github.com/kecho/coalpy
+
+tutorialbar:
+  - title: 0 - Introduction
+    url: /tutorial-intro
+  - title: 1 - Getting Started
+    url: /tutorial-start
+  - title: 2 - Simple Effect
+    url: /tutorial-effect
+  - title: 3 - Configuration
+    url: /tutorial-config

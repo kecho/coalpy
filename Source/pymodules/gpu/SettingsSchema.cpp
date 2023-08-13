@@ -164,7 +164,7 @@ bool SettingsSchema::serialize(IFileSystem& fs, const char* filename, const void
     fs.closeHandle(handle);
     free(str);
     cJSON_Delete(root);
-    return false;
+    return success;
 }
 
 bool SettingsSchema::load(IFileSystem& fs, const char* filename, void* settingsObj)

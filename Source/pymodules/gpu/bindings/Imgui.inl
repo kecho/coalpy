@@ -130,7 +130,7 @@ COALPY_FN(input_float, inputFloat, R"(
         The new float value that the user set. Feed this value back on v on the next call to see a proper state update.
 )")
 
-COALPY_FN(input_float3, inputFloat3, R"(
+COALPY_FN(input_float2, inputFloat2, R"(
     Draws a box to input a float2 value.
     
     Parameters:
@@ -661,6 +661,66 @@ COALPY_FN(tree_pop, treePop, R"(
     Must be called if tree_node returns True.
 )")
 
+COALPY_FN(color_edit3, colorEdit3, R"(
+    Parameters:
+        label (str): label of widget
+        col (float):  tuple or array size 3 of color values (tuple or array)
+        flags (optional): see coalpy.gpu.ImGuiColorEditFlags
+
+    Return:
+        The color edited (tuple of size 3) or None if nothing was set
+)")
+
+COALPY_FN(color_edit4, colorEdit4, R"(
+    Parameters:
+        label (str): label of widget
+        col (float):  tuple or array size 4 of color values (tuple or array)
+        flags (optional): see coalpy.gpu.ImGuiColorEditFlags
+
+    Return:
+        The color edited (tuple of size 4) or None if nothing was set
+)")
+
+COALPY_FN(color_picker3, colorPicker3, R"(
+    Parameters:
+        label (str): label of widget
+        col (float):  tuple or array size 3 of color values (tuple or array)
+        flags (optional): see coalpy.gpu.ImGuiColorEditFlags
+
+    Return:
+        The color picked (tuple of size 3) or None if nothing was set
+)")
+
+COALPY_FN(color_picker4, colorPicker4, R"(
+    Parameters:
+        label (str): label of widget
+        col (float):  tuple or array size 4 of color values (tuple or array)
+        flags (optional): see coalpy.gpu.ImGuiColorEditFlags
+
+    Return:
+        The color picked (tuple of size 4) or None if nothing was set
+)")
+
+COALPY_FN(color_button, colorButton, R"(
+    display a color square/button, hover for details, return true when pressed.
+
+    Parameters:
+        desc_id (str)
+        col (float): tuple size 4 of color
+        flags (optional): see coalpy.gpu.ImGuiColorEditFlags
+        size (float tuple 2)(optional): size of the button. Defualt is (0, 0)
+
+    Return:
+        True if pressed, false otherwise
+)")
+
+COALPY_FN(set_color_edit_options, setColorEditOptions, R"(
+    initialize current options (generally on application startup) if you want to select a default format, picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.
+
+    Parameters:
+        flags : see coalpy.gpu.ImGuiColorEditFlags
+)")
+
 
 //Imgui focus flags enums
 COALPY_ENUM_BEGIN(ImGuiFocusedFlags, "ImGUI Focused flags")
@@ -919,6 +979,34 @@ COALPY_ENUM(NoReorder,                    ImGuiTabItemFlags_NoReorder, R"(Disabl
 COALPY_ENUM(Leading,                      ImGuiTabItemFlags_Leading, R"(Enforce the tab position to the left of the tab bar (after the tab list popup button))")
 COALPY_ENUM(Trailing,                     ImGuiTabItemFlags_Trailing, R"(the tab position to the right of the tab bar (before the scrolling buttons))")
 COALPY_ENUM_END(ImGuiTabItemFlags)
+
+COALPY_ENUM_BEGIN(ImGuiColorEditFlags, "")
+COALPY_ENUM(None, ImGuiColorEditFlags_None, "")
+COALPY_ENUM(NoAlpha, ImGuiColorEditFlags_NoAlpha, R"(ColorEdit, ColorPicker, ColorButton: ignore Alpha component (will only read 3 components from the input pointer).)")
+COALPY_ENUM(NoPicker, ImGuiColorEditFlags_NoPicker, R"(ColorEdit: disable picker when clicking on color square.)")
+COALPY_ENUM(NoOptions, ImGuiColorEditFlags_NoOptions, R"(ColorEdit: disable toggling options menu when right-clicking on inputs/small preview.)")
+COALPY_ENUM(NoSmallPreview, ImGuiColorEditFlags_NoSmallPreview, R"(ColorEdit, ColorPicker: disable color square preview next to the inputs. (e.g. to show only the inputs))")
+COALPY_ENUM(NoInputs, ImGuiColorEditFlags_NoInputs, R"(ColorEdit, ColorPicker: disable inputs sliders/text widgets (e.g. to show only the small preview color square).)")
+COALPY_ENUM(NoTooltip, ImGuiColorEditFlags_NoTooltip, R"(ColorEdit, ColorPicker, ColorButton: disable tooltip when hovering the preview.)")
+COALPY_ENUM(NoLabel, ImGuiColorEditFlags_NoLabel, R"(ColorEdit, ColorPicker: disable display of inline text label (the label is still forwarded to the tooltip and picker).)")
+COALPY_ENUM(NoSidePreview, ImGuiColorEditFlags_NoSidePreview, R"(ColorPicker: disable bigger color preview on right side of the picker, use small color square preview instead.)")
+COALPY_ENUM(NoDragDrop, ImGuiColorEditFlags_NoDragDrop, R"(ColorEdit: disable drag and drop target. ColorButton: disable drag and drop source.)")
+COALPY_ENUM(NoBorder, ImGuiColorEditFlags_NoBorder, R"(ColorButton: disable border (which is enforced by default))")
+COALPY_ENUM(AlphaBar, ImGuiColorEditFlags_AlphaBar, R"(ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.)")
+COALPY_ENUM(AlphaPreview, ImGuiColorEditFlags_AlphaPreview, R"(ColorEdit, ColorPicker, ColorButton: display preview as a transparent color over a checkerboard, instead of opaque.)")
+COALPY_ENUM(AlphaPreviewHalf, ImGuiColorEditFlags_AlphaPreviewHalf, R"(ColorEdit, ColorPicker, ColorButton: display half opaque / half checkerboard, instead of opaque.)")
+COALPY_ENUM(HDR, ImGuiColorEditFlags_HDR, R"((WIP) ColorEdit: Currently only disable 0.0f..1.0f limits in RGBA edition (note: you probably want to use ImGuiColorEditFlags_Float flag as well).)")
+COALPY_ENUM(DisplayRGB, ImGuiColorEditFlags_DisplayRGB, R"([Display] ColorEdit: override _display_ type among RGB/HSV/Hex. ColorPicker: select any combination using one or more of RGB/HSV/Hex.)")
+COALPY_ENUM(DisplayHSV, ImGuiColorEditFlags_DisplayHSV, R"([Display] ")")
+COALPY_ENUM(DisplayHex, ImGuiColorEditFlags_DisplayHex, R"([Display] ")")
+COALPY_ENUM(Uint8, ImGuiColorEditFlags_Uint8, R"([DataType] ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0..255.)")
+COALPY_ENUM(Float, ImGuiColorEditFlags_Float, R"([DataType] ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0.0f..1.0f floats instead of 0..255 integers. No round-trip of value via integers.)")
+COALPY_ENUM(PickerHueBar, ImGuiColorEditFlags_PickerHueBar, R"([Picker]  ColorPicker: bar for Hue, rectangle for Sat/Value.)")
+COALPY_ENUM(PickerHueWheel, ImGuiColorEditFlags_PickerHueWheel, R"([Picker] ColorPicker: wheel for Hue, triangle for Sat/Value.)")
+COALPY_ENUM(InputRGB, ImGuiColorEditFlags_InputRGB, R"([Input]  ColorEdit, ColorPicker: input and output data in RGB format.)")
+COALPY_ENUM(InputHSV, ImGuiColorEditFlags_InputHSV, R"([Input]  ColorEdit, ColorPicker: input and output data in HSV format.)")
+COALPY_ENUM(DefaultOptions_, ImGuiColorEditFlags_DefaultOptions_, "Default options")
+COALPY_ENUM_END(ImGuiColorEditFlags)
 
 #undef COALPY_ENUM_END
 #undef COALPY_ENUM_BEGIN

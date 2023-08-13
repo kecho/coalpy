@@ -52,6 +52,22 @@ namespace methods
         else
             Py_RETURN_FALSE;
     }
+
+    PyObject* loadSettings(PyObject* self, PyObject* vargs, PyObject* kwds)
+    {
+        ModuleState& moduleState = parentModule(self);
+        ModuleSettings* settingsObj = reinterpret_cast<ModuleSettings*>(self);
+
+        static char* arguments[] = { "filename", nullptr };
+        char* fileName = nullptr;
+        if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "s", arguments, &fileName))
+            return nullptr;
+
+        if (settingsObj->load(moduleState.fs(), fileName))
+            Py_RETURN_TRUE;
+        else
+            Py_RETURN_FALSE;
+    }
 }
 
 }
