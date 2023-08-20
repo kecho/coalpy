@@ -22,7 +22,7 @@ Alternatively, you can download the prebuilt binaries in the release links of th
 To test it works on your machine, run the following python module, which is an example of a GPU application built using coalpy:
 
 ```
-py coalpy.examples.seascape 
+py -m coalpy.examples.seascape 
 ```
 
 ## A first kernel
