@@ -320,8 +320,6 @@ local CoalPyModuleDeps = {
 
 -- Module list for the core coalpy module
 local CoalPyModules = { "core", "tasks", "render", "files", "window", "texture", "libjpeg", "libpng", "zlib", "spirvreflect"  }
-local SrcDLL = "$(OBJECTDIR)$(SEP)gpu.dll"
-local SrcSO = "$(OBJECTDIR)$(SEP)libgpu.so"
 
 _G.BuildModules(SourceDir, CoalPyModuleTable, CoalPyModuleIncludes, CoalPyModuleDeps)
 _G.BuildPyLibs(
