@@ -36,10 +36,6 @@ local LibIncludes = {
         WinVulkanIncludes,
         Config = "win64-*-*"
     },
-    {
-        "/usr/include/python3.11",
-        Config = "linux-*-*"
-    },
     ImguiDir,
     ImplotDir,
     LibJpgDir,
