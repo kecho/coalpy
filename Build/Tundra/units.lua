@@ -27,6 +27,7 @@ local PythonModuleVersions =
 {
     _G.WindowsPythonModuleTemplate("cp311-win_amd64", "311", PythonDir),
     _G.WindowsPythonModuleTemplate("cp310-win_amd64", "310", PythonDir),
+    _G.WindowsPythonModuleTemplate("cp39-win_amd64",  "39",  PythonDir),
     _G.LinuxPythonModuleTemplate("cp311-linux-gcc_amd64", "3.11"),
     _G.LinuxPythonModuleTemplate("cp310-linux-gcc_amd64", "3.10")
 }
