@@ -22,7 +22,6 @@ FileSystem::~FileSystem()
 AsyncFileHandle FileSystem::read(const FileReadRequest& request)
 {
     CPY_ASSERT_MSG(request.doneCallback, "File read request must provide a done callback.");
-
     AsyncFileHandle asyncHandle;
     Task task;
     

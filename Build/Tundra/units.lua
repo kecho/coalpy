@@ -14,19 +14,25 @@ local DxcLibDir = DxcDir.."lib/x64/"
 local DxcBinaryCompiler = DxcDir.."bin/x64/dxcompiler.dll"
 local DxcBinaryCompilerSo = DxcDir.."bin/x64/libdxcompiler.so"
 local DxcBinaryIl = DxcDir.."bin/x64/dxil.dll"
-local PythonDir = "External/Python3.11.2-win64/"
 local OpenEXRDir = "External/OpenEXR/"
 local OpenEXRLibDir = "External/OpenEXR/staticlib/"
+local PythonDir = "External/Python/"
 local PixDir ="External/WinPixEventRuntime_1.0.210818001"
 local PixBinaryDll ="External/WinPixEventRuntime_1.0.210818001/bin/WinPixEventRuntime.dll"
 local WinVulkanDir = "External/Vulkan/1.3.231.1/"
 local WinVulkanIncludes = WinVulkanDir .. "Include"
 local WinVulkanLibs = WinVulkanDir .. "Lib"
 
+local PythonModuleVersions =
+{
+    _G.WindowsPythonModuleTemplate("cp311-win_amd64", "311", PythonDir),
+    _G.WindowsPythonModuleTemplate("cp310-win_amd64", "310", PythonDir),
+    _G.LinuxPythonModuleTemplate("cp311-linux-gcc_amd64", "3.11"),
+    _G.LinuxPythonModuleTemplate("cp310-linux-gcc_amd64", "3.10")
+}
 
 local LibIncludes = {
     {
-        PythonDir .. "Include",
         WinVulkanIncludes,
         Config = "win64-*-*"
     },
@@ -44,7 +50,6 @@ local LibIncludes = {
 
 local Libraries = {
     {
-        PythonDir.."python311_d.lib",
         "Half-2_5_d.lib",
         "Iex-2_5_d.lib",
         "IexMath-2_5_d.lib",
@@ -55,7 +60,6 @@ local Libraries = {
         Config = { "win64-msvc-debug-*" }
     },
     {
-        PythonDir.."python311.lib",
         "Half-2_5.lib",
         "Iex-2_5.lib",
         "IexMath-2_5.lib",
@@ -323,10 +327,15 @@ local SrcDLL = "$(OBJECTDIR)$(SEP)gpu.dll"
 local SrcSO = "$(OBJECTDIR)$(SEP)libgpu.so"
 
 _G.BuildModules(SourceDir, CoalPyModuleTable, CoalPyModuleIncludes, CoalPyModuleDeps)
-_G.BuildPyLib("gpu", "pymodules/gpu", SourceDir, LibIncludes, CoalPyModules, Libraries, { CoalPyModuleDeps.render, CoalPyModuleDeps.texture, "core" }, LibPaths)
+_G.BuildPyLibs(
+    PythonModuleVersions, "gpu", "pymodules/gpu",
+    SourceDir, LibIncludes, CoalPyModules, Libraries,
+    { _G.GetModuleDeps(CoalPyModuleTable, CoalPyModuleDeps), "core" },
+    LibPaths)
+
+_G.DeployPyPackage("coalpy", "gpu", PythonModuleVersions, Binaries, ScriptsDir)
 _G.BuildProgram("coalpy_tests", "tests", { "CPY_ASSERT_ENABLED=1" }, SourceDir, LibIncludes, CoalPyModules, Libraries, LibPaths)
-_G.DeployPyPackage("coalpy", "gpu", SrcDLL, SrcSO, Binaries, ScriptsDir)
 
 -- Deploy PIP package
-_G.DeployPyPackage("coalpy_pip/src/coalpy", "gpu", SrcDLL, SrcSO, Binaries, ScriptsDir)
+_G.DeployPyPackage("coalpy_pip/src/coalpy", "gpu", PythonModuleVersions, Binaries, ScriptsDir)
 _G.DeployPyPipFiles("coalpy_pip", SourceDir.."/../README.md", SourceDir.."/pipfiles")

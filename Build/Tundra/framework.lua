@@ -13,6 +13,40 @@ function _G.GenRootIdeHints(rootFolder)
     }
 end
 
+function _G.WindowsPythonModuleTemplate(tag, version, pythonDir)
+    return {
+        Tag = tag,
+        Includes = pythonDir..version.."/Include",
+        Libs =
+        {
+            {
+                pythonDir..version.."/python"..version.."_d.lib",
+                Config = "win64-msvc-debug"
+            },
+            {
+                pythonDir..version.."/python"..version..".lib",
+                Config = { "win64-msvc-release", "win64-msvc-production" }
+            }
+        },
+        Config = "win64-msvc-*",
+        Prefix = "",
+        Ext = ".dll",
+        PyModExt = ".pyd"
+    }
+end
+
+function _G.LinuxPythonModuleTemplate(tag, version, pythonDir)
+    return {
+        Tag = tag,
+        Includes = "/usr/include/python"..version,
+        Libs = {},
+        Config = "linux-*-*",
+        Prefix = "lib",
+        Ext = ".so",
+        PyModExt = ".so"
+    }
+end
+
 function _G.GetModuleDir(sourceDir, moduleName)
     return sourceDir.."/modules/"..moduleName.."/"
 end
@@ -29,10 +63,12 @@ function _G.GetModuleIncludes(sourceDir, moduleList)
     return includeList
 end
 
-function _G.GetModuleDeps(moduleList)
+function _G.GetModuleDeps(moduleList, moduleDeps)
     local depList = {}
-    for i, v in ipairs(moduleList) do
-        table.insert(depList, v)
+    for i, v in pairs(moduleList) do
+        if moduleDeps[i] ~= nil then
+            table.insert(depList, moduleDeps[i])
+        end
     end
     return depList
 end
@@ -44,7 +80,7 @@ function _G.BuildModules(sourceDir, moduleMap, extraIncludes, extraDeps)
         local moduleLib = StaticLibrary {
             Name = k,
             Pass = "BuildCode",
-            Depends = { _G.GetModuleDeps(v), extraModDeps },
+            Depends = { v, extraModDeps },
             Includes = {
                 _G.GetModuleDir(sourceDir, k),
                 _G.GetModuleIncludes(sourceDir, v),
@@ -69,13 +105,13 @@ function _G.BuildModules(sourceDir, moduleMap, extraIncludes, extraDeps)
     end
 end
 
-function _G.BuildPyLib(libName, libFolder, sourceDir, includeList, moduleList, otherLibs, otherDeps, otherLibPaths)
+function _G.BuildPyLib(libName, libFolder, sourceDir, includeList, moduleList, otherLibs, otherDeps, otherLibPaths, targetConfig)
     local pythonLib = SharedLibrary {
         Name = libName,
         Pass = "BuildCode",
         Includes = { _G.GetModuleIncludes(sourceDir, moduleList), includeList },
         Depends = { 
-            _G.GetModuleDeps(moduleList),
+            moduleList,
             otherDeps
         },
         Libs = {
@@ -90,9 +126,36 @@ function _G.BuildPyLib(libName, libFolder, sourceDir, includeList, moduleList, o
         },
         LibPaths = otherLibPaths,
         IdeGenerationHints = _G.GenRootIdeHints("PyModules");
+        Config = { targetConfig }
     }
 
     Default(pythonLib)
+end
+
+function _G.BuildPyLibs(
+    pythonModuleVersions,
+    moduleName,
+    libFolder,
+    sourceDir,
+    includeList,
+    moduleList,
+    otherLibs,
+    otherDeps,
+    otherLibPaths)
+
+    for i, v in ipairs(pythonModuleVersions) do
+        local dllName = moduleName.."."..v.Tag
+        _G.BuildPyLib(
+            dllName,
+            libFolder,
+            sourceDir,
+            { includeList, v.Includes },
+            moduleList,
+            { otherLibs, v.Libs },
+            otherDeps,
+            otherLibPaths,
+            v.Config)
+    end
 end
 
 function _G.BuildProgram(programName, programSource, defines, sourceDir, includeList, moduleList, otherLibs, otherLibPaths)
@@ -104,7 +167,7 @@ function _G.BuildProgram(programName, programSource, defines, sourceDir, include
         },
         Includes = { _G.GetModuleIncludes(sourceDir, moduleList), includeList },
         Depends = { 
-            _G.GetModuleDeps(moduleList)
+            moduleList
         },
         Libs = {
            otherLibs 
@@ -123,26 +186,18 @@ function _G.BuildProgram(programName, programSource, defines, sourceDir, include
     Default(prog)
 end
 
-function _G.DeployPyPackage(packageName, pythonLibName, pythonSrcDLL, pythonSrcSO, binaries, scriptsDir)
+function _G.DeployPyPackage(packageName, pythonLibName, pythonModuleVersions, binaries, scriptsDir)
     local packageDst = "$(OBJECTDIR)$(SEP)"..packageName
-    local dstPyd = packageDst.."$(SEP)"..pythonLibName..".pyd"
-    local dstPydSO = packageDst.."$(SEP)"..pythonLibName..".so"
     local binaryDst = packageDst .. "$(SEP)resources$(SEP)"
-    local cpyFileWindows = CopyFile {
-                Pass = "Deploy",
-                Source = pythonSrcDLL,
-                Target = dstPyd,
-                Config="win64-*-*"
-            }
-    local cpyFileLinux = CopyFile {
-                Pass = "Deploy",
-                Source = pythonSrcSO,
-                Target = dstPydSO,
-                Config="linux-*-*"
-            },
-
-    Default(cpyFileWindows)
-    Default(cpyFileLinux)
+    for i, v in ipairs(pythonModuleVersions) do
+        local cpyPyModuleCmd = CopyFile {
+                    Pass = "Deploy",
+                    Source = "$(OBJECTDIR)$(SEP)"..v.Prefix..pythonLibName.."."..v.Tag..v.Ext,
+                    Target = packageDst.."$(SEP)"..v.Prefix..pythonLibName.."."..v.Tag..v.PyModExt,
+                    Config=v.Config
+                }
+        Default(cpyPyModuleCmd)
+    end
 
     for i, v in ipairs(binaries) do
         local targetName =  binaryDst..npath.get_filename(v)
