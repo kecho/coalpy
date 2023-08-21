@@ -23,6 +23,9 @@
 #ifndef cJSON__h
 #define cJSON__h
 
+//COALPY divergence - hide symbols.
+#define CJSON_HIDE_SYMBOLS
+
 #ifdef __cplusplus
 extern "C"
 {
