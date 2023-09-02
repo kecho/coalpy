@@ -1936,7 +1936,9 @@ void testCollectGpuMarkers(TestContext& ctx)
 static const TestCase* createCases(int& caseCounts)
 {
     static const TestCase sCases[] = {
+#if ENABLE_DX12
         { "dx12BufferPool",  dx12BufferPool },
+#endif
         { "vulkanBufferPool", vulkanBufferPool },
         { "createBuffer",  testCreateBuffer },
         { "createTexture", testCreateTexture },
