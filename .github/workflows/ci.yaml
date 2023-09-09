@@ -5,14 +5,6 @@ on:
         branches:
             - master
 jobs:
-    build-release-linux:
-        uses: ./.github/workflows/build.yaml
-        with:
-            build_type: "release"
-        secrets:
-            ciip: ${{ secrets.ciip }}
-            ciport: ${{ secrets.ciport_linux }}
-            cimac: ${{ secrets.cimac }}
     build-debug:
         uses: ./.github/workflows/build.yaml
         with:
@@ -21,7 +13,6 @@ jobs:
             ciip: ${{ secrets.ciip }}
             ciport: ${{ secrets.ciport }}
             cimac: ${{ secrets.cimac }}
-        needs: [build-release-linux]
     build-release:
         uses: ./.github/workflows/build.yaml
         with:
@@ -40,4 +31,13 @@ jobs:
             ciport: ${{ secrets.ciport }}
             cimac: ${{ secrets.cimac }}
         needs: [build-debug, build-release]
+    build-release-linux:
+        uses: ./.github/workflows/build.yaml
+        with:
+            build_type: "release"
+        secrets:
+            ciip: ${{ secrets.ciip }}
+            ciport: ${{ secrets.ciport_linux }}
+            cimac: ${{ secrets.cimac }}
+        needs: [build-production]
 
