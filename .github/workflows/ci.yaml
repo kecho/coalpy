@@ -31,4 +31,13 @@ jobs:
             ciport: ${{ secrets.ciport }}
             cimac: ${{ secrets.cimac }}
         needs: [build-debug, build-release]
+    build-release-linux:
+        uses: ./.github/workflows/build.yaml
+        with:
+            build_type: "release-linux"
+        secrets:
+            ciip: ${{ secrets.ciip }}
+            ciport: ${{ secrets.ciport_linux }}
+            cimac: ${{ secrets.cimac }}
+        needs: build-debug
 
