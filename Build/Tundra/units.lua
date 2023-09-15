@@ -110,6 +110,12 @@ local zlibLib = StaticLibrary {
     Name = "zlib",
     Pass = "BuildCode",
     Includes = { ZlibDir },
+    Defines = {
+        Config = { "macosx-uni-*" },
+        {
+            "HAVE_UNISTD_H"
+        }
+    },
     Sources = {
         Glob {
             Dir = ZlibDir,
