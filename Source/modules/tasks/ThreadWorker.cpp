@@ -1,7 +1,6 @@
 #include "ThreadWorker.h"
 #include <coalpy.tasks/ThreadQueue.h>
 #include <coalpy.core/Assert.h>
-#include <thread>
 #include <iostream>
 
 namespace coalpy

@@ -3,11 +3,7 @@
 #include <coalpy.tasks/TaskDefs.h>
 #include <memory>
 #include <functional>
-
-namespace std
-{
-    class thread;
-}
+#include <thread>
 
 namespace coalpy
 {
