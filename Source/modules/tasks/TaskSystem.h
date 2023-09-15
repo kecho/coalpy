@@ -8,11 +8,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <condition_variable>
-
-namespace std
-{
-class thread;
-}
+#include <thread>
 
 namespace coalpy
 {
