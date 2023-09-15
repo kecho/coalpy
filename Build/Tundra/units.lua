@@ -155,6 +155,7 @@ local imguiLib = StaticLibrary {
             Recursive = true
         },
         {
+            Config = { "win64-msvc-*", "linux-gcc-*" },
             ImguiDir.."$(SEP)backends$(SEP)imgui_impl_vulkan.h",
             ImguiDir.."$(SEP)backends$(SEP)imgui_impl_vulkan.cpp",
         },
@@ -172,6 +173,13 @@ local imguiLib = StaticLibrary {
             {
                 ImguiDir.."$(SEP)backends$(SEP)imgui_impl_sdl.h",
                 ImguiDir.."$(SEP)backends$(SEP)imgui_impl_sdl.cpp",
+            }
+        },
+        {
+            Config = { "macosx-uni-*" },
+            {
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_metal.h",
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_metal.mm",
             }
         }
     },
