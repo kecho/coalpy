@@ -43,6 +43,22 @@ Build {
                 LD = "$(CXX)"
             },
         },
+        {
+            Name = "macosx-uni",
+            DefaultOnHost = "macosx",
+            Tools = { "clang" },
+            Env = {
+                CPPPATH = {
+                    "$(OBJECTDIR)$(SEP)Source"
+                },
+                CXXOPTS = { "-std=c++17", "-fPIC", "-Wno-multichar", "-Wno-write-strings", "-mlzcnt" },
+                CXXOPTS_DEBUG   = { "-g",  "-D _DEBUG=1" },
+                CCOPTS = { "-fPIC", "-Wno-multichar" },
+            },
+            ReplaceEnv = {
+                LD = "$(CXX)"
+            },
+        },
     },
     
     Env = {
