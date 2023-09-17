@@ -6,4 +6,7 @@ t2-output
 tags
 imgui.ini
 .shader_pdb
+*/__pycache__
+*/*/__pycache__
+*/*/*/__pycache__
 docs/_site/*

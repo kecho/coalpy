@@ -4,14 +4,14 @@ Compute abstraction layer for python.
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://github.com/kecho/coalpy/actions/workflows/ci.yaml/badge.svg)](https://github.com/kecho/coalpy/actions/workflows/ci.yaml)
 
-[CoalPy](https://coalpy.org) is a free low friction python (3.9, 3.10, 3.11) native module for Windows and Linux. Coalpy's main goal is to make modern DirectX12 or Vulkan GPU compute software easy to write and deploy.
+[CoalPy](https://coalpy.org) is a free low friction python (3.10, 3.11) native module for Windows and Linux. Coalpy's main goal is to make modern DirectX12 or Vulkan GPU compute software easy to write and deploy.
 
 ![seascape_example](docs/images/seascape.png?raw=true "Seascape shadertoy by Alexander Alekseev aka TDM - 2014.")
 
 ## Python module
 
 Get started with API documentation here:
-[coalpy.gpu documentation](https://kecho.github.io/coalpy/coalpy.gpu.html)
+[coalpy.gpu documentation](https://coalpy.org/apidocs/0.51/coalpy.gpu.html)
 
 To install, just run the pip command:
 
@@ -34,7 +34,7 @@ The following section specifies guidelines for contributing to the coalpy projec
 ### Building requirements
 * Install Python supported versions
     ** Preferably [3.11](https://www.python.org/downloads/release/python-3112/)
-    ** Other versions include 3.9 and 3.10
+    ** Other versions include 3.10
 * Ensure you have a version of visual studio with support for VC 
 * Ensure you are on the latest and greatest version of windows 10
 
