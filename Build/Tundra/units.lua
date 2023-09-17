@@ -323,6 +323,10 @@ local CoalPyModuleIncludes = {
         {
             "/usr/include/OpenEXR",
             Config = "linux-*-*"
+        },
+        {
+            OpenEXRDir.."include/OpenEXR",
+            Config = "macosx-*-*"
         }
     }
 }
