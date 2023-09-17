@@ -188,7 +188,7 @@ local imguiLib = StaticLibrary {
 
 Default(imguiLib)
 
--- Build imgui
+-- Build implot
 local implotLib = StaticLibrary {
     Name = "implot",
     Pass = "BuildCode",
