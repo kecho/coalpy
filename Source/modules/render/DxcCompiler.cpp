@@ -17,7 +17,7 @@
 #include <vector>
 #ifdef _WIN32
 #include <windows.h>
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
 #include <dlfcn.h>
 #endif
 
@@ -48,6 +48,11 @@ const char* g_dxil = "dxil.dll";
 #elif defined(__linux__)
 const char* g_defaultDxcPath = "coalpy/resources";
 const char* g_dxCompiler = "libdxcompiler.so";
+#elif defined(__APPLE__)
+const char* g_defaultDxcPath = "coalpy/resources";
+const char* g_dxCompiler = "libdxcompiler.dylib";
+#else
+#error "Unknown platform"
 #endif
 
 void loadCompilerModule(const char* searchPath, const char* moduleName, LIB_MODULE& outModule, DxcCreateInstanceProc& outProc)
@@ -57,8 +62,10 @@ void loadCompilerModule(const char* searchPath, const char* moduleName, LIB_MODU
     if (compilerPath != "")
 #ifdef _WIN32
         compilerFullPath << compilerPath << "\\";
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
         compilerFullPath << compilerPath << "/";
+#else
+#error "Unknown platform"
 #endif
     compilerFullPath << moduleName;
     std::string pathAndModName = compilerFullPath.str();
@@ -67,8 +74,10 @@ void loadCompilerModule(const char* searchPath, const char* moduleName, LIB_MODU
     FileUtils::getAbsolutePath(pathAndModName, fullModulePath);
 #ifdef _WIN32
     outModule = LoadLibraryA(fullModulePath.c_str());
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
     outModule = dlopen(fullModulePath.c_str(), RTLD_GLOBAL | RTLD_NOW);
+#else
+#error "Unknown platform"
 #endif
     if (outModule == nullptr)
     {
@@ -80,7 +89,7 @@ void loadCompilerModule(const char* searchPath, const char* moduleName, LIB_MODU
     {
 #ifdef _WIN32
         outProc = (DxcCreateInstanceProc)GetProcAddress(outModule, "DxcCreateInstance");
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
         outProc = (DxcCreateInstanceProc)dlsym(outModule, "DxcCreateInstance");
 #endif
         CPY_ASSERT_FMT(outProc, "Could not find \"DxcCreateInstance\" inside %s", pathAndModName.c_str());
