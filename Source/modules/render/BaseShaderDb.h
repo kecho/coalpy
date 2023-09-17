@@ -9,6 +9,7 @@
 #include <shared_mutex>
 #include <atomic>
 #include <set>
+#include <unordered_map>
 
 namespace coalpy
 {
