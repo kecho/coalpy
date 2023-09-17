@@ -1,3 +1,6 @@
+#include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanResources.h"
 #include "VulkanDevice.h"
 #include "Config.h"
@@ -977,3 +980,5 @@ void VulkanResources::release(ResourceTable handle)
 
 }
 }
+
+#endif // ENABLE_VULKAN

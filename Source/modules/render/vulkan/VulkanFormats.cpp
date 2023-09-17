@@ -1,3 +1,6 @@
+#include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanFormats.h"
 #include <coalpy.core/Assert.h>
 
@@ -132,3 +135,5 @@ int getVkFormatStride(Format format)
 
 }
 }
+
+#endif // ENABLE_VULKAN

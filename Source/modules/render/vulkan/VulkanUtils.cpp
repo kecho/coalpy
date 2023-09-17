@@ -1,4 +1,6 @@
 #include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanUtils.h"
 #if ENABLE_SDL_VULKAN
 #include <SDL2/SDL.h>
@@ -547,3 +549,5 @@ int getGraphicsComputeQueueFamilyIndex(VkPhysicalDevice device)
 
 }
 }
+
+#endif // ENABLE_VULKAN

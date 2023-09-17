@@ -1,4 +1,6 @@
 #include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanShaderDb.h" 
 #include "SpirvReflectionData.h"
 #include "VulkanDevice.h"
@@ -332,3 +334,5 @@ void VulkanShaderDb::purgePayloads()
 }
 
 #endif
+
+#endif // ENABLE_VULKAN

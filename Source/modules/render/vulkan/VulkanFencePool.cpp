@@ -1,4 +1,6 @@
 #include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanDevice.h"
 #include "VulkanFencePool.h"
 
@@ -89,3 +91,5 @@ void VulkanFencePool::free(VulkanFenceHandle handle)
 
 }
 }
+
+#endif // ENABLE_VULKAN

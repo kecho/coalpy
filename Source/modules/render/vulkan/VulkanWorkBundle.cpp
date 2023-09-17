@@ -1,3 +1,6 @@
+#include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanWorkBundle.h"
 #include "VulkanDevice.h"
 #include "VulkanResources.h"
@@ -537,3 +540,5 @@ void VulkanWorkBundle::getDownloadResourceMap(VulkanDownloadResourceMap& downloa
 
 }
 }
+
+#endif // ENABLE_VULKAN

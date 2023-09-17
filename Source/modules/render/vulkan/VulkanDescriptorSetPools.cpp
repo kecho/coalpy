@@ -1,3 +1,6 @@
+#include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanDescriptorSetPools.h"
 #include "VulkanDevice.h"
 #include "VulkanUtils.h"
@@ -102,3 +105,5 @@ void VulkanDescriptorSetPools::free(VulkanDescriptorTable table)
 
 }
 }
+
+#endif // ENABLE_VULKAN

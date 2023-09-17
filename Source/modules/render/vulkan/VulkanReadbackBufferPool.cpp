@@ -1,3 +1,6 @@
+#include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanReadbackBufferPool.h"
 #include "VulkanResources.h"
 #include "VulkanDevice.h"
@@ -182,3 +185,5 @@ void VulkanReadbackBufferPool::free(const VulkanReadbackMemBlock& block)
 
 }
 }
+
+#endif // ENABLE_VULKAN

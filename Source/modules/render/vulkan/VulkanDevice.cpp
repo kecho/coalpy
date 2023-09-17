@@ -1,4 +1,6 @@
 #include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanDevice.h"
 #include "VulkanShaderDb.h"
 #if ENABLE_SDL_VULKAN
@@ -482,3 +484,5 @@ ScheduleStatus VulkanDevice::internalSchedule(CommandList** commandLists, int li
 
 }
 }
+
+#endif // ENABLE_VULKAN

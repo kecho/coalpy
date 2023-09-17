@@ -1,3 +1,6 @@
+#include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanBarriers.h"
 #include "VulkanDevice.h"
 #include "VulkanEventPool.h"
@@ -223,3 +226,5 @@ void inlineApplyBarriers(
 
 }
 }
+
+#endif // ENABLE_VULKAN

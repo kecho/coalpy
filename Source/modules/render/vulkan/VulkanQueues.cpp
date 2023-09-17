@@ -1,3 +1,6 @@
+#include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanQueues.h"
 #include "VulkanDevice.h"
 #include "VulkanDevice.h"
@@ -118,3 +121,5 @@ void VulkanQueues::deallocate(VulkanList& list, VulkanFenceHandle fenceValue)
 
 }
 }
+
+#endif // ENABLE_VULKAN

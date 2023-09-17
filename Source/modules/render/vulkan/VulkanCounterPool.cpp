@@ -1,5 +1,7 @@
-#include <coalpy.core/Assert.h>
 #include <Config.h>
+#if ENABLE_VULKAN
+
+#include <coalpy.core/Assert.h>
 #include "VulkanCounterPool.h"
 #include "VulkanDevice.h"
 
@@ -82,3 +84,5 @@ void VulkanCounterPool::free(VulkanCounterHandle handle)
 
 }
 }
+
+#endif // ENABLE_VULKAN
