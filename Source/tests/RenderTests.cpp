@@ -1947,7 +1947,13 @@ static const TestCase* createCases(int& caseCounts)
 #if ENABLE_DX12
         { "dx12BufferPool",  dx12BufferPool },
 #endif
+#if ENABLE_VULKAN
         { "vulkanBufferPool", vulkanBufferPool },
+#endif
+// TODO
+// #if ENABLE_METAL
+//         { "metalBufferPool", metalBufferPool },
+// #endif
         { "createBuffer",  testCreateBuffer },
         { "createTexture", testCreateTexture },
         { "createTables",  testCreateTables },

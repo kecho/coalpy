@@ -22,7 +22,8 @@ class CommandList;
 enum class DevicePlat
 {
     Dx12 = 0,
-    Vulkan = 1
+    Vulkan = 1,
+    Metal = 2
 };
 
 inline const char* getDevicePlatName(DevicePlat plat)

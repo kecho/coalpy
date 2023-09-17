@@ -82,10 +82,12 @@ void runSuiteOnPlatform(const TestSuiteDesc& suite, const char* currPlatform, ui
     }
 
     if (!cases.empty())
+    {
         if (currPlatform == nullptr)
             printf("[%s]\n", suite.name);
         else
             printf("[%s][%s]\n", suite.name, currPlatform);
+    }
 
     static TestContext sEmptyContext = {};
     TestContext* context = suite.createContextFn ? suite.createContextFn() : &sEmptyContext;
@@ -190,6 +192,10 @@ int main(int argc, char* argv[])
     auto platform = render::DevicePlat::Dx12;
     #elif defined(__linux__) && ENABLE_VULKAN
     auto platform = render::DevicePlat::Vulkan;
+    #elif defined(__APPLE__) && ENABLE_METAL
+    auto platform = render::DevicePlat::Metal;
+    #else
+    #error "Platform not supported"
     #endif
 
     TestPlatforms platforms = {};

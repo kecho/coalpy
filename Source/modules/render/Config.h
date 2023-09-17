@@ -5,6 +5,7 @@
 #define ENABLE_VULKAN 1
 #define ENABLE_SDL_VULKAN 0
 #define ENABLE_WIN_VULKAN 1
+#define ENABLE_METAL 0
 #endif
 
 #ifdef __linux__
@@ -12,6 +13,15 @@
 #define ENABLE_VULKAN 1
 #define ENABLE_SDL_VULKAN 1
 #define ENABLE_WIN_VULKAN 0
+#define ENABLE_METAL 0
+#endif
+
+#ifdef __APPLE__
+#define ENABLE_DX12 0
+#define ENABLE_VULKAN 0
+#define ENABLE_SDL_VULKAN 0
+#define ENABLE_WIN_VULKAN 0
+#define ENABLE_METAL 1
 #endif
 
 #ifndef ENABLE_DX12
@@ -20,6 +30,10 @@
 
 #ifndef ENABLE_VULKAN
 #define ENABLE_VULKAN 0
+#endif
+
+#ifndef ENABLE_METAL
+#define ENABLE_METAL 0
 #endif
 
 #ifndef ENABLE_SDL_VULKAN

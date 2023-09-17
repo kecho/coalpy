@@ -14,7 +14,7 @@ typedef uint64_t BitMask;
 
 inline int popCnt(BitMask mask)
 {
-#if defined (_WIN32)
+#if defined (_WIN32) || defined(__APPLE__)
     return __popcnt64(mask);
 #elif defined(__linux__)
     return _popcnt64(mask);

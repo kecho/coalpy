@@ -7,6 +7,8 @@
 #define DEFAULT_PLATFORMS (TestPlatforms)(TestPlatformDx12 | TestPlatformVulkan)
 #elif defined (__linux__)
 #define DEFAULT_PLATFORMS TestPlatformVulkan
+#elif defined (__APPLE__)
+#define DEFAULT_PLATFORMS TestPlatformMetal
 #else
 #define DEFAULT_PLATFORM
 #endif
@@ -48,7 +50,7 @@ static ApplicationContext g_ctx = {};
 
 #if defined(_WIN32)
     #define SEP "\\"
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
     #define SEP "/"
 #else
     #error "Platform not supported"
