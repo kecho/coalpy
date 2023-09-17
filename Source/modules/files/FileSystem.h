@@ -15,10 +15,12 @@
 namespace coalpy
 {
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #define FILE_SEP '/'
-#else
+#elif defined(_WIN32)
 #define FILE_SEP '\\'
+#else
+#error "Unknown platform"
 #endif
 
 class FileSystem : public IFileSystem

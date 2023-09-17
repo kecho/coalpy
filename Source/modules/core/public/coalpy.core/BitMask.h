@@ -18,6 +18,8 @@ inline int popCnt(BitMask mask)
     return __popcnt64(mask);
 #elif defined(__linux__)
     return _popcnt64(mask);
+#else
+#error "Unsupported platform"
 #endif
 }
 
