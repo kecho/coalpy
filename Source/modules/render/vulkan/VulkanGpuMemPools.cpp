@@ -1,3 +1,6 @@
+#include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanGpuMemPools.h"
 #include "VulkanDevice.h"
 #include "VulkanResources.h"
@@ -280,3 +283,5 @@ VkDescriptorSet VulkanGpuDescriptorSetPool::allocateDescriptorSet(VkDescriptorSe
 
 }
 }
+
+#endif // ENABLE_VULKAN

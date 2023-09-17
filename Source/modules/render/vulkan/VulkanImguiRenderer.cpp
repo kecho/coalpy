@@ -1,4 +1,5 @@
 #include "Config.h"
+#if ENABLE_VULKAN
 
 #if ENABLE_WIN_VULKAN
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -370,3 +371,4 @@ bool VulkanImguiRenderer::isTextureRegistered(Texture texture) const
 }
 }
 
+#endif // ENABLE_VULKAN

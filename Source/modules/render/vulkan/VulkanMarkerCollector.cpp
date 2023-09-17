@@ -1,3 +1,6 @@
+#include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanDevice.h"
 #include "VulkanMarkerCollector.h"
 #include "VulkanQueues.h"
@@ -154,3 +157,5 @@ void VulkanMarkerCollector::endMarker(VkCommandBuffer cmdList)
 
 }
 }
+
+#endif // ENABLE_VULKAN

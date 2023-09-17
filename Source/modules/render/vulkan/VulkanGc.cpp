@@ -1,4 +1,6 @@
-#include "Config.h"
+#include <Config.h>
+#if ENABLE_VULKAN
+
 #include "VulkanGc.h"
 #include "VulkanDevice.h"
 #include "VulkanQueues.h"
@@ -241,3 +243,5 @@ void VulkanGc::flush()
 
 }
 }
+
+#endif // ENABLE_VULKAN

@@ -1,4 +1,6 @@
 #include <Config.h>
+#if ENABLE_VULKAN
+
 #include <coalpy.core/Assert.h>
 #include "VulkanEventPool.h"
 #include "VulkanDevice.h"
@@ -56,3 +58,5 @@ VulkanEventHandle VulkanEventPool::find(CommandLocation location) const
 
 }
 }
+
+#endif // ENABLE_VULKAN
