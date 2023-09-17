@@ -9,7 +9,8 @@ namespace coalpy
 enum TestPlatforms : unsigned
 {
     TestPlatformDx12 = 1 << (unsigned)render::DevicePlat::Dx12,
-    TestPlatformVulkan = 1 << (unsigned)render::DevicePlat::Vulkan
+    TestPlatformVulkan = 1 << (unsigned)render::DevicePlat::Vulkan,
+    TestPlatformMetal = 1 << (unsigned)render::DevicePlat::Metal
 };
 
 bool parseTestPlatforms(const std::string& arg, TestPlatforms& outPlatforms);

@@ -270,6 +270,8 @@ static TestContext* createContext()
         auto platform = render::DevicePlat::Dx12;
     #elif defined(__linux__)
         auto platform = render::DevicePlat::Vulkan;
+    #elif defined(__APPLE__)
+        auto platform = render::DevicePlat::Metal;
     #else
         #error "Platform not supported"
     #endif
