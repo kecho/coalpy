@@ -22,6 +22,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/inotify.h>
+#elif defined(__APPLE__)
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
 #endif
 
 #define WATCH_SERVICE_DEBUG_OUTPUT 0
@@ -31,6 +34,9 @@ namespace coalpy
 
 enum class FileWatchMessageType
 {
+#ifdef __APPLE__
+    DirectoryAdded,
+#endif
     ListenToDirectories,
     Exit
 };
@@ -63,14 +69,23 @@ public:
     std::shared_mutex fileWatchMutex;
     std::set<std::string> directoriesSet;
     std::vector<std::string> directories;
-    std::vector<WatchHandle> handles;
     std::set<IFileWatchListener*> listeners;
     ThreadQueue<FileWatchMessage> queue;
+
+#if defined(_WIN32) || defined(__linux__)
+    std::vector<WatchHandle> handles;
+#endif
 
 #ifdef _WIN32 
     std::vector<WinFileWatch*> watches;
 #elif defined(__linux__)
     int inotifyInstance;
+#elif defined(__APPLE__)
+    FSEventStreamRef stream;
+    bool streamStarted;
+    std::set<std::string> gCaughtFiles;
+#else
+#error "Unsupported platform"
 #endif
 
 };
@@ -205,6 +220,14 @@ bool waitListenForDirs(FileWatchState& state, int millisecondsToWait)
         }
         i += sizeof(struct inotify_event) + event->len;
     }
+#elif defined(__APPLE__)
+    {
+        std::unique_lock lock(state.fileWatchMutex);
+        caughtFiles = state.gCaughtFiles;
+        caughtFiles.empty();
+    }
+#else
+#error "Unsupported platform"
 #endif
 
     if (!caughtFiles.empty())
@@ -321,6 +344,14 @@ void FileWatcher::addDirectory(const char* directory)
     int wd = inotify_add_watch(
         m_state->inotifyInstance, directory, IN_MODIFY | IN_CREATE | IN_DELETE);
     m_state->handles.push_back((WatchHandle)wd);
+#elif defined(__APPLE__)
+    m_state->directories.push_back(dirStr);
+    FileWatchMessage msg;
+    msg.type = FileWatchMessageType::DirectoryAdded;
+    m_state->queue.push(msg);
+
+#else
+#error "Unsupported platform"
 #endif
 }
 
@@ -344,6 +375,40 @@ void FileWatcher::removeListener(IFileWatchListener* listener)
     m_state->listeners.erase(it);
 }
 
+#ifdef __APPLE__
+void fileEventCallback(
+    ConstFSEventStreamRef streamRef,
+    void *clientCallBackInfo,
+    size_t numEvents,
+    void *eventPaths,
+    const FSEventStreamEventFlags *eventFlags,
+    const FSEventStreamEventId *eventIds)
+{
+    FileWatchState* state = static_cast<FileWatchState*>(clientCallBackInfo);
+    std::unique_lock lock(state->fileWatchMutex);
+
+    state->gCaughtFiles.empty();
+    CFArrayRef pathsArray = static_cast<CFArrayRef>(eventPaths);
+    for (size_t i = 0; i < numEvents; i++)
+    {
+        bool fileModifiedEvent =
+            (eventFlags[i] & kFSEventStreamEventFlagItemModified &&
+            eventFlags[i] & kFSEventStreamEventFlagItemIsFile);
+        if (!fileModifiedEvent)
+        {
+            continue;
+        }
+
+        CFStringRef pathRef = static_cast<CFStringRef>(
+            CFArrayGetValueAtIndex(pathsArray, i)
+        );
+        const char* pathCStr = CFStringGetCStringPtr(pathRef, kCFStringEncodingUTF8);
+        std::string pathStr(pathCStr);
+        state->gCaughtFiles.insert(pathStr);
+    }
+}
+#endif
+
 void FileWatcher::onFileListening()
 {
     bool active = true;
@@ -362,6 +427,67 @@ void FileWatcher::onFileListening()
 
         switch (msg.type)
         {
+#ifdef __APPLE__
+        case FileWatchMessageType::DirectoryAdded:
+            {
+                std::unique_lock lock(m_state->fileWatchMutex);
+                if (m_state->streamStarted)
+                {
+                    // A stream already exists. Streams are immutable, so we need to destroy
+                    // the current one before creating a new one.
+                    FSEventStreamStop(m_state->stream);
+                    FSEventStreamUnscheduleFromRunLoop(m_state->stream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+                    FSEventStreamInvalidate(m_state->stream);
+                    FSEventStreamRelease(m_state->stream);
+                }
+
+                m_state->streamStarted = true;
+                // Build a vector of paths
+                std::vector<CFStringRef> paths;
+                paths.reserve(m_state->directories.size());
+                for (const auto& str : m_state->directories) {
+                    CFStringRef cfStr = CFStringCreateWithCString(
+                        kCFAllocatorDefault, 
+                        str.c_str(), 
+                        kCFStringEncodingUTF8
+                    );
+                    paths.push_back(cfStr);
+                }
+                CFArrayRef pathsArray = CFArrayCreate(
+                    kCFAllocatorDefault, 
+                    (const void **)paths.data(), 
+                    paths.size(), 
+                    &kCFTypeArrayCallBacks
+                );
+
+                FSEventStreamContext context = {0, nullptr, nullptr, nullptr, nullptr};
+                context.info = m_state;
+
+                m_state->stream = FSEventStreamCreate(
+                    NULL,
+                    &fileEventCallback,
+                    &context,
+                    pathsArray,
+                    kFSEventStreamEventIdSinceNow, 
+                    m_desc.pollingRateMS / 1000.0, // Arg expects seconds
+                    kFSEventStreamCreateFlagFileEvents
+                );
+
+                FSEventStreamScheduleWithRunLoop(
+                    m_state->stream,
+                    CFRunLoopGetCurrent(),
+                    kCFRunLoopDefaultMode
+                );
+                FSEventStreamStart(m_state->stream);
+
+                // Cleanup
+                CFRelease(pathsArray);
+                for (auto cfStr : paths) {
+                    CFRelease(cfStr);
+                }
+            }
+            break;
+#endif
         case FileWatchMessageType::ListenToDirectories:
             {
                 active = waitListenForDirs(*m_state, m_desc.pollingRateMS);
@@ -371,6 +497,16 @@ void FileWatcher::onFileListening()
             }
             break;
         case FileWatchMessageType::Exit:
+            {
+#ifdef __APPLE__
+                FSEventStreamStop(m_state->stream);
+                FSEventStreamUnscheduleFromRunLoop(m_state->stream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+                FSEventStreamInvalidate(m_state->stream);
+                FSEventStreamRelease(m_state->stream);
+#endif
+                active = false;
+            }
+            break;
         default:
             {
                 active = false;
