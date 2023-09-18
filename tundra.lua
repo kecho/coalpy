@@ -56,7 +56,7 @@ Build {
                 CCOPTS = { "-fPIC", "-Wno-multichar" },
             },
             ReplaceEnv = {
-                LD = "$(CXX)"
+                LD = "$(CXX) -framework CoreFoundation -framework CoreServices"
             },
         },
     },
