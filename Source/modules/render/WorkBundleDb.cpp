@@ -547,7 +547,7 @@ bool processUpload(const AbiUploadCmd* cmd, const unsigned char* data, WorkBuild
             ss << "Upload of texture window of size"
                 << szX << ", " << szY << ", " << szZ 
                 << " Exceeds the destination remaining size of "
-                << sizeLeftX << ", " << sizeLeftY << ", ", sizeLeftZ;
+                << sizeLeftX << ", " << sizeLeftY << ", " << sizeLeftZ;
             context.errorMsg = ss.str();
             context.errorType = ScheduleErrorType::OutOfBounds;
             return false;
