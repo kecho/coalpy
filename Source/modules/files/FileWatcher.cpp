@@ -82,6 +82,7 @@ public:
     int inotifyInstance;
 #elif defined(__APPLE__)
     FSEventStreamRef stream;
+    dispatch_queue_t dispatchQueue;
     bool streamStarted;
     std::set<std::string> gCaughtFiles;
 #else
@@ -436,9 +437,9 @@ void FileWatcher::onFileListening()
                     // A stream already exists. Streams are immutable, so we need to destroy
                     // the current one before creating a new one.
                     FSEventStreamStop(m_state->stream);
-                    FSEventStreamUnscheduleFromRunLoop(m_state->stream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
                     FSEventStreamInvalidate(m_state->stream);
                     FSEventStreamRelease(m_state->stream);
+                    dispatch_release(m_state->dispatchQueue);
                 }
 
                 m_state->streamStarted = true;
@@ -473,11 +474,8 @@ void FileWatcher::onFileListening()
                     kFSEventStreamCreateFlagFileEvents
                 );
 
-                FSEventStreamScheduleWithRunLoop(
-                    m_state->stream,
-                    CFRunLoopGetCurrent(),
-                    kCFRunLoopDefaultMode
-                );
+                m_state->dispatchQueue = dispatch_queue_create("com.coalpy.filewatcher", NULL);
+                FSEventStreamSetDispatchQueue(m_state->stream, m_state->dispatchQueue);
                 FSEventStreamStart(m_state->stream);
 
                 // Cleanup
@@ -500,9 +498,9 @@ void FileWatcher::onFileListening()
             {
 #ifdef __APPLE__
                 FSEventStreamStop(m_state->stream);
-                FSEventStreamUnscheduleFromRunLoop(m_state->stream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
                 FSEventStreamInvalidate(m_state->stream);
                 FSEventStreamRelease(m_state->stream);
+                dispatch_release(m_state->dispatchQueue);
 #endif
                 active = false;
             }
