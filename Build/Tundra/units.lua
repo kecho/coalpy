@@ -91,7 +91,17 @@ local Libraries = {
 
 local LibPaths = {
     OpenEXRLibDir,
-    DxcLibDir,
+    -- TODO (Apoorva): The following conditionals rely on the assumption that Windows and Linux are
+    -- x64, and that MacOS is arm64. This is not a safe assumption, and should be fixed.
+    {
+        DxcDir.."lib/x64/",
+        Config = { "win64-*-*", "linux-*-*" }
+    },
+    {
+        DxcDir.."lib/arm64/",
+        Config = "macosx-*-*"
+    },
+    -- /TODO
     {
         WinVulkanLibs,
         Config = "win64-msvc-*"
@@ -99,10 +109,11 @@ local LibPaths = {
 }
 
 local Binaries = {
-    DxcBinaryCompiler,
-    DxcBinaryCompilerSo,
-    DxcBinaryIl,
-    PixBinaryDll
+    -- TODO (Apoorva): Build the new version (v1.7.2308) of DXC for Windows and Linux, and then uncomment the following lines.
+    -- DxcBinaryCompiler,
+    -- DxcBinaryCompilerSo,
+    -- DxcBinaryIl,
+    -- PixBinaryDll
 }
 
 -- Build zlib
@@ -111,7 +122,7 @@ local zlibLib = StaticLibrary {
     Pass = "BuildCode",
     Includes = { ZlibDir },
     Defines = {
-        Config = { "macosx-uni-*" },
+        Config = { "macosx-*-*" },
         {
             "HAVE_UNISTD_H"
         }
@@ -176,7 +187,7 @@ local imguiLib = StaticLibrary {
             }
         },
         {
-            Config = { "macosx-uni-*" },
+            Config = { "macosx-*-*" },
             {
                 ImguiDir.."$(SEP)backends$(SEP)imgui_impl_metal.h",
                 ImguiDir.."$(SEP)backends$(SEP)imgui_impl_metal.mm",
