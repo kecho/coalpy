@@ -10,3 +10,4 @@ imgui.ini
 */*/__pycache__
 */*/*/__pycache__
 docs/_site/*
+.DS_Store
