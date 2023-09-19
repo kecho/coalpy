@@ -6,7 +6,7 @@
 #include <functional>
 
 struct IDxcBlob;
-struct IDxcBlobUtf16;
+struct IDxcBlobWide;
 
 namespace coalpy
 {
@@ -18,7 +18,7 @@ struct DxcResultPayload
 {
     IDxcBlob* resultBlob;
     IDxcBlob* pdbBlob;
-    IDxcBlobUtf16* pdbName;
+    IDxcBlobWide* pdbName;
     SpirvReflectionData* spirvReflectionData;
 };
 
