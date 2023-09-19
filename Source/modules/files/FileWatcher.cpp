@@ -389,7 +389,7 @@ void fileEventCallback(
     std::unique_lock lock(state->fileWatchMutex);
 
     state->gCaughtFiles.empty();
-    CFArrayRef pathsArray = static_cast<CFArrayRef>(eventPaths);
+    const char **paths = static_cast<const char **>(eventPaths);
     for (size_t i = 0; i < numEvents; i++)
     {
         bool fileModifiedEvent =
@@ -400,11 +400,7 @@ void fileEventCallback(
             continue;
         }
 
-        CFStringRef pathRef = static_cast<CFStringRef>(
-            CFArrayGetValueAtIndex(pathsArray, i)
-        );
-        const char* pathCStr = CFStringGetCStringPtr(pathRef, kCFStringEncodingUTF8);
-        std::string pathStr(pathCStr);
+        std::string pathStr(paths[i]);
         state->gCaughtFiles.insert(pathStr);
     }
 }
