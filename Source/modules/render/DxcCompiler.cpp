@@ -553,11 +553,11 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
 void DxcCompiler::setupDxc()
 {
     if (g_dxcModule == nullptr)
-        loadCompilerModule(m_desc.compilerDllPath, g_dxCompiler, g_dxcModule, g_dxcCreateInstanceFn);
+        loadCompilerModule(m_desc.compilerDllPath.c_str(), g_dxCompiler, g_dxcModule, g_dxcCreateInstanceFn);
 
 #ifdef _WIN32
     if (g_dxilModule == nullptr)
-        loadCompilerModule(m_desc.compilerDllPath, g_dxil, g_dxilModule, g_dxilCreateInstanceFn);
+        loadCompilerModule(m_desc.compilerDllPath.c_str(), g_dxil, g_dxilModule, g_dxilCreateInstanceFn);
 #endif
 }
 

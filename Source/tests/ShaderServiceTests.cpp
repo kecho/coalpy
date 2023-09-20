@@ -275,7 +275,6 @@ static TestContext* createContext()
     #endif
     
     auto testContext = new ShaderServiceContext();
-    std::string resourceDir = ApplicationContext::get().resourceRootDir();
 
     {
         TaskSystemDesc desc;
@@ -289,7 +288,7 @@ static TestContext* createContext()
     }
 
     {
-        ShaderDbDesc desc = { platform, resourceDir.c_str(), testContext->fs, testContext->ts, nullptr };
+        ShaderDbDesc desc = { platform, ApplicationContext::get().resourceRootDir(), testContext->fs, testContext->ts, nullptr };
         testContext->dbDesc = desc;
         testContext->db = IShaderDb::create(desc);
     }

@@ -55,7 +55,7 @@ struct ShaderDbDesc
 {
     //optional if we want to specify a path for the compiler library
     render::DevicePlat platform = render::DevicePlat::Dx12;
-    const char* compilerDllPath = nullptr;
+    std::string compilerDllPath;
     IFileSystem* fs = nullptr;
     ITaskSystem* ts = nullptr;
     IFileWatcher* fw = nullptr;
