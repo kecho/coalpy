@@ -138,7 +138,7 @@ public:
         }
 
         {
-#ifndef __linux__
+#ifdef _WIN32
             SmartPtr<IDxcValidator2>& instance = m_validatorPool.allocate(h.validator);
             if (instance == nullptr)
                 DX_OK(g_dxilCreateInstanceFn(CLSID_DxcValidator, __uuidof(IDxcValidator2), (void**)&instance));
