@@ -83,8 +83,10 @@ void dxcCompileFunction(DxcCompiler& compiler)
     compilerArgs.source = simpleComputeShader();
 #if _WIN32
     compilerArgs.generatePdb = true;
-#elif __linux__
+#elif defined(__linux__) || defined(__APPLE__)
     compilerArgs.generatePdb = false;
+#else
+    #error "Platform not supported"
 #endif
 
     compilerArgs.onError = [&](const char* name, const char* errorString)
@@ -102,9 +104,11 @@ void dxcCompileFunction(DxcCompiler& compiler)
 #if _WIN32
         bool pdbValid = payload.pdbBlob != nullptr;
         CPY_ASSERT_MSG(pdbValid, "PDB was not generated.");
-#elif __linux__
+#elif defined(__linux__) || defined(__APPLE__)
         bool spirvReflectValid = payload.spirvReflectionData != nullptr;
         CPY_ASSERT_MSG(spirvReflectValid, "SPIR-V Reflection data not generated");
+#else
+    #error "Platform not supported"
 #endif
     };
 
