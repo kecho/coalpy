@@ -376,7 +376,9 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
 
     const wchar_t* profile = smTargets[(int)args.type];
 
-    const bool outputSpirV = m_desc.platform == render::DevicePlat::Vulkan;
+    const bool outputSpirV =
+        (m_desc.platform == render::DevicePlat::Vulkan) ||
+        (m_desc.platform == render::DevicePlat::Metal);
     const bool generatePdb = !outputSpirV  && args.generatePdb;
 
     std::vector<LPCWSTR> arguments;
