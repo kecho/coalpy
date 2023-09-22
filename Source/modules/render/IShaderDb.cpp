@@ -9,6 +9,10 @@
 #include "vulkan/VulkanShaderDb.h"
 #endif
 
+#if ENABLE_METAL
+#include "metal/MetalShaderDb.h"
+#endif
+
 namespace coalpy
 {
 
@@ -22,6 +26,11 @@ IShaderDb* IShaderDb::create(const ShaderDbDesc& desc)
 #if ENABLE_VULKAN
     if (desc.platform == render::DevicePlat::Vulkan)
         return new VulkanShaderDb(desc);
+#endif
+
+#if ENABLE_METAL
+    if (desc.platform == render::DevicePlat::Metal)
+        return new MetalShaderDb(desc);
 #endif
 
     return nullptr;
