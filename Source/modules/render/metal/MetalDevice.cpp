@@ -329,58 +329,77 @@ void MetalDevice::enumerate(std::vector<DeviceInfo>& outputList)
 //     return false;
 // }
 
-// void MetalDevice::beginCollectMarkers(int maxQueryBytes)
-// {
-//     m_markerCollector->beginCollection(maxQueryBytes);
-// }
+void MetalDevice::beginCollectMarkers(int maxQueryBytes)
+{
+    // m_markerCollector->beginCollection(maxQueryBytes);
+}
 
-// MarkerResults MetalDevice::endCollectMarkers()
-// {
+MarkerResults MetalDevice::endCollectMarkers()
+{
+        MarkerResults results = {};
+        return results;
+        // TODO (Apoorva)
 //     return m_markerCollector->endCollection();
-// }
+}
 
-// TextureResult MetalDevice::createTexture(const TextureDesc& desc)
-// {
-//     return m_resources->createTexture(desc);
-// }
+TextureResult MetalDevice::createTexture(const TextureDesc& desc)
+{
+    return TextureResult { ResourceResult::Ok, { -1 } };
+    // TODO (Apoorva)
+    // return m_resources->createTexture(desc);
+}
 
-// TextureResult MetalDevice::recreateTexture(Texture texture, const TextureDesc& desc)
-// {
-//     return m_resources->recreateTexture(texture, desc);
-// }
+TextureResult MetalDevice::recreateTexture(Texture texture, const TextureDesc& desc)
+{
+    return TextureResult { ResourceResult::Ok, { -1 } };
+    // TODO (Apoorva)
+    // return m_resources->recreateTexture(texture, desc);
+}
 
-// BufferResult  MetalDevice::createBuffer (const BufferDesc& config)
-// {
-//     return m_resources->createBuffer(config, MTL_NULL_HANDLE);
-// }
+BufferResult  MetalDevice::createBuffer (const BufferDesc& config)
+{
+    return BufferResult { ResourceResult::Ok, { -1 } };
+    // TODO (Apoorva)
+    // return m_resources->createBuffer(config, MTL_NULL_HANDLE);
+}
 
-// SamplerResult MetalDevice::createSampler (const SamplerDesc& config)
-// {
-//     return m_resources->createSampler(config);
-// }
+SamplerResult MetalDevice::createSampler (const SamplerDesc& config)
+{
+    return SamplerResult { ResourceResult::Ok, { -1 } };
+    // TODO (Apoorva)
+    // return m_resources->createSampler(config);
+}
 
-// InResourceTableResult MetalDevice::createInResourceTable  (const ResourceTableDesc& config)
-// {
-//     return m_resources->createInResourceTable(config);
-// }
+InResourceTableResult MetalDevice::createInResourceTable  (const ResourceTableDesc& config)
+{
+    return InResourceTableResult { ResourceResult::Ok, { -1 } };
+    // TODO (Apoorva)
+    // return m_resources->createInResourceTable(config);
+}
 
-// OutResourceTableResult MetalDevice::createOutResourceTable (const ResourceTableDesc& config)
-// {
-//     return m_resources->createOutResourceTable(config);
-// }
+OutResourceTableResult MetalDevice::createOutResourceTable (const ResourceTableDesc& config)
+{
+    return OutResourceTableResult { ResourceResult::Ok, { -1 } };
+    // TODO (Apoorva)
+    // return m_resources->createOutResourceTable(config);
+}
 
-// SamplerTableResult  MetalDevice::createSamplerTable (const ResourceTableDesc& config)
-// {
-//     return m_resources->createSamplerTable(config);
-// }
+SamplerTableResult  MetalDevice::createSamplerTable (const ResourceTableDesc& config)
+{
+    return SamplerTableResult { ResourceResult::Ok, { -1 } };
+    // TODO (Apoorva)
+    // return m_resources->createSamplerTable(config);
+}
 
-// void MetalDevice::getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo)
-// {
-//     m_resources->getResourceMemoryInfo(handle, memInfo);
-// }
+void MetalDevice::getResourceMemoryInfo(ResourceHandle handle, ResourceMemoryInfo& memInfo)
+{
+    // m_resources->getResourceMemoryInfo(handle, memInfo);
+}
 
-// WaitStatus MetalDevice::waitOnCpu(WorkHandle handle, int milliseconds)
-// {
+WaitStatus MetalDevice::waitOnCpu(WorkHandle handle, int milliseconds)
+{
+    return WaitStatus { WaitErrorType::NotReady, "" };
+    // TODO (Apoorva)
 //     auto workInfoIt = m_metalWorkInfos->workMap.find(handle.handleId);
 //     if (workInfoIt == m_metalWorkInfos->workMap.end())
 //         return WaitStatus { WaitErrorType::Invalid, "Invalid work handle." };    
@@ -393,10 +412,10 @@ void MetalDevice::enumerate(std::vector<DeviceInfo>& outputList)
 //         return WaitStatus { WaitErrorType::Ok, "" };
 //     else
 //         return WaitStatus { WaitErrorType::NotReady, "" };
-// }
+}
 
-// DownloadStatus MetalDevice::getDownloadStatus(WorkHandle bundle, ResourceHandle handle, int mipLevel, int arraySlice)
-// {
+DownloadStatus MetalDevice::getDownloadStatus(WorkHandle bundle, ResourceHandle handle, int mipLevel, int arraySlice)
+{
 //     auto it = m_metalWorkInfos->workMap.find(bundle.handleId);
 //     if (it == m_metalWorkInfos->workMap.end())
 //         return DownloadStatus { DownloadResult::Invalid, nullptr, 0u };
@@ -420,18 +439,18 @@ void MetalDevice::enumerate(std::vector<DeviceInfo>& outputList)
 //             downloadState.depth,
 //         };
 //     }
-//     return DownloadStatus { DownloadResult::NotReady, nullptr, 0u };
-// }
+    return DownloadStatus { DownloadResult::NotReady, nullptr, 0u };
+}
 
-// void MetalDevice::release(ResourceHandle resource)
-// {
-//     m_resources->release(resource);
-// }
+void MetalDevice::release(ResourceHandle resource)
+{
+    // m_resources->release(resource);
+}
 
-// void MetalDevice::release(ResourceTable table)
-// {
+void MetalDevice::release(ResourceTable table)
+{
 //     m_resources->release(table);
-// }
+}
 
 SmartPtr<IDisplay> MetalDevice::createDisplay (const DisplayConfig& config)
 {
@@ -457,9 +476,9 @@ void MetalDevice::internalReleaseWorkHandle(WorkHandle handle)
 //     m_metalWorkInfos->workMap.erase(workInfoIt);
 }
 
-// ScheduleStatus MetalDevice::internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle)
-// {
-//     ScheduleStatus status;
+ScheduleStatus MetalDevice::internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle)
+{
+    ScheduleStatus status;
 //     status.workHandle = workHandle;
     
 //     MetalWorkBundle metalWorkBundle(*this);
@@ -481,10 +500,10 @@ void MetalDevice::internalReleaseWorkHandle(WorkHandle handle)
 //         m_workDb.unlock();
 //     }
 
-//     return status;
+    return status;
 }
 
-// }
+}
 }
 
 #endif // ENABLE_METAL
