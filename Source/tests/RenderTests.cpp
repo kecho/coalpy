@@ -20,6 +20,11 @@
 #include <coalpy.render/../../vulkan/VulkanDevice.h>
 #endif
 
+#if ENABLE_METAL
+#include <coalpy.render/../../metal/MetalReadbackBufferPool.h>
+#include <coalpy.render/../../metal/MetalDevice.h>
+#endif
+
 #include <string>
 #include <set>
 #include <iostream>
@@ -170,6 +175,46 @@ void vulkanBufferPool(TestContext& ctx)
     }
 
     renderTestCtx.end();
+}
+#endif
+
+#if ENABLE_METAL
+// TODO (Apoorva)
+void metalBufferPool(TestContext& ctx)
+{
+    // auto& renderTestCtx = (RenderTestContext&)ctx;
+    // renderTestCtx.begin();
+    // IDevice& device = *renderTestCtx.device;
+    // MetalDevice& mtlDevice = (MetalDevice&)device;
+    // MetalReadbackBufferPool& bufferPool = mtlDevice.readbackPool();
+    // MetalReadbackMemBlock block1 = bufferPool.allocate(256);
+    // bufferPool.free(block1);
+
+    // {
+    //     MetalReadbackMemBlock block2 = bufferPool.allocate(1024 * 1024 * 10);
+    //     MetalReadbackMemBlock block3 = bufferPool.allocate(215);
+    //     MetalReadbackMemBlock block4 = bufferPool.allocate(33);
+    //     MetalReadbackMemBlock block5 = bufferPool.allocate(15);
+
+    //     bufferPool.free(block5);
+    //     bufferPool.free(block2);
+    //     bufferPool.free(block3);
+    //     bufferPool.free(block4);
+    // }
+
+    // {
+    //     MetalReadbackMemBlock block4 = bufferPool.allocate(3323);
+    //     MetalReadbackMemBlock block2 = bufferPool.allocate(1024 * 1024 * 10);
+    //     MetalReadbackMemBlock block3 = bufferPool.allocate(4123);
+    //     MetalReadbackMemBlock block5 = bufferPool.allocate(1500);
+
+    //     bufferPool.free(block5);
+    //     bufferPool.free(block2);
+    //     bufferPool.free(block3);
+    //     bufferPool.free(block4);
+    // }
+
+    // renderTestCtx.end();
 }
 #endif
 
@@ -1949,10 +1994,9 @@ static const TestCase* createCases(int& caseCounts)
 #if ENABLE_VULKAN
         { "vulkanBufferPool", vulkanBufferPool },
 #endif
-// TODO
-// #if ENABLE_METAL
-//         { "metalBufferPool", metalBufferPool },
-// #endif
+#if ENABLE_METAL
+        { "metalBufferPool", metalBufferPool },
+#endif
         { "createBuffer",  testCreateBuffer },
         { "createTexture", testCreateTexture },
         { "createTables",  testCreateTables },
@@ -1987,6 +2031,9 @@ static const TestCaseFilter* createCasesFilters(int& caseCounts)
 #endif
 #if  ENABLE_VULKAN
         { "vulkanBufferPool", TestPlatformVulkan },
+#endif
+#if  ENABLE_METAL
+        { "metalBufferPool", TestPlatformMetal },
 #endif
     };
 
@@ -2038,6 +2085,9 @@ void renderSuite(TestSuiteDesc& suite)
 #endif
 #if ENABLE_VULKAN
     supportedPlatforms |= TestPlatformVulkan;
+#endif
+#if ENABLE_METAL
+    supportedPlatforms |= TestPlatformMetal;
 #endif
     suite.supportedRenderPlatforms = (TestPlatforms)supportedPlatforms;
 }

@@ -34,6 +34,8 @@ inline const char* getDevicePlatName(DevicePlat plat)
         return "dx12";
     case DevicePlat::Vulkan:
         return "vulkan";
+    case DevicePlat::Metal:
+        return "metal";
     default:
         return "unknown";
     }

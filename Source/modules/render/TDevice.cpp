@@ -7,6 +7,9 @@
 #if ENABLE_VULKAN
 #include <vulkan/VulkanDevice.h>
 #endif
+#if ENABLE_METAL
+#include <metal/MetalDevice.h>
+#endif
 
 namespace coalpy
 {
@@ -24,6 +27,11 @@ void IDevice::enumerate(DevicePlat platform, std::vector<DeviceInfo>& outputList
     if (platform == DevicePlat::Vulkan)
         VulkanDevice::enumerate(outputList);
 #endif
+
+#if ENABLE_METAL
+    if (platform == DevicePlat::Metal)
+        MetalDevice::enumerate(outputList);
+#endif
 }
 
 IDevice * IDevice::create(const DeviceConfig& config)
@@ -40,6 +48,11 @@ IDevice * IDevice::create(const DeviceConfig& config)
 #if ENABLE_VULKAN
     if (config.platform == DevicePlat::Vulkan)
         return new VulkanDevice(config);
+#endif
+
+#if ENABLE_METAL
+    if (config.platform == DevicePlat::Metal)
+        return new MetalDevice(config);
 #endif
 
     return nullptr;
