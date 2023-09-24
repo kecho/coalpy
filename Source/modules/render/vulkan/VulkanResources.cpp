@@ -3,7 +3,6 @@
 
 #include "VulkanResources.h"
 #include "VulkanDevice.h"
-#include "Config.h"
 #include "WorkBundleDb.h"
 #include "VulkanFormats.h"
 #include "VulkanGc.h"

@@ -19,7 +19,7 @@ namespace render
 
 // class MetalDescriptorSetPools;
 // class MetalReadbackBufferPool;
-// class MetalResources;
+class MetalResources;
 // class MetalQueues;
 // class MetalCounterPool;
 // class MetalEventPool;
@@ -96,7 +96,7 @@ private:
     // MtlDevice m_mtlDevice;
     // MetalDescriptorSetPools* m_descriptorSetPools;
     // MetalQueues* m_queues;
-    // MetalResources* m_resources;
+    MetalResources* m_resources;
     // MetalReadbackBufferPool* m_readbackPool;
     // MetalEventPool* m_eventPool;
     // MetalFencePool* m_fencePool;

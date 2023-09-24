@@ -10,7 +10,7 @@
 // #endif
 // #include "MetalDescriptorSetPools.h"
 // #include "MetalDisplay.h"
-// #include "MetalResources.h"
+#include "MetalResources.h"
 // #include "MetalReadbackBufferPool.h"
 // #include "MetalWorkBundle.h"
 // #include "MetalQueues.h"
@@ -178,9 +178,9 @@ namespace render
 
 MetalDevice::MetalDevice(const DeviceConfig& config)
 :   TDevice<MetalDevice>(config),
-    m_shaderDb(nullptr)
+    m_shaderDb(nullptr),
     // m_queueFamIndex(-1),
-    // m_resources(nullptr)
+    m_resources(nullptr)
 {
     // m_metalWorkInfos = new MetalWorkInformationMap;
     // m_runtimeInfo = { ShaderModel::End };
@@ -244,7 +244,7 @@ MetalDevice::MetalDevice(const DeviceConfig& config)
     // m_eventPool = new MetalEventPool(*this);
     // m_queues =  new MetalQueues(*this, *m_fencePool, *m_eventPool);
     // m_gc = new MetalGc(125, *this);
-    // m_resources = new MetalResources(*this, m_workDb);
+    m_resources = new MetalResources(*this, m_workDb);
     // m_descriptorSetPools = new MetalDescriptorSetPools(*this);
     // m_readbackPool = new MetalReadbackBufferPool(*this);
     // m_counterPool = new MetalCounterPool(*this);
@@ -289,8 +289,8 @@ MetalDevice::~MetalDevice()
     // m_markerCollector = nullptr;
     // delete m_readbackPool;
     // m_readbackPool = nullptr;
-    // delete m_resources;
-    // m_resources = nullptr;
+    delete m_resources;
+    m_resources = nullptr;
     // delete m_descriptorSetPools;
     // m_descriptorSetPools = nullptr;
     // delete m_gc;
@@ -371,7 +371,7 @@ TextureResult MetalDevice::recreateTexture(Texture texture, const TextureDesc& d
 
 BufferResult  MetalDevice::createBuffer (const BufferDesc& config)
 {
-    return BufferResult { ResourceResult::Ok, { -1 } };
+    return m_resources->createBuffer(config);
     // TODO (Apoorva)
     // return m_resources->createBuffer(config, MTL_NULL_HANDLE);
 }
