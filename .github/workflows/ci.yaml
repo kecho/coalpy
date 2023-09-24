@@ -2,7 +2,6 @@ name: tests-ci run-name: CI - ${{ github.actor }}
 on:
     push:
         branches:
-            - master
             - macosx
 jobs:
     build-debug:
