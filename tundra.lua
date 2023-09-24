@@ -44,19 +44,19 @@ Build {
             },
         },
         {
-            Name = "macosx-uni",
+            Name = "macosx-clang",
             DefaultOnHost = "macosx",
             Tools = { "clang" },
             Env = {
                 CPPPATH = {
                     "$(OBJECTDIR)$(SEP)Source"
                 },
-                CXXOPTS = { "-std=c++17", "-fPIC", "-Wno-multichar", "-Wno-write-strings", "-fms-extensions" },
+                CXXOPTS = { "-std=c++17", "-fPIC", "-Wno-multichar", "-Wno-write-strings", "-fms-extensions", "-x objective-c++" },
                 CXXOPTS_DEBUG   = { "-g",  "-D _DEBUG=1" },
                 CCOPTS = { "-fPIC", "-Wno-multichar" },
             },
             ReplaceEnv = {
-                LD = "$(CXX) -framework CoreFoundation -framework CoreServices"
+                LD = "$(CXX) -framework CoreFoundation -framework CoreServices -framework Metal"
             },
         },
     },
