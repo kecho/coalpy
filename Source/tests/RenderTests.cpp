@@ -182,10 +182,19 @@ void vulkanBufferPool(TestContext& ctx)
 // TODO (Apoorva)
 void metalBufferPool(TestContext& ctx)
 {
-    // auto& renderTestCtx = (RenderTestContext&)ctx;
-    // renderTestCtx.begin();
-    // IDevice& device = *renderTestCtx.device;
-    // MetalDevice& mtlDevice = (MetalDevice&)device;
+    auto& renderTestCtx = (RenderTestContext&)ctx;
+    renderTestCtx.begin();
+    IDevice& device = *renderTestCtx.device;
+    MetalDevice& mtlDevice = (MetalDevice&)device;
+
+    std::vector<render::DeviceInfo> devices;
+    mtlDevice.enumerate(devices);
+    std::cout << "-----\n";
+    for (auto& d : devices)
+    {
+        std::cout << d.name << std::endl;
+    }
+    std::cout << "-----\n";
     // MetalReadbackBufferPool& bufferPool = mtlDevice.readbackPool();
     // MetalReadbackMemBlock block1 = bufferPool.allocate(256);
     // bufferPool.free(block1);
@@ -214,7 +223,7 @@ void metalBufferPool(TestContext& ctx)
     //     bufferPool.free(block4);
     // }
 
-    // renderTestCtx.end();
+    renderTestCtx.end();
 }
 #endif
 

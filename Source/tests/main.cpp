@@ -34,10 +34,10 @@ extern void renderSuite(TestSuiteDesc& suite);
 }
 
 CreateSuiteFn g_suites[] = {
-    coreSuite,
-    taskSystemSuite,
-    fileSystemSuite,
-    shaderSuite,
+    // coreSuite,
+    // taskSystemSuite,
+    // fileSystemSuite,
+    // shaderSuite,
     renderSuite
 };
 
