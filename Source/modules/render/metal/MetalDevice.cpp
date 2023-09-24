@@ -1,4 +1,5 @@
 #include <Config.h>
+#include <Metal/Metal.h>
 #if ENABLE_METAL
 
 #include "MetalDevice.h"
@@ -310,6 +311,18 @@ MetalDevice::~MetalDevice()
 
 void MetalDevice::enumerate(std::vector<DeviceInfo>& outputList)
 {
+    auto devices = MTLCopyAllDevices();
+    outputList.reserve(devices.count);
+    int index = 0;
+    for(id<MTLDevice> device in devices) {
+        DeviceInfo deviceInfo;
+        deviceInfo.index = index++;
+        deviceInfo.valid = true;
+        deviceInfo.name = device.name.UTF8String;
+
+        outputList.push_back(deviceInfo);
+    }
+    [devices release];
     // std::vector<MtlPhysicalDevice> unused;
     // enumerateMetalDevices(outputList, unused);
 }
