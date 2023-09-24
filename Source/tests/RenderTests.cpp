@@ -21,7 +21,7 @@
 #endif
 
 #if ENABLE_METAL
-#include <coalpy.render/../../metal/MetalReadbackBufferPool.h>
+// #include <coalpy.render/../../metal/MetalReadbackBufferPool.h>
 #include <coalpy.render/../../metal/MetalDevice.h>
 #endif
 
