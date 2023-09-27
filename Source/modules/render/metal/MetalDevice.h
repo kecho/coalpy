@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <string>
 
+@protocol MTLDevice;
+
 namespace coalpy
 {
 
@@ -59,7 +61,7 @@ public:
     ScheduleStatus internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle); 
 
     // MtlInstance mtlInstance() const { return m_mtlInstance; }
-    // MtlDevice mtlDevice() const { return m_mtlDevice; }
+    id<MTLDevice> mtlDevice() const { return m_mtlDevice; }
     // MtlPhysicalDevice mtlPhysicalDevice() const { return m_mtlPhysicalDevice; }
     // const MtlPhysicalDeviceProperties& mtlPhysicalDeviceProps() const { return m_mtlPhysicalProps; }
     // MetalDescriptorSetPools& descriptorSetPools() { return *m_descriptorSetPools; }
@@ -93,7 +95,7 @@ private:
     // MtlPhysicalDevice m_mtlPhysicalDevice;
     // MtlPhysicalDeviceMemoryProperties m_mtlMemProps;
     // MtlPhysicalDeviceProperties m_mtlPhysicalProps;
-    // MtlDevice m_mtlDevice;
+    id<MTLDevice> m_mtlDevice;
     // MetalDescriptorSetPools* m_descriptorSetPools;
     // MetalQueues* m_queues;
     MetalResources* m_resources;

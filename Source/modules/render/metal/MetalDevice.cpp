@@ -1,7 +1,7 @@
 #include <Config.h>
-#include <Metal/Metal.h>
 #if ENABLE_METAL
 
+#include <Metal/Metal.h>
 #include "MetalDevice.h"
 #include "MetalShaderDb.h"
 // #if ENABLE_SDL_METAL
@@ -219,6 +219,8 @@ MetalDevice::MetalDevice(const DeviceConfig& config)
     // | asFlag(MetalDeviceExtensions::GoogleHLSLFunctionality1)
     // | asFlag(MetalDeviceExtensions::GooleUserType);
     
+    // TODO (Apoorva): Maybe we want a user-configurable device.
+    m_mtlDevice = MTLCreateSystemDefaultDevice();
     // createMetalDevice(
     //     m_mtlPhysicalDevice,
     //     deviceExts,

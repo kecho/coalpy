@@ -4,6 +4,8 @@
 #include <coalpy.render/Resources.h>
 #include <coalpy.core/HandleContainer.h>
 
+@protocol MTLBuffer;
+
 namespace coalpy
 {
 namespace render
@@ -18,7 +20,7 @@ enum ResourceSpecialFlags : int
     // ResourceSpecialFlag_NoDeferDelete = 1 << 0,
     // ResourceSpecialFlag_CanDenyShaderResources = 1 << 1,
     // ResourceSpecialFlag_TrackTables = 1 << 2,
-    ResourceSpecialFlag_CpuReadback = 1 << 3,
+    // ResourceSpecialFlag_CpuReadback = 1 << 3,
     // ResourceSpecialFlag_CpuUpload = 1 << 4,
     // ResourceSpecialFlag_EnableColorAttachment = 1 << 5,
 };
@@ -34,6 +36,7 @@ struct MetalResource
 
     struct BufferData
     {
+        id<MTLBuffer> mtlBuffer;
     };
 
     struct TextureData
