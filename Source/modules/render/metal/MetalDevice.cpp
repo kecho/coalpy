@@ -221,6 +221,7 @@ MetalDevice::MetalDevice(const DeviceConfig& config)
     
     // TODO (Apoorva): Maybe we want a user-configurable device.
     m_mtlDevice = MTLCreateSystemDefaultDevice();
+    CPY_ASSERT(m_mtlDevice != nil);
     // createMetalDevice(
     //     m_mtlPhysicalDevice,
     //     deviceExts,

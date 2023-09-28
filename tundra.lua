@@ -56,7 +56,9 @@ Build {
                 CCOPTS = { "-fPIC", "-Wno-multichar" },
             },
             ReplaceEnv = {
-                LD = "$(CXX) -framework CoreFoundation -framework CoreServices -framework Metal"
+                -- Ideally the MetalKit framework should not need to be linked.
+                -- But for some reason, MTLCreateSystemDefaultDevice() returns nil.
+                LD = "$(CXX) -framework CoreFoundation -framework CoreServices -framework Metal -framework MetalKit"
             },
         },
     },
