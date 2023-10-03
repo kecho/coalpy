@@ -7,10 +7,10 @@ local LibPngDir = "Source/libpng"
 local ZlibDir = "Source/zlib"
 local cJSONDir = "Source/cjson"
 local TinyObjLoaderDir = "Source/tinyobjloader"
+local SpirvCrossDir = "Source/spirvcross"
 local SpirvReflectDir = "Source/spirvreflect"
 local DxcDir = "External/dxc/v1.7.2308/"
 local DxcIncludes = DxcDir.."inc/"
-local DxcLibDir = DxcDir.."lib/x64/"
 local DxcBinaryCompiler = DxcDir.."bin/x64/dxcompiler.dll"
 local DxcBinaryCompilerSo = DxcDir.."bin/x64/libdxcompiler.so"
 local DxcBinaryIl = DxcDir.."bin/x64/dxil.dll"
@@ -235,6 +235,23 @@ local libjpegLib = StaticLibrary {
 
 Default (libjpegLib)
 
+-- Build spirvcross
+local spirvcross = StaticLibrary {
+    Name = "spirvcross",
+    Pass = "BuildCode",
+    Includes = SpirvCrossDir,
+    Sources = {
+        Glob {
+            Dir = SpirvCrossDir,
+            Extensions = { ".cpp", ".h", ".c" },
+            Recursive = true
+        }
+    },
+    IdeGenerationHints = _G.GenRootIdeHints("spirvcross");
+}
+
+Default (spirvcross)
+
 -- Build spirvreflect
 local spirvreflect = StaticLibrary {
     Name = "spirvreflect",
@@ -318,6 +335,7 @@ local CoalPyModuleIncludes = {
         DxcIncludes,
         ImguiDir,
         ImplotDir,
+        SpirvCrossDir,
         SpirvReflectDir,
         cJSONDir,
         "Source/modules/window",
@@ -343,12 +361,12 @@ local CoalPyModuleIncludes = {
 }
 
 local CoalPyModuleDeps = {
-    render = { imguiLib, implotLib, spirvreflect, tinyobjloader, cjson },
+    render = { imguiLib, implotLib, spirvcross, spirvreflect, tinyobjloader, cjson },
     texture = { zlibLib, libpngLib, libjpegLib }
 }
 
 -- Module list for the core coalpy module
-local CoalPyModules = { "core", "tasks", "render", "files", "window", "texture", "libjpeg", "libpng", "zlib", "spirvreflect"  }
+local CoalPyModules = { "core", "tasks", "render", "files", "window", "texture", "libjpeg", "libpng", "zlib", "spirvcross", "spirvreflect"  }
 
 _G.BuildModules(SourceDir, CoalPyModuleTable, CoalPyModuleIncludes, CoalPyModuleDeps)
 _G.BuildPyLibs(

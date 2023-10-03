@@ -17,8 +17,11 @@
 #include <vector>
 #ifdef _WIN32
 #include <windows.h>
-#elif defined(__linux__) || defined(__APPLE__)
+#elif defined(__linux__)
 #include <dlfcn.h>
+#elif defined(__APPLE__)
+#include <dlfcn.h>
+#include <spirv_msl.hpp>
 #endif
 
 #include <dxcapi.h>
@@ -515,6 +518,25 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                         else
                             spirVReflectionData->mainFn = args.mainFn;
                     }
+                    // ---
+                    {
+                        std::cout << "----------\n";
+                        std::cout <<shaderOut->GetBufferSize()<<"\n";
+
+                        spirv_cross::CompilerGLSL glsl((uint*)shaderOut->GetBufferPointer(), shaderOut->GetBufferSize() / 4);
+                        spirv_cross::ShaderResources resources = glsl.get_shader_resources();
+                        for (auto &resource : resources.separate_images)
+                        {
+                            printf("%s\n", resource.name.c_str());
+                        }
+                        for (auto &resource : resources.builtin_inputs)
+                        {
+                            printf("%d\n", resource.value_type_id);
+                        }
+                        std::cout << "----------\n";
+
+                    }
+                    // ---
 
                     DxcResultPayload payload = {};
                     payload.resultBlob = &(*shaderOut);

@@ -37,8 +37,8 @@ CreateSuiteFn g_suites[] = {
     // coreSuite,
     // taskSystemSuite,
     // fileSystemSuite,
-    // shaderSuite,
-    renderSuite
+    shaderSuite,
+    // renderSuite
 };
 
 bool g_enableErrorOutput = true;
