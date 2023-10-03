@@ -17,15 +17,13 @@
 #include <vector>
 #ifdef _WIN32
 #include <windows.h>
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
 #include <dlfcn.h>
-#elif defined(__APPLE__)
-#include <dlfcn.h>
-#include <spirv_msl.hpp>
 #endif
 
 #include <dxcapi.h>
 #include "SpirvReflectionData.h"
+#include <spirv_msl.hpp>
 
 namespace coalpy
 {
@@ -521,18 +519,21 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                     // ---
                     {
                         std::cout << "----------\n";
-                        std::cout <<shaderOut->GetBufferSize()<<"\n";
-
-                        spirv_cross::CompilerGLSL glsl((uint*)shaderOut->GetBufferPointer(), shaderOut->GetBufferSize() / 4);
-                        spirv_cross::ShaderResources resources = glsl.get_shader_resources();
+                        spirv_cross::CompilerMSL msl((uint*)shaderOut->GetBufferPointer(), shaderOut->GetBufferSize() / 4);
+                        spirv_cross::ShaderResources resources = msl.get_shader_resources();
+                        std::cout << "Separate images\n";
                         for (auto &resource : resources.separate_images)
                         {
-                            printf("%s\n", resource.name.c_str());
+                            printf("  %s\n", resource.name.c_str());
                         }
-                        for (auto &resource : resources.builtin_inputs)
+                        std::cout << "Storage images\n";
+                        for (auto &resource : resources.storage_images)
                         {
-                            printf("%d\n", resource.value_type_id);
+                            printf("  %s\n", resource.name.c_str());
                         }
+                        std::cout << "----------\n";
+                        std::string msl_source = msl.compile();
+                        std::cout << msl_source << "\n";
                         std::cout << "----------\n";
 
                     }
