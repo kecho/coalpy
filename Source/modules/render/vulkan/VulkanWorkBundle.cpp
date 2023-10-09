@@ -27,6 +27,68 @@ bool VulkanWorkBundle::load(const WorkBundle& workBundle)
     return true;
 }
 
+static void fillDescriptorCommands(
+    SpirvRegisterType type,
+    VulkanResources& resources,
+    const SpirvPayload& shaderPayload,
+    const ResourceTable* inputTables,
+    int inputTablesCounts,
+    VkDescriptorSet* destinationSets,
+    int destinationSetCount,
+    std::vector<VkCopyDescriptorSet>& outCopyCmds)
+{
+    for (int i = 0; i < inputTablesCounts; ++i)
+    {
+        if (i >= destinationSetCount)
+            break;
+    
+        uint64_t activeMask = shaderPayload.activeDescriptors[i][(int)type];
+        while (activeMask)
+        {
+            ResourceTable tableHandle = inputTables[i];
+            const VulkanResourceTable& table = resources.unsafeGetTable(tableHandle);
+    
+            uint64_t lsbMask = ~(activeMask - 1ull);
+            unsigned binding = popCnt((activeMask & lsbMask) - 1ull);
+            activeMask ^= (1ull << binding);
+            if (binding >= (int)table.descriptorsCount())
+                continue;
+    
+            outCopyCmds.emplace_back();
+            VkCopyDescriptorSet& copy = outCopyCmds.back();
+            copy = { VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, nullptr };
+            copy.srcSet = table.descriptors.descriptors;
+            copy.srcBinding = table.descriptorsBegin + binding;
+            copy.dstSet = destinationSets[i];
+            copy.dstBinding = (uint32_t)SpirvRegisterTypeOffset(type) + binding;
+            copy.descriptorCount = 1u;
+        }
+    
+        uint64_t activeCounters = shaderPayload.activeCountersBitMask[i];
+        const uint8_t* activeCounterRegister = shaderPayload.activeCounterRegister[i];
+        int counterTable = 0;
+        while (type == SpirvRegisterType::u && activeCounters)
+        {
+            ResourceTable tableHandle = inputTables[i];
+            const VulkanResourceTable& table = resources.unsafeGetTable(tableHandle);
+            if (counterTable >= table.countersEnd)
+                break;
+    
+            uint64_t lsbMask = ~(activeCounters - 1ull);
+            unsigned binding = popCnt((activeCounters & lsbMask) - 1ull);
+            activeCounters ^= (1ull << binding);
+            outCopyCmds.emplace_back();
+            VkCopyDescriptorSet& copy = outCopyCmds.back();
+            copy = { VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, nullptr };
+            copy.srcSet = table.descriptors.descriptors;
+            copy.srcBinding = table.countersBegin + counterTable++;
+            copy.dstSet = destinationSets[i];
+            copy.dstBinding = activeCounterRegister[binding];
+            copy.descriptorCount = 1;
+        }
+    }
+}
+
 void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiComputeCmd* computeCmd, const CommandInfo& cmdInfo, VulkanList& outList)
 {
     VulkanShaderDb& db = (VulkanShaderDb&)*m_device.db();
@@ -42,60 +104,6 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
     std::vector<VkWriteDescriptorSet> writes;
     std::vector<VkDescriptorBufferInfo> cbuffers;
     VulkanResources& resources = m_device.resources();
-    auto fillDescriptors = [&copies, &sets, &resources, &shaderPayload]
-        (SpirvRegisterType type, int tableCounts, const ResourceTable* tables)
-    {
-        for (int i = 0; i < tableCounts; ++i)
-        {
-            if (i >= sets.size())
-                break;
-
-            uint64_t activeMask = shaderPayload.activeDescriptors[i][(int)type];
-            while (activeMask)
-            {
-                ResourceTable tableHandle = tables[i];
-                const VulkanResourceTable& table = resources.unsafeGetTable(tableHandle);
-
-                uint64_t lsbMask = ~(activeMask - 1ull);
-                unsigned binding = popCnt((activeMask & lsbMask) - 1ull);
-                activeMask ^= (1ull << binding);
-                if (binding >= (int)table.descriptorsCount())
-                    continue;
-
-                copies.emplace_back();
-                VkCopyDescriptorSet& copy = copies.back();
-                copy = { VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, nullptr };
-                copy.srcSet = table.descriptors.descriptors;
-                copy.srcBinding = table.descriptorsBegin + binding;
-                copy.dstSet = sets[i];
-                copy.dstBinding = (uint32_t)SpirvRegisterTypeOffset(type) + binding;
-                copy.descriptorCount = 1u;
-            }
-
-            uint64_t activeCounters = shaderPayload.activeCountersBitMask[i];
-            const uint8_t* activeCounterRegister = shaderPayload.activeCounterRegister[i];
-            int counterTable = 0;
-            while (type == SpirvRegisterType::u && activeCounters)
-            {
-                ResourceTable tableHandle = tables[i];
-                const VulkanResourceTable& table = resources.unsafeGetTable(tableHandle);
-                if (counterTable >= table.countersEnd)
-                    break;
-
-                uint64_t lsbMask = ~(activeCounters - 1ull);
-                unsigned binding = popCnt((activeCounters & lsbMask) - 1ull);
-                activeCounters ^= (1ull << binding);
-                copies.emplace_back();
-                VkCopyDescriptorSet& copy = copies.back();
-                copy = { VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, nullptr };
-                copy.srcSet = table.descriptors.descriptors;
-                copy.srcBinding = table.countersBegin + counterTable++;
-                copy.dstSet = sets[i];
-                copy.dstBinding = activeCounterRegister[binding];
-                copy.descriptorCount = 1;
-            }
-        }
-    };
 
     if (computeCmd->inlineConstantBufferSize > 0)
     {
@@ -144,9 +152,16 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
         }
     }
 
-    fillDescriptors(SpirvRegisterType::t, computeCmd->inResourceTablesCounts, (const ResourceTable*)computeCmd->inResourceTables.data(data));
-    fillDescriptors(SpirvRegisterType::u, computeCmd->outResourceTablesCounts, (const ResourceTable*)computeCmd->outResourceTables.data(data));
-    fillDescriptors(SpirvRegisterType::s, computeCmd->samplerTablesCounts, (const ResourceTable*)computeCmd->samplerTables.data(data));
+    fillDescriptorCommands(SpirvRegisterType::t, resources, shaderPayload,
+        (const ResourceTable*)computeCmd->inResourceTables.data(data), computeCmd->inResourceTablesCounts,
+        sets.data(), (int)sets.size(), copies);
+    fillDescriptorCommands(SpirvRegisterType::u, resources, shaderPayload,
+        (const ResourceTable*)computeCmd->outResourceTables.data(data), computeCmd->outResourceTablesCounts,
+        sets.data(), (int)sets.size(), copies);
+    fillDescriptorCommands(SpirvRegisterType::s, resources, shaderPayload,
+        (const ResourceTable*)computeCmd->samplerTables.data(data), computeCmd->samplerTablesCounts,
+        sets.data(), (int)sets.size(), copies);
+
     vkUpdateDescriptorSets(m_device.vkDevice(), writes.size(), writes.data(), copies.size(), copies.data());
 
     VkCommandBuffer cmdBuffer = outList.list;
