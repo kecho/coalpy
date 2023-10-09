@@ -73,6 +73,7 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
             }
 
             uint64_t activeCounters = shaderPayload.activeCountersBitMask[i];
+            const uint8_t* activeCounterRegister = shaderPayload.activeCounterRegister[i];
             int counterTable = 0;
             while (type == SpirvRegisterType::u && activeCounters)
             {
@@ -90,7 +91,7 @@ void VulkanWorkBundle::buildComputeCmd(const unsigned char* data, const AbiCompu
                 copy.srcSet = table.descriptors.descriptors;
                 copy.srcBinding = table.countersBegin + counterTable++;
                 copy.dstSet = sets[i];
-                copy.dstBinding = shaderPayload.activeCounterRegister[binding];
+                copy.dstBinding = activeCounterRegister[binding];
                 copy.descriptorCount = 1;
             }
         }

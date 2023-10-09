@@ -131,6 +131,7 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
             std::unordered_map<std::string, SpvReflectDescriptorBinding*> bindingCounter;
             uint64_t* descriptorBitsSections = payload->activeDescriptors[setData->set];
             uint64_t& activeCountersBitMask = payload->activeCountersBitMask[setData->set];
+            uint8_t* activeCounterRegister = payload->activeCounterRegister[setData->set];
             for (int b = 0; b < (int)setData->binding_count; ++b)
             {
                 SpvReflectDescriptorBinding& reflectionBinding = *setData->bindings[b];
@@ -172,7 +173,7 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
                         if (reflectionBinding.binding < uavOffset || reflectionBinding.binding >= (uavOffset + SpirvRegisterTypeShiftCount))
                             std::cerr << "Failed to connect counter of binding " << reflectionBinding.name << " with binding slot " << reflectionBinding.binding << std::endl;
                         else
-                            payload->activeCounterRegister[reflectionBinding.binding - uavOffset] = bindingCounterIt->second->binding;
+                            activeCounterRegister[reflectionBinding.binding - uavOffset] = bindingCounterIt->second->binding;
                     }
                 }
                 
@@ -190,8 +191,8 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
                 activeDescriptorBits |= 1 << ((int)reflectionBinding.binding % (int)SpirvRegisterTypeShiftCount); //TODO: bindless
                 //if (reflectionBinding.count)
                 //{
-                //    flags |= VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
-                //    flags |= VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
+                    //flags |= VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+                    //flags |= VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
                 //}
             }
 

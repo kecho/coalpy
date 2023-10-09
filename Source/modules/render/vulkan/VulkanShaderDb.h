@@ -27,7 +27,7 @@ struct SpirvPayload
     VkPipelineLayout pipelineLayout = {};
     std::vector<VulkanDescriptorSetInfo> descriptorSetsInfos;
     uint64_t activeDescriptors[SpirvMaxRegisterSpace][(int)SpirvRegisterType::Count] = {};
-    uint8_t  activeCounterRegister[SpirvRegisterTypeShiftCount] = {};
+    uint8_t  activeCounterRegister[SpirvMaxRegisterSpace][SpirvRegisterTypeShiftCount] = {};
     uint64_t activeCountersBitMask[SpirvMaxRegisterSpace] = {};
 };
 
