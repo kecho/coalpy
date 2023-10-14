@@ -132,6 +132,29 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
             uint64_t* descriptorBitsSections = payload->activeDescriptors[setData->set];
             uint64_t& activeCountersBitMask = payload->activeCountersBitMask[setData->set];
             uint8_t* activeCounterRegister = payload->activeCounterRegister[setData->set];
+
+            // first pass, gather and tag all the counters.
+            for (int b = 0; b < (int)setData->binding_count; ++b)
+            {
+                SpvReflectDescriptorBinding& reflectionBinding = *setData->bindings[b];
+                const char* counterOwner = processCounterByName(reflectionBinding);
+                SpirvRegisterType implicitRegisterType = (SpirvRegisterType)((int)reflectionBinding.binding / (int)SpirvRegisterTypeShiftCount);
+                if (counterOwner != nullptr && implicitRegisterType != SpirvRegisterType::b)
+                {
+                    std::cerr << " Coalpy stuffs append consume counters in the first 32 bindings of descriptor set 0 (reserved for constant buffers)."
+                              << " Binding with name " << reflectionBinding.name << " has been parsed as a counter. "
+                              << " This binding lives out of the range of register space0. This means you have too many constant buffer resources" << std::endl;
+                    continue;
+                }
+
+                if (counterOwner == nullptr)
+                    continue;
+
+                bindingCounter[std::string(counterOwner)] = &reflectionBinding;
+                activeCountersBitMask |= 1 << reflectionBinding.binding;
+            }
+
+            // second pass register the bindings.
             for (int b = 0; b < (int)setData->binding_count; ++b)
             {
                 SpvReflectDescriptorBinding& reflectionBinding = *setData->bindings[b];
@@ -150,21 +173,7 @@ void VulkanShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSt
                     continue;
                 }
 
-                const char* counterOwner = processCounterByName(reflectionBinding);
-                if (counterOwner != nullptr && implicitRegisterType != SpirvRegisterType::b)
-                {
-                    std::cerr << " Coalpy stuffs append consume counters in the first 32 bindings of descriptor set 0 (reserved for constant buffers)."
-                              << " Binding with name " << reflectionBinding.name << " has been parsed as a counter. "
-                              << " This binding lives out of the range of register space0. This means you have too many constant buffer resources" << std::endl;
-                    continue;
-                }
-
-                if (counterOwner != nullptr)
-                {
-                    bindingCounter[std::string(counterOwner)] = &reflectionBinding;
-                    activeCountersBitMask |= 1 << reflectionBinding.binding;
-                }
-                else if (!bindingCounter.empty())
+                if ((activeCountersBitMask & (1 << reflectionBinding.binding)) == 0 && !bindingCounter.empty())
                 {
                     auto bindingCounterIt = bindingCounter.find(std::string(reflectionBinding.name));
                     if (bindingCounterIt != bindingCounter.end())
