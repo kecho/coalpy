@@ -1,1 +1,1 @@
-__all__ = [ "gpu" ]
+__all__ = [ "gpu", "utils" ]
