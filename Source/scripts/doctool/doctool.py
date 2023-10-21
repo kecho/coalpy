@@ -109,67 +109,77 @@ def html_class_doc_bar(class_name, class_obj, lvl = 0):
         </ul>"""
     return s
 
-def html_doc_bar(mod):
+def html_doc_bar(mod_list):
     print("""
-        <div class="sidebar">""", end="")
+        <div class="sidebar"><ul>""", end="")
 
-    publicsymbols = get_publicsymbols(mod, dir(mod))
-    funcsymbols = get_funcsymbols(publicsymbols)
-    typesymbols = get_subtypesymbols(publicsymbols)
-    enumsymbols = get_enumsymbols(publicsymbols)
-    print("""
-            <ul><li>""", end="")
-    print(html_doc_bar_item_name("Functions"), end="")
-    print("""
-                <ul>""", end="")
-    for (nm, s) in funcsymbols:
+    for mod in mod_list:
         print("""
-                    <li>""", end="")
-        print(html_doc_bar_item_name(nm, False), end="")
-        print("""
-                    </li>""", end="")
-    print("""
-                </ul>""", end="")
-
-    print("""
-            </li>""", end="")
-
-    print("""
             <li>""", end="")
-    print(html_doc_bar_item_name("Types"), end="")
-    print("""
-                <ul>""", end="")
-    for (nm, s) in typesymbols:
-        print("""
+        print(html_doc_bar_item_name(mod.__name__), end="")
+        publicsymbols = get_publicsymbols(mod, dir(mod))
+        funcsymbols = get_funcsymbols(publicsymbols)
+        typesymbols = get_subtypesymbols(publicsymbols)
+        enumsymbols = get_enumsymbols(publicsymbols)
+        print("""<ul>""", end="")
+        if len(funcsymbols) > 0:
+            print("""
                     <li>""", end="")
-        print(html_class_doc_bar(nm, s), end="")
-        print("""
-                    </li>""", end="")
-    print("""
-                </ul>""", end="")
-    print("""
-            </li>""", end="")
+            print(html_doc_bar_item_name("Functions"), end="")
+            print("""
+                        <ul>""", end="")
+            for (nm, s) in funcsymbols:
+                print("""
+                            <li>""", end="")
+                print(html_doc_bar_item_name(nm, False), end="")
+                print("""
+                            </li>""", end="")
+            print("""
+                        </ul>""", end="")
 
-    print("""
-            <li>""", end="")
-    print(html_doc_bar_item_name("Enums"), end="")
-    print("""
-                <ul>""", end="")
-    for (nm, s) in enumsymbols:
-        print("""
+            print("""
+                    </li>""", end="")
+
+        if len(typesymbols) > 0:
+            print("""
                     <li>""", end="")
-        print(html_doc_bar_item_name(nm, False), end="")
-        print("""
+            print(html_doc_bar_item_name("Types"), end="")
+            print("""
+                        <ul>""", end="")
+            for (nm, s) in typesymbols:
+                print("""
+                            <li>""", end="")
+                print(html_class_doc_bar(nm, s), end="")
+                print("""
+                            </li>""", end="")
+            print("""
+                        </ul>""", end="")
+            print("""
                     </li>""", end="")
-    print("""
-                </ul>""", end="")
-    print("""
-            </li>""", end="")
 
+        if len(enumsymbols) > 0:
+            print("""
+                    <li>""", end="")
+            print(html_doc_bar_item_name("Enums"), end="")
+            print("""
+                        <ul>""", end="")
+            for (nm, s) in enumsymbols:
+                print("""
+                            <li>""", end="")
+                print(html_doc_bar_item_name(nm, False), end="")
+                print("""
+                            </li>""", end="")
+            print("""
+                        </ul>""", end="")
+            print("""
+                    </li>""", end="")
+
+        print("""
+                </ul>""", end="")
+        print("""
+            </li>""", end="")
     print("""
-            </ul>""", end="")
-    print("""
-        </div>""", end="")
+        </ul></div>""", end="")
 
 def html_member_table(members):
     if len(members) == 0:
@@ -212,15 +222,16 @@ def html_recurse_doc(parent_name, obj_name, obj, subtitle=""):
         outs += html_recurse_doc(new_parent_name, nm, s, "enum") 
     return outs
 
-def html_doc_content(mod):
+def html_doc_content(mod_list):
     print("""
         <div class="content">""")
-    print(html_recurse_doc("", mod.__name__, mod))
+    for mod in mod_list:
+        print(html_recurse_doc("", mod.__name__, mod))
     print("""
         </div>""")
     
 
-def html_body(mod):
+def html_body(mod_list):
     print("""
     <body>
         <div class="header-root">
@@ -229,10 +240,10 @@ def html_body(mod):
         </div>
         <div class="body-root">
     """ % (date.today()), end="")
-    html_doc_bar(mod)
-    html_doc_content(mod)
-    print("""
-    </div></body>""", end="")
+    html_doc_bar(mod_list)
+    html_doc_content(mod_list)
+
+    print("""</div></body>""", end="")
 
 def html_footer():
     print("""
@@ -240,8 +251,9 @@ def html_footer():
 
 def gen_doc(module_name):
     mod = importlib.import_module(module_name)
+    mod_list = [importlib.import_module(module_name+"."+s) for s in mod.__all__]
     html_header(module_name)
-    html_body(mod)
+    html_body(mod_list)
     html_footer()
 
 if __name__ == "__main__":

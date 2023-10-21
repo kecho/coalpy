@@ -3,6 +3,28 @@ import numpy as nm
 import math as m
 
 class Profiler:
+    """
+    Profiler class. Instantiate to utilize helper function for profiling. 
+    Usage example:
+
+        profiler = coalpy.Profiler()
+        command_list = coalpy.gpu.CommandList()
+        profiler.begin_capture() # starts the capture
+
+        command_list.begin_marker("FirstMarker")
+            command_list.begin_marker("SecondMarker")
+            # .... some dispatches here ... 
+            command_list.end_marker()
+        command_list.end_marker()
+
+        coalpy.gpu.submit(command_list)
+        profiler.end_capture() # ends capture for all these submits
+
+        # then later we can draw it via build_ui
+        
+        profiler.build_ui(render_args.imgui, render_args.implot)
+
+    """
     def __init__(self):
         self.m_active = True
         self.m_gpu_queue = []
@@ -20,6 +42,13 @@ class Profiler:
         self.m_active = value
 
     def build_ui(self, imgui : g.ImguiBuilder, implot : g.ImplotBuilder):
+        """
+        Builds a UI for this profiler user coalpy's imgui and implot objects.
+
+        Parameters:
+            imgui : the imgui builder object. Found in the render_args of a on_render callback.
+            imgui : the implot builder object. Found in the render_args of a on_render callback.
+        """
         self.m_active = imgui.begin("Profiler", self.m_active)
         if self.m_active and imgui.begin_tab_bar("profiler-tab"):
             if imgui.begin_tab_item("Timeline"):
@@ -81,12 +110,19 @@ class Profiler:
             implot.end_plot()
 
     def begin_capture(self):
+        """
+        Begins the capture of all the following scheduled command lists. Note: you can write command lists outside this method.
+        Whats important is that all the coalpy.gpu.schedule calls are wrapped by a begin_capture and end_capture
+        """
         if not self.active:
             return
 
         g.begin_collect_markers()
 
     def end_capture(self):        
+        """
+        Ends the capture of all the previously scheduled command lists. See begin_capture.
+        """
         if not self.active:
             return
 
