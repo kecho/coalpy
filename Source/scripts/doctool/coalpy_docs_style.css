@@ -20,6 +20,7 @@ html
     position: fixed;
     overflow-y: auto;
     margin-left: 20px;
+    margin-bottom: 20px;
     padding-right: 20px;
 }
 

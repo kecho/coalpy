@@ -179,7 +179,7 @@ def html_doc_bar(mod_list):
         print("""
             </li>""", end="")
     print("""
-        </ul></div>""", end="")
+        </ul><br/><br/><br/><br/></div>""", end="")
 
 def html_member_table(members):
     if len(members) == 0:
