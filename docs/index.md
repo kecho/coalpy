@@ -14,10 +14,13 @@ python -m pip install coalpy
 
 ## Examples
 
-[GRR: GPU Renderer and Rasterizer](https://github.com/kecho/grr)
+[GRR: GPU Renderer and Rasterizer by Kleber Garcia](https://github.com/kecho/grr)
 ![image](https://github.com/kecho/grr/blob/master/docs/images/grr_main.png?raw=true)
 
-[Seascape](https://github.com/kecho/coalpy/blob/master/Source/scripts/coalpy/examples/)
+[LineSoftwareRasterizer: Hair strand compute rasterizer by John Parsaie](https://github.com/johnpars/LineSoftwareRasterizer)
+![image](https://github.com/johnpars/LineSoftwareRasterizer/blob/master/docs/images/HairImage.png?raw=true)
+
+[Seascape by Aleksander Alekseev](https://github.com/kecho/coalpy/blob/master/Source/scripts/coalpy/examples/)
 ![image](images/seascape.png?raw=true "Seascape shadertoy by Alexander Alekseev aka TDM - 2014.")
 
 
