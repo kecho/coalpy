@@ -93,6 +93,7 @@ struct BufferDesc : public ResourceDesc
     Format format = Format::RGBA_32_SINT;
     bool isConstantBuffer = false;
     bool isAppendConsume = false;
+    bool isIndirectArgs = false;
     int elementCount  = 1;
     int stride = 4;
 };

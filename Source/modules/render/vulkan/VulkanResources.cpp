@@ -77,6 +77,9 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, VkBuffer reso
         resource.bufferData.isStorageBuffer = true;
     }
 
+    if (desc.isIndirectArgs)
+        createInfo.usage |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
+
     createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; //not exposed, cant do async in coalpy yet.
     createInfo.queueFamilyIndexCount = 1;
     uint32_t desfaultQueueFam = m_device.graphicsFamilyQueueIndex();

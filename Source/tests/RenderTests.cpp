@@ -1433,6 +1433,7 @@ void testIndirectDispatch(TestContext& ctx)
     {
         BufferDesc desc;
         desc.elementCount = 1;
+        desc.isIndirectArgs = true;
         indirectArgsBuffer = device.createBuffer(desc);
         CPY_ASSERT(indirectArgsBuffer.valid());
     }

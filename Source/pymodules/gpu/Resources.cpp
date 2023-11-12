@@ -41,6 +41,7 @@ void Buffer::constructType(CoalpyTypeObject& o)
         stride (int): stride count in case of Structured type
         is_constant_buffer (Bool) : True if this can be used as a constant buffer. False otherwise.
         is_append_consume (Bool) : True if this can be used as an append consume buffer in the GPU. False otherwise. This wont work for raw buffers.
+        is_indirect_args (Bool) : True if this is an indirect argument buffer (when used as an argument for dispatch).
     )";
 
     t.tp_flags = Py_TPFLAGS_DEFAULT;
@@ -58,12 +59,13 @@ int Buffer::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     if (!moduleState.checkValidDevice())
         return -1;
 
-    static char* arguments[] = { "name", "mem_flags", "type", "format", "element_count", "stride", "is_constant_buffer", "is_append_consume", nullptr };
+    static char* arguments[] = { "name", "mem_flags", "type", "format", "element_count", "stride", "is_constant_buffer", "is_append_consume", "is_indirect_args", nullptr };
     const char* name = "<unknown>";
     render::BufferDesc buffDesc;
     int isConstantBuffer = 0;
     int isAppendConsume = 0;
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|siiiiipp", arguments,
+    int isIndirectArgs = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|siiiiippp", arguments,
             &name,
             &buffDesc.memFlags,
             &buffDesc.type,
@@ -71,12 +73,14 @@ int Buffer::init(PyObject* self, PyObject * vargs, PyObject* kwds)
             &buffDesc.elementCount,
             &buffDesc.stride,
             &isConstantBuffer,
-            &isAppendConsume))
+            &isAppendConsume,
+            &isIndirectArgs))
         return -1;
 
     buffDesc.name = name;
     buffDesc.isConstantBuffer = isConstantBuffer;
     buffDesc.isAppendConsume  = isAppendConsume;
+    buffDesc.isIndirectArgs  = isIndirectArgs;
     buffer->isAppendConsume = isAppendConsume;
 
     //validate
