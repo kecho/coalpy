@@ -616,11 +616,11 @@ void testCachedConstantBuffer(TestContext& ctx)
     buffDesc.memFlags = (MemFlags)MemFlag_GpuRead;
     buffDesc.format = Format::RGBA_32_SINT;
     buffDesc.elementCount = totalElements;
-    buffDesc.isConstantBuffer = true;
+    buffDesc.usage = BufferUsage_Constant;
     Buffer constantBuffer = device.createBuffer(buffDesc);
 
     buffDesc.memFlags = (MemFlags)(MemFlag_GpuRead | MemFlag_GpuWrite);
-    buffDesc.isConstantBuffer = false;
+    buffDesc.usage = {};
     Buffer resultBuffer = device.createBuffer(buffDesc);
 
     ResourceTableDesc tableDesc;
@@ -1068,7 +1068,7 @@ void testAppendConsumeBufferCreate(TestContext& ctx)
 
     BufferDesc bufferDesc;
     bufferDesc.type = BufferType::Structured;
-    bufferDesc.isAppendConsume = true;
+    bufferDesc.usage = BufferUsage_AppendConsume;
     bufferDesc.elementCount = 10;
     
     Buffer buffer1 = device.createBuffer(bufferDesc);
@@ -1114,7 +1114,7 @@ void testAppendConsumeBufferAppend(TestContext& ctx)
     BufferDesc bufferDesc;
     bufferDesc.type = BufferType::Structured;
     bufferDesc.format = Format::R32_SINT;
-    bufferDesc.isAppendConsume = true;
+    bufferDesc.usage = BufferUsage_AppendConsume;
     bufferDesc.elementCount = 10;
     
     Buffer acDummybuffer = device.createBuffer(bufferDesc);
@@ -1433,7 +1433,7 @@ void testIndirectDispatch(TestContext& ctx)
     {
         BufferDesc desc;
         desc.elementCount = 1;
-        desc.isIndirectArgs = true;
+        desc.usage = BufferUsage_IndirectArgs;
         indirectArgsBuffer = device.createBuffer(desc);
         CPY_ASSERT(indirectArgsBuffer.valid());
     }

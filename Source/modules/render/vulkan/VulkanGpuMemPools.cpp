@@ -103,7 +103,7 @@ VulkanUploadHeap VulkanGpuUploadPoolImpl::createNewHeap(const VulkanUploadDesc& 
     BufferDesc bufferDesc;
     bufferDesc.type = BufferType::Standard;
     bufferDesc.format = Format::R8_UINT;
-    bufferDesc.isConstantBuffer = true;
+    bufferDesc.usage = BufferUsage_Constant;
     bufferDesc.elementCount = std::max(2*desc.requestBytes, m_nextHeapSize);
     bufferDesc.memFlags = MemFlag_GpuRead;
     

@@ -405,14 +405,14 @@ Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpeci
         srvDesc.Buffer.Flags = desc.type == BufferType::Raw ? D3D12_BUFFER_SRV_FLAG_RAW : D3D12_BUFFER_SRV_FLAG_NONE;
     }
 
-    if (m_buffDesc.isAppendConsume)
+    if (m_buffDesc.isAppendConsume())
        m_counterHandle = m_device.counterPool().allocate();
 
     if ((desc.memFlags & MemFlag_GpuWrite) != 0)
     {
         auto& uavDesc = m_data.uavDesc;
         UINT defaultByteStride = 0;
-        if (desc.isAppendConsume)
+        if (desc.isAppendConsume())
         {
             uavDesc.Format = DXGI_FORMAT_UNKNOWN;
             defaultByteStride = getDxFormatStride(desc.format);
@@ -430,7 +430,7 @@ Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpeci
         uavDesc.Buffer.CounterOffsetInBytes = 0u;
         uavDesc.Buffer.Flags = desc.type == BufferType::Raw ? D3D12_BUFFER_UAV_FLAG_RAW : D3D12_BUFFER_UAV_FLAG_NONE;
     
-        if (desc.isAppendConsume)
+        if (desc.isAppendConsume())
         {
             uavDesc.Buffer.CounterOffsetInBytes = m_device.counterPool().counterOffset(m_counterHandle);
         }
@@ -444,7 +444,7 @@ Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpeci
                            ? getDxFormatStride(desc.format)
                            : desc.stride) * desc.elementCount;
 
-    if (m_buffDesc.isConstantBuffer)
+    if (m_buffDesc.isConstantBuffer())
         m_data.resDesc.Width = alignByte<UINT>(m_data.resDesc.Width, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
 
     m_data.resDesc.Height = 1u;
@@ -459,7 +459,7 @@ Dx12Buffer::Dx12Buffer(Dx12Device& device, const BufferDesc& desc, ResourceSpeci
 
 Dx12ResourceInitResult Dx12Buffer::init()
 {
-    if (m_buffDesc.type != BufferType::Structured && m_buffDesc.isAppendConsume)
+    if (m_buffDesc.type != BufferType::Structured && m_buffDesc.isAppendConsume())
         return Dx12ResourceInitResult{ ResourceResult::InvalidParameter, "Append consume buffers can only be of type structured." };
 
     auto parentResult = Dx12Resource::init();
@@ -474,14 +474,14 @@ Dx12ResourceInitResult Dx12Buffer::init()
             m_uavs.push_back(descriptorPool.allocateSrvOrUavOrCbv());
 		    m_device.device().CreateUnorderedAccessView(
 		    	m_data.resource,
-                m_buffDesc.isAppendConsume && m_counterHandle.valid()
+                m_buffDesc.isAppendConsume() && m_counterHandle.valid()
                 ? &m_device.counterPool().resource()
                 : nullptr,
                 &m_data.uavDesc, m_uavs.back().handle);
         }
     }
 
-    if (m_buffDesc.isConstantBuffer)
+    if (m_buffDesc.isConstantBuffer())
     {
         m_cbv = m_device.descriptors().allocateSrvOrUavOrCbv();
 
@@ -502,7 +502,7 @@ size_t Dx12Buffer::byteSize() const
 
 Dx12Buffer::~Dx12Buffer()
 {
-    if (m_buffDesc.isConstantBuffer)
+    if (m_buffDesc.isConstantBuffer())
         m_device.descriptors().release(m_cbv);
 }
 

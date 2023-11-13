@@ -38,6 +38,13 @@ enum MemFlags : int
     MemFlag_GpuWrite = 1 << 1,
 };
 
+enum BufferUsage : int
+{
+    BufferUsage_Constant = 1 << 0,
+    BufferUsage_AppendConsume = 1 << 1,
+    BufferUsage_IndirectArgs = 1 << 2
+};
+
 enum class BufferType
 {
     Standard,
@@ -91,9 +98,10 @@ struct BufferDesc : public ResourceDesc
 {
     BufferType type = BufferType::Standard;
     Format format = Format::RGBA_32_SINT;
-    bool isConstantBuffer = false;
-    bool isAppendConsume = false;
-    bool isIndirectArgs = false;
+    BufferUsage usage = {};
+    inline bool isConstantBuffer() const { return (usage & BufferUsage_Constant) != 0; }
+    inline bool isAppendConsume() const { return (usage & BufferUsage_AppendConsume) != 0; }
+    inline bool isIndirectArgs() const { return (usage & BufferUsage_IndirectArgs) != 0; }
     int elementCount  = 1;
     int stride = 4;
 };

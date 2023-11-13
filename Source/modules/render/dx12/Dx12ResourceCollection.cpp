@@ -125,7 +125,7 @@ BufferResult Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12
     outPtr->handle = resHandle;
 
     Buffer counterBuffer;
-    if (desc.isAppendConsume)
+    if (desc.isAppendConsume())
         counterBuffer = m_device.countersBuffer();
 
     const D3D12_RESOURCE_DESC& resDesc = outPtr->resource->d3dResDesc();

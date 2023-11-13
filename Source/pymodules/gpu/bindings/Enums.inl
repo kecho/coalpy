@@ -39,6 +39,12 @@ COALPY_ENUM(Clamp,  render::TextureAddressMode::Clamp, "Clamps the UV coordinate
 COALPY_ENUM(Border, render::TextureAddressMode::Border, "Samples a border when UVs are in the edge. Set the border color in the sampler object.")
 COALPY_ENUM_END(TextureAddressMode)
 
+COALPY_ENUM_BEGIN(BufferUsage,  "Buffer usage flags. Use enum values located at coalpy.gpu.BufferUsage")
+COALPY_ENUM(Constant,   render::BufferUsage_Constant, "Set flag when buffer is to  be bound in a dispatch called through the constant argument.")
+COALPY_ENUM(AppendConsume, render::BufferUsage_AppendConsume, "Set flag when a buffer is to be used as an append consume queue. In HLSL this corresponds to AppendStructuredBuffer")
+COALPY_ENUM(IndirectArgs,  render::BufferUsage_IndirectArgs, "Set flag when a buffer is to be used as an argument buffer on a dispatch call.")
+COALPY_ENUM_END(BufferUsage)
+
 #undef COALPY_ENUM_BEGIN
 #undef COALPY_ENUM
 #undef COALPY_ENUM_END

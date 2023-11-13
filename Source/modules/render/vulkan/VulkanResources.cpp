@@ -45,12 +45,12 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, VkBuffer reso
     if ((desc.memFlags & MemFlag_GpuWrite) != 0 && (desc.memFlags & MemFlag_GpuRead) != 0 && (specialFlags & ResourceSpecialFlag_CpuReadback) != 0)
         return BufferResult  { ResourceResult::InvalidHandle, Buffer(), "Unsupported special flags combined with mem flags." };
 
-    if (desc.isAppendConsume && desc.type != BufferType::Structured)
+    if (desc.isAppendConsume() && desc.type != BufferType::Structured)
         return BufferResult { ResourceResult::InvalidParameter, Buffer(), "Append consume buffers can only be of type Structured." };
 
     VkBufferCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    createInfo.usage |= desc.isConstantBuffer ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : (VkBufferUsageFlags)0u;
+    createInfo.usage |= desc.isConstantBuffer() ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : (VkBufferUsageFlags)0u;
     resource.memFlags = desc.memFlags;
     resource.specialFlags = specialFlags;
     resource.bufferData.isStorageBuffer = false;
@@ -60,7 +60,7 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, VkBuffer reso
             createInfo.usage |= (VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
         if ((desc.memFlags & MemFlag_GpuWrite) != 0 || (specialFlags & ResourceSpecialFlag_CpuReadback) != 0)
             createInfo.usage |= (VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-        if (desc.isConstantBuffer)
+        if (desc.isConstantBuffer())
             createInfo.usage |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
         createInfo.size = getVkFormatStride(desc.format) * desc.elementCount;
@@ -77,7 +77,7 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, VkBuffer reso
         resource.bufferData.isStorageBuffer = true;
     }
 
-    if (desc.isIndirectArgs)
+    if (desc.isIndirectArgs())
         createInfo.usage |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
 
     createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; //not exposed, cant do async in coalpy yet.
@@ -86,7 +86,7 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, VkBuffer reso
     createInfo.pQueueFamilyIndices = &desfaultQueueFam;
 
     auto& bufferData = resource.bufferData;
-    if (desc.isAppendConsume)
+    if (desc.isAppendConsume())
     {
         resource.counterHandle = m_device.counterPool().allocate();
         if (!resource.counterHandle.valid())

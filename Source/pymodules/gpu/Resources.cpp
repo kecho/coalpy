@@ -39,9 +39,7 @@ void Buffer::constructType(CoalpyTypeObject& o)
         format (int): Format of buffer. See coalpy.gpu.Format for available formats. This argument is ignored if buffer is Structured or Raw. Default format is RGBA_32_SINT
         element_count (int): number of elements this buffer will have
         stride (int): stride count in case of Structured type
-        is_constant_buffer (Bool) : True if this can be used as a constant buffer. False otherwise.
-        is_append_consume (Bool) : True if this can be used as an append consume buffer in the GPU. False otherwise. This wont work for raw buffers.
-        is_indirect_args (Bool) : True if this is an indirect argument buffer (when used as an argument for dispatch).
+        usage (Bool) : see coalpy.gpu.BufferUsage
     )";
 
     t.tp_flags = Py_TPFLAGS_DEFAULT;
@@ -59,29 +57,23 @@ int Buffer::init(PyObject* self, PyObject * vargs, PyObject* kwds)
     if (!moduleState.checkValidDevice())
         return -1;
 
-    static char* arguments[] = { "name", "mem_flags", "type", "format", "element_count", "stride", "is_constant_buffer", "is_append_consume", "is_indirect_args", nullptr };
+    static char* arguments[] = { "name", "mem_flags", "type", "format", "element_count", "stride", "usage", nullptr };
     const char* name = "<unknown>";
     render::BufferDesc buffDesc;
     int isConstantBuffer = 0;
     int isAppendConsume = 0;
     int isIndirectArgs = 0;
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|siiiiippp", arguments,
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "|siiiiii", arguments,
             &name,
             &buffDesc.memFlags,
             &buffDesc.type,
             &buffDesc.format,
             &buffDesc.elementCount,
             &buffDesc.stride,
-            &isConstantBuffer,
-            &isAppendConsume,
-            &isIndirectArgs))
+            &buffDesc.usage))
         return -1;
 
     buffDesc.name = name;
-    buffDesc.isConstantBuffer = isConstantBuffer;
-    buffDesc.isAppendConsume  = isAppendConsume;
-    buffDesc.isIndirectArgs  = isIndirectArgs;
-    buffer->isAppendConsume = isAppendConsume;
 
     //validate
     if (!validateEnum(moduleState, (int)buffDesc.type, (int)render::BufferType::Count, "type", "BufferType"))
