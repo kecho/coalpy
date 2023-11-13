@@ -2,7 +2,7 @@ main:
   - title: Tutorial
     url: /tutorial-intro
   - title: API Docs
-    url: /apidocs/0.52/coalpy.html
+    url: /apidocs/0.53/coalpy.html
   - title: GitHub
     url: https://github.com/kecho/coalpy
 
