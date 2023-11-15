@@ -20,6 +20,9 @@ struct DxcResultPayload
     IDxcBlob* pdbBlob;
     IDxcBlobWide* pdbName;
     SpirvReflectionData* spirvReflectionData;
+#if ENABLE_METAL
+    std::string mslSource;
+#endif // ENABLE_METAL
 };
 
 enum

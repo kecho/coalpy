@@ -516,30 +516,25 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                         else
                             spirVReflectionData->mainFn = args.mainFn;
                     }
-                    // ---
-                    {
-                        std::cout << "----------\n";
-                        spirv_cross::CompilerMSL msl((uint*)shaderOut->GetBufferPointer(), shaderOut->GetBufferSize() / 4);
-                        spirv_cross::ShaderResources resources = msl.get_shader_resources();
-                        std::cout << "Separate images\n";
-                        for (auto &resource : resources.separate_images)
-                        {
-                            printf("  %s\n", resource.name.c_str());
-                        }
-                        std::cout << "Storage images\n";
-                        for (auto &resource : resources.storage_images)
-                        {
-                            printf("  %s\n", resource.name.c_str());
-                        }
-                        std::cout << "----------\n";
-                        std::string msl_source = msl.compile();
-                        std::cout << msl_source << "\n";
-                        std::cout << "----------\n";
-
-                    }
-                    // ---
 
                     DxcResultPayload payload = {};
+#if ENABLE_METAL
+                    {
+                        spirv_cross::CompilerMSL msl((uint*)shaderOut->GetBufferPointer(), shaderOut->GetBufferSize() / 4);
+                        // spirv_cross::ShaderResources resources = msl.get_shader_resources();
+                        // for (auto &resource : resources.separate_images)
+                        // {
+                        //     printf("  %s\n", resource.name.c_str());
+                        // }
+                        // for (auto &resource : resources.storage_images)
+                        // {
+                        //     printf("  %s\n", resource.name.c_str());
+                        // }
+                        payload.mslSource = msl.compile();
+
+                    }
+#endif // ENABLE_METAL
+
                     payload.resultBlob = &(*shaderOut);
                     payload.pdbBlob = pdbOut == nullptr ? nullptr : &(*pdbOut);
                     payload.pdbName = pdbName == nullptr ? nullptr : &(*pdbName);
