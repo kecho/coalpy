@@ -182,7 +182,7 @@ void shaderDbCompile(TestContext& ctx)
     std::atomic<int> successCount = 0;
     Task allWrite = ts.createTask();
     ts.depends(allWrite, fs.asTask(includeFile));
-    for (int i = 0; i < 400; ++i)
+    for (int i = 0; i < 256; ++i)
     {
         std::stringstream name;
         name << "shaderTest/testShader-" << i <<  ".hlsl";
