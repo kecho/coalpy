@@ -243,7 +243,7 @@ local spirvcross = StaticLibrary {
     Sources = {
         Glob {
             Dir = SpirvCrossDir,
-            Extensions = { ".cpp", ".h", ".c" },
+            Extensions = { ".hpp", ".cpp", ".h", ".c" },
             Recursive = true
         }
     },
