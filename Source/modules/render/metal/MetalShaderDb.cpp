@@ -17,7 +17,12 @@ MetalShaderDb::~MetalShaderDb()
 
 void MetalShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderState& shaderState)
 {
-    // TODO: Do actual stuff in here
+    if (shaderState.mslData == nullptr)
+    {
+        if (m_desc.onErrorFn != nullptr)
+            m_desc.onErrorFn(handle, shaderState.debugName.c_str(), "No Metal Shading Language data found.");
+        return;
+    }
 }
 
 }

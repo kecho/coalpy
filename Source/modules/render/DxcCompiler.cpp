@@ -23,6 +23,7 @@
 
 #include <dxcapi.h>
 #include "SpirvReflectionData.h"
+#include "metal/MSLData.h"
 #include <spirv_msl.hpp>
 
 namespace coalpy
@@ -518,8 +519,12 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                     }
 
                     DxcResultPayload payload = {};
+
+                    MSLData* mslData = nullptr;
 #if ENABLE_METAL
+                    if (m_desc.platform == render::DevicePlat::Metal)
                     {
+                        mslData = new MSLData();
                         spirv_cross::CompilerMSL msl((uint*)shaderOut->GetBufferPointer(), shaderOut->GetBufferSize() / 4);
                         // spirv_cross::ShaderResources resources = msl.get_shader_resources();
                         // for (auto &resource : resources.separate_images)
@@ -530,11 +535,11 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                         // {
                         //     printf("  %s\n", resource.name.c_str());
                         // }
-                        payload.mslSource = msl.compile();
-
+                        mslData->mslSource = msl.compile();
                     }
 #endif // ENABLE_METAL
 
+                    payload.mslData = mslData;
                     payload.resultBlob = &(*shaderOut);
                     payload.pdbBlob = pdbOut == nullptr ? nullptr : &(*pdbOut);
                     payload.pdbName = pdbName == nullptr ? nullptr : &(*pdbName);

@@ -60,6 +60,7 @@ protected:
         std::string debugName;
         IDxcBlob* shaderBlob;
         SpirvReflectionData* spirVReflectionData;
+        MSLData* mslData;
         std::atomic<bool> compiling;
         CompileState* compileState;
         std::atomic<ShaderGPUPayload> payload;
@@ -72,6 +73,7 @@ protected:
             debugName = {};
             shaderBlob = nullptr;
             spirVReflectionData = nullptr;
+            mslData = nullptr;
             compiling = false;
             compileState = nullptr;
             payload = nullptr;

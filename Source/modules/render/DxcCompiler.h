@@ -13,6 +13,7 @@ namespace coalpy
 
 class ByteBuffer;
 class SpirvReflectionData;
+class MSLData;
 
 struct DxcResultPayload
 {
@@ -20,9 +21,7 @@ struct DxcResultPayload
     IDxcBlob* pdbBlob;
     IDxcBlobWide* pdbName;
     SpirvReflectionData* spirvReflectionData;
-#if ENABLE_METAL
-    std::string mslSource;
-#endif // ENABLE_METAL
+    MSLData* mslData;
 };
 
 enum

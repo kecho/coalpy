@@ -19,6 +19,8 @@
 #include <windows.h>
 #elif defined(__linux__)
 #include <dlfcn.h>
+#elif defined(__APPLE__)
+#include "metal/MSLData.h"
 #endif
 #include <dxcapi.h>
 
@@ -373,6 +375,11 @@ void BaseShaderDb::prepareCompileJobs(CompileState& compileState)
                 {
                     payload.spirvReflectionData->AddRef();
                     shaderState->spirVReflectionData = payload.spirvReflectionData;
+                }
+                if (payload.mslData != nullptr)
+                {
+                    payload.mslData->AddRef();
+                    shaderState->mslData = payload.mslData;
                 }
             }
             shaderState->ready = true;
