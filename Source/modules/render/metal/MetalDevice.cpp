@@ -183,7 +183,7 @@ MetalDevice::MetalDevice(const DeviceConfig& config)
     m_resources(nullptr)
 {
     // m_metalWorkInfos = new MetalWorkInformationMap;
-    // m_runtimeInfo = { ShaderModel::End };
+    m_runtimeInfo = { ShaderModel::End };
     // m_mtlMemProps = {};
 
     // MetalBitMask extensions = 
@@ -232,13 +232,13 @@ MetalDevice::MetalDevice(const DeviceConfig& config)
     // if (m_queueFamIndex == -1)
     //     std::cerr << "Could not find a compute queue for device selected" << std::endl;
 
-    // if (config.shaderDb)
-    // {
-    //     m_shaderDb = static_cast<MetalShaderDb*>(config.shaderDb);
-    //     CPY_ASSERT_MSG(m_shaderDb->parentDevice() == nullptr, "shader database can only belong to 1 and only 1 device");
+    if (config.shaderDb)
+    {
+        m_shaderDb = static_cast<MetalShaderDb*>(config.shaderDb);
+        CPY_ASSERT_MSG(m_shaderDb->parentDevice() == nullptr, "shader database can only belong to 1 and only 1 device");
         
-    //     m_shaderDb->setParentDevice(this, &m_runtimeInfo);
-    // }
+        m_shaderDb->setParentDevice(this, &m_runtimeInfo);
+    }
 
     // mtlGetPhysicalDeviceMemoryProperties(m_mtlPhysicalDevice, &m_mtlMemProps);
     // mtlGetPhysicalDeviceProperties(m_mtlPhysicalDevice, &m_mtlPhysicalProps);

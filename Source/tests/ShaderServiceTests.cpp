@@ -4,12 +4,15 @@
 #include <coalpy.files/IFileSystem.h>
 #include <coalpy.files/Utils.h>
 #include <coalpy.render/IShaderDb.h>
+#include <coalpy.render/IDevice.h>
 #include <coalpy.render/../../Config.h>
 #include <sstream>
 #include <iostream>
 #include <atomic>
 #include <string.h>
 #include <coalpy.render/../../DxcCompiler.h>
+
+using namespace coalpy::render;
 
 namespace coalpy
 {
@@ -20,6 +23,7 @@ public:
     ITaskSystem* ts = nullptr;
     IFileSystem* fs = nullptr;
     IShaderDb* db = nullptr;
+    IDevice* device = nullptr;
     ShaderDbDesc dbDesc = {};
     std::string rootDir;
     virtual ~ShaderServiceContext() {}
@@ -297,6 +301,14 @@ static TestContext* createContext()
         ShaderDbDesc desc = { platform, ApplicationContext::get().resourceRootDir(), testContext->fs, testContext->ts, nullptr };
         testContext->dbDesc = desc;
         testContext->db = IShaderDb::create(desc);
+    }
+
+    {
+        DeviceConfig config;
+        config.shaderDb = testContext->db;
+        config.platform = platform;
+        config.flags = DeviceFlags::EnableDebug;
+        testContext->device = IDevice::create(config);
     }
 
     return testContext;
