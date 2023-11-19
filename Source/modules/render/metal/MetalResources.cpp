@@ -145,23 +145,36 @@ TextureResult MetalResources::createTexture(const TextureDesc& desc)
     resource.type = MetalResource::Type::Texture;
 
     // Create the texture descriptor
-    MTLTextureDescriptor *textureDescriptor = [[MTLTextureDescriptor alloc] init];
-    textureDescriptor.textureType = (MTLTextureType)g_typeTranslations[(int)desc.type];
+    MTLTextureDescriptor *texDesc = [[MTLTextureDescriptor alloc] init];
+    texDesc.textureType = (MTLTextureType)g_typeTranslations[(int)desc.type];
     if (g_formatTranslations[(int)desc.format] == -1)
     {
         // TODO (Apoorva): Do something better than an assert if a texture
         // format is not supported.
         CPY_ASSERT(false);
     }
-    textureDescriptor.pixelFormat = (MTLPixelFormat)g_formatTranslations[(int)desc.format];
+    texDesc.pixelFormat = (MTLPixelFormat)g_formatTranslations[(int)desc.format];
 
-    textureDescriptor.width = desc.width;
-    textureDescriptor.height = desc.height;
-    textureDescriptor.usage = MTLTextureUsageShaderRead;
+    texDesc.width = desc.width;
+    texDesc.height = desc.height;
+    texDesc.arrayLength = desc.depth;
+    texDesc.mipmapLevelCount = desc.mipLevels;
+    texDesc.usage = MTLTextureUsageShaderRead;
     if (desc.isRtv)
     {
-        textureDescriptor.usage |= MTLTextureUsageShaderWrite;
+        texDesc.usage |= MTLTextureUsageShaderWrite;
     }
+
+    resource.textureData.mtlTexture = [m_device.mtlDevice() newTextureWithDescriptor:texDesc];
+    CPY_ASSERT(resource.textureData.mtlTexture != nil);
+
+    m_workDb.registerResource(
+        handle,
+        desc.memFlags,
+        ResourceGpuState::Default,
+        desc.width, desc.height, desc.depth,
+        desc.mipLevels, desc.depth);
+        // ^ TODO (Apoorva): desc.depth is used twice. Not sure if this is correct.
 
     return TextureResult { ResourceResult::Ok, { handle.handleId } };
 }

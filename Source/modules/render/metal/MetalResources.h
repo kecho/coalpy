@@ -41,7 +41,7 @@ struct MetalResource
 
     struct TextureData
     {
-        id<MTLTexture> mtlBuffer;
+        id<MTLTexture> mtlTexture;
     };
 
     ResourceHandle handle;
