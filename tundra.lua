@@ -58,7 +58,7 @@ Build {
             ReplaceEnv = {
                 -- Ideally the MetalKit framework should not need to be linked.
                 -- But for some reason, MTLCreateSystemDefaultDevice() returns nil.
-                LD = "$(CXX) -framework CoreFoundation -framework CoreServices -framework Metal -framework MetalKit"
+                LD = "$(CXX) -framework Foundation -framework CoreFoundation -framework CoreServices -framework Metal -framework MetalKit"
             },
         },
     },

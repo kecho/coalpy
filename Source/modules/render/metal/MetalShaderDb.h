@@ -2,8 +2,15 @@
 
 #include <BaseShaderDb.h>
 
+@protocol MTLLibrary;
+
 namespace coalpy
 {
+
+struct MetalPayload
+{
+    id<MTLLibrary> mtlLibrary = {};
+};
 
 class MetalShaderDb : public BaseShaderDb
 {

@@ -526,6 +526,15 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                     {
                         mslData = new MSLData();
                         spirv_cross::CompilerMSL msl((uint*)shaderOut->GetBufferPointer(), shaderOut->GetBufferSize() / 4);
+                        auto entryPoints = msl.get_entry_points_and_stages();
+                        // TODO (Apoorva):
+                        // There is an assumption here, that there is exactly
+                        // one entry point. I'm not sure what to do if a file
+                        // contains multiple entry points. It seems that
+                        // SpirvReflectionData.h also only has support for one
+                        // main function.
+                        CPY_ASSERT(entryPoints.size() == 1);
+                        mslData->mainFn = entryPoints[0].name;
                         // spirv_cross::ShaderResources resources = msl.get_shader_resources();
                         // for (auto &resource : resources.separate_images)
                         // {

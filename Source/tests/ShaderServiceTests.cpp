@@ -299,6 +299,10 @@ static TestContext* createContext()
 
     {
         ShaderDbDesc desc = { platform, ApplicationContext::get().resourceRootDir(), testContext->fs, testContext->ts, nullptr };
+        desc.onErrorFn = [](ShaderHandle handle, const char* shaderName, const char* shaderErrorStr)
+        {
+            std::cerr << shaderName << ":" << shaderErrorStr << std::endl;
+        };
         testContext->dbDesc = desc;
         testContext->db = IShaderDb::create(desc);
     }

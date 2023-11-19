@@ -19,6 +19,7 @@ public:
     void Release();
 
     std::string mslSource;
+    std::string mainFn;
 private:
     bool m_valid;
     int m_refCount;
