@@ -54,7 +54,7 @@ void MetalShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSta
     }
     payload->mtlLibrary = library;
 
-    // Retrieve the entry point function from the library
+    // Get the entry point function from the library
     NSString* mainFn = [NSString stringWithUTF8String:shaderState.mslData->mainFn.c_str()];
     id<MTLFunction> computeFunction = [library newFunctionWithName:mainFn];
     if (!computeFunction) {
@@ -63,6 +63,14 @@ void MetalShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSta
         return;
     }
 
+    // Create a compute pipeline state
+    id<MTLComputePipelineState> pipelineState = [metalDevice.mtlDevice() newComputePipelineStateWithFunction:computeFunction error:&error];
+    if (!pipelineState) {
+        if (m_desc.onErrorFn != nullptr)
+            m_desc.onErrorFn(handle, shaderState.debugName.c_str(), "Error creating compute pipeline state.");
+        return;
+    }
+    payload->mtlPipelineState = pipelineState;
 }
 
 }

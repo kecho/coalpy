@@ -3,6 +3,7 @@
 #include <BaseShaderDb.h>
 
 @protocol MTLLibrary;
+@protocol MTLComputePipelineState;
 
 namespace coalpy
 {
@@ -10,6 +11,7 @@ namespace coalpy
 struct MetalPayload
 {
     id<MTLLibrary> mtlLibrary = {};
+    id<MTLComputePipelineState> mtlPipelineState = {};
 };
 
 class MetalShaderDb : public BaseShaderDb
