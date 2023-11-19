@@ -34,11 +34,11 @@ extern void renderSuite(TestSuiteDesc& suite);
 }
 
 CreateSuiteFn g_suites[] = {
-    // coreSuite,
-    // taskSystemSuite,
-    // fileSystemSuite,
+    coreSuite,
+    taskSystemSuite,
+    fileSystemSuite,
     shaderSuite,
-    // renderSuite
+    renderSuite
 };
 
 bool g_enableErrorOutput = true;

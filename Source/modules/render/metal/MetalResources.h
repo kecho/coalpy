@@ -41,6 +41,7 @@ struct MetalResource
 
     struct TextureData
     {
+        id<MTLTexture> mtlBuffer;
     };
 
     ResourceHandle handle;
@@ -65,6 +66,7 @@ public:
     ~MetalResources();
 
     BufferResult createBuffer(const BufferDesc& desc, ResourceSpecialFlags specialFlags = ResourceSpecialFlag_None);
+    TextureResult createTexture(const TextureDesc& desc);
 
     void release(ResourceHandle handle);
 

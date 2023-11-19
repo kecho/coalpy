@@ -360,9 +360,7 @@ MarkerResults MetalDevice::endCollectMarkers()
 
 TextureResult MetalDevice::createTexture(const TextureDesc& desc)
 {
-    return TextureResult { ResourceResult::Ok, { -1 } };
-    // TODO (Apoorva)
-    // return m_resources->createTexture(desc);
+    return m_resources->createTexture(desc);
 }
 
 TextureResult MetalDevice::recreateTexture(Texture texture, const TextureDesc& desc)
@@ -372,11 +370,9 @@ TextureResult MetalDevice::recreateTexture(Texture texture, const TextureDesc& d
     // return m_resources->recreateTexture(texture, desc);
 }
 
-BufferResult  MetalDevice::createBuffer (const BufferDesc& config)
+BufferResult MetalDevice::createBuffer (const BufferDesc& config)
 {
     return m_resources->createBuffer(config);
-    // TODO (Apoorva)
-    // return m_resources->createBuffer(config, MTL_NULL_HANDLE);
 }
 
 SamplerResult MetalDevice::createSampler (const SamplerDesc& config)
