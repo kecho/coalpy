@@ -384,9 +384,7 @@ SamplerResult MetalDevice::createSampler (const SamplerDesc& config)
 
 InResourceTableResult MetalDevice::createInResourceTable  (const ResourceTableDesc& config)
 {
-    return InResourceTableResult { ResourceResult::Ok, { -1 } };
-    // TODO (Apoorva)
-    // return m_resources->createInResourceTable(config);
+    return m_resources->createInResourceTable(config);
 }
 
 OutResourceTableResult MetalDevice::createOutResourceTable (const ResourceTableDesc& config)

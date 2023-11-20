@@ -82,6 +82,7 @@ MetalResources::MetalResources(MetalDevice& device, WorkBundleDb& workDb) :
 
 MetalResources::~MetalResources()
 {
+    // TODO (Apoorva): Release resources and tables
     // m_container.forEach([this](ResourceHandle handle, MetalResource& resource)
     // {
     //     releaseResourceInternal(handle, resource);
@@ -177,6 +178,78 @@ TextureResult MetalResources::createTexture(const TextureDesc& desc)
         // ^ TODO (Apoorva): desc.depth is used twice. Not sure if this is correct.
 
     return TextureResult { ResourceResult::Ok, { handle.handleId } };
+}
+
+static bool queryResources(
+    const ResourceHandle* handles,
+    int counts,
+    const HandleContainer<ResourceHandle, MetalResource, MetalResources::MaxResources>& container,
+    std::vector<const MetalResource*>& outResources
+)
+{
+    outResources.reserve(counts);
+    for (int i = 0; i < counts; ++i)
+    {
+        if (!container.contains(handles[i]))
+        {
+            return false;
+        }
+        
+        const MetalResource& resource = container[handles[i]];
+        outResources.push_back(&resource);
+    }
+
+    return true;
+}
+
+static ResourceTable createAndFillTable(
+    MetalResourceTable::Type tableType,
+    const MetalResource** resources,
+    const int* uavTargetMips,
+    HandleContainer<ResourceTable, MetalResourceTable, MetalResources::MaxResources>* tables
+)
+{
+    ResourceTable handle;
+    MetalResourceTable& table = tables->allocate(handle);
+    table.type = tableType;
+
+    // TODO (Apoorva): Do stuff relevant to the Metal API here
+    
+    return handle;
+}
+
+static void trackResources(
+    const MetalResource** resources,
+    int count,
+    ResourceTable table,
+    HandleContainer<ResourceTable, MetalResourceTable, MetalResources::MaxResources>& tables
+)
+{
+    MetalResourceTable& tableContainer = tables[table];
+    for (int i = 0; i < count; ++i)
+    {
+        const MetalResource& resource = *resources[i];
+        if ((resource.specialFlags & ResourceSpecialFlag_TrackTables) == 0)
+            continue;
+
+        std::set<ResourceTable>& trackedTables = const_cast<std::set<ResourceTable>&>(resource.trackedTables);
+        trackedTables.insert(table);
+        tableContainer.trackedResources[resource.handle] = i;
+    }
+}
+
+InResourceTableResult MetalResources::createInResourceTable(const ResourceTableDesc& desc)
+{
+    std::unique_lock lock(m_mutex);
+    std::vector<const MetalResource*> resources;
+
+    if (!queryResources(desc.resources, desc.resourcesCount, m_container, resources))
+        return InResourceTableResult { ResourceResult::InvalidHandle, InResourceTable(), "Passed an invalid resource to in resource table" };
+
+    ResourceTable handle = createAndFillTable(MetalResourceTable::Type::In, resources.data(), desc.uavTargetMips, &m_tables);
+    trackResources(resources.data(), (int)resources.size(), handle, m_tables);
+    m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, false);
+    return InResourceTableResult { ResourceResult::Ok, InResourceTable { handle.handleId } };
 }
 
 }
