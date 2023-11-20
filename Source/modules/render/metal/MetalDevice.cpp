@@ -452,7 +452,7 @@ DownloadStatus MetalDevice::getDownloadStatus(WorkHandle bundle, ResourceHandle 
 
 void MetalDevice::release(ResourceHandle resource)
 {
-    // m_resources->release(resource);
+    m_resources->release(resource);
 }
 
 void MetalDevice::release(ResourceTable table)

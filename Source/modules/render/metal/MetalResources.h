@@ -19,7 +19,7 @@ class WorkBundleDb;
 enum ResourceSpecialFlags : int
 {
     ResourceSpecialFlag_None = 0,
-    // ResourceSpecialFlag_NoDeferDelete = 1 << 0,
+    ResourceSpecialFlag_NoDeferDelete = 1 << 0,
     // ResourceSpecialFlag_CanDenyShaderResources = 1 << 1,
     ResourceSpecialFlag_TrackTables = 1 << 2,
     // ResourceSpecialFlag_CpuReadback = 1 << 3,
