@@ -86,6 +86,7 @@ public:
     TextureResult createTexture(const TextureDesc& desc);
     // SamplerResult  createSampler (const SamplerDesc& desc);
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
+    OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);
 
     void release(ResourceHandle handle);
 

@@ -252,6 +252,20 @@ InResourceTableResult MetalResources::createInResourceTable(const ResourceTableD
     return InResourceTableResult { ResourceResult::Ok, InResourceTable { handle.handleId } };
 }
 
+OutResourceTableResult MetalResources::createOutResourceTable(const ResourceTableDesc& desc)
+{
+    std::unique_lock lock(m_mutex);
+    std::vector<const MetalResource*> resources;
+
+    if (!queryResources(desc.resources, desc.resourcesCount, m_container, resources))
+        return OutResourceTableResult { ResourceResult::InvalidHandle, OutResourceTable(), "Passed an invalid resource to out resource table" };
+
+    ResourceTable handle = createAndFillTable(MetalResourceTable::Type::Out, resources.data(), desc.uavTargetMips, &m_tables);
+    trackResources(resources.data(), (int)resources.size(), handle, m_tables);
+    m_workDb.registerTable(handle, desc.name.c_str(), desc.resources, desc.resourcesCount, true);
+    return OutResourceTableResult { ResourceResult::Ok, OutResourceTable { handle.handleId } };
+}
+
 }
 }
 #endif // ENABLE_METAL
