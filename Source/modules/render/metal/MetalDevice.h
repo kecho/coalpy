@@ -22,7 +22,7 @@ namespace render
 // class MetalDescriptorSetPools;
 // class MetalReadbackBufferPool;
 class MetalResources;
-// class MetalQueues;
+class MetalQueues;
 // class MetalCounterPool;
 // class MetalEventPool;
 // class MetalFencePool;
@@ -71,7 +71,7 @@ public:
 
     // bool findMemoryType(uint32_t typeFilter, MtlMemoryPropertyFlags properties, uint32_t& outMemType);
 
-    // MetalQueues& queues() { return *m_queues; }
+    MetalQueues& queues() { return *m_queues; }
     // MetalResources& resources() { return *m_resources; }
     // MetalEventPool& eventPool() { return *m_eventPool; }
     // MetalFencePool& fencePool() { return *m_fencePool; }
@@ -97,7 +97,7 @@ private:
     // MtlPhysicalDeviceProperties m_mtlPhysicalProps;
     id<MTLDevice> m_mtlDevice;
     // MetalDescriptorSetPools* m_descriptorSetPools;
-    // MetalQueues* m_queues;
+    MetalQueues* m_queues;
     MetalResources* m_resources;
     // MetalReadbackBufferPool* m_readbackPool;
     // MetalEventPool* m_eventPool;

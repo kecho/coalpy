@@ -437,6 +437,7 @@ void testRenderMemoryDownload(TestContext& ctx)
     buffDesc.format = Format::R32_UINT;
     buffDesc.elementCount = totalElements;
     Buffer buff = device.createBuffer(buffDesc);
+    CPY_ASSERT(buff.valid());
     
     ResourceTableDesc tableDesc;
     tableDesc.resources = &buff;
