@@ -12,8 +12,8 @@
 // #include "MetalDisplay.h"
 #include "MetalResources.h"
 // #include "MetalReadbackBufferPool.h"
-// #include "MetalWorkBundle.h"
-// #include "MetalQueues.h"
+#include "MetalWorkBundle.h"
+#include "MetalQueues.h"
 // #include "MetalEventPool.h"
 // #include "MetalFencePool.h"
 // #include "MetalCounterPool.h"
@@ -245,7 +245,7 @@ MetalDevice::MetalDevice(const DeviceConfig& config)
 
     // m_fencePool = new MetalFencePool(*this);
     // m_eventPool = new MetalEventPool(*this);
-    // m_queues =  new MetalQueues(*this, *m_fencePool, *m_eventPool);
+    m_queues =  new MetalQueues(*this);
     // m_gc = new MetalGc(125, *this);
     m_resources = new MetalResources(*this, m_workDb);
     // m_descriptorSetPools = new MetalDescriptorSetPools(*this);
@@ -300,8 +300,8 @@ MetalDevice::~MetalDevice()
     // m_gc = nullptr;
     // delete m_counterPool;
     // m_counterPool = nullptr;
-    // delete m_queues;
-    // m_queues = nullptr;
+    delete m_queues;
+    m_queues = nullptr;
     // delete m_eventPool;
     // m_eventPool = nullptr;
     // delete m_fencePool;
@@ -489,15 +489,15 @@ ScheduleStatus MetalDevice::internalSchedule(CommandList** commandLists, int lis
     ScheduleStatus status;
 //     status.workHandle = workHandle;
     
-//     MetalWorkBundle metalWorkBundle(*this);
-//     {
-//         m_workDb.lock();
-//         WorkBundle& workBundle = m_workDb.unsafeGetWorkBundle(workHandle);
-//         metalWorkBundle.load(workBundle);
-//         m_workDb.unlock();
-//     }
+    MetalWorkBundle metalWorkBundle(*this);
+    {
+        m_workDb.lock();
+        WorkBundle& workBundle = m_workDb.unsafeGetWorkBundle(workHandle);
+        metalWorkBundle.load(workBundle);
+        m_workDb.unlock();
+    }
 
-//     MetalFenceHandle fenceValue = metalWorkBundle.execute(commandLists, listCounts);
+    int fenceValue = metalWorkBundle.execute(commandLists, listCounts);
 
 //     {
 //         m_workDb.lock();

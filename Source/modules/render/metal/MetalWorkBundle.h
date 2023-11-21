@@ -22,7 +22,7 @@ class MetalWorkBundle
 public:
     MetalWorkBundle(MetalDevice& device) : m_device(device) {}
     bool load(const WorkBundle& workBundle);
-    // MetalFenceHandle execute(CommandList** commandLists, int commandListsCount);
+    int execute(CommandList** commandLists, int commandListsCount);
     // void getDownloadResourceMap(MetalDownloadResourceMap& downloadMap);
 
 private:
