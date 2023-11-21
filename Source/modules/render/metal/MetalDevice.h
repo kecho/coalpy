@@ -85,6 +85,7 @@ public:
     // BitMask enabledLayers() const { return m_Layers; }
     // BitMask enabledExts() const { return m_Extensions; }
     // BitMask enabledDeviceExts() const { return m_DeviceExtensions; }
+    MetalShaderDb& shaderDb() { return *m_shaderDb; }
 
 private:
     // void createSwapchain();

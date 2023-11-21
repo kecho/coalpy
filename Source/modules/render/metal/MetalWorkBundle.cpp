@@ -3,13 +3,38 @@
 
 #include <Metal/Metal.h>
 #include "MetalDevice.h"
-#include "MetalWorkBundle.h"
+#include "MetalShaderDb.h"
 #include "MetalQueues.h"
+#include "MetalWorkBundle.h"
 
 namespace coalpy
 {
 namespace render
 {
+
+static void buildComputeCmd(
+    MetalDevice& device,
+    const unsigned char* data,
+    const AbiComputeCmd* computeCmd,
+    const CommandInfo& cmdInfo,
+    id<MTLCommandBuffer> cmdBuffer
+)
+{
+    MetalShaderDb& db = device.shaderDb();
+    db.resolve(computeCmd->shader);
+    MetalPayload* payload = db.getMetalPayload(computeCmd->shader);
+
+    id<MTLComputeCommandEncoder> encoder = [cmdBuffer computeCommandEncoder];
+    [encoder setComputePipelineState:payload->mtlPipelineState];
+
+    MTLSize gridSize = MTLSizeMake(computeCmd->x, computeCmd->y, computeCmd->z);
+    // TODO (Apoorva): Where do we get the threadgroup size from? Do we need to
+    // do this in SPIRV-Cross? Until then, use this dummy value:
+    MTLSize threadgroupSize = MTLSizeMake(8, 8, 1);
+
+    [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+    [encoder endEncoding];
+}
 
 bool MetalWorkBundle::load(const WorkBundle& workBundle)
 {
@@ -23,7 +48,7 @@ int MetalWorkBundle::execute(CommandList** cmdLists, int cmdListsCount)
     auto& queues = m_device.queues();
     id<MTLCommandQueue> cmdQueue = queues.cmdQueue(workType);
 
-    id <MTLCommandBuffer> cmdBuffer = [cmdQueue commandBuffer];
+    id<MTLCommandBuffer> cmdBuffer = [cmdQueue commandBuffer];
     for (int i = 0; i < cmdListsCount; ++i)
     {
         CommandList* cmdList = cmdLists[i];
@@ -39,12 +64,12 @@ int MetalWorkBundle::execute(CommandList** cmdLists, int cmdListsCount)
             AbiCmdTypes cmdType = *((AbiCmdTypes*)cmdBlob);
             switch (cmdType)
             {
-            // case AbiCmdTypes::Compute:
-            //     {
-            //         const auto* abiCmd = (const AbiComputeCmd*)cmdBlob;
-            //         buildComputeCmd(listData, abiCmd, cmdInfo, outList);
-            //     }
-            //     break;
+            case AbiCmdTypes::Compute:
+                {
+                    const auto* abiCmd = (const AbiComputeCmd*)cmdBlob;
+                    buildComputeCmd(m_device, listData, abiCmd, cmdInfo, cmdBuffer);
+                }
+                break;
             // case AbiCmdTypes::Copy:
             //     {
             //         const auto* abiCmd = (const AbiCopyCmd*)cmdBlob;
