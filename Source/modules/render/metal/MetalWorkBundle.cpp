@@ -28,9 +28,11 @@ static void buildComputeCmd(
     [encoder setComputePipelineState:payload->mtlPipelineState];
 
     MTLSize gridSize = MTLSizeMake(computeCmd->x, computeCmd->y, computeCmd->z);
-    // TODO (Apoorva): Where do we get the threadgroup size from? Do we need to
-    // do this in SPIRV-Cross? Until then, use this dummy value:
-    MTLSize threadgroupSize = MTLSizeMake(8, 8, 1);
+    MTLSize threadgroupSize = MTLSizeMake(
+        payload->threadGroupSizeX,
+        payload->threadGroupSizeY,
+        payload->threadGroupSizeZ
+    );
 
     [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
     [encoder endEncoding];

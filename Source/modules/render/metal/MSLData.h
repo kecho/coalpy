@@ -20,6 +20,9 @@ public:
 
     std::string mslSource;
     std::string mainFn;
+    int threadGroupSizeX;
+    int threadGroupSizeY;
+    int threadGroupSizeZ;
 private:
     bool m_valid;
     int m_refCount;

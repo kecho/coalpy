@@ -12,6 +12,9 @@ struct MetalPayload
 {
     id<MTLLibrary> mtlLibrary = {};
     id<MTLComputePipelineState> mtlPipelineState = {};
+    int threadGroupSizeX;
+    int threadGroupSizeY;
+    int threadGroupSizeZ;
 };
 
 class MetalShaderDb : public BaseShaderDb

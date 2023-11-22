@@ -544,6 +544,22 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                         // {
                         //     printf("  %s\n", resource.name.c_str());
                         // }
+
+                        mslData->threadGroupSizeX = msl.get_execution_mode_argument(spv::ExecutionMode::ExecutionModeLocalSize, 0);
+                        mslData->threadGroupSizeY = msl.get_execution_mode_argument(spv::ExecutionMode::ExecutionModeLocalSize, 1);
+                        mslData->threadGroupSizeZ = msl.get_execution_mode_argument(spv::ExecutionMode::ExecutionModeLocalSize, 2);
+                        // If either of these are 0, we might need to query them using
+                        // `msl.get_work_group_size_specialization_constants()`. There
+                        // seems to be some subtletly in SPIR-V's thread group sizing.
+                        // If this assert is hit on certain shaders, refer to
+                        // spirv_cross.hpp for more information on how to use the
+                        // above API.
+                        CPY_ASSERT(
+                            mslData->threadGroupSizeX != 0 &&
+                            mslData->threadGroupSizeY != 0 &&
+                            mslData->threadGroupSizeZ != 0
+                        );
+
                         mslData->mslSource = msl.compile();
                     }
 #endif // ENABLE_METAL

@@ -41,6 +41,10 @@ void MetalShaderDb::onCreateComputePayload(const ShaderHandle& handle, ShaderSta
     auto* payload = new MetalPayload;
     shaderState.payload = payload;
 
+    payload->threadGroupSizeX = shaderState.mslData->threadGroupSizeX;
+    payload->threadGroupSizeY = shaderState.mslData->threadGroupSizeY;
+    payload->threadGroupSizeZ = shaderState.mslData->threadGroupSizeZ;
+
     render::MetalDevice& metalDevice = *static_cast<render::MetalDevice*>(m_parentDevice);
 
     // Create a Metal library from the MSL source code
