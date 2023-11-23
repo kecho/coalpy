@@ -13,6 +13,7 @@ class MetalDevice;
 
 struct MetalResourceDownloadState
 {
+    ResourceDownloadKey downloadKey;
 };
 
 using MetalDownloadResourceMap = std::unordered_map<ResourceDownloadKey, MetalResourceDownloadState>;

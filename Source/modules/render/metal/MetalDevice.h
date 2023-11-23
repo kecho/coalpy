@@ -72,7 +72,7 @@ public:
     // bool findMemoryType(uint32_t typeFilter, MtlMemoryPropertyFlags properties, uint32_t& outMemType);
 
     MetalQueues& queues() { return *m_queues; }
-    // MetalResources& resources() { return *m_resources; }
+    MetalResources& resources() { return *m_resources; }
     // MetalEventPool& eventPool() { return *m_eventPool; }
     // MetalFencePool& fencePool() { return *m_fencePool; }
     // MetalCounterPool& counterPool() { return *m_counterPool; }

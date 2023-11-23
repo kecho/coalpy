@@ -377,6 +377,7 @@ BufferResult MetalDevice::createBuffer (const BufferDesc& config)
 
 SamplerResult MetalDevice::createSampler (const SamplerDesc& config)
 {
+    CPY_ASSERT(false);
     return SamplerResult { ResourceResult::Ok, { -1 } };
     // TODO (Apoorva)
     // return m_resources->createSampler(config);

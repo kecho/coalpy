@@ -3,6 +3,7 @@
 
 #include <Metal/Metal.h>
 #include "MetalDevice.h"
+#include "MetalResources.h"
 #include "MetalShaderDb.h"
 #include "MetalQueues.h"
 #include "MetalWorkBundle.h"
@@ -13,16 +14,16 @@ namespace render
 {
 
 static void buildComputeCmd(
-    MetalDevice& device,
+    MetalDevice* device,
     const unsigned char* data,
     const AbiComputeCmd* computeCmd,
     const CommandInfo& cmdInfo,
     id<MTLCommandBuffer> cmdBuffer
 )
 {
-    MetalShaderDb& db = device.shaderDb();
-    db.resolve(computeCmd->shader);
-    MetalPayload* payload = db.getMetalPayload(computeCmd->shader);
+    MetalShaderDb* db = &device->shaderDb();
+    db->resolve(computeCmd->shader);
+    MetalPayload* payload = db->getMetalPayload(computeCmd->shader);
 
     id<MTLComputeCommandEncoder> encoder = [cmdBuffer computeCommandEncoder];
     [encoder setComputePipelineState:payload->mtlPipelineState];
@@ -38,6 +39,34 @@ static void buildComputeCmd(
     [encoder endEncoding];
 }
 
+static void buildDownloadCmd(
+    MetalDevice* device,
+    std::vector<MetalResourceDownloadState>* downloadStates,
+    const unsigned char* data,
+    const AbiDownloadCmd* downloadCmd,
+    const CommandInfo& cmdInfo,
+    id<MTLCommandBuffer> cmdBuffer
+)
+{
+    CPY_ASSERT(cmdInfo.commandDownloadIndex >= 0 && cmdInfo.commandDownloadIndex < (int)downloadStates->size());
+    CPY_ASSERT(downloadCmd->source.valid());
+
+    MetalResources& resources = device->resources();
+    MetalResourceDownloadState* downloadState = &(*downloadStates)[cmdInfo.commandDownloadIndex];
+    downloadState->downloadKey = ResourceDownloadKey { downloadCmd->source, downloadCmd->mipLevel, downloadCmd->arraySlice };
+    MetalResource& metalResource = resources.unsafeGetResource(downloadCmd->source);
+    if (metalResource.type == MetalResource::Type::Buffer)
+    {
+        // downloadState->memoryBlock = m_device.readbackPool().allocate(metalResource.byteSize());
+
+    }
+    else
+    {
+        CPY_ASSERT(metalResource.type == MetalResource::Type::Texture)
+        MetalResource::TextureData& textureData = metalResource.textureData;
+    }
+}
+
 bool MetalWorkBundle::load(const WorkBundle& workBundle)
 {
     m_workBundle = workBundle;
@@ -49,6 +78,8 @@ int MetalWorkBundle::execute(CommandList** cmdLists, int cmdListsCount)
     WorkType workType = WorkType::Graphics;
     auto& queues = m_device.queues();
     id<MTLCommandQueue> cmdQueue = queues.cmdQueue(workType);
+
+    m_downloadStates.resize((int)m_workBundle.resourcesToDownload.size());
 
     id<MTLCommandBuffer> cmdBuffer = [cmdQueue commandBuffer];
     for (int i = 0; i < cmdListsCount; ++i)
@@ -69,7 +100,7 @@ int MetalWorkBundle::execute(CommandList** cmdLists, int cmdListsCount)
             case AbiCmdTypes::Compute:
                 {
                     const auto* abiCmd = (const AbiComputeCmd*)cmdBlob;
-                    buildComputeCmd(m_device, listData, abiCmd, cmdInfo, cmdBuffer);
+                    buildComputeCmd(&m_device, listData, abiCmd, cmdInfo, cmdBuffer);
                 }
                 break;
             // case AbiCmdTypes::Copy:
@@ -84,12 +115,12 @@ int MetalWorkBundle::execute(CommandList** cmdLists, int cmdListsCount)
             //         buildUploadCmd(listData, abiCmd, cmdInfo, outList);
             //     }
             //     break;
-            // case AbiCmdTypes::Download:
-            //     {
-            //         const auto* abiCmd = (const AbiDownloadCmd*)cmdBlob;
-            //         buildDownloadCmd(listData, abiCmd, cmdInfo, workType, outList);
-            //     }
-            //     break;
+            case AbiCmdTypes::Download:
+                {
+                    const auto* abiCmd = (const AbiDownloadCmd*)cmdBlob;
+                    buildDownloadCmd(&m_device, &m_downloadStates, listData, abiCmd, cmdInfo, cmdBuffer);
+                }
+                break;
             // case AbiCmdTypes::CopyAppendConsumeCounter:
             //     {
             //         const auto* abiCmd = (const AbiCopyAppendConsumeCounter*)cmdBlob;

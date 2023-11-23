@@ -87,6 +87,7 @@ public:
     // SamplerResult  createSampler (const SamplerDesc& desc);
     InResourceTableResult createInResourceTable(const ResourceTableDesc& desc);
     OutResourceTableResult createOutResourceTable(const ResourceTableDesc& desc);
+    MetalResource& unsafeGetResource(ResourceHandle handle) { return m_container[handle]; }
 
     void release(ResourceHandle handle);
 
