@@ -11,7 +11,7 @@
 // #include "MetalDescriptorSetPools.h"
 // #include "MetalDisplay.h"
 #include "MetalResources.h"
-// #include "MetalReadbackBufferPool.h"
+#include "MetalReadbackBufferPool.h"
 #include "MetalWorkBundle.h"
 #include "MetalQueues.h"
 // #include "MetalEventPool.h"
@@ -249,7 +249,7 @@ MetalDevice::MetalDevice(const DeviceConfig& config)
     // m_gc = new MetalGc(125, *this);
     m_resources = new MetalResources(*this, m_workDb);
     // m_descriptorSetPools = new MetalDescriptorSetPools(*this);
-    // m_readbackPool = new MetalReadbackBufferPool(*this);
+    m_readbackPool = new MetalReadbackBufferPool(*this);
     // m_counterPool = new MetalCounterPool(*this);
     // m_markerCollector = new MetalMarkerCollector(*this);
 
@@ -290,8 +290,8 @@ MetalDevice::~MetalDevice()
 
     // delete m_markerCollector;
     // m_markerCollector = nullptr;
-    // delete m_readbackPool;
-    // m_readbackPool = nullptr;
+    delete m_readbackPool;
+    m_readbackPool = nullptr;
     delete m_resources;
     m_resources = nullptr;
     // delete m_descriptorSetPools;

@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <vector>
 #include "WorkBundleDb.h"
+#include "MetalReadbackBufferPool.h"
 
 namespace coalpy
 {
@@ -14,6 +15,7 @@ class MetalDevice;
 struct MetalResourceDownloadState
 {
     ResourceDownloadKey downloadKey;
+    MetalReadbackMemBlock memoryBlock;
 };
 
 using MetalDownloadResourceMap = std::unordered_map<ResourceDownloadKey, MetalResourceDownloadState>;

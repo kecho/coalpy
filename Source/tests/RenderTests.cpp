@@ -180,7 +180,7 @@ void vulkanBufferPool(TestContext& ctx)
 
 #if ENABLE_METAL
 // TODO (Apoorva)
-void metalBufferPool(TestContext& ctx)
+void MetalReadbackBufferPool(TestContext& ctx)
 {
     auto& renderTestCtx = (RenderTestContext&)ctx;
     renderTestCtx.begin();
@@ -2006,7 +2006,7 @@ static const TestCase* createCases(int& caseCounts)
         { "vulkanBufferPool", vulkanBufferPool },
 #endif
 #if ENABLE_METAL
-        // { "metalBufferPool", metalBufferPool },
+        // { "MetalReadbackBufferPool", MetalReadbackBufferPool },
 #endif
         { "createBuffer",  testCreateBuffer },
         { "createTexture", testCreateTexture },
@@ -2044,7 +2044,7 @@ static const TestCaseFilter* createCasesFilters(int& caseCounts)
         { "vulkanBufferPool", TestPlatformVulkan },
 #endif
 #if  ENABLE_METAL
-        { "metalBufferPool", TestPlatformMetal },
+        { "MetalReadbackBufferPool", TestPlatformMetal },
 #endif
     };
 

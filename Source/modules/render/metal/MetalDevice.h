@@ -20,7 +20,7 @@ namespace render
 {
 
 // class MetalDescriptorSetPools;
-// class MetalReadbackBufferPool;
+class MetalReadbackBufferPool;
 class MetalResources;
 class MetalQueues;
 // class MetalCounterPool;
@@ -67,7 +67,7 @@ public:
     // MetalDescriptorSetPools& descriptorSetPools() { return *m_descriptorSetPools; }
     // int graphicsFamilyQueueIndex() const { return m_queueFamIndex; }
 
-    // MetalReadbackBufferPool& readbackPool() { return *m_readbackPool; }
+    MetalReadbackBufferPool& readbackPool() { return *m_readbackPool; }
 
     // bool findMemoryType(uint32_t typeFilter, MtlMemoryPropertyFlags properties, uint32_t& outMemType);
 
@@ -100,7 +100,7 @@ private:
     // MetalDescriptorSetPools* m_descriptorSetPools;
     MetalQueues* m_queues;
     MetalResources* m_resources;
-    // MetalReadbackBufferPool* m_readbackPool;
+    MetalReadbackBufferPool* m_readbackPool;
     // MetalEventPool* m_eventPool;
     // MetalFencePool* m_fencePool;
     // MetalCounterPool* m_counterPool;

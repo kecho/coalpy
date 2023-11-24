@@ -57,7 +57,7 @@ static void buildDownloadCmd(
     MetalResource& metalResource = resources.unsafeGetResource(downloadCmd->source);
     if (metalResource.type == MetalResource::Type::Buffer)
     {
-        // downloadState->memoryBlock = m_device.readbackPool().allocate(metalResource.byteSize());
+        // downloadState->memoryBlock = device->readbackPool().allocate(metalResource.byteSize());
 
     }
     else
