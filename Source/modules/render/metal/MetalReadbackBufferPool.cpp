@@ -41,6 +41,7 @@ bool MetalReadbackBufferPool::createNewHeap(size_t size)
     memBlock.allocationId = m_nextAllocId++;
     memBlock.heapIndex = heapIndex;
 
+    heap.freeBlocks.push_back(memBlock);
     return true;
 }
 
