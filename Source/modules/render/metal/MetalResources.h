@@ -55,6 +55,9 @@ struct MetalResource
         // MTLSamplerState sampler;
     };
 
+    // If this resource is a buffer, this is simply the size. If it is a texture,
+    // this is the size of the only the 0th mip.
+    size_t sizeInBytes;
     ResourceSpecialFlags specialFlags = {};
     // TODO (Apoorva): Is this actually read anywhere?
     std::set<ResourceTable> trackedTables;
