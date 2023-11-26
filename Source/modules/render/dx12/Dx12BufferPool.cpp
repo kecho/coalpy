@@ -19,7 +19,7 @@ Dx12BufferPool::Dx12BufferPool(Dx12Device& device, bool isReadback)
 {
     bool success = createNewHeap(InitialBufferPoolSize);
     CPY_ASSERT_MSG(success, "Could not allocate heap.");
-    m_nextHeapSize = 2 * InitialBufferPoolSize;
+    m_nextHeapSize = InitialBufferPoolSize;
 }
 
 bool Dx12BufferPool::createNewHeap(size_t size)
@@ -79,10 +79,9 @@ Dx12CpuMemBlock Dx12BufferPool::allocate(size_t size)
     if (selectedHeapIndex == -1)
     {
         selectedHeapIndex = m_heaps.size();
+        m_nextHeapSize = (2 * m_nextHeapSize) > size ? (2 * m_nextHeapSize) : size;
         if (!createNewHeap(m_nextHeapSize))
             return Dx12CpuMemBlock();
-
-        m_nextHeapSize = (2 * m_nextHeapSize) > size ? (2 * m_nextHeapSize) : size;
     }
 
     HeapState& selectedHeap = m_heaps[selectedHeapIndex];
