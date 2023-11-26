@@ -83,8 +83,6 @@ local Libraries = {
         "IlmImfUtil",
         "IlmThread",
         "Imath",
-        "dxclib",
-        "LLVMDxcSupport",
         Config = "linux-*-*"
     }
 }
