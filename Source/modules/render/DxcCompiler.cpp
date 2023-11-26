@@ -463,14 +463,14 @@ void DxcCompiler::compileShader(const DxcCompileArgs& args)
                 nullptr));
 
             SmartPtr<IDxcBlob> pdbOut;
-            SmartPtr<IDxcBlobUtf16> pdbName;
+            SmartPtr<IDxcBlobWide> pdbName;
             if (generatePdb)
             {
                 DX_OK(results->GetOutput(
                     DXC_OUT_PDB,
                     __uuidof(IDxcBlob),
                     (void**)&pdbOut,
-                    (IDxcBlobUtf16**)(&pdbName)));
+                    (IDxcBlobWide**)(&pdbName)));
             }
 
             if (shaderOut != nullptr)
