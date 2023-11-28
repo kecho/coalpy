@@ -39,11 +39,16 @@ struct MetalResource
     struct BufferData
     {
         id<MTLBuffer> mtlBuffer;
+        size_t sizeInBytes;
     };
 
     struct TextureData
     {
         id<MTLTexture> mtlTexture;
+        int width;
+        int height;
+        int mipLevels;
+        int pixelStride;
     };
 
     ResourceHandle handle;
@@ -57,7 +62,6 @@ struct MetalResource
 
     // If this resource is a buffer, this is simply the size. If it is a texture,
     // this is the size of the only the 0th mip.
-    size_t sizeInBytes;
     ResourceSpecialFlags specialFlags = {};
     // TODO (Apoorva): Is this actually read anywhere?
     std::set<ResourceTable> trackedTables;

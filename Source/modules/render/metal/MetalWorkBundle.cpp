@@ -52,19 +52,63 @@ static void buildDownloadCmd(
     CPY_ASSERT(downloadCmd->source.valid());
 
     MetalResources& resources = device->resources();
+    MetalResource& srcResource = resources.unsafeGetResource(downloadCmd->source);
     MetalResourceDownloadState* downloadState = &(*downloadStates)[cmdInfo.commandDownloadIndex];
     downloadState->downloadKey = ResourceDownloadKey { downloadCmd->source, downloadCmd->mipLevel, downloadCmd->arraySlice };
-    MetalResource& metalResource = resources.unsafeGetResource(downloadCmd->source);
-    if (metalResource.type == MetalResource::Type::Buffer)
-    {
-        downloadState->memoryBlock = device->readbackPool().allocate(metalResource.sizeInBytes);
 
+    size_t sizeInBytes = 0;
+    if (srcResource.type == MetalResource::Type::Buffer)
+    {
+        sizeInBytes = srcResource.bufferData.sizeInBytes;
     }
     else
     {
-        CPY_ASSERT(metalResource.type == MetalResource::Type::Texture)
-        MetalResource::TextureData& textureData = metalResource.textureData;
+        CPY_ASSERT(srcResource.type == MetalResource::Type::Texture)
+        CPY_ASSERT(srcResource.textureData.mipLevels > downloadCmd->mipLevel);
+        sizeInBytes =
+            (srcResource.textureData.width >> downloadCmd->mipLevel)
+            * (srcResource.textureData.height >> downloadCmd->mipLevel)
+            * srcResource.textureData.pixelStride;
     }
+
+    downloadState->memoryBlock = device->readbackPool().allocate(sizeInBytes);
+    id<MTLBuffer> dstBuffer = resources.unsafeGetResource(downloadState->memoryBlock.buffer).bufferData.mtlBuffer;
+
+    id<MTLBlitCommandEncoder> encoder = [cmdBuffer blitCommandEncoder];
+    if (srcResource.type == MetalResource::Type::Buffer)
+    {
+        [encoder
+            copyFromBuffer:srcResource.bufferData.mtlBuffer
+            sourceOffset:0
+            toBuffer:dstBuffer
+            destinationOffset:downloadState->memoryBlock.offset
+            size:sizeInBytes];
+    }
+    else
+    {
+        CPY_ASSERT(srcResource.type == MetalResource::Type::Texture)
+        MetalResource::TextureData& textureData = srcResource.textureData;
+
+        int w = srcResource.textureData.width >> downloadCmd->mipLevel;
+        int h = srcResource.textureData.height >> downloadCmd->mipLevel;
+        // TODO (Apoorva): For 3D images, `depth` needs to be set according to the API:
+        MTLSize regionSize = MTLSizeMake(w, h, 1);
+
+        [encoder
+            copyFromTexture:srcResource.textureData.mtlTexture
+            sourceSlice:downloadCmd->arraySlice
+            sourceLevel:downloadCmd->mipLevel
+            sourceOrigin:MTLOriginMake(0, 0, 0)
+            sourceSize:regionSize
+            toBuffer:dstBuffer
+            destinationOffset:downloadState->memoryBlock.offset
+            destinationBytesPerRow:srcResource.textureData.pixelStride * w
+            destinationBytesPerImage:0];
+            // TODO (Apoorva): ^ For 3D images, `destinationBytesPerImage` needs to be set according
+            // to the API: https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400773-copyfromtexture
+    }
+
+    [encoder endEncoding];
 }
 
 bool MetalWorkBundle::load(const WorkBundle& workBundle)

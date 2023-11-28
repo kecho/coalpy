@@ -275,12 +275,12 @@ BufferResult MetalResources::createBuffer(
 
     // TODO (Apoorva): Get the stride in bytes for the given texture format in desc.format
     int stride = 4 * 1; // 4 channels, 1 byte per channel
-    resource.sizeInBytes = stride * desc.elementCount;
+    resource.bufferData.sizeInBytes = stride * desc.elementCount;
 
     MTLResourceOptions options = MTLResourceStorageModeShared;
     resource.bufferData.mtlBuffer = [
         m_device.mtlDevice()
-        newBufferWithLength:resource.sizeInBytes
+        newBufferWithLength:resource.bufferData.sizeInBytes
         options:options
     ];
     CPY_ASSERT(resource.bufferData.mtlBuffer != nil);
@@ -289,7 +289,7 @@ BufferResult MetalResources::createBuffer(
         handle,
         desc.memFlags,
         ResourceGpuState::Default,
-        resource.sizeInBytes, 1, 1,
+        resource.bufferData.sizeInBytes, 1, 1,
         1, 1,
         // TODO (Apoorva):
         // VulkanResources.cpp and Dx12ResourceCollection.cpp have more complex
@@ -335,9 +335,10 @@ TextureResult MetalResources::createTexture(const TextureDesc& desc)
     }
 
     resource.textureData.mtlTexture = [m_device.mtlDevice() newTextureWithDescriptor:texDesc];
-    resource.sizeInBytes =
-        resource.textureData.mtlTexture.bufferBytesPerRow
-        * desc.height * desc.depth;
+    resource.textureData.width = desc.width;
+    resource.textureData.height = desc.height;
+    resource.textureData.mipLevels = desc.mipLevels;
+    resource.textureData.pixelStride = resource.textureData.mtlTexture.bufferBytesPerRow;
     CPY_ASSERT(resource.textureData.mtlTexture != nil);
 
     m_workDb.registerResource(
