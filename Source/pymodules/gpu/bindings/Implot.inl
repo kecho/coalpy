@@ -108,7 +108,6 @@ COALPY_ENUM(NoChild       , ImPlotFlags_NoChild      ,  R"( a child window regio
 COALPY_ENUM(NoFrame       , ImPlotFlags_NoFrame      ,  R"( the ImGui frame will not be rendered )")
 COALPY_ENUM(Equal         , ImPlotFlags_Equal        ,  R"( x and y axes pairs will be constrained to have the same units/pixel )")
 COALPY_ENUM(Crosshairs    , ImPlotFlags_Crosshairs   ,  R"( the default mouse cursor will be replaced with a crosshair when hovered )")
-COALPY_ENUM(AntiAliased   , ImPlotFlags_AntiAliased  ,  R"(pot items will be software anti-aliased (not recommended for high density plots, prefer MSAA) )")
 COALPY_ENUM(CanvasOnly    , ImPlotFlags_CanvasOnly   , R"()")
 COALPY_ENUM_END(ImPlotFlags)
 
@@ -121,8 +120,6 @@ COALPY_ENUM(NoInitialFit  , ImPlotAxisFlags_NoInitialFit   , R"(will not be init
 COALPY_ENUM(NoMenus       , ImPlotAxisFlags_NoMenus        , R"(the user will not be able to open context menus with right-click)")
 COALPY_ENUM(Opposite      , ImPlotAxisFlags_Opposite       , R"(xis ticks and labels will be rendered on conventionally opposite side (i.e, right or top)")
 COALPY_ENUM(Foreground    , ImPlotAxisFlags_Foreground     , R"(d lines will be displayed in the foreground (i.e. on top of data) in stead of the background)")
-COALPY_ENUM(LogScale      , ImPlotAxisFlags_LogScale       , R"( logartithmic (base 10) axis scale will be used (mutually exclusive with ImPlotAxisFlags_Time)")
-COALPY_ENUM(Time          , ImPlotAxisFlags_Time           , R"(   axis will display date/time formatted labels (mutually exclusive with ImPlotAxisFlags_LogScale)")
 COALPY_ENUM(Invert        , ImPlotAxisFlags_Invert         , R"( the axis will be inverted)")
 COALPY_ENUM(AutoFit       , ImPlotAxisFlags_AutoFit        , R"(axis will be auto-fitting to data extents)")
 COALPY_ENUM(RangeFit      , ImPlotAxisFlags_RangeFit       , R"(xis will only fit points if the point is in the visible range of the **orthogonal** axis)")

@@ -6,7 +6,7 @@
 #include "Resources.h"
 #include <functional>
 #include <imgui_internal.h> //for docking API 
-#include <cpp/imgui_stdlib.h>
+#include <misc/cpp/imgui_stdlib.h>
 
 namespace coalpy
 {
@@ -812,7 +812,7 @@ PyObject* isKeyDown(PyObject* self, PyObject* vargs, PyObject* kwds)
     if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &key))
         return nullptr;
 
-    if (ImGui::IsKeyDown(key))
+    if (ImGui::IsKeyDown((ImGuiKey)key))
         Py_RETURN_TRUE;
     else
         Py_RETURN_FALSE;
@@ -830,7 +830,7 @@ PyObject* isKeyPressed(PyObject* self, PyObject* vargs, PyObject* kwds)
     if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i|p", argnames, &key, &repeatInt))
         return nullptr;
 
-    if (ImGui::IsKeyPressed(key, repeatInt))
+    if (ImGui::IsKeyPressed((ImGuiKey)key, (bool)repeatInt))
         Py_RETURN_TRUE;
     else
         Py_RETURN_FALSE;
@@ -847,7 +847,7 @@ PyObject* isKeyReleased(PyObject* self, PyObject* vargs, PyObject* kwds)
     if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &key))
         return nullptr;
 
-    if (ImGui::IsKeyReleased(key))
+    if (ImGui::IsKeyReleased((ImGuiKey)key))
         Py_RETURN_TRUE;
     else
         Py_RETURN_FALSE;
@@ -866,7 +866,7 @@ PyObject* getKeyPressedAmount(PyObject* self, PyObject* vargs, PyObject* kwds)
     if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "iff", argnames, &key, &repeat_delay, &rate))
         return nullptr;
 
-    int retVal = ImGui::GetKeyPressedAmount(key, repeat_delay, rate);
+    int retVal = ImGui::GetKeyPressedAmount((ImGuiKey)key, repeat_delay, rate);
     return Py_BuildValue("i", retVal);
 }
 
@@ -881,7 +881,7 @@ PyObject* getKeyName(PyObject* self, PyObject* vargs, PyObject* kwds)
     if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "i", argnames, &key))
         return nullptr;
 
-    const char* keyName = ImGui::GetKeyName(key);
+    const char* keyName = ImGui::GetKeyName((ImGuiKey)key);
     return Py_BuildValue("s",keyName);
 }
 

@@ -7,6 +7,7 @@ local LibPngDir = "Source/libpng"
 local ZlibDir = "Source/zlib"
 local cJSONDir = "Source/cjson"
 local TinyObjLoaderDir = "Source/tinyobjloader"
+local ImGuiFileDialogDir = "Source/ImGuiFileDialog"
 local SpirvReflectDir = "Source/spirvreflect"
 local DxcDir = "External/dxc/v1.7.2308/"
 local DxcIncludes = DxcDir.."inc/"
@@ -142,7 +143,7 @@ local imguiLib = StaticLibrary {
             Recursive = false
         },
         Glob {
-            Dir = ImguiDir.."/cpp/",
+            Dir = ImguiDir.."/misc/cpp/",
             Extensions = { ".cpp", ".h", ".hpp" },
             Recursive = true
         },
@@ -162,8 +163,8 @@ local imguiLib = StaticLibrary {
         {
             Config = { "linux-gcc-*" },
             {
-                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_sdl.h",
-                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_sdl.cpp",
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_sdl2.h",
+                ImguiDir.."$(SEP)backends$(SEP)imgui_impl_sdl2.cpp",
             }
         }
     },
@@ -274,6 +275,23 @@ local cjson = StaticLibrary {
 }
 
 Default (cjson)
+
+-- Build ImGuiFileDialog
+local ImGuiFileDialog = StaticLibrary {
+    Name = "ImGuiFileDialog",
+    Pass = "BuildCode",
+    Includes = { ImGuiFileDialogDir, ImguiDir },
+    Sources = {
+        Glob {
+            Dir = ImGuiFileDialogDir,
+            Extensions = { ".cpp", ".h", ".c" },
+            Recursive = true
+        }
+    },
+    IdeGenerationHints = _G.GenRootIdeHints("ImGuiFileDialog");
+}
+
+Default(ImGuiFileDialog)
 
 -- C++ module table-> module name with its dependencies
 local CoalPyModuleTable = {

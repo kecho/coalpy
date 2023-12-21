@@ -120,29 +120,7 @@ void VulkanImguiRenderer::initSampler()
 
 void VulkanImguiRenderer::initFontTextures()
 {
-    VulkanQueues& queues = m_device.queues();
-    VulkanFencePool& fencePool = m_device.fencePool();
-    VulkanFenceHandle fenceHandle = fencePool.allocate();
-
-    VkQueue queue = queues.cmdQueue(WorkType::Graphics);
-    VulkanList list;
-    queues.allocate(WorkType::Graphics, list);
-
-    VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, nullptr };
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(list.list, &beginInfo);
-    ImGui_ImplVulkan_CreateFontsTexture(list.list);
-    vkEndCommandBuffer(list.list);
-
-    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &list.list;
-
-    VK_OK(vkQueueSubmit(queue, 1u, &submitInfo, fencePool.get(fenceHandle)));
-    fencePool.waitOnCpu(fenceHandle);
-    queues.deallocate(list, fenceHandle);
-    fencePool.free(fenceHandle);
-    ImGui_ImplVulkan_DestroyFontUploadObjects();
+    ImGui_ImplVulkan_CreateFontsTexture();
 }
 
 void VulkanImguiRenderer::initPass()
