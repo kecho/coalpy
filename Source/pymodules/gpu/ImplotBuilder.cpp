@@ -221,12 +221,12 @@ PyObject* plotShaded(PyObject* self, PyObject* vargs, PyObject* kwds)
     if (valuesView.itemsize == sizeof(float))
     {
         float* values = (float*)valuesView.buf;
-        ImPlot::PlotShaded(label, values, values + 1, count, yref, offset, 2 * sizeof(float));
+        ImPlot::PlotShaded(label, values, values + 1, count, yref, 0, offset, 2 * sizeof(float));
     }
     else if (valuesView.itemsize == sizeof(double))
     {
         double* values = (double*)valuesView.buf;
-        ImPlot::PlotShaded(label, values, values + 1, count, (double)yref, offset, 2 * sizeof(double));
+        ImPlot::PlotShaded(label, values, values + 1, count, (double)yref, 0, offset, 2 * sizeof(double));
     }
 
     PyBuffer_Release(&valuesView);
