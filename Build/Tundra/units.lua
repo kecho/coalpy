@@ -39,6 +39,7 @@ local LibIncludes = {
         Config = "win64-*-*"
     },
     ImguiDir,
+    ImGuiFileDialogDir,
     ImplotDir,
     LibJpgDir,
     LibPngDir,
@@ -330,7 +331,7 @@ local CoalPyModuleIncludes = {
 }
 
 local CoalPyModuleDeps = {
-    render = { imguiLib, implotLib, spirvreflect, tinyobjloader, cjson },
+    render = { imguiLib, ImGuiFileDialog, implotLib, spirvreflect, tinyobjloader, cjson },
     texture = { zlibLib, libpngLib, libjpegLib }
 }
 

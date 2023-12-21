@@ -7,6 +7,7 @@
 #include <functional>
 #include <imgui_internal.h> //for docking API 
 #include <misc/cpp/imgui_stdlib.h>
+#include <ImGuiFileDialog.h>
 
 namespace coalpy
 {
@@ -1354,6 +1355,26 @@ PyObject* setColorEditOptions(PyObject* self, PyObject* vargs, PyObject* kwds)
         return nullptr;
 
     ImGui::SetColorEditOptions(flags);
+    Py_RETURN_NONE;
+}
+
+PyObject* openDialog(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI
+    static char* argnames[] = { "key", "title", "filter", "path", nullptr };
+    char* key, * title, * filter, * path;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "ssss", argnames, &key, &title, &filter, &path))
+        return nullptr;
+
+    std::string keyStr = key, titleStr = title, pathStr = path;
+    ImGuiFileDialog::Instance()->OpenDialog(keyStr, titleStr, filter, pathStr);
+
+    if (ImGuiFileDialog::Instance()->Display(keyStr)) 
+    {
+        ImGuiFileDialog::Instance()->Close();
+    }
+
+
     Py_RETURN_NONE;
 }
 

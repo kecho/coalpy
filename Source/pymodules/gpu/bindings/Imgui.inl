@@ -721,6 +721,19 @@ COALPY_FN(set_color_edit_options, setColorEditOptions, R"(
         flags : see coalpy.gpu.ImGuiColorEditFlags
 )")
 
+COALPY_FN(open_dialog, openDialog, R"(
+    Open a file dialog
+
+    Parameters:
+        key (str): key of dialog
+        title (str): title of dialog 
+        filter (str): file filter, i.e ".cpp.h.hpp"
+        path (str): path of dialog
+
+    Returns (tuple):
+        (filePathName, filePath, response(bool))
+)")
+
 
 //Imgui focus flags enums
 COALPY_ENUM_BEGIN(ImGuiFocusedFlags, "ImGUI Focused flags")
