@@ -933,6 +933,22 @@ PyObject* setNextFrameWantCaptureKeyboard(PyObject* self, PyObject* vargs, PyObj
     Py_RETURN_NONE;
 }
 
+PyObject* progressBar(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "fraction", "size_arg", "overlay", nullptr };
+    float fraction = 0.0f;
+    ImVec2 size_arg = { -FLT_MIN, 0 };
+    char* overlay = nullptr;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "f|(ff)s", argnames, &fraction, &size_arg.x, &size_arg.y, &overlay))
+        return nullptr;
+
+    ImGui::ProgressBar(fraction, size_arg, overlay);
+    Py_RETURN_NONE;
+}
+
 PyObject* setWindowDock(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI

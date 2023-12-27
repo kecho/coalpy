@@ -516,7 +516,7 @@ COALPY_FN(set_next_window_size, setNextWindowSize, R"(
         condition_flags (optional) : see ImGuiCond
 )")
 
-COALPY_FN(set_next_window_pos, setNextFrameWantCaptureKeyboard, R"(
+COALPY_FN(set_next_window_pos, setNextWindowPos, R"(
     Parameters:
         pos (with, height) : the width and height of next window size.
         condition_flags (optional) : see ImGuiCond
@@ -527,6 +527,13 @@ COALPY_FN(set_next_frame_want_capture_keyboard, setNextFrameWantCaptureKeyboard,
 
     Parameters:
         want_capture_keyboard (bool)
+)")
+
+COALPY_FN(progress_bar, progressBar, R"(
+    Parameters:
+        fraction (float)
+        size_arg (tuple)(x, y)
+        overlay (str)
 )")
 
 COALPY_FN(dockspace, dockspace, R"(
