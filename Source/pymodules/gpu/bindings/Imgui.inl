@@ -508,6 +508,20 @@ COALPY_FN(get_key_name, getKeyName, R"(
         Gets the key name (str)
 )")
 
+COALPY_FN(set_next_window_size, setNextWindowSize, R"(
+    Sets the next window size.
+
+    Parameters:
+        size (with, height) : the width and height of next window size.
+        condition_flags (optional) : see ImGuiCond
+)")
+
+COALPY_FN(set_next_window_pos, setNextFrameWantCaptureKeyboard, R"(
+    Parameters:
+        pos (with, height) : the width and height of next window size.
+        condition_flags (optional) : see ImGuiCond
+)")
+
 COALPY_FN(set_next_frame_want_capture_keyboard, setNextFrameWantCaptureKeyboard, R"(
     Override io.WantCaptureKeyboard flag next frame (said flag is left for your application to handle, typically when true it instructs your app to ignore inputs). e.g. force capture keyboard when your widget is being hovered. This is equivalent to setting "io.WantCaptureKeyboard = want_capture_keyboard"; after the next NewFrame() call.
 
@@ -721,7 +735,7 @@ COALPY_FN(set_color_edit_options, setColorEditOptions, R"(
         flags : see coalpy.gpu.ImGuiColorEditFlags
 )")
 
-COALPY_FN(open_dialog, openDialog, R"(
+COALPY_FN(open_file_dialog, openFileDialog, R"(
     Open a file dialog
 
     Parameters:
@@ -732,6 +746,7 @@ COALPY_FN(open_dialog, openDialog, R"(
 
     Returns (tuple):
         (filePathName, filePath, response(bool))
+        Note: None means no action taken, and window should be re-rendered.
 )")
 
 
@@ -1020,6 +1035,14 @@ COALPY_ENUM(InputRGB, ImGuiColorEditFlags_InputRGB, R"([Input]  ColorEdit, Color
 COALPY_ENUM(InputHSV, ImGuiColorEditFlags_InputHSV, R"([Input]  ColorEdit, ColorPicker: input and output data in HSV format.)")
 COALPY_ENUM(DefaultOptions_, ImGuiColorEditFlags_DefaultOptions_, "Default options")
 COALPY_ENUM_END(ImGuiColorEditFlags)
+
+COALPY_ENUM_BEGIN(ImGuiCond, "")
+COALPY_ENUM(None, ImGuiCond_None,  R"(No condition (always set the variable), same as _Always)")
+COALPY_ENUM(Always, ImGuiCond_Always,   R"(No condition (always set the variable), same as _None)")
+COALPY_ENUM(Once, ImGuiCond_Once,   R"(Set the variable once per runtime session (only the first call will succeed))")
+COALPY_ENUM(FirstUseEver, ImGuiCond_FirstUseEver,   R"(Set the variable if the object/window has no persistently saved data (no entry in .ini file))")
+COALPY_ENUM(Appearing, ImGuiCond_Appearing,   R"(Set the variable if the object/window is appearing after being hidden/inactive (or the first time))")
+COALPY_ENUM_END(ImGuiCond)
 
 #undef COALPY_ENUM_END
 #undef COALPY_ENUM_BEGIN

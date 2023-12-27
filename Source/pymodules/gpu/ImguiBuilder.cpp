@@ -886,6 +886,38 @@ PyObject* getKeyName(PyObject* self, PyObject* vargs, PyObject* kwds)
     return Py_BuildValue("s",keyName);
 }
 
+PyObject* setNextWindowSize(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "size", "conditional_flags", nullptr };
+
+    ImVec2 sz = {};
+    ImGuiCond flags = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "(ff)|i", argnames, &sz.x, &sz.y, &flags))
+        return nullptr;
+
+    ImGui::SetNextWindowSize(sz, flags);
+    Py_RETURN_NONE;
+}
+
+PyObject* setNextWindowPos(PyObject* self, PyObject* vargs, PyObject* kwds)
+{
+    CHECK_IMGUI;
+    auto& imguiBuilder = *(ImguiBuilder*)self;
+    ModuleState& moduleState = parentModule(self);
+    static char* argnames[] = { "pos", "conditional_flags", nullptr };
+
+    ImVec2 sz = {};
+    ImGuiCond flags = 0;
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "(ff)|i", argnames, &sz.x, &sz.y, &flags))
+        return nullptr;
+
+    ImGui::SetNextWindowPos(sz, flags);
+    Py_RETURN_NONE;
+}
+
 PyObject* setNextFrameWantCaptureKeyboard(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI;
@@ -1358,12 +1390,13 @@ PyObject* setColorEditOptions(PyObject* self, PyObject* vargs, PyObject* kwds)
     Py_RETURN_NONE;
 }
 
-PyObject* openDialog(PyObject* self, PyObject* vargs, PyObject* kwds)
+PyObject* openFileDialog(PyObject* self, PyObject* vargs, PyObject* kwds)
 {
     CHECK_IMGUI
-    static char* argnames[] = { "key", "title", "filter", "path", nullptr };
+    static char* argnames[] = { "key", "title", "filter", "path", "width", "height", nullptr };
     char* key, * title, * filter, * path;
-    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "ssss", argnames, &key, &title, &filter, &path))
+    ImVec2 sz = { 300.0f, 200.0f };
+    if (!PyArg_ParseTupleAndKeywords(vargs, kwds, "ssss|ff", argnames, &key, &title, &filter, &path, &sz.x, &sz.y))
         return nullptr;
 
     std::string keyStr = key, titleStr = title, pathStr = path;
@@ -1371,9 +1404,16 @@ PyObject* openDialog(PyObject* self, PyObject* vargs, PyObject* kwds)
 
     if (ImGuiFileDialog::Instance()->Display(keyStr)) 
     {
+        if (ImGuiFileDialog::Instance()->IsOk())
+        {
+            std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+            std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+            return Py_BuildValue("(sss)", "ok", filePathName.c_str(), filePath.c_str()); 
+        }
+        
         ImGuiFileDialog::Instance()->Close();
+        return Py_BuildValue("(sss)", "cancel", "", "");
     }
-
 
     Py_RETURN_NONE;
 }
