@@ -36,6 +36,9 @@ VulkanResources::~VulkanResources()
 
 BufferResult VulkanResources::createBuffer(const BufferDesc& desc, VkBuffer resourceToAcquire, ResourceSpecialFlags specialFlags)
 {
+    if ((desc.usage & ResourceSpecialFlag_CpuReadback) != 0)
+        specialFlags = (ResourceSpecialFlags)(specialFlags | ResourceSpecialFlag_CpuUpload | ResourceSpecialFlag_MapMemory);
+
     std::unique_lock lock(m_mutex);
     ResourceHandle handle;
     VulkanResource& resource = m_container.allocate(handle);
@@ -140,6 +143,11 @@ BufferResult VulkanResources::createBuffer(const BufferDesc& desc, VkBuffer reso
         vkDestroyBuffer(m_device.vkDevice(), bufferData.vkBuffer, nullptr);
         m_container.free(handle);
         return BufferResult  { ResourceResult::InternalApiFailure, Buffer(), "Failed to allocating buffer memory." };
+    }
+
+    if ((specialFlags & ResourceSpecialFlag_MapMemory) != 0)
+    {
+        VK_OK(vkMapMemory(m_device.vkDevice(), resource.memory, 0u, VK_WHOLE_SIZE, 0u, &resource.mappedMemory));
     }
 
     if (bufferData.ownsBuffer && vkBindBufferMemory(m_device.vkDevice(), bufferData.vkBuffer, resource.memory, 0u) != VK_SUCCESS)
@@ -337,7 +345,7 @@ TextureResult VulkanResources::createTextureInternal(ResourceHandle handle, cons
 
     VkImageCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    
+
     resource.memFlags = desc.memFlags;
     resource.specialFlags = specialFlags;
 
@@ -414,7 +422,7 @@ TextureResult VulkanResources::createTextureInternal(ResourceHandle handle, cons
     VkMemoryAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memReqs.size;
-    if (textureData.ownsImage && !m_device.findMemoryType(memReqs.memoryTypeBits, 0u, allocInfo.memoryTypeIndex))
+    if (textureData.ownsImage && !m_device.findMemoryType(memReqs.memoryTypeBits, 0, allocInfo.memoryTypeIndex))
     {
         if (textureData.ownsImage)
             vkDestroyImage(m_device.vkDevice(), textureData.vkImage, nullptr);
@@ -875,6 +883,12 @@ void VulkanResources::releaseResourceInternal(ResourceHandle handle, VulkanResou
 
     if (resource.isBuffer())
     {
+        if ((resource.specialFlags & ResourceSpecialFlag_MapMemory) != 0)
+        {
+            vkUnmapMemory(m_device.vkDevice(), resource.memory);
+            resource.mappedMemory = nullptr;
+        }
+
         if ((resource.specialFlags & ResourceSpecialFlag_NoDeferDelete) == 0)
         {
             m_device.gc().deferRelease(

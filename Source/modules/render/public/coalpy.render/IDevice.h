@@ -85,6 +85,8 @@ public:
 
     virtual TextureResult recreateTexture(Texture handle, const TextureDesc& config) = 0;
 
+    virtual void* mappedMemory(Buffer buffer) = 0;
+
     virtual void release(ResourceHandle resource) = 0;
     virtual void release(ResourceTable table) = 0;
     virtual void release(WorkHandle handle) = 0;

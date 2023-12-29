@@ -1941,6 +1941,125 @@ void testCollectGpuMarkers(TestContext& ctx)
     renderTestCtx.end();
 }
 
+void testBufferCpuMap(TestContext& ctx)
+{
+    auto& renderTestCtx = (RenderTestContext&)ctx;
+    renderTestCtx.begin();
+    IDevice& device = *renderTestCtx.device;
+    IShaderDb& db = *renderTestCtx.db;
+
+    const char* verifyKernelSrc = R"(
+        Buffer<int> g_input : register(t0);
+        RWBuffer<int> g_output : register(u0);
+        [numthreads(1,1,1)]
+        void csMain(uint3 gti : SV_GroupID)
+        {
+            int matches = 0;
+            for (uint i = 0; i < 64; ++i)
+                matches += (g_input[i] == i) ? 1 : 0;
+
+            g_output[0] = matches;
+        }
+    )";
+
+    ShaderHandle verifyShader;
+    {
+        ShaderInlineDesc shaderDesc;
+        shaderDesc.type = ShaderType::Compute;
+        shaderDesc.name = "verifyKernel";
+        shaderDesc.mainFn = "csMain";
+        shaderDesc.immCode = verifyKernelSrc;
+        verifyShader = db.requestCompile(shaderDesc);
+        db.resolve(verifyShader);
+        CPY_ASSERT(db.isValid(verifyShader));
+    }
+
+    BufferDesc bufferDesc;
+    bufferDesc.format = Format::R32_SINT;
+    bufferDesc.elementCount = 64;
+    bufferDesc.memFlags = MemFlag_GpuRead;
+    bufferDesc.usage = BufferUsage_Upload;
+    BufferResult uploadBuffResult = device.createBuffer(bufferDesc);
+    CPY_ASSERT_MSG(uploadBuffResult.success(), uploadBuffResult.message.c_str());
+    if (!uploadBuffResult.success())
+    {
+        renderTestCtx.end();
+        return;
+    }
+
+    Buffer uploadBuff = uploadBuffResult.object;
+
+    Buffer outputBuffer;
+    {
+        BufferDesc outDesc;
+        outDesc.format = Format::R32_SINT;
+        outDesc.elementCount = 1;
+        outDesc.memFlags = MemFlag_GpuWrite;
+        outputBuffer  = device.createBuffer(outDesc);
+    }
+
+    OutResourceTable outputTable;
+    {
+        ResourceTableDesc desc;
+        desc.resources = &outputBuffer;
+        desc.resourcesCount = 1;
+        outputTable = device.createOutResourceTable(desc);
+    }
+
+    InResourceTable inputTable;
+    {
+        ResourceTableDesc desc;
+        desc.resources = &uploadBuff;
+        desc.resourcesCount = 1;
+        inputTable = device.createInResourceTable(desc);
+    }
+
+    int* memory = static_cast<int*>(device.mappedMemory(uploadBuff));
+    CPY_ASSERT(memory != nullptr);
+    if (memory != nullptr)
+    {
+        for (int i = 0; i < bufferDesc.elementCount; ++i)
+            memory[i] = i;
+    }
+
+    
+    CommandList cmdList;
+    {
+        ComputeCommand cmd;
+        cmd.setShader(verifyShader);
+        cmd.setInResources(&inputTable, 1);
+        cmd.setOutResources(&outputTable, 1);
+        cmd.setDispatch("matchDispatch", 1, 1, 1);
+        cmdList.writeCommand(cmd);
+    }
+
+    {
+        DownloadCommand cmd;
+        cmd.setData(outputBuffer);
+        cmdList.writeCommand(cmd);
+    }
+
+    cmdList.finalize();
+
+    CommandList* cmdLists = &cmdList;
+    ScheduleStatus scheduleStatus = device.schedule(&cmdLists, 1, ScheduleFlags_GetWorkHandle);
+    CPY_ASSERT(scheduleStatus.success());
+
+    WaitStatus waitStatus = device.waitOnCpu(scheduleStatus.workHandle, -1);
+    CPY_ASSERT(waitStatus.success());
+
+    DownloadStatus downloadResult = device.getDownloadStatus(scheduleStatus.workHandle, outputBuffer);
+    CPY_ASSERT(downloadResult.success());
+    if (downloadResult.success())
+        CPY_ASSERT(*(int*)downloadResult.downloadPtr == 64);
+
+    device.release(uploadBuff);
+    device.release(outputBuffer);
+    device.release(outputTable);
+    device.release(inputTable);
+    renderTestCtx.end();
+}
+
 static const TestCase* createCases(int& caseCounts)
 {
     static const TestCase sCases[] = {
@@ -1967,6 +2086,7 @@ static const TestCase* createCases(int& caseCounts)
         { "copyTexture",  testCopyTexture },
         { "copyTextureArrayAndMips",  testCopyTextureArrayAndMips },
         { "collectGpuMarkers",  testCollectGpuMarkers },
+        { "bufferCpuMap", testBufferCpuMap },
     };
 
     caseCounts = sizeof(sCases)/sizeof(sCases[0]);

@@ -44,6 +44,7 @@ Dx12Resource::Dx12Resource(Dx12Device& device, const ResourceDesc& config, Resou
 
         m_data.heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
         m_usage = Usage::Dynamic; //assume all read / write
+
         if ((specialFlags & (ResourceSpecialFlag_CpuReadback | ResourceSpecialFlag_CpuUpload)) == 0)
         {
             m_usage = Usage::Default;

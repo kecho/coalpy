@@ -23,7 +23,8 @@ enum ResourceSpecialFlags : int
     ResourceSpecialFlag_TrackTables = 1 << 2,
     ResourceSpecialFlag_CpuReadback = 1 << 3,
     ResourceSpecialFlag_CpuUpload = 1 << 4,
-    ResourceSpecialFlag_EnableColorAttachment = 1 << 5,
+    ResourceSpecialFlag_MapMemory = 1 << 5,
+    ResourceSpecialFlag_EnableColorAttachment = 1 << 6,
 };
 
 class VulkanDevice;
@@ -84,6 +85,7 @@ struct VulkanResource
     VkDeviceSize requestSize = {};
     VkDeviceSize actualSize = {};
     VkDeviceMemory memory = {};
+    void* mappedMemory = {};
 
     std::set<ResourceTable> trackedTables;
 };

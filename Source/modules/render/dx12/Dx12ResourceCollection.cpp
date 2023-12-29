@@ -107,6 +107,9 @@ BufferResult Dx12ResourceCollection::createBuffer(const BufferDesc& desc, ID3D12
     std::unique_lock lock(m_resourceMutex);
     ResourceHandle resHandle;
 
+    if ((desc.usage & BufferUsage_Upload) != 0)
+        flags = (ResourceSpecialFlags)(flags | ResourceSpecialFlag_CpuUpload);
+
     SmartPtr<Dx12Resource> bufferObj = new Dx12Buffer(m_device, desc, flags);
     if (resource)
         bufferObj->acquireD3D12Resource(resource);

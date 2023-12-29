@@ -65,6 +65,7 @@ public:
     virtual const DeviceInfo& info() const override { return m_info; }
     virtual const DeviceRuntimeInfo& runtimeInfo() const { return m_runtimeInfo; }
     virtual SmartPtr<IDisplay> createDisplay(const DisplayConfig& config) override;
+    virtual void* mappedMemory (Buffer buffer) override;
 
     virtual void removeShaderDb() { m_shaderDb = nullptr; }
     virtual IShaderDb* db() override { return (IShaderDb*)m_shaderDb; }

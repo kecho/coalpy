@@ -42,7 +42,8 @@ enum BufferUsage : int
 {
     BufferUsage_Constant = 1 << 0,
     BufferUsage_AppendConsume = 1 << 1,
-    BufferUsage_IndirectArgs = 1 << 2
+    BufferUsage_IndirectArgs = 1 << 2,
+    BufferUsage_Upload = 1 << 3
 };
 
 enum class BufferType

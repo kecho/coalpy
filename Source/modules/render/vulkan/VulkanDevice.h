@@ -60,6 +60,8 @@ public:
     void internalReleaseWorkHandle(WorkHandle handle);
     ScheduleStatus internalSchedule(CommandList** commandLists, int listCounts, WorkHandle workHandle); 
 
+    virtual void* mappedMemory(Buffer buffer) override;
+
     VkInstance vkInstance() const { return m_vkInstance; }
     VkDevice vkDevice() const { return m_vkDevice; }
     VkPhysicalDevice vkPhysicalDevice() const { return m_vkPhysicalDevice; }

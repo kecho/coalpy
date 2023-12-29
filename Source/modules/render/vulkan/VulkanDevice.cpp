@@ -480,5 +480,18 @@ ScheduleStatus VulkanDevice::internalSchedule(CommandList** commandLists, int li
     return status;
 }
 
+
+void* VulkanDevice::mappedMemory(Buffer buffer)
+{
+    if (!buffer.valid())
+        return nullptr;
+
+    VulkanResource& resource = m_resources->unsafeGetResource(buffer);
+    if (!resource.isBuffer())
+        return nullptr;
+
+    return resource.mappedMemory;
+}
+
 }
 }

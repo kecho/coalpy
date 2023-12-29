@@ -569,6 +569,15 @@ void Dx12Device::transitionResourceState(ResourceHandle resource, D3D12_RESOURCE
     resourceInfo.gpuState = getGpuState(newState);
 }
 
+void* Dx12Device::mappedMemory(Buffer buffer)
+{
+    if (!buffer.valid())
+        return nullptr;
+
+    Dx12Resource& resource = m_resources->unsafeGetResource(buffer);
+    return resource.mappedMemory();
+}
+
 Dx12PixApi* Dx12Device::getPixApi() const
 {
     return Dx12PixApi::get(m_config.resourcePath.c_str());
