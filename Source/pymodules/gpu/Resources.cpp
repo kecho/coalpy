@@ -5,11 +5,13 @@
 #include "structmember.h"
 #include <coalpy.render/IDevice.h>
 #include <coalpy.texture/ITextureLoader.h>
+#include "HelperMacros.h"
 
 namespace coalpy
 {
 namespace gpu
 {
+
 
 bool validateEnum(ModuleState& state, int value, int count, const char* name, const char* typeName)
 {
@@ -23,6 +25,18 @@ bool validateEnum(ModuleState& state, int value, int count, const char* name, co
 
     return true;
 }
+
+namespace methods
+{
+    #include "bindings/MethodDecl.h"
+    #include "bindings/Buffer.inl"
+}
+
+static PyMethodDef g_bufferMethods[] = {
+    #include "bindings/MethodDef.h"
+    #include "bindings/Buffer.inl"
+    FN_END
+};
 
 void Buffer::constructType(CoalpyTypeObject& o)
 {
@@ -45,6 +59,7 @@ void Buffer::constructType(CoalpyTypeObject& o)
     t.tp_flags = Py_TPFLAGS_DEFAULT;
     t.tp_new = PyType_GenericNew;
     t.tp_init = Buffer::init;
+    t.tp_methods = g_bufferMethods;
     t.tp_dealloc = Buffer::destroy;
 }
 
@@ -102,8 +117,47 @@ void Buffer::destroy(PyObject* self)
     if (buffer->owned)
         moduleState.device().release(buffer->buffer);
 
+    Py_XDECREF(buffer->mappedMemory);
     buffer->~Buffer();
     Py_TYPE(self)->tp_free(self);
+}
+
+namespace methods
+{
+    PyObject* bufferMappedMemory(PyObject* self, PyObject* vargs, PyObject* kwds)
+    {
+        Buffer* bufferObj = (Buffer*)self;
+        ModuleState& state = parentModule(self);
+        if (!state.checkValidDevice())
+        {
+            PyErr_SetString(state.exObj(), "Current device is invalid.");
+            return nullptr;
+        }
+
+        if (!bufferObj->buffer.valid())
+        {
+            PyErr_SetString(state.exObj(), "Current buffer is invalid.");
+            return nullptr;
+        }
+
+        if (bufferObj->mappedMemory != nullptr)
+        {
+            Py_INCREF(bufferObj->mappedMemory);
+            return bufferObj->mappedMemory;
+        }
+
+        void* mappedMemory = state.device().mappedMemory(bufferObj->buffer);
+        if (mappedMemory == nullptr)
+            Py_RETURN_NONE;
+
+        render::ResourceMemoryInfo memInfo = {};
+        state.device().getResourceMemoryInfo(bufferObj->buffer, memInfo);
+
+        PyObject* memoryView = PyMemoryView_FromMemory((char*)mappedMemory, memInfo.byteSize, 0);
+        bufferObj->mappedMemory = memoryView;
+        Py_INCREF(bufferObj->mappedMemory);
+        return bufferObj->mappedMemory;
+    }
 }
 
 void Texture::constructType(CoalpyTypeObject& o)

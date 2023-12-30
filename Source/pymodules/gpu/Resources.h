@@ -35,6 +35,7 @@ struct Buffer
     bool isAppendConsume = false;
     bool owned = true;
     render::Buffer buffer;
+    PyObject* mappedMemory = nullptr;
 
     //Functions
     static const TypeId s_typeId = TypeId::Buffer;

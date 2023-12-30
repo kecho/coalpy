@@ -236,7 +236,7 @@ PyObject* dataAsByteArray(PyObject* self, PyObject* vargs, PyObject* kwds)
         return nullptr;
 
     request.rowBytesPitchObject = PyLong_FromLongLong((long)status.rowPitch);
-    request.dataAsByteArray = PyBytes_FromStringAndSize((const char*)status.downloadPtr, status.downloadByteSize);
+    request.dataAsByteArray = PyMemoryView_FromMemory((char*)(status.downloadPtr), status.downloadByteSize, 0);
 
     Py_INCREF(request.dataAsByteArray);
     return request.dataAsByteArray;
